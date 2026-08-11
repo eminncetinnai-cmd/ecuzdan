@@ -1,0 +1,601 @@
+{% extends "layout.html" %}
+
+{% block title %}Finansal Seyir Defteri - E-Cüzdan{% endblock %}
+
+{% block content %}
+<style>
+/* Simple Logbook Styles */
+.logbook-container {
+    padding: 2rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.logbook-header {
+    margin-bottom: 2rem;
+}
+
+.logbook-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 0.5rem;
+}
+
+.logbook-subtitle {
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.logbook-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.logbook-card-header {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.create-entry-btn {
+    background: #10b981;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+}
+
+.create-entry-btn:hover {
+    background: #059669;
+}
+
+.filter-panel {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.filter-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.filter-group label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 0.25rem;
+}
+
+.filter-select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.875rem;
+}
+
+.timeline {
+    padding: 1.5rem;
+}
+
+.timeline-item {
+    margin-bottom: 1.5rem;
+    padding-left: 0;
+}
+
+.timeline-content {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.25rem;
+}
+
+.timeline-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.timeline-entry-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 0.25rem;
+}
+
+.timeline-entry-meta {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.timeline-entry-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.action-btn:hover {
+    background: #f1f5f9;
+}
+
+.timeline-entry-content {
+    font-size: 0.875rem;
+    color: #334155;
+    line-height: 1.5;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 0.75rem;
+}
+
+.empty-state-text {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin-bottom: 1rem;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 16px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    background: #f8fafc;
+    padding: 1rem 1.5rem;
+    border-radius: 16px 16px 0 0;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: #64748b;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.25rem;
+}
+
+.modal-close:hover {
+    background: #e2e8f0;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 0.25rem;
+}
+
+.form-input, .form-textarea, .form-select {
+    width: 100%;
+    padding: 0.625rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.875rem;
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.modal-btn {
+    padding: 0.625rem 1.25rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+}
+
+.modal-btn-cancel {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.modal-btn-cancel:hover {
+    background: #e2e8f0;
+}
+
+.modal-btn-save {
+    background: #10b981;
+    color: white;
+}
+
+.modal-btn-save:hover {
+    background: #059669;
+}
+
+@media (max-width: 768px) {
+    .filter-row {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<div class="logbook-container">
+    <div class="logbook-header">
+        <h1 class="logbook-title">Finansal Seyir Defteri</h1>
+        <p class="logbook-subtitle">Finansal kararlarınızı, yatırım notlarınızı ve kilometre taşlarınızı takip edin</p>
+    </div>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">
+                    <span>{% if category == 'success' %}✓{% elif category == 'error' %}✕{% elif category == 'warning' %}⚠{% endif %}</span>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
+
+    <div class="logbook-card">
+        <div class="logbook-card-header">
+            <h2 class="modal-title">Finansal Seyir Defteri</h2>
+            <button type="button" class="create-entry-btn" onclick="showCreateModal()">
+                + Yeni Kayıt
+            </button>
+        </div>
+        
+        <div class="filter-panel">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>Kategori</label>
+                    <select class="filter-select" id="filter-category" onchange="applyFilters()">
+                        <option value="">Tümü</option>
+                        <option value="Finansal" {% if category_filter == 'Finansal' %}selected{% endif %}>Finansal</option>
+                        <option value="Yatırım" {% if category_filter == 'Yatırım' %}selected{% endif %}>Yatırım</option>
+                        <option value="Ödeme" {% if category_filter == 'Ödeme' %}selected{% endif %}>Ödeme</option>
+                        <option value="Kilometre Taşı" {% if category_filter == 'Kilometre Taşı' %}selected{% endif %}>Kilometre Taşı</option>
+                        <option value="Fikir" {% if category_filter == 'Fikir' %}selected{% endif %}>Fikir</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Tarih</label>
+                    <input type="date" class="filter-select" id="filter-date" value="{{ date_filter or '' }}" onchange="applyFilters()">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Timeline Görünümü -->
+        <div id="timeline-view">
+            {% if entries %}
+                <div class="timeline">
+                    {% for entry in entries %}
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <div class="timeline-entry-header">
+                                <div>
+                                    <h3 class="timeline-entry-title">{{ entry.title }}</h3>
+                                    <div class="timeline-entry-meta">
+                                        {{ entry.entry_date }} | {{ entry.category }}
+                                    </div>
+                                </div>
+                                <div class="timeline-entry-actions">
+                                    <button type="button" class="action-btn" onclick="showEditModal({{ entry.id }})" title="Düzenle">Edit</button>
+                                    <button type="button" class="action-btn" onclick="deleteEntry({{ entry.id }})" title="Sil">Delete</button>
+                                </div>
+                            </div>
+                            <div class="timeline-entry-content">
+                                {{ entry.content_preview }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">📝</div>
+                    <p class="empty-state-text">Henüz kayıt yok. İlk kaydınızı oluşturun!</p>
+                    <button type="button" class="create-entry-btn" onclick="showCreateModal()">
+                        + Yeni Kayıt Oluştur
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Modal -->
+<div class="modal-overlay hidden" id="entryModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modalTitle">Yeni Kayıt</h3>
+            <button type="button" onclick="hideModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="entryForm">
+                <input type="hidden" id="entryId">
+                <input type="hidden" name="csrf_token" value="{{ session.get('csrf_token', '') }}">
+                
+                <div class="form-group">
+                    <label class="form-label" for="title">Başlık *</label>
+                    <input type="text" class="form-input" id="title" name="title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="content">İçerik *</label>
+                    <textarea class="form-textarea" id="content" name="content" rows="5" required></textarea>
+                </div>
+                
+                <div class="filter-row">
+                    <div class="form-group">
+                        <label class="form-label" for="entry_date">Tarih *</label>
+                        <input type="date" class="form-input" id="entry_date" name="entry_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="category">Kategori</label>
+                        <select class="form-select" id="category" name="category">
+                            <option value="Finansal">Finansal</option>
+                            <option value="Yatırım">Yatırım</option>
+                            <option value="Ödeme">Ödeme</option>
+                            <option value="Kilometre Taşı">Kilometre Taşı</option>
+                            <option value="Fikir">Fikir</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="hideModal()">İptal</button>
+            <button type="button" onclick="saveEntry()">Kaydet</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Toast notification function
+function showToast(message, type) {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    const bgColor = type === 'success' ? 'bg-emerald-500' : type === 'error' ? 'bg-rose-500' : 'bg-amber-500';
+    const textColor = 'text-white';
+    toast.className = `px-4 py-2 rounded shadow ${bgColor} ${textColor} animate-fade-in`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => { toast.remove(); }, 4000);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('entry_date').value = new Date().toISOString().split('T')[0];
+    
+    // Check for open_edit parameter in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const openEditId = urlParams.get('open_edit');
+    if (openEditId) {
+        showEditModal(parseInt(openEditId));
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
+    // ESC key listener for modal
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('entryModal');
+            if (modal.classList.contains('active')) {
+                hideModal();
+            }
+        }
+    });
+});
+
+function showCreateModal() {
+    document.getElementById('modalTitle').textContent = 'Yeni Kayıt';
+    document.getElementById('entryForm').reset();
+    document.getElementById('entryId').value = '';
+    document.getElementById('entry_date').value = new Date().toISOString().split('T')[0];
+    window.openModal('entryModal');
+}
+
+function showEditModal(entryId) {
+    fetch(`/logbook/${entryId}`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Kayıt bulunamadı veya yetkiniz yok.');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success && data.entry) {
+            const entry = data.entry;
+            document.getElementById('modalTitle').textContent = 'Kayıt Düzenle';
+            document.getElementById('entryId').value = entry.id;
+            document.getElementById('title').value = entry.title;
+            document.getElementById('content').value = entry.content;
+            document.getElementById('entry_date').value = entry.entry_date;
+            document.getElementById('category').value = entry.category;
+            window.openModal('entryModal');
+        } else {
+            showToast(data.message || 'Kayıt yüklenemedi.', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error loading entry:', error);
+        showToast('Kayıt yüklenirken hata oluştu: ' + error.message, 'error');
+    });
+}
+
+function hideModal() {
+    window.closeModal('entryModal');
+    document.getElementById('entryForm').reset();
+}
+
+function saveEntry() {
+    const entryId = document.getElementById('entryId').value;
+    const formData = new FormData(document.getElementById('entryForm'));
+
+    const url = entryId ? `/logbook/${entryId}/update` : '/logbook/create';
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data);
+        if (data.success) {
+            hideModal();
+            location.reload();
+        } else {
+            showToast(data.message || 'Kayıt başarısız.', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving entry:', error);
+        showToast('Kayıt sırasında hata oluştu: ' + error.message, 'error');
+    });
+}
+
+function deleteEntry(entryId) {
+    if (typeof window.showGlobalConfirm === 'function') {
+        window.showGlobalConfirm('Kaydı Sil', 'Bu kaydı silmek istiyor musunuz? Bu işlem geri alınamaz.', function() {
+            const formData = new FormData();
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            formData.append('csrf_token', csrfToken);
+            
+            fetch(`/logbook/${entryId}/delete`, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    showToast(data.message || 'Silme başarısız.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting entry:', error);
+                showToast('Silme sırasında hata oluştu.', 'error');
+            });
+        }, true);
+    } else {
+        if (confirm('Bu kaydı silmek istiyor musunuz? Bu işlem geri alınamaz.')) {
+            const formData = new FormData();
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            formData.append('csrf_token', csrfToken);
+            
+            fetch(`/logbook/${entryId}/delete`, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    showToast(data.message || 'Silme başarısız.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting entry:', error);
+                showToast('Silme sırasında hata oluştu.', 'error');
+            });
+        }
+    }
+}
+
+function applyFilters() {
+    const category = document.getElementById('filter-category').value;
+    const date = document.getElementById('filter-date').value;
+    const url = new URL(window.location);
+    if (category) url.searchParams.set('category', category);
+    else url.searchParams.delete('category');
+    if (date) url.searchParams.set('date', date);
+    else url.searchParams.delete('date');
+    window.location = url.toString();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,174 @@
+# Generation Rules for Demo Data
+# Defines amount ranges, frequency, and patterns for different transaction types
+
+income_rules:
+  salary:
+    base_amount: 50000
+    amount_range:
+      min: 45000
+      max: 55000
+    variation_percent: 0.10  # ±10% variation
+    frequency: "monthly"
+    payment_day: 15
+    status_distribution:
+      Ödendi: 0.90
+      Gecikti: 0.10
+  
+  extra_income:
+    base_amount: 8000
+    amount_range:
+      min: 6000
+      max: 10000
+    variation_percent: 0.30  # ±30% variation
+    frequency: "bi_monthly"  # Every 2 months
+    payment_day_range:
+      min: 5
+      max: 25
+    status_distribution:
+      Ödendi: 0.70
+      Bekliyor: 0.30
+  
+  rent_income:
+    base_amount: 7500
+    amount_range:
+      min: 7000
+      max: 8000
+    variation_percent: 0.05  # ±5% variation
+    frequency: "monthly"
+    payment_day: 1
+    status_distribution:
+      Ödendi: 0.80
+      Gecikti: 0.20
+  
+  interest_income:
+    base_amount: 2500
+    amount_range:
+      min: 2000
+      max: 3000
+    variation_percent: 0.20  # ±20% variation
+    frequency: "quarterly"
+    payment_day: 1
+    payment_months: [3, 6, 9, 12]
+    status_distribution:
+      Ödendi: 1.0
+
+expense_rules:
+  monthly_fixed:
+    base_amount: 10000
+    amount_range:
+      min: 9000
+      max: 11000
+    variation_percent: 0.05  # ±5% variation
+    frequency: "monthly"
+    payment_day: 3
+    status_distribution:
+      Ödendi: 0.95
+      Gecikti: 0.05
+  
+  food:
+    base_amount: 4000
+    amount_range:
+      min: 3000
+      max: 5000
+    variation_percent: 0.40  # ±40% variation
+    frequency: "weekly"
+    payment_day_range:
+      min: 1
+      max: 28
+    status_distribution:
+      Ödendi: 0.70
+      Bekliyor: 0.20
+      Gecikti: 0.10
+  
+  credit_card:
+    base_amount: 2800
+    amount_range:
+      min: 2500
+      max: 3100
+    variation_percent: 0.10  # ±10% variation
+    frequency: "monthly"
+    payment_day: 12
+    status_distribution:
+      Ödendi: 0.85
+      Gecikti: 0.15
+  
+  tax:
+    base_amount: 1500
+    amount_range:
+      min: 1400
+      max: 1600
+    variation_percent: 0.05  # ±5% variation
+    frequency: "monthly"
+    payment_day: 18
+    status_distribution:
+      Ödendi: 0.95
+      Gecikti: 0.05
+  
+  credit:
+    base_amount: 5500
+    amount_range:
+      min: 5000
+      max: 6000
+    variation_percent: 0.05  # ±5% variation
+    frequency: "monthly"
+    payment_day: 22
+    status_distribution:
+      Ödendi: 0.90
+      Gecikti: 0.10
+  
+  transport:
+    base_amount: 500
+    amount_range:
+      min: 400
+      max: 700
+    variation_percent: 0.30  # ±30% variation
+    frequency: "monthly"
+    payment_day: 20
+    status_distribution:
+      Ödendi: 1.0
+
+investment_rules:
+  monthly_investment:
+    base_amount: 15000
+    amount_range:
+      min: 12000
+      max: 18000
+    variation_percent: 0.20  # ±20% variation
+    frequency: "monthly"
+    payment_day: 10
+    status_distribution:
+      Ödendi: 0.85
+      Bekliyor: 0.15
+  
+  asset_types:
+    base_amount: 5000
+    amount_range:
+      min: 1000
+      max: 50000
+    variation_percent: 0.50  # ±50% variation
+    frequency: "monthly"
+    payment_day_range:
+      min: 1
+      max: 28
+    status_distribution:
+      Ödendi: 0.90
+      Bekliyor: 0.10
+    asset_list:
+      - Hisse Senedi
+      - Altın
+      - Döviz
+      - Diğer Yatırımlar
+  
+  investment_direction:
+    buy: 0.85  # 85% buy transactions
+    sell: 0.15  # 15% sell transactions
+
+global_settings:
+  inflation_rate: 0.40  # 40% annual inflation
+  salary_growth_rate: 0.08  # 8% annual salary growth
+  market_volatility: 0.15  # 15% market volatility
+  
+  year_adjustments:
+    enabled: true
+    inflation_multiplier: 0.5  # Inflation effect multiplier per year
+    salary_growth_multiplier: 0.3  # Salary growth effect multiplier per year

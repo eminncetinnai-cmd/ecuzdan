@@ -1,0 +1,239 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+    .ff-card { transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+    .ff-card:hover { transform: translateY(-2px); box-shadow: 0 16px 48px -20px rgba(0,0,0,0.12); }
+    .progress-bar { height: 10px; border-radius: 999px; background: #e2e8f0; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 999px; transition: width 1s ease-out; }
+    .criterion-success { border-left: 4px solid #10b981; }
+    .criterion-warning { border-left: 4px solid #f59e0b; }
+    .criterion-danger { border-left: 4px solid #ef4444; }
+    .milestone-done { opacity: 1; }
+    .milestone-pending { opacity: 0.45; }
+    .stage-step { width: 2rem; height: 2rem; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; }
+</style>
+
+<div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8 flex flex-wrap justify-between items-end gap-4">
+        <div>
+            <h2 class="text-4xl font-black text-slate-900 tracking-tighter uppercase leading-none bg-gradient-to-r from-slate-900 via-amber-600 to-slate-900 bg-clip-text text-transparent">Finansal Özgürlük</h2>
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">FIRE · Trinity Study · YMYL — verilerinize dayalı kişisel değerlendirme</p>
+        </div>
+        <div class="bg-gradient-to-tr from-amber-500 to-amber-600 text-white px-6 py-4 rounded-2xl shadow-lg flex items-center gap-3">
+            <span class="text-2xl">{{ analysis.freedom_stage.icon }}</span>
+            <div>
+                <p class="text-[9px] font-bold uppercase opacity-80 tracking-wider">Mevcut Aşama</p>
+                <p class="text-sm font-black uppercase">{{ analysis.freedom_stage.name }}</p>
+            </div>
+        </div>
+    </div>
+
+    {% if analysis.is_financially_free %}
+    <div class="ff-card premium-card p-6 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 mb-8">
+        <div class="flex items-center gap-4">
+            <span class="text-4xl">🏆</span>
+            <div>
+                <h3 class="font-black text-lg text-emerald-900 uppercase">Finansal Bağımsızlığa Ulaştınız</h3>
+                <p class="text-sm text-emerald-700 mt-1">Portföyünüz 4% güvenli çekim kuralına göre yaşam giderlerinizi sürdürebilir.</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- FI Progress Hero -->
+    <div class="ff-card premium-card p-8 bg-white/85 border-t-4 border-amber-500 mb-8 shadow-sm">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+            <div class="lg:col-span-2">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">FI Hedefi — 25× Yıllık Gider (4% Kuralı)</p>
+                <div class="flex flex-wrap items-end gap-3 mb-3">
+                    <p class="text-3xl font-black text-slate-900">{{ analysis.fi_progress_pct }}%</p>
+                    <p class="text-sm text-slate-500 pb-1">tamamlandı</p>
+                </div>
+                <div class="progress-bar mb-2">
+                    <div class="progress-fill bg-gradient-to-r from-amber-400 to-emerald-500" style="width: {{ min(analysis.fi_progress_pct, 100) }}%"></div>
+                </div>
+                <div class="flex flex-wrap justify-between text-[10px] font-bold text-slate-500 gap-2">
+                    <span>Mevcut: {{ (analysis.total_assets + analysis.total_cash)|format_money }} ₺</span>
+                    <span>Hedef: {{ analysis.fi_number|format_money }} ₺</span>
+                </div>
+            </div>
+            <div class="text-center lg:text-right space-y-2">
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Özgürlük Skoru</p>
+                <p class="text-5xl font-black {% if analysis.freedom_score >= 75 %}text-emerald-600{% elif analysis.freedom_score >= 45 %}text-amber-600{% else %}text-rose-600{% endif %}">{{ analysis.freedom_score }}</p>
+                <p class="text-[10px] text-slate-400">/ 100 — 6 kriterden</p>
+                <span class="inline-block px-3 py-1 rounded-full text-[9px] font-black uppercase bg-indigo-100 text-indigo-700">{{ analysis.fire_profile.name }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key metrics row -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="ff-card premium-card p-5 bg-white/80 text-center">
+            <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Net Değer</p>
+            <p class="text-xl font-black {% if analysis.net_worth >= 0 %}text-indigo-700{% else %}text-rose-600{% endif %}">{{ analysis.net_worth|format_money }} ₺</p>
+        </div>
+        <div class="ff-card premium-card p-5 bg-white/80 text-center">
+            <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Tasarruf Oranı</p>
+            <p class="text-xl font-black {% if analysis.savings_rate >= 20 %}text-emerald-600{% elif analysis.savings_rate >= 10 %}text-amber-600{% else %}text-rose-600{% endif %}">%{{ analysis.savings_rate }}</p>
+        </div>
+        <div class="ff-card premium-card p-5 bg-white/80 text-center">
+            <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Gerçek Pasif Gelir Karşılama</p>
+            <p class="text-xl font-black text-emerald-600">%{{ analysis.income_replacement_pct }}</p>
+        </div>
+        <div class="ff-card premium-card p-5 bg-white/80 text-center">
+            <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Tahmini FI Süresi</p>
+            <p class="text-xl font-black text-slate-800">{% if analysis.years_to_fi is not none %}{{ analysis.years_to_fi }} yıl{% else %}—{% endif %}</p>
+            {% if analysis.estimated_freedom_date %}<p class="text-[9px] text-amber-600 font-bold mt-1">{{ analysis.estimated_freedom_date }}</p>{% endif %}
+        </div>
+    </div>
+
+    <!-- Personal interpretation -->
+    <div class="ff-card premium-card p-6 bg-gradient-to-br from-slate-50 to-white border border-slate-200 mb-8">
+        <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight mb-3">📋 Verilerinizin Yorumu</h3>
+        <p class="text-sm text-slate-600 leading-relaxed">{{ analysis.interpretation }}</p>
+        <p class="text-xs text-slate-400 mt-3 italic">{{ analysis.fire_profile.detail }}</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <!-- Criteria -->
+        <div class="lg:col-span-2 space-y-4">
+            <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">Küresel Kriter Karnesi</h3>
+            {% for c in analysis.criteria %}
+            <div class="ff-card premium-card p-5 bg-white/85 criterion-{{ c.status }}">
+                <div class="flex flex-wrap justify-between items-start gap-2 mb-2">
+                    <div>
+                        <h4 class="font-black text-sm text-slate-800">{{ c.name }}</h4>
+                        <p class="text-[9px] text-slate-400 font-semibold uppercase tracking-wide">{{ c.source }}</p>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase
+                        {% if c.status == 'success' %}bg-emerald-100 text-emerald-700
+                        {% elif c.status == 'warning' %}bg-amber-100 text-amber-700
+                        {% else %}bg-rose-100 text-rose-700{% endif %}">
+                        {{ c.score }}/{{ c.max_score }} puan
+                    </span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs mb-2">
+                    <div><span class="text-slate-400 font-bold">Sizin değeriniz:</span> <span class="font-black text-slate-800">{{ c.your_value }}</span></div>
+                    <div><span class="text-slate-400 font-bold">Hedef:</span> <span class="font-semibold text-slate-600">{{ c.target }}</span></div>
+                </div>
+                <p class="text-[11px] text-slate-500">{{ c.detail }}</p>
+                <p class="text-xs text-slate-700 mt-2 font-medium">{{ c.interpretation }}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Milestones + cash flow snapshot -->
+        <div class="space-y-6">
+            <div class="ff-card premium-card p-6 bg-white/85">
+                <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight mb-4">Yolculuk Kilometre Taşları</h3>
+                <ul class="space-y-3">
+                    {% for m in analysis.milestones %}
+                    <li class="flex items-center gap-3 {% if m.done %}milestone-done{% else %}milestone-pending{% endif %}">
+                        <span class="text-lg">{{ m.icon }}</span>
+                        <span class="text-xs font-bold text-slate-700 flex-1">{{ m.name }}</span>
+                        {% if m.done %}<span class="text-emerald-500 text-sm">✓</span>{% else %}<span class="text-slate-300 text-sm">○</span>{% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="ff-card premium-card p-6 bg-white/85">
+                <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight mb-4">12 Aylık Nakit Özeti</h3>
+                <div class="space-y-3 text-xs">
+                    <div class="flex justify-between"><span class="text-slate-400">Aylık gelir (ort.)</span><span class="font-black text-emerald-600">{{ analysis.monthly_avg_income|format_money }} ₺</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Aylık gider (ort.)</span><span class="font-black text-rose-600">{{ analysis.monthly_avg_expenses|format_money }} ₺</span></div>
+                    <div class="flex justify-between border-t border-slate-100 pt-2"><span class="text-slate-400">Aylık tasarruf</span><span class="font-black text-indigo-600">{{ analysis.monthly_savings|format_money }} ₺</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Acil fon (nakit)</span><span class="font-bold">{{ analysis.emergency_fund_months|round(1) }} ay</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Kira/pasif nakit</span><span class="font-bold text-emerald-600">{{ analysis.rental_income_monthly|format_money }} ₺/ay</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Güvenli çekim (%4)</span><span class="font-bold">{{ analysis.safe_withdrawal_monthly|format_money }} ₺/ay</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Portföy varlıkları</span><span class="font-bold">{{ analysis.total_assets|format_money }} ₺</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Borç/yükümlülük</span><span class="font-bold text-rose-600">{{ analysis.total_debts|format_money }} ₺</span></div>
+                </div>
+            </div>
+
+            <div class="ff-card premium-card p-6 bg-amber-50/80 border border-amber-100">
+                <h3 class="text-sm font-black text-amber-900 uppercase tracking-tight mb-3">Öncelikli Adımlar</h3>
+                <ul class="space-y-2 text-xs text-amber-900">
+                    {% if analysis.savings_rate < 20 %}<li>• Tasarruf oranını %20 bandına çıkarın</li>{% endif %}
+                    {% if analysis.emergency_fund_months < 6 %}<li>• En az 6 aylık acil fon biriktirin</li>{% endif %}
+                    {% if analysis.fi_progress_pct < 50 %}<li>• Düzenli yatırım ile FI hedefine yaklaşın</li>{% endif %}
+                    {% if analysis.debt_to_income_pct > 36 %}<li>• Borç yükünü azaltın (DTI %36 altı)</li>{% endif %}
+                    {% if analysis.income_replacement_pct < 50 %}<li>• Pasif gelir kaynaklarını çeşitlendirin</li>{% endif %}
+                    {% if analysis.savings_rate >= 20 and analysis.emergency_fund_months >= 6 and analysis.fi_progress_pct >= 25 %}
+                    <li>• Mevcut stratejiyi sürdürün — doğru yoldasınız</li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Academic references -->
+    <div class="ff-card premium-card p-6 bg-white/70 mb-6">
+        <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight mb-4">Akademik &amp; Literatür Referansları</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {% for ref in analysis.references %}
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                <p class="font-black text-xs text-slate-800">{{ ref.title }}</p>
+                <p class="text-[10px] text-slate-500 mt-1">{{ ref.author }}</p>
+                <p class="text-[9px] text-indigo-600 font-semibold mt-1">{{ ref.note }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        <p class="text-[9px] text-slate-400 mt-4 italic">Hesaplamalar son 12 ay ödenmiş işlemler, mevcut portföy ve planlı yükümlülük verilerinize dayanır. Yatırım getirisi varsayımı: yıllık {{ analysis.macro_data.real_return_rate|round(1) }}% reel getiri, %4 güvenli çekim. (Kaynak: {{ analysis.macro_data.source }})</p>
+    </div>
+
+    <!-- Mathematical Foundations Card -->
+    <div class="ff-card premium-card p-10 bg-slate-900 text-white shadow-2xl relative overflow-hidden">
+        <div class="absolute w-96 h-96 bg-amber-600 rounded-full blur-[150px] -top-20 -right-20 opacity-20"></div>
+        <div class="relative z-10">
+            <h3 class="font-black text-sm text-amber-400 uppercase mb-4 tracking-widest italic flex items-center">
+                <span class="w-2.5 h-2.5 bg-amber-400 rounded-full mr-2.5"></span>
+                Finansal Sözlük &amp; Metodoloji
+            </h3>
+            <h4 class="text-lg font-black text-white mb-4">Analizlerin Matematiksel Temelleri</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                    <p class="text-[10px] font-bold text-amber-400 uppercase mb-2">4% Güvenli Çekim Kuralı</p>
+                    <p class="text-xs text-slate-300 leading-relaxed">Trinity Study (Bengen, 1994) — Yıllık %4 portföy çekimi, 30 yıllık dönemde %95 başarı oranı sağlar. FI Hedefi = Yıllık Gider × 25</p>
+                </div>
+                <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                    <p class="text-[10px] font-bold text-amber-400 uppercase mb-2">Tasarruf Oranı</p>
+                    <p class="text-xs text-slate-300 leading-relaxed">FIRE matematiği — Tasarruf oranı %20'den başlar, %50'de hızlanır. Yüksek tasarruf = Kısa FI süresi</p>
+                </div>
+                <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                    <p class="text-[10px] font-bold text-amber-400 uppercase mb-2">Acil Fon</p>
+                    <p class="text-xs text-slate-300 leading-relaxed">Dave Ramsey & Fed — 3-6 aylık gider karşılığı nakit. İşsizlik riskine göre 12 aya kadar çıkılabilir</p>
+                </div>
+                <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                    <p class="text-[10px] font-bold text-amber-400 uppercase mb-2">Pasif Gelir</p>
+                    <p class="text-xs text-slate-300 leading-relaxed">Your Money or Your Life — Crossover point: Pasif gelir ≥ Gider. İş geliri zorunluluğu kalkar</p>
+                </div>
+            </div>
+            <div class="border-t border-slate-700/60 pt-6 mt-6 flex flex-wrap gap-8 justify-between text-xs text-slate-400 font-semibold">
+                <div>
+                    <span>FI Çarpanı:</span>
+                    <span class="text-white ml-1 font-bold">25×</span>
+                </div>
+                <div>
+                    <span>Güvenli Çekim:</span>
+                    <span class="text-white ml-1 font-bold">%4</span>
+                </div>
+                <div>
+                    <span>Reel Getiri:</span>
+                    <span class="text-white ml-1 font-bold">%{{ analysis.macro_data.real_return_rate|round(1) }}</span>
+                </div>
+                <div>
+                    <span>Enflasyon:</span>
+                    <span class="text-white ml-1 font-bold">%{{ analysis.macro_data.inflation_rate|round(1) }}</span>
+                </div>
+                <div>
+                    <span>Kaynak:</span>
+                    <span class="text-white ml-1 font-bold">{{ analysis.macro_data.source }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

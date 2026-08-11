@@ -1,0 +1,589 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-4xl font-black text-slate-900 tracking-tighter uppercase leading-none bg-gradient-to-r from-slate-900 via-emerald-600 to-slate-900 bg-clip-text text-transparent">
+            {{ _('fe_title') }}
+        </h1>
+        <p class="text-sm font-bold text-slate-400 uppercase tracking-widest mt-2">{{ _('fe_subtitle') }}</p>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="flex gap-3 mb-8 flex-wrap">
+        <a href="/financial_education"
+           class="px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all
+           {% if not view_type or view_type == 'guide' %}bg-emerald-600 text-white shadow-lg shadow-emerald-200{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+            {{ _('fe_tab_guide') }}
+        </a>
+        <a href="/financial_education?view=quiz"
+           class="px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all
+           {% if view_type == 'quiz' %}bg-emerald-600 text-white shadow-lg shadow-emerald-200{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+            🎯 Quiz
+        </a>
+        <a href="/financial_education?view=progress"
+           class="px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all
+           {% if view_type == 'progress' %}bg-emerald-600 text-white shadow-lg shadow-emerald-200{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+            📊 Progress
+        </a>
+        <a href="/financial_education?view=calculations"
+           class="px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all
+           {% if view_type == 'calculations' %}bg-emerald-600 text-white shadow-lg shadow-emerald-200{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+            {{ _('fe_tab_calculations') }}
+        </a>
+        <a href="/financial_education?view=analyses"
+           class="px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all
+           {% if view_type == 'analyses' %}bg-emerald-600 text-white shadow-lg shadow-emerald-200{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+            {{ _('fe_tab_analyses') }}
+        </a>
+        <a href="/financial_education?view=dictionary"
+           class="px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all
+           {% if view_type == 'dictionary' %}bg-emerald-600 text-white shadow-lg shadow-emerald-200{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+            {{ _('fe_tab_dictionary') }}
+        </a>
+    </div>
+
+    {% if view_type == 'quiz' %}
+    <!-- Quiz View -->
+    <div class="space-y-8">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+            <div class="bg-gradient-to-r from-emerald-600 to-teal-600 p-6">
+                <h2 class="text-2xl font-black text-white uppercase tracking-tight">🎯 Financial Literacy Quiz</h2>
+                <p class="text-emerald-100 mt-2">Test your knowledge and track your progress</p>
+            </div>
+            <div class="p-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-slate-50 rounded-xl p-6 border border-slate-200 text-center">
+                        <div class="text-4xl font-black text-emerald-600 mb-2">15</div>
+                        <div class="text-slate-600 text-sm font-semibold">Questions</div>
+                    </div>
+                    <div class="bg-slate-50 rounded-xl p-6 border border-slate-200 text-center">
+                        <div class="text-4xl font-black text-blue-600 mb-2">10</div>
+                        <div class="text-slate-600 text-sm font-semibold">Minutes</div>
+                    </div>
+                    <div class="bg-slate-50 rounded-xl p-6 border border-slate-200 text-center">
+                        <div class="text-4xl font-black text-purple-600 mb-2">3</div>
+                        <div class="text-slate-600 text-sm font-semibold">Difficulty Levels</div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-6 border border-emerald-200">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-black text-slate-800">Beginner Quiz</h3>
+                            <span class="bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full">Easy</span>
+                        </div>
+                        <p class="text-slate-600 mb-4">Test your basic financial knowledge</p>
+                        <button onclick="startQuiz('beginner')" class="bg-emerald-600 text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-emerald-700 transition">Start Quiz</button>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-black text-slate-800">Intermediate Quiz</h3>
+                            <span class="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">Medium</span>
+                        </div>
+                        <p class="text-slate-600 mb-4">Challenge yourself with investment concepts</p>
+                        <button onclick="startQuiz('intermediate')" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-blue-700 transition">Start Quiz</button>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-200">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-black text-slate-800">Advanced Quiz</h3>
+                            <span class="bg-purple-100 text-purple-700 text-xs font-bold px-3 py-1 rounded-full">Hard</span>
+                        </div>
+                        <p class="text-slate-600 mb-4">Master complex financial strategies</p>
+                        <button onclick="startQuiz('advanced')" class="bg-purple-600 text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-purple-700 transition">Start Quiz</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% elif view_type == 'progress' %}
+    <!-- Progress View -->
+    <div class="space-y-8">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-6">
+                <h2 class="text-2xl font-black text-white uppercase tracking-tight">📊 Your Learning Progress</h2>
+                <p class="text-blue-100 mt-2">Track your financial education journey</p>
+            </div>
+            <div class="p-8">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-slate-50 rounded-xl p-6 border border-slate-200 text-center">
+                        <div class="text-4xl font-black text-emerald-600 mb-2 progress-stats" data-type="completed">0</div>
+                        <div class="text-slate-600 text-sm font-semibold">Topics Completed</div>
+                    </div>
+                    <div class="bg-slate-50 rounded-xl p-6 border border-slate-200 text-center">
+                        <div class="text-4xl font-black text-blue-600 mb-2 progress-stats" data-type="average">0%</div>
+                        <div class="text-slate-600 text-sm font-semibold">Quiz Average</div>
+                    </div>
+                    <div class="bg-slate-50 rounded-xl p-6 border border-slate-200 text-center">
+                        <div class="text-4xl font-black text-purple-600 mb-2">0</div>
+                        <div class="text-slate-600 text-sm font-semibold">Day Streak</div>
+                    </div>
+                    <div class="bg-slate-50 rounded-xl p-6 border border-slate-200 text-center">
+                        <div class="text-4xl font-black text-amber-600 mb-2 achievement-count">0</div>
+                        <div class="text-slate-600 text-sm font-semibold">Badges Earned</div>
+                    </div>
+                </div>
+
+                <div class="mb-8">
+                    <h3 class="text-lg font-black text-slate-800 mb-4">Topic Progress</h3>
+                    <div class="space-y-4" id="topic-progress-container">
+                        <!-- Dynamic content will be loaded here -->
+                        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                            <p class="text-slate-500 text-center">Loading progress...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-black text-slate-800 mb-4">Achievements</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl p-4 border border-amber-200 text-center achievement-badge opacity-50" data-type="first_steps">
+                            <div class="text-3xl mb-2">🏆</div>
+                            <div class="font-bold text-slate-800 text-sm">First Steps</div>
+                            <div class="text-slate-500 text-xs">Complete first topic</div>
+                        </div>
+                        <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-200 text-center achievement-badge opacity-50" data-type="quiz_learner">
+                            <div class="text-3xl mb-2">🎯</div>
+                            <div class="font-bold text-slate-800 text-sm">Quiz Learner</div>
+                            <div class="text-slate-500 text-xs">Score 60%+ on quiz</div>
+                        </div>
+                        <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-200 text-center achievement-badge opacity-50" data-type="quiz_master">
+                            <div class="text-3xl mb-2">🎯</div>
+                            <div class="font-bold text-slate-800 text-sm">Quiz Master</div>
+                            <div class="text-slate-500 text-xs">Score 80%+ on quiz</div>
+                        </div>
+                        <div class="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200 text-center achievement-badge opacity-50" data-type="graduate">
+                            <div class="text-3xl mb-2">🎓</div>
+                            <div class="font-bold text-slate-800 text-sm">Graduate</div>
+                            <div class="text-slate-500 text-xs">Complete all topics</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% elif view_type == 'dictionary' %}
+    <!-- Dictionary View -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for term in technical_terms %}
+        <div class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden hover:shadow-xl transition-shadow">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-4">
+                <h3 class="text-lg font-black text-white uppercase tracking-tight">{{ term.term }}</h3>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{{ _('fd_definition') }}</p>
+                    <p class="text-slate-600 text-sm leading-relaxed">{{ term.definition }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{{ _('fd_context') }}</p>
+                    <p class="text-slate-600 text-sm leading-relaxed">{{ term.context }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% elif view_type == 'calculations' %}
+    <!-- Calculations View -->
+    <div class="space-y-8">
+        {% for calc_key, calc_data in program_calculations.items() %}
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+            <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-6">
+                <h2 class="text-2xl font-black text-white uppercase tracking-tight">{{ calc_data.title }}</h2>
+            </div>
+            <div class="p-8">
+                <div class="space-y-6">
+                    {% for calc in calc_data.calculations %}
+                    <div class="bg-slate-50 rounded-xl p-6 border border-slate-200">
+                        <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight mb-3">{{ calc.name }}</h3>
+                        <div class="bg-slate-900 rounded-xl p-4 text-white font-mono text-sm mb-3">
+                            <pre class="whitespace-pre-wrap">{{ calc.formula }}</pre>
+                        </div>
+                        <p class="text-slate-600 text-sm leading-relaxed mb-2">{{ calc.description }}</p>
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Program Function: <code class="bg-slate-100 px-2 py-1 rounded text-purple-700">{{ calc.program_function }}</code>
+                        </p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% elif view_type == 'analyses' %}
+    <!-- Analyses View -->
+    <div class="space-y-8">
+        {% for analysis in program_analyses %}
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+            <div class="bg-gradient-to-r from-orange-600 to-red-600 p-6">
+                <h2 class="text-2xl font-black text-white uppercase tracking-tight">{{ analysis.name }}</h2>
+            </div>
+            <div class="p-8 space-y-6">
+                <p class="text-slate-600 leading-relaxed">{{ analysis.description }}</p>
+                
+                <div>
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        Metrics
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {% for metric in analysis.metrics %}
+                        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                            <p class="font-bold text-slate-800 text-sm uppercase tracking-wider">{{ metric.metric }}</p>
+                            <p class="text-slate-600 text-xs mt-1">{{ metric.range }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-200">
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight mb-3 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        Actionable Insights
+                    </h3>
+                    <p class="text-slate-700 leading-relaxed">{{ analysis.actionable_insights }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Guide View -->
+    <!-- Phase Selector -->
+    <div class="flex gap-3 mb-8">
+        {% for phase in phases %}
+        <a href="/financial_education?phase={{ phase }}&topic={{ topics[0] if topics else '' }}" 
+           class="px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all
+           {% if current_phase == phase %}bg-emerald-600 text-white shadow-lg shadow-emerald-200{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+            {{ _('fe_phase_' + phase) }}
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Topic Selector -->
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-3 mb-8">
+        {% for topic in topics %}
+        <a href="/financial_education?phase={{ current_phase }}&topic={{ topic }}" 
+           class="p-4 rounded-xl border-2 transition-all text-center
+           {% if current_topic == topic %}border-emerald-500 bg-emerald-50{% else %}border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/50{% endif %}">
+            <p class="font-bold text-xs uppercase tracking-wider text-slate-700">
+                {{ _('fe_topic_' + topic) }}
+            </p>
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Content Card -->
+    {% if guide_data %}
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+        <!-- Title -->
+        <div class="bg-gradient-to-r from-emerald-600 to-teal-600 p-6">
+            <h2 class="text-2xl font-black text-white uppercase tracking-tight">{{ guide_data.title }}</h2>
+        </div>
+
+        <!-- Content -->
+        <div class="p-8 space-y-8">
+            <!-- Concept Definition -->
+            <div>
+                <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight mb-3 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    {{ _('fe_concept_definition') }}
+                </h3>
+                <p class="text-slate-600 leading-relaxed">{{ guide_data.concept_definition }}</p>
+            </div>
+
+            <!-- Practical Example -->
+            <div class="bg-slate-50 rounded-xl p-6 border border-slate-200">
+                <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight mb-3 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    {{ _('fe_practical_example') }}
+                </h3>
+                <p class="text-slate-600 leading-relaxed">{{ guide_data.practical_example }}</p>
+            </div>
+
+            <!-- Mathematical Formula -->
+            <div>
+                <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight mb-3 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                    {{ _('fe_mathematical_formula') }}
+                </h3>
+                <div class="bg-slate-900 rounded-xl p-6 text-white font-mono text-sm">
+                    <pre class="whitespace-pre-wrap">{{ guide_data.mathematical_formula }}</pre>
+                </div>
+                <p class="text-xs font-bold text-slate-500 mt-2 uppercase tracking-wider">
+                    {{ _('fe_python_function') }}: <code class="bg-slate-100 px-2 py-1 rounded text-emerald-700">{{ guide_data.python_function }}</code>
+                </p>
+            </div>
+
+            <!-- Literary Insights -->
+            <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-200">
+                <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight mb-3 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    {{ _('fe_literary_insights') }}
+                </h3>
+                <p class="text-slate-700 leading-relaxed italic">{{ guide_data.literary_insights }}</p>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-12 text-center">
+        <svg class="w-16 h-16 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <p class="text-slate-500 font-semibold">{{ _('fe_no_content') }}</p>
+    </div>
+    {% endif %}
+    {% endif %}
+</div>
+
+<script>
+// Quiz functionality
+let currentQuiz = null;
+let currentAnswers = {};
+
+async function startQuiz(difficulty) {
+    try {
+        const response = await fetch('/api/quiz/start', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ difficulty })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            currentQuiz = data.quiz_id;
+            currentAnswers = {};
+            displayQuizQuestions(data.questions);
+        } else {
+            alert(data.error || 'Quiz başlatılamadı');
+        }
+    } catch (error) {
+        console.error('Quiz başlatma hatası:', error);
+        alert('Quiz başlatılırken bir hata oluştu');
+    }
+}
+
+function displayQuizQuestions(questions) {
+    const quizContainer = document.createElement('div');
+    quizContainer.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+    quizContainer.id = 'quiz-modal';
+    
+    quizContainer.innerHTML = `
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="bg-gradient-to-r from-emerald-600 to-teal-600 p-6">
+                <h2 class="text-2xl font-black text-white uppercase tracking-tight">Quiz</h2>
+                <p class="text-emerald-100 mt-2">${questions.length} soru</p>
+            </div>
+            <div class="p-8">
+                ${questions.map((q, index) => `
+                    <div class="mb-8" data-question-id="${q.id}">
+                        <p class="text-lg font-bold text-slate-800 mb-4">${index + 1}. ${q.question}</p>
+                        <div class="space-y-3">
+                            ${Object.entries(q.options).map(([key, value]) => `
+                                <label class="flex items-center p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition">
+                                    <input type="radio" name="question_${q.id}" value="${key}" class="mr-3" onchange="selectAnswer(${q.id}, '${key}')">
+                                    <span class="text-slate-700">${value}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('')}
+                <button onclick="submitQuiz()" class="w-full bg-emerald-600 text-white px-6 py-3 rounded-lg font-bold text-sm hover:bg-emerald-700 transition">Submit Quiz</button>
+                <button onclick="closeQuizModal()" class="w-full mt-3 bg-slate-200 text-slate-700 px-6 py-3 rounded-lg font-bold text-sm hover:bg-slate-300 transition">Cancel</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(quizContainer);
+}
+
+function selectAnswer(questionId, answer) {
+    currentAnswers[questionId] = answer;
+}
+
+async function submitQuiz() {
+    if (Object.keys(currentAnswers).length === 0) {
+        alert('Lütfen en az bir soruyu cevaplayın');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/quiz/submit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                answers: currentAnswers,
+                difficulty: 'beginner' // This should be stored when quiz starts
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            displayQuizResults(data);
+        } else {
+            alert(data.error || 'Quiz sonuçları gönderilemedi');
+        }
+    } catch (error) {
+        console.error('Quiz gönderme hatası:', error);
+        alert('Quiz sonuçları gönderilirken bir hata oluştu');
+    }
+}
+
+function displayQuizResults(data) {
+    const quizModal = document.getElementById('quiz-modal');
+    const scoreColor = data.score >= 80 ? 'text-emerald-600' : (data.score >= 60 ? 'text-blue-600' : 'text-amber-600');
+    
+    quizModal.innerHTML = `
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-6">
+                <h2 class="text-2xl font-black text-white uppercase tracking-tight">Quiz Results</h2>
+            </div>
+            <div class="p-8 text-center">
+                <div class="text-6xl font-black ${scoreColor} mb-4">${data.score}%</div>
+                <p class="text-slate-600 mb-6">${data.correct_count} / ${data.total_count} doğru cevap</p>
+                
+                <div class="space-y-4 mb-8 text-left">
+                    ${data.results.map(r => `
+                        <div class="p-4 rounded-lg ${r.is_correct ? 'bg-emerald-50 border border-emerald-200' : 'bg-red-50 border border-red-200'}">
+                            <p class="font-bold ${r.is_correct ? 'text-emerald-700' : 'text-red-700'}">
+                                ${r.is_correct ? '✓' : '✗'} Soru ${r.question_id}
+                            </p>
+                            ${!r.is_correct ? `
+                                <p class="text-sm text-slate-600 mt-2">Doğru cevap: ${r.correct_answer}</p>
+                                ${r.explanation ? `<p class="text-sm text-slate-500 mt-1">${r.explanation}</p>` : ''}
+                            ` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <button onclick="closeQuizModal()" class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-bold text-sm hover:bg-blue-700 transition">Close</button>
+            </div>
+        </div>
+    `;
+}
+
+function closeQuizModal() {
+    const quizModal = document.getElementById('quiz-modal');
+    if (quizModal) {
+        quizModal.remove();
+    }
+    currentQuiz = null;
+    currentAnswers = {};
+}
+
+// Progress tracking
+async function loadProgress() {
+    try {
+        const response = await fetch('/api/progress');
+        const data = await response.json();
+        
+        if (data.success) {
+            updateProgressUI(data.progress);
+        }
+    } catch (error) {
+        console.error('İlerleme yükleme hatası:', error);
+    }
+}
+
+function updateProgressUI(progress) {
+    // Update progress bars and stats
+    const completedCount = progress.filter(p => p.completed).length;
+    const avgProgress = progress.length > 0 
+        ? Math.round(progress.reduce((sum, p) => sum + p.progress_percent, 0) / progress.length)
+        : 0;
+    
+    // Update stats elements
+    const completedElement = document.querySelector('.progress-stats[data-type="completed"]');
+    const averageElement = document.querySelector('.progress-stats[data-type="average"]');
+    
+    if (completedElement) {
+        completedElement.textContent = completedCount;
+    }
+    if (averageElement) {
+        averageElement.textContent = avgProgress + '%';
+    }
+    
+    // Update topic progress bars
+    const topicContainer = document.getElementById('topic-progress-container');
+    if (topicContainer && progress.length > 0) {
+        topicContainer.innerHTML = progress.map(p => {
+            const colorClass = p.progress_percent >= 80 ? 'bg-emerald-600' : 
+                              (p.progress_percent >= 50 ? 'bg-blue-600' : 
+                              (p.progress_percent >= 25 ? 'bg-purple-600' : 'bg-amber-600'));
+            const textColorClass = p.progress_percent >= 80 ? 'text-emerald-600' : 
+                                  (p.progress_percent >= 50 ? 'text-blue-600' : 
+                                  (p.progress_percent >= 25 ? 'text-purple-600' : 'text-amber-600'));
+            
+            return `
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold text-slate-700">${p.topic}</span>
+                        <span class="${textColorClass} font-bold">${p.progress_percent}%</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2">
+                        <div class="${colorClass} h-2 rounded-full transition-all duration-500" style="width: ${p.progress_percent}%"></div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } else if (topicContainer) {
+        topicContainer.innerHTML = `
+            <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                <p class="text-slate-500 text-center">No progress data available</p>
+            </div>
+        `;
+    }
+}
+
+// Load achievements
+async function loadAchievements() {
+    try {
+        const response = await fetch('/api/achievements');
+        const data = await response.json();
+        
+        if (data.success) {
+            updateAchievementsUI(data.achievements);
+        }
+    } catch (error) {
+        console.error('Başarılar yükleme hatası:', error);
+    }
+}
+
+function updateAchievementsUI(achievements) {
+    const achievementTypes = achievements.map(a => a.achievement_type);
+    
+    // Update achievement count
+    const achievementCountElement = document.querySelector('.achievement-count');
+    if (achievementCountElement) {
+        achievementCountElement.textContent = achievements.length;
+    }
+    
+    // Update achievement badges
+    document.querySelectorAll('.achievement-badge').forEach(badge => {
+        const type = badge.dataset.type;
+        if (achievementTypes.includes(type)) {
+            badge.classList.remove('opacity-50');
+            badge.classList.add('opacity-100');
+        } else {
+            badge.classList.remove('opacity-100');
+            badge.classList.add('opacity-50');
+        }
+    });
+}
+
+// Initialize on page load if on progress view
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.location.search.includes('view=progress')) {
+        loadProgress();
+        loadAchievements();
+    }
+});
+</script>
+{% endblock %}

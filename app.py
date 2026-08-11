@@ -1,0 +1,373 @@
+"""
+E-Cüzdan v15 - Modüler Mimari
+Ana Flask uygulaması - Konfigürasyon ve başlatma
+"""
+import os
+import logging
+import secrets
+import sys
+from datetime import timedelta
+
+from flask import Flask, jsonify
+
+from config import Config
+from database import init_database
+from infrastructure.i18n import i18n
+from models import db
+from routes import register_routes
+from utils.auth_helpers import set_tenant_context
+
+# Centralized logging configuration
+from utils.logging_config import get_logger, setup_logging
+
+setup_logging(level=logging.DEBUG)
+
+# OpenTelemetry Setup
+try:
+    from bootstrap import get_container
+    # Initialize the global TracerProvider via container
+    get_container().infrastructure.tracer(service_name="e_cuzdan")
+except Exception as e:
+    # Safe fallback if OTel is not installed/configured properly
+    pass
+
+logger = get_logger(__name__)
+
+# Flask uygulamasını başlat
+app = Flask(__name__)
+app.config.setdefault('DB_BOOTSTRAP_READY', False)
+app.config.setdefault('DB_BOOTSTRAP_ERROR', None)
+
+# Instrument Flask with OpenTelemetry
+try:
+    from opentelemetry.instrumentation.flask import FlaskInstrumentor
+    FlaskInstrumentor().instrument_app(app)
+    logger.info("OpenTelemetry Flask instrumentation applied.")
+except ImportError:
+    logger.info("opentelemetry-instrumentation-flask not installed. Skipping web instrumentation.")
+
+config = Config.from_env()
+app.config['TESTING'] = os.getenv('FLASK_ENV', '').lower() == 'testing' or os.getenv('TESTING', 'false').lower() == 'true'
+
+# Apply configuration
+# Production'da SECRET_KEY mutlaka .env ile set edilmeli.
+# Geliştirmede (dev) her restart'ta aynı kalması için sabit fallback kullan.
+if config.SECRET_KEY and config.SECRET_KEY != 'dev-secret-key-change-in-production':
+    app.secret_key = config.SECRET_KEY
+else:
+    # Geliştirme ortamı: sabit bir değer kullan ki her restart'ta session'lar geçersiz olmasın.
+    # Üretimde .env dosyasına SECRET_KEY eklenmeli.
+    logger.warning(
+        "SECRET_KEY ayarlanmamış veya varsayılan değerde. "
+        "Üretimde .env içinde güçlü bir SECRET_KEY tanımlanmalıdır."
+    )
+    app.secret_key = 'dev-only-fixed-fallback-key-do-not-use-in-production'
+app.config['SQLALCHEMY_DATABASE_URI'] = config.DATABASE_URL
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = config.SQLALCHEMY_TRACK_MODIFICATIONS
+app.config['APP_BOOT_ID'] = secrets.token_hex(32) if not config.APP_BOOT_ID else config.APP_BOOT_ID
+
+# Jinja2'ye min ve max fonksiyonlarını ekle
+app.jinja_env.globals.update(min=min, max=max)
+
+@app.context_processor
+def inject_global_categories():
+    try:
+        from flask import g
+        from repositories.catalog_repository import CatalogRepository
+        tenant_id = g.get('tenant_id')
+        repo = CatalogRepository()
+        cats = repo.list_visible_categories(tenant_id)
+        return {
+            'global_income_cats': [c.name for c in cats if c.type == 'Gelir'],
+            'global_expense_cats': [c.name for c in cats if c.type == 'Gider'],
+            'global_investment_cats': [c.name for c in cats if c.type == 'Yat\u0131r\u0131m']
+        }
+    except Exception:
+        return {'global_income_cats': [], 'global_expense_cats': [], 'global_investment_cats': []}
+
+@app.context_processor
+def inject_csrf_token():
+    """csrf_token() Jinja helper - layout.html modalinda kullanilir."""
+    from flask import session
+    def csrf_token():
+        return session.get('csrf_token', '')
+    return {'csrf_token': csrf_token}
+
+# Session ve Cookie Güvenlik Ayarları
+app.permanent_session_lifetime = timedelta(hours=config.SESSION_TIMEOUT_HOURS)
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=config.SESSION_COOKIE_HTTPONLY,
+    SESSION_COOKIE_SAMESITE=config.SESSION_COOKIE_SAMESITE,
+    SESSION_COOKIE_SECURE=config.SESSION_COOKIE_SECURE,
+    SESSION_REFRESH_EACH_REQUEST=config.SESSION_REFRESH_EACH_REQUEST,
+)
+
+# ── Rate Limiting ─────────────────────────────────────────────────────────
+# Flask-Limiter: Çeşitli endpoint'ler için rate limiting koruması.
+# Login, register, ve diğer kritik endpoint'ler özel limitlere tabidir.
+try:
+    from flask_limiter import Limiter
+    from flask_limiter.util import get_remote_address
+
+    limiter = Limiter(
+        key_func=get_remote_address,
+        app=app,
+        # Global varsayılan: yüksek ama sınırsız değil
+        default_limits=["1000 per day", "200 per hour"],
+        storage_uri="memory://",   # Üretimde redis://... yap
+        strategy="fixed-window",
+    )
+    app.config['RATELIMIT_ENABLED'] = not app.config.get('TESTING', False)
+    # extensions dict'e koy — auth.py before_request hook'u buradan erişir
+    app.extensions['limiter'] = limiter
+    logger.info("Flask-Limiter aktif (memory storage). Testing=%s", app.config['TESTING'])
+    _limiter_instance = limiter
+except ImportError:
+    logger.warning("flask-limiter yüklü değil; rate limiting devre dışı.")
+    app.config['RATELIMIT_ENABLED'] = False
+    _limiter_instance = None
+
+# Veritabanını ve servisleri başlat
+db.init_app(app)
+i18n.init_app(app)
+
+# Demo data configuration validation on startup
+try:
+    from domain.demo.startup_validation import validate_demo_data_config
+    with app.app_context():
+        if not validate_demo_data_config():
+            logger.warning("Demo data configuration validation failed. Demo data generation may not work correctly.")
+except Exception as e:
+    logger.warning(f"Demo data configuration validation error: {e}")
+
+@app.route('/healthz')
+def healthz():
+    return jsonify({
+        'status': 'ok' if app.config.get('DB_BOOTSTRAP_READY', False) else 'degraded',
+        'database_ready': app.config.get('DB_BOOTSTRAP_READY', False),
+        'database_error': app.config.get('DB_BOOTSTRAP_ERROR'),
+        'environment': app.config.get('ENV') or app.config.get('FLASK_ENV') or 'production',
+    })
+
+try:
+    init_database(app)
+except Exception as init_error:
+    logger.exception("Database initialization did not complete successfully: %s", init_error)
+
+register_routes(app)
+
+# Flask-Limiter mevcutsa kritik endpoint'lere spesifik limitler ekle
+# register_routes'TAN SONRA çalışır — view fonksiyonu bu noktada kayıtlı
+if _limiter_instance is not None:
+    try:
+        # Login endpoint'i için sıkı limit
+        login_view = app.view_functions.get('auth.login')
+        if login_view:
+            decorated = _limiter_instance.limit(
+                "10 per minute",
+                methods=["POST"],
+                error_message="Çok fazla giriş denemesi. Lütfen bir dakika bekleyin.",
+            )(login_view)
+            app.view_functions['auth.login'] = decorated
+            logger.info("Flask-Limiter: /login route'una 10/dk limit uygulandı.")
+        
+        # Register endpoint'i için sıkı limit
+        register_view = app.view_functions.get('auth.register')
+        if register_view:
+            decorated = _limiter_instance.limit(
+                "5 per minute",
+                methods=["POST"],
+                error_message="Çok fazla kayıt denemesi. Lütfen bir dakika bekleyin.",
+            )(register_view)
+            app.view_functions['auth.register'] = decorated
+            logger.info("Flask-Limiter: /register route'una 5/dk limit uygulandı.")
+        
+        # Password reset endpoint'i için sıkı limit
+        reset_view = app.view_functions.get('auth.reset_password')
+        if reset_view:
+            decorated = _limiter_instance.limit(
+                "3 per hour",
+                methods=["POST"],
+                error_message="Çok fazla şifre sıfırlama denemesi. Lütfen bir saat bekleyin.",
+            )(reset_view)
+            app.view_functions['auth.reset_password'] = decorated
+            logger.info("Flask-Limiter: /reset_password route'una 3/saat limit uygulandı.")
+        
+        if app.config.get('TESTING', False):
+            _limiter_instance.enabled = False
+            logger.info("Flask-Limiter disabled in testing mode.")
+    except Exception as _e:
+        logger.warning("Flask-Limiter route binding başarısız: %s", _e)
+
+# Tenant context middleware'i kaydet
+@app.before_request
+def tenant_context_middleware():
+    """
+    Her istekte tenant context'i set eder
+    g.current_user ve g.tenant_id'yi ayarlar
+    """
+    result = set_tenant_context()
+    if result:
+        return result
+
+
+# Temizlik: request sonunda TenantContext temizle
+@app.teardown_request
+def clear_tenant_context(exception=None):
+    """Tüm istek sonrası TenantContext'i temizleyerek leakage önler"""
+    try:
+        from domain.tenant.context import TenantContext
+        TenantContext.set(None)
+    except Exception:
+        pass
+
+# HTTPS enforcement middleware
+# Config bir kez okunur; her request'te yeniden parse edilmez.
+_force_https = config.FORCE_HTTPS
+_https_enabled = config.HTTPS_ENABLED
+
+@app.before_request
+def enforce_https():
+    """
+    HTTPS zorunlu hale getirir (production ortamında)
+    FORCE_HTTPS=True veya HTTPS_ENABLED=True olduğunda HTTP isteklerini HTTPS'e yönlendirir
+    """
+    if _force_https or _https_enabled:
+        from flask import redirect, request
+        if not request.is_secure:
+            return redirect(request.url.replace('http://', 'https://'), code=301)
+
+# Arka plan veri güncelleme servisini başlatma ve yönetme
+import atexit
+
+from infrastructure.background.outbox_processor import OutboxProcessor
+from bootstrap import get_container
+from application.transactions.handlers import register_handlers
+
+_background_workers_started = False
+_background_service = None
+_outbox_processor = None
+_event_bus = None
+
+
+def _background_workers_enabled():
+    if app.config.get('TESTING', False):
+        return False
+    if app.config.get('DISABLE_BACKGROUND_SERVICE'):
+        return False
+    if os.environ.get('DISABLE_BACKGROUND_SERVICE', 'false').lower() == 'true':
+        return False
+    return True
+
+
+def _start_background_workers():
+    global _background_workers_started, _event_bus, _outbox_processor
+    if _background_workers_started:
+        return
+    if not _background_workers_enabled():
+        logger.info("Background services disabled by configuration.")
+        _background_workers_started = True
+        return
+
+    global _background_service
+
+    try:
+        from infrastructure.background.background_service import get_background_service
+        _background_service = get_background_service()
+        _background_service.start()
+    except Exception as e:
+        logger.exception("Arka plan servisi başlatılamadı, uygulama servissiz devam edecek: %s", e)
+
+    try:
+        _event_bus = get_container().infrastructure.async_event_bus()
+        register_handlers(_event_bus)
+        _outbox_processor = OutboxProcessor(event_bus=_event_bus, app=app)
+        _outbox_processor.start(interval_seconds=5)
+    except Exception as e:
+        _outbox_processor = None
+        logger.exception("OutboxProcessor başlatılamadı: %s", e)
+
+    _background_workers_started = True
+
+
+@app.before_request
+def _initialize_background_workers_on_first_request():
+    if not _background_workers_started:
+        _start_background_workers()
+
+
+def _cleanup_database_resources():
+    """Explicitly remove DB session and dispose engine at process exit."""
+    try:
+        with app.app_context():
+            db.session.remove()
+            db.engine.dispose()
+    except Exception as exc:
+        print(f"DB cleanup failed during shutdown: {exc}", file=sys.stderr)
+
+
+# Register DB cleanup before background service shutdown so it runs last.
+atexit.register(_cleanup_database_resources)
+
+
+def _stop_background_service():
+    try:
+        if _background_service is not None:
+            _background_service.stop()
+    except Exception as exc:
+        print(f"BackgroundService stop failed during shutdown: {exc}", file=sys.stderr)
+
+atexit.register(_stop_background_service)
+
+def _stop_outbox_processor():
+    try:
+        if _outbox_processor is not None:
+            _outbox_processor.stop()
+    except Exception as exc:
+        print(f"OutboxProcessor stop failed during shutdown: {exc}", file=sys.stderr)
+
+atexit.register(_stop_outbox_processor)
+
+
+def _shutdown_event_bus():
+    try:
+        if _event_bus is not None and hasattr(_event_bus, 'shutdown'):
+            _event_bus.shutdown(wait=False)
+    except Exception as exc:
+        print(f"EventBus shutdown failed during shutdown: {exc}", file=sys.stderr)
+
+atexit.register(_shutdown_event_bus)
+
+if __name__ == '__main__':
+    # Lokal geliştirme için tarayıcı açma fonksiyonu
+    import time
+    import urllib.request
+    import webbrowser
+    from threading import Thread
+
+    def open_browser():
+        """
+        Sunucu gerçekten hazır olduğunda tarayıcıyı açar.
+        Sabit bekleme yerine health-check polling kullanır — race condition'ı önler.
+        """
+        url = "http://127.0.0.1:5000"
+        max_attempts = 30          # toplam ~15 saniye dene
+        interval = 0.5              # her 500ms'de bir kontrol et
+
+        for attempt in range(max_attempts):
+            try:
+                urllib.request.urlopen(url, timeout=1)
+                webbrowser.open(url)
+                logger.info("Sunucu hazır, tarayıcı açıldı (deneme: %d)", attempt + 1)
+                return
+            except Exception:
+                time.sleep(interval)
+
+        logger.warning("Sunucu %d denemede yanıt vermedi, tarayıcı açılmadı.", max_attempts)
+
+    # Ayrı bir thread'de health-check polling başlat (sunucu bloklanmasın)
+    Thread(target=open_browser, daemon=True).start()
+    # Windows stabilitesi için debug=False önerilir
+    # Geliştirme aşamasında hataları görmek için debug=True yapıldı
+    _start_background_workers()
+    app.run(host='127.0.0.1', port=5000, debug=True, use_reloader=False)

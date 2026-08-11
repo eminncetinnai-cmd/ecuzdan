@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Davet ile Kayıt Ol - E-Cüzdan</title>
+    <style>
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .auth-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .auth-header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .auth-header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .auth-form .form-group {
+            margin-bottom: 20px;
+        }
+
+        .auth-form label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .auth-form input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .auth-form input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .auth-form input[readonly] {
+            background-color: #f5f5f5;
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .auth-footer p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .auth-footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-error {
+            background-color: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+        }
+
+        .alert-success {
+            background-color: #efe;
+            color: #3c3;
+            border: 1px solid #cfc;
+        }
+
+        .alert-warning {
+            background-color: #ffd;
+            color: #963;
+            border: 1px solid #fc6;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #653a91 100%);
+        }
+    </style>
+</head>
+<body>
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1>Davet ile Kayıt Ol</h1>
+            <p>{{ email }} adresine davet edildiniz</p>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form method="POST" action="{{ url_for('auth.register_with_invite', token=token) }}" class="auth-form">
+            <div class="form-group">
+                <label for="full_name">Ad Soyad</label>
+                <input type="text" id="full_name" name="full_name" required 
+                       placeholder="Adınız ve soyadınız">
+            </div>
+            
+            <div class="form-group">
+                <label for="email">E-posta</label>
+                <input type="email" id="email" name="email" value="{{ email }}" readonly
+                       style="background-color: #f5f5f5;">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Şifre</label>
+                <input type="password" id="password" name="password" required 
+                       placeholder="En az 8 karakter" minlength="8">
+            </div>
+            
+            <div class="form-group">
+                <label for="confirm_password">Şifre Tekrar</label>
+                <input type="password" id="confirm_password" name="confirm_password" required 
+                       placeholder="Şifrenizi tekrar girin" minlength="8">
+            </div>
+            
+            <button type="submit" class="btn">Kayıt Ol</button>
+        </form>
+        
+        <div class="auth-footer">
+            <p>Zaten hesabınız var mı? <a href="{{ url_for('auth.login') }}">Giriş Yap</a></p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

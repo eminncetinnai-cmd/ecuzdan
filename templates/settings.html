@@ -1,0 +1,897 @@
+{% extends "layout.html" %}
+{% block content %}
+{#
+  Ayarlar sayfası — sekmeli mimari (Faz 1).
+  Sekmeler: Profil & Güvenlik · Finansal Tercihler · Dil & Bölge · Veri & Yedekleme · Aile & Ortak Bütçe
+  Kullanıcı oluşturma/silme bu sayfadan kaldırıldı; kanonik yer /admin/users ve /tenant/users.
+#}
+{% set can_manage_household = current_user.role in ['sistem_yoneticisi', 'tenant_admin', 'tenant_yoneticisi'] %}
+{# Kendi tenant'ını dışa aktarmak temel bir kullanıcı hakkıdır; sekme herkese açık.
+   Toplu demo veri yazımı ve platform yedeği içeride ayrıca yetki ister. #}
+{% set can_manage_data = True %}
+{% set can_load_demo_data = current_user.has_admin_access %}
+<style>
+    .settings-section {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .password-strength-bar {
+        height: 4px;
+        border-radius: 2px;
+        transition: all 0.3s ease;
+    }
+    .settings-tab {
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+    .settings-tab[aria-selected="true"] {
+        background: linear-gradient(to right, #4f46e5, #4338ca);
+        color: #fff;
+        box-shadow: 0 4px 14px -4px rgba(79, 70, 229, 0.6);
+    }
+    .settings-tab[aria-selected="false"]:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+    .currency-option input:checked + div {
+        border-color: #4f46e5;
+        background: rgba(79, 70, 229, 0.06);
+        box-shadow: inset 0 0 0 1px #4f46e5;
+    }
+</style>
+
+<div class="max-w-5xl mx-auto space-y-4 mb-10">
+    <!-- Header -->
+    <div class="mb-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-2xl font-black text-slate-900 tracking-tighter uppercase leading-none bg-gradient-to-r from-slate-900 via-indigo-800 to-slate-900 bg-clip-text text-transparent">{{ _('nav_system_settings') }}</h2>
+            </div>
+            <div class="flex items-center space-x-2 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg">
+                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                <span class="text-[10px] font-bold text-emerald-700 uppercase">{{ _('system_active') if _('system_active') != 'system_active' else 'Sistem Aktif' }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="premium-card bg-white/80 p-1.5 shadow-lg overflow-x-auto">
+        <div class="flex items-center gap-1 min-w-max" role="tablist" aria-label="Ayarlar bölümleri">
+            <button type="button" role="tab" data-tab="profile" aria-selected="true"
+                    class="settings-tab flex items-center gap-2 px-4 py-2.5 rounded-lg font-black text-[10px] uppercase tracking-wider text-slate-500">
+                <span class="text-sm">👤</span> Profil &amp; Güvenlik
+            </button>
+            <button type="button" role="tab" data-tab="finance" aria-selected="false"
+                    class="settings-tab flex items-center gap-2 px-4 py-2.5 rounded-lg font-black text-[10px] uppercase tracking-wider text-slate-500">
+                <span class="text-sm">⚙️</span> Finansal Tercihler
+            </button>
+            <button type="button" role="tab" data-tab="locale" aria-selected="false"
+                    class="settings-tab flex items-center gap-2 px-4 py-2.5 rounded-lg font-black text-[10px] uppercase tracking-wider text-slate-500">
+                <span class="text-sm">🌐</span> Dil &amp; Görünüm
+            </button>
+            {% if can_manage_data %}
+            <button type="button" role="tab" data-tab="data" aria-selected="false"
+                    class="settings-tab flex items-center gap-2 px-4 py-2.5 rounded-lg font-black text-[10px] uppercase tracking-wider text-slate-500">
+                <span class="text-sm">💾</span> Veri &amp; Yedekleme
+            </button>
+            {% endif %}
+            {% if can_manage_household %}
+            <button type="button" role="tab" data-tab="household" aria-selected="false"
+                    class="settings-tab flex items-center gap-2 px-4 py-2.5 rounded-lg font-black text-[10px] uppercase tracking-wider text-slate-500">
+                <span class="text-sm">👥</span> Aile &amp; Ortak Bütçe
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ============ SEKME 1: PROFİL & GÜVENLİK ============ -->
+    <div data-panel="profile" class="settings-panel space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Profil Resmi -->
+            <div class="settings-section premium-card p-5 bg-white/80 border-l-4 border-emerald-600 shadow-lg">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="bg-emerald-100 p-2 rounded-lg">
+                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">{{ _('settings_profile_image') }}</h3>
+                </div>
+                <form method="post" enctype="multipart/form-data" class="flex flex-col items-center gap-3">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="action" value="update_profile">
+
+                    <div class="relative group">
+                        <div class="w-16 h-16 rounded-xl bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden shadow-inner transition group-hover:border-emerald-400">
+                            {% if current_user.profile_image %}
+                                <img src="{{ current_user.profile_image }}" class="w-full h-full object-cover" alt="Profil">
+                            {% elif current_user.avatar_url %}
+                                <img src="{{ current_user.avatar_url }}" class="w-full h-full object-cover" alt="Profil">
+                            {% else %}
+                                <span class="text-2xl font-black text-slate-300">{{ current_user.username[0]|upper }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="absolute -bottom-1 -right-1 bg-emerald-500 text-white p-1 rounded-lg shadow-lg">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
+                        </div>
+                    </div>
+
+                    <div class="w-full flex flex-col gap-2">
+                        <input type="file" name="profile_image" accept="image/*" class="text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[9px] file:font-black file:uppercase file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 transition">
+                        <button type="submit" class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-black text-[9px] uppercase tracking-wider shadow-lg hover:shadow-xl transition">{{ _('update_image') if _('update_image') != 'update_image' else 'Güncelle' }}</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Kimlik Doğrulama / Şifre -->
+            <div class="settings-section premium-card p-5 bg-white/80 border-l-4 border-indigo-600 shadow-lg">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="bg-indigo-100 p-2 rounded-lg">
+                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    </div>
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">{{ _('settings_password_update') }}</h3>
+                </div>
+
+                {% if current_user.auth_provider and current_user.auth_provider != 'LOCAL' %}
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="bg-white border border-slate-200 px-2 py-1 rounded text-[9px] font-black uppercase tracking-wider text-slate-700">{{ current_user.auth_provider }}</span>
+                        {% if current_user.email_verified %}
+                        <span class="bg-emerald-100 text-emerald-700 border border-emerald-200 px-2 py-1 rounded text-[8px] font-bold uppercase">Doğrulanmış</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-[10px] text-slate-500 font-medium leading-relaxed">
+                        Hesabınız <strong>{{ current_user.auth_provider }}</strong> ile bağlı. Şifreniz sağlayıcı tarafında yönetildiği için buradan değiştirilemez.
+                    </p>
+                </div>
+                {% else %}
+                <form method="post" class="space-y-3" onsubmit="return validatePasswordForm(this)">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="action" value="change_pw">
+                    <div>
+                        <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">Yeni Şifre</label>
+                        <input type="password" id="new_password" name="new_pw" placeholder="En az 8 karakter" class="w-full p-2.5 border border-slate-200 rounded-lg bg-slate-50 text-xs focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition font-bold" required oninput="checkPasswordStrength(this.value)">
+                        <div class="mt-1.5">
+                            <div class="flex space-x-1">
+                                <div id="strength-1" class="password-strength-bar flex-1 bg-slate-200"></div>
+                                <div id="strength-2" class="password-strength-bar flex-1 bg-slate-200"></div>
+                                <div id="strength-3" class="password-strength-bar flex-1 bg-slate-200"></div>
+                                <div id="strength-4" class="password-strength-bar flex-1 bg-slate-200"></div>
+                            </div>
+                            <p id="strength-text" class="text-[8px] font-bold text-slate-400 uppercase mt-0.5">Şifre gücü: Zayıf</p>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">Şifre Tekrar</label>
+                        <input type="password" id="confirm_password" placeholder="Şifreyi tekrar girin" class="w-full p-2.5 border border-slate-200 rounded-lg bg-slate-50 text-xs focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition font-bold" required>
+                    </div>
+                    <button type="submit" class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-6 py-2.5 rounded-lg font-black text-[9px] uppercase tracking-wider shadow-lg hover:shadow-xl transition">Şifreyi Güncelle</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Hesap Özeti -->
+        <div class="settings-section premium-card p-5 bg-white/80 border-l-4 border-slate-400 shadow-lg">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="bg-slate-100 p-2 rounded-lg">
+                    <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                </div>
+                <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">Hesap Bilgileri</h3>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                    <div class="text-[8px] font-bold text-slate-400 uppercase mb-1">Kullanıcı Adı</div>
+                    <div class="text-xs font-black text-slate-800 truncate">{{ current_user.username }}</div>
+                </div>
+                <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                    <div class="text-[8px] font-bold text-slate-400 uppercase mb-1">Rol</div>
+                    <div class="text-xs font-black text-slate-800 truncate">{{ current_user.role_labels|join(', ') }}</div>
+                </div>
+                <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                    <div class="text-[8px] font-bold text-slate-400 uppercase mb-1">Son Giriş</div>
+                    <div class="text-xs font-black text-slate-800 truncate">{{ current_user.last_login_at.strftime('%d.%m.%Y %H:%M') if current_user.last_login_at else '—' }}</div>
+                </div>
+                <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                    <div class="text-[8px] font-bold text-slate-400 uppercase mb-1">Workspace</div>
+                    <div class="text-xs font-black text-slate-800 truncate">{{ current_user.tenant_id }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Oturum Güvenliği -->
+        <div class="settings-section premium-card p-5 bg-white/80 border-l-4 border-rose-400 shadow-lg">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="bg-rose-100 p-2 rounded-lg">
+                    <svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">Oturum Güvenliği</h3>
+                    <span class="text-[8px] font-bold text-slate-400 uppercase">Tek oturum politikası aktif</span>
+                </div>
+            </div>
+
+            <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3 mb-3 flex gap-2 items-start">
+                <span class="text-base flex-shrink-0">🔒</span>
+                <div class="text-[9px] text-emerald-700 leading-relaxed font-medium">
+                    Bu hesapta aynı anda <strong>yalnızca tek bir oturum</strong> açık olabilir. Başka bir cihazdan
+                    giriş yapıldığında önceki oturum otomatik kapatılır — bu yüzden ayrı bir "aktif cihazlar"
+                    listesi bulunmaz.
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                    <div class="text-[8px] font-bold text-slate-400 uppercase mb-1">Bu Oturum</div>
+                    <div class="text-xs font-black text-slate-800">Aktif</div>
+                </div>
+                <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                    <div class="text-[8px] font-bold text-slate-400 uppercase mb-1">Şifre Son Değişim</div>
+                    <div class="text-xs font-black text-slate-800">
+                        {{ current_user.password_changed_at.strftime('%d.%m.%Y') if current_user.password_changed_at else 'Hiç değiştirilmedi' }}
+                    </div>
+                </div>
+            </div>
+
+            <form method="post" action="/logout_other_devices" class="inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit"
+                            onclick="return confirmSettingSubmit(this.form, 'Diğer Cihazlardan Çık', 'Bu oturum dışındaki tüm oturumlar kapatılacak. Devam edilsin mi?', false)"
+                        class="bg-rose-600 text-white px-4 py-2 rounded-lg font-black text-[9px] uppercase tracking-wider shadow hover:bg-rose-700 transition">
+                    Diğer Cihazlardan Çıkış Yap
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============ SEKME 2: FİNANSAL TERCİHLER ============ -->
+    <div data-panel="finance" class="settings-panel space-y-4 hidden">
+        <div class="settings-section premium-card p-5 bg-white/80 border-l-4 border-indigo-600 shadow-lg">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="bg-indigo-100 p-2 rounded-lg">
+                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">Ana Para Birimi</h3>
+                    <span class="text-[8px] font-bold text-slate-400 uppercase">Raporlama ve portföy değerlemesi bu birimde yapılır</span>
+                </div>
+            </div>
+
+            <p class="text-[10px] text-slate-500 font-medium leading-relaxed mb-3">
+                Farklı para birimlerindeki varlık ve işlemleriniz, net değer ve performans hesaplarında seçtiğiniz
+                birime çevrilir. Bu ayar yalnızca <strong>sizin hesabınız</strong> için geçerlidir; workspace varsayılanını değiştirmez.
+            </p>
+
+            <form method="post" class="space-y-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="change_base_currency">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {% for code, meta in base_currency_choices %}
+                    <label class="currency-option cursor-pointer">
+                        <input type="radio" name="base_currency" value="{{ code }}" class="sr-only" {% if current_base_currency == code %}checked{% endif %}>
+                        <div class="flex items-center justify-between p-3 rounded-xl border-2 border-slate-100 bg-slate-50/50 hover:border-indigo-200 transition">
+                            <span class="text-lg font-black text-slate-700">{{ meta.symbol }}</span>
+                            <div class="text-right">
+                                <div class="font-black text-[10px] uppercase tracking-wider text-slate-700">{{ code }}</div>
+                                <div class="text-[8px] font-bold text-slate-400 truncate">{{ meta.name }}</div>
+                            </div>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+                <button type="submit" class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-6 py-2.5 rounded-lg font-black text-[9px] uppercase tracking-wider shadow-lg hover:shadow-xl transition">
+                    Para Birimini Kaydet
+                </button>
+            </form>
+        </div>
+
+        <!-- FIRE / Emeklilik Hedefleri ve Analiz Varsayımları -->
+        <div class="settings-section premium-card p-5 bg-white/80 border-l-4 border-emerald-600 shadow-lg">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="bg-emerald-100 p-2 rounded-lg">
+                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">Finansal Bağımsızlık Hedefleri</h3>
+                    <span class="text-[8px] font-bold text-slate-400 uppercase">Finansal Özgürlük analizinde kullanılan varsayımlar</span>
+                </div>
+            </div>
+
+            <p class="text-[10px] text-slate-500 font-medium leading-relaxed mb-4">
+                Boş bıraktığınız alanlarda literatür varsayılanları kullanılır
+                (Trinity %4 çekim kuralı, {{ engine_defaults.emergency_fund_months }} ay acil fon).
+                Girdiğiniz değerler <strong>Finansal Özgürlük</strong> sayfasındaki skorları, FI hedefini ve kilometre taşlarını doğrudan değiştirir.
+            </p>
+
+            <form method="post" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="update_preferences">
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">Doğum Yılı</label>
+                        <input type="number" name="birth_year" min="1900" max="{{ current_year }}" step="1"
+                               value="{{ preferences.birth_year if preferences and preferences.birth_year else '' }}"
+                               placeholder="1985"
+                               class="w-full p-2.5 border border-slate-200 rounded-lg bg-slate-50 text-xs focus:ring-2 focus:ring-emerald-500 outline-none transition font-bold">
+                    </div>
+                    <div>
+                        <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">Hedef Emeklilik Yaşı</label>
+                        <input type="number" name="target_retirement_age" min="18" max="100" step="1"
+                               value="{{ preferences.target_retirement_age if preferences and preferences.target_retirement_age else '' }}"
+                               placeholder="55"
+                               class="w-full p-2.5 border border-slate-200 rounded-lg bg-slate-50 text-xs focus:ring-2 focus:ring-emerald-500 outline-none transition font-bold">
+                    </div>
+                    <div>
+                        <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">Hedef Aylık Pasif Gelir</label>
+                        <input type="number" name="target_monthly_passive_income" min="0" step="0.01"
+                               value="{{ preferences.target_monthly_passive_income if preferences and preferences.target_monthly_passive_income else '' }}"
+                               placeholder="Boşsa aylık gideriniz baz alınır"
+                               class="w-full p-2.5 border border-slate-200 rounded-lg bg-slate-50 text-xs focus:ring-2 focus:ring-emerald-500 outline-none transition font-bold">
+                    </div>
+                </div>
+
+                {% if preferences and preferences.target_retirement_year %}
+                <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                    <p class="text-[9px] text-emerald-700 font-semibold">
+                        Hedef finansal bağımsızlık yılınız: <strong>{{ preferences.target_retirement_year }}</strong>
+                    </p>
+                </div>
+                {% endif %}
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">Acil Durum Fonu Hedefi (Ay)</label>
+                        <input type="number" name="emergency_fund_target_months" min="1" max="60" step="1"
+                               value="{{ preferences.emergency_fund_target_months if preferences and preferences.emergency_fund_target_months else '' }}"
+                               placeholder="Varsayılan: {{ engine_defaults.emergency_fund_months }}"
+                               class="w-full p-2.5 border border-slate-200 rounded-lg bg-slate-50 text-xs focus:ring-2 focus:ring-emerald-500 outline-none transition font-bold">
+                        <p class="text-[8px] text-slate-400 font-semibold mt-1">Ramsey: 3–6 ay · muhafazakâr: 12 ay</p>
+                    </div>
+                    <div>
+                        <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">Güvenli Çekim Oranı (%)</label>
+                        <input type="number" name="safe_withdrawal_rate" min="2" max="10" step="0.1"
+                               value="{{ '%.1f'|format(preferences.safe_withdrawal_rate * 100) if preferences and preferences.safe_withdrawal_rate else '' }}"
+                               placeholder="Varsayılan: {{ '%.1f'|format(engine_defaults.safe_withdrawal_rate_pct) }}"
+                               class="w-full p-2.5 border border-slate-200 rounded-lg bg-slate-50 text-xs focus:ring-2 focus:ring-emerald-500 outline-none transition font-bold">
+                        <p class="text-[8px] text-slate-400 font-semibold mt-1">FI çarpanı bunun tersidir: %4 → 25× · %3 → 33×</p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                    <label class="text-[8px] font-bold text-slate-400 uppercase block mb-2">Risksiz Faiz Oranı (Sharpe hesabı)</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="risk_free_rate_mode" value="auto" id="rf_mode_auto"
+                                   {% if not preferences or preferences.risk_free_rate_mode != 'manual' %}checked{% endif %}
+                                   class="w-4 h-4 text-emerald-600 focus:ring-emerald-500">
+                            <span class="text-[10px] font-bold text-slate-700">
+                                TCMB otomatik
+                                {% if engine_defaults.risk_free_rate_pct is not none %}
+                                <span class="text-slate-400">(şu an %{{ '%.1f'|format(engine_defaults.risk_free_rate_pct) }})</span>
+                                {% endif %}
+                            </span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="risk_free_rate_mode" value="manual" id="rf_mode_manual"
+                                   {% if preferences and preferences.risk_free_rate_mode == 'manual' %}checked{% endif %}
+                                   class="w-4 h-4 text-emerald-600 focus:ring-emerald-500">
+                            <span class="text-[10px] font-bold text-slate-700">Manuel oran gir</span>
+                        </label>
+                        <div id="rf_manual_container" class="{% if not preferences or preferences.risk_free_rate_mode != 'manual' %}hidden{% endif %} pl-6">
+                            <input type="number" name="risk_free_rate_manual" min="0" max="200" step="0.1"
+                                   value="{{ '%.1f'|format(preferences.risk_free_rate_manual * 100) if preferences and preferences.risk_free_rate_manual else '' }}"
+                                   placeholder="Örn. 45.0"
+                                   class="w-full md:w-1/2 p-2.5 border border-slate-200 rounded-lg bg-white text-xs focus:ring-2 focus:ring-emerald-500 outline-none transition font-bold">
+                            <p class="text-[8px] text-slate-400 font-semibold mt-1">Yüzde olarak girin (45 = %45)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-6 py-2.5 rounded-lg font-black text-[9px] uppercase tracking-wider shadow-lg hover:shadow-xl transition">
+                    Hedefleri Kaydet
+                </button>
+            </form>
+        </div>
+
+        <!-- Bildirim Tercihleri -->
+        <div class="settings-section premium-card p-5 bg-white/80 border-l-4 border-amber-500 shadow-lg">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="bg-amber-100 p-2 rounded-lg">
+                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">Bildirimler</h3>
+                    <span class="text-[8px] font-bold text-slate-400 uppercase">Üst bardaki zil simgesinde görünür</span>
+                </div>
+            </div>
+
+            <p class="text-[10px] text-slate-500 font-medium leading-relaxed mb-3">
+                Bildirimler <strong>uygulama içinde</strong> gösterilir; e-posta veya push gönderimi yoktur.
+                Kurallar zile bastığınızda güncel verinize göre yeniden değerlendirilir.
+            </p>
+
+            <form method="post" class="space-y-3" id="notifyForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="update_notifications">
+
+                <label class="flex items-start gap-3 cursor-pointer">
+                    <input type="checkbox" name="notify_budget" class="mt-0.5 w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500"
+                           {% if not preferences or preferences.notify_budget %}checked{% endif %}>
+                    <div>
+                        <div class="font-black text-[10px] uppercase tracking-wider text-slate-700">Bütçe aşım uyarısı</div>
+                        <p class="text-[9px] text-slate-400 font-semibold mt-0.5">
+                            Bütçe limiti tanımlı gider kategorilerinde %80'e ulaşınca uyarı, %100'ü aşınca kritik bildirim.
+                        </p>
+                    </div>
+                </label>
+
+                <label class="flex items-start gap-3 cursor-pointer">
+                    <input type="checkbox" name="notify_payments" class="mt-0.5 w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500"
+                           {% if not preferences or preferences.notify_payments %}checked{% endif %}>
+                    <div>
+                        <div class="font-black text-[10px] uppercase tracking-wider text-slate-700">Ödeme hatırlatıcısı</div>
+                        <p class="text-[9px] text-slate-400 font-semibold mt-0.5">
+                            Bekleyen taksit ve ödemelerin vadesi yaklaşınca ve geciktiğinde bildirim.
+                        </p>
+                    </div>
+                </label>
+
+                <div>
+                    <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">Kaç gün önceden hatırlatılsın?</label>
+                    <input type="number" name="payment_reminder_days" min="0" max="30" step="1"
+                           value="{{ preferences.payment_reminder_days if preferences and preferences.payment_reminder_days is not none else 3 }}"
+                           class="w-full md:w-40 p-2.5 border border-slate-200 rounded-lg bg-slate-50 text-xs focus:ring-2 focus:ring-amber-500 outline-none transition font-bold">
+                </div>
+
+                <button type="submit" class="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-2.5 rounded-lg font-black text-[9px] uppercase tracking-wider shadow-lg hover:shadow-xl transition">
+                    Bildirim Tercihlerini Kaydet
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============ SEKME 3: DİL & BÖLGE ============ -->
+    <div data-panel="locale" class="settings-panel space-y-4 hidden">
+        <div class="settings-section premium-card p-5 bg-white/80 border-l-4 border-amber-500 shadow-lg">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="bg-amber-100 p-2 rounded-lg">
+                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 0h7M11 21l5-10 5 10M12.751 5c1.382 4.07 4.254 7.315 7.749 9.15M7.751 5C6.369 9.07 3.497 12.315 0 14.15"></path></svg>
+                </div>
+                <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">{{ _('settings_language_preference') }}</h3>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <button type="button" onclick="changeLang('tr')" class="flex items-center justify-between p-3 rounded-xl border-2 transition all-200 {% if lang == 'tr' %}border-amber-500 bg-amber-50/50{% else %}border-slate-100 bg-slate-50/50 hover:border-amber-200{% endif %}">
+                    <span class="text-xl">🇹🇷</span>
+                    <span class="font-black text-[10px] uppercase tracking-wider text-slate-700">Türkçe</span>
+                </button>
+                <button type="button" onclick="changeLang('en')" class="flex items-center justify-between p-3 rounded-xl border-2 transition all-200 {% if lang == 'en' %}border-amber-500 bg-amber-50/50{% else %}border-slate-100 bg-slate-50/50 hover:border-amber-200{% endif %}">
+                    <span class="text-xl">🇬🇧</span>
+                    <span class="font-black text-[10px] uppercase tracking-wider text-slate-700">English</span>
+                </button>
+                <button type="button" onclick="changeLang('it')" class="flex items-center justify-between p-3 rounded-xl border-2 transition all-200 {% if lang == 'it' %}border-amber-500 bg-amber-50/50{% else %}border-slate-100 bg-slate-50/50 hover:border-amber-200{% endif %}">
+                    <span class="text-xl">🇮🇹</span>
+                    <span class="font-black text-[10px] uppercase tracking-wider text-slate-700">Italiano</span>
+                </button>
+                <button type="button" onclick="changeLang('de')" class="flex items-center justify-between p-3 rounded-xl border-2 transition all-200 {% if lang == 'de' %}border-amber-500 bg-amber-50/50{% else %}border-slate-100 bg-slate-50/50 hover:border-amber-200{% endif %}">
+                    <span class="text-xl">🇩🇪</span>
+                    <span class="font-black text-[10px] uppercase tracking-wider text-slate-700">Deutsch</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tema -->
+        <div class="settings-section premium-card p-5 bg-white/80 border-l-4 border-slate-700 shadow-lg">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="bg-slate-100 p-2 rounded-lg">
+                    <svg class="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">Görünüm</h3>
+                    <span class="text-[8px] font-bold text-slate-400 uppercase">Açık / koyu mod tercihi</span>
+                </div>
+            </div>
+
+            <form method="post" class="space-y-3" id="themeForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="change_theme">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {% set current_theme = preferences.theme if preferences and preferences.theme else 'light' %}
+                    {% for value, icon, label, desc in [
+                        ('light',  '☀️', 'Açık Mod',   'Klasik aydınlık görünüm'),
+                        ('dark',   '🌙', 'Koyu Mod',   'Düşük ışıkta göz yormaz'),
+                        ('system', '🖥️', 'Sistem',     'İşletim sistemini izler')
+                    ] %}
+                    <label class="currency-option cursor-pointer">
+                        <input type="radio" name="theme" value="{{ value }}" class="sr-only"
+                               {% if current_theme == value %}checked{% endif %}
+                               onchange="document.getElementById('themeForm').submit()">
+                        <div class="flex items-center gap-3 p-3 rounded-xl border-2 border-slate-100 bg-slate-50/50 hover:border-indigo-200 transition">
+                            <span class="text-xl">{{ icon }}</span>
+                            <div>
+                                <div class="font-black text-[10px] uppercase tracking-wider text-slate-700">{{ label }}</div>
+                                <div class="text-[8px] font-bold text-slate-400">{{ desc }}</div>
+                            </div>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+                <p class="text-[9px] text-slate-400 font-semibold">Seçim anında kaydedilir ve tüm sayfalara uygulanır.</p>
+            </form>
+
+            <div class="border-t border-slate-100 mt-5 pt-4">
+                <form method="post" id="privacyForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="action" value="set_privacy_mode">
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="checkbox" name="privacy_mode" class="mt-0.5 w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                               {% if preferences and preferences.privacy_mode %}checked{% endif %}
+                               onchange="document.getElementById('privacyForm').submit()">
+                        <div>
+                            <div class="font-black text-[10px] uppercase tracking-wider text-slate-700">🙈 Gizlilik Modu</div>
+                            <p class="text-[9px] text-slate-400 font-semibold leading-relaxed mt-0.5">
+                                Ekrandaki tüm para tutarlarını ve grafikleri bulanıklaştırır; halka açık ortamlarda
+                                omuz üstü bakışlara karşı korur. Bir tutarın üzerine gelerek tek tek görebilirsiniz.
+                                Üst bardaki göz simgesiyle de anında açıp kapatabilirsiniz.
+                            </p>
+                        </div>
+                    </label>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% if can_manage_data %}
+    <!-- ============ SEKME 4: VERİ & YEDEKLEME ============ -->
+    <div data-panel="data" class="settings-panel space-y-4 hidden">
+        <!-- Yedekleme & Geri Yükleme -->
+        <div class="settings-section premium-card p-5 bg-white/80 border-l-4 border-indigo-600 shadow-lg">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="bg-indigo-100 p-2 rounded-lg">
+                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 7v10c0 1.1.9 2 2 2h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2zm14 0h-4M4 7h4m0 0v10m12-10v10M8 7h8"/></svg>
+                </div>
+                <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">Yedekleme &amp; Geri Yükleme</h3>
+            </div>
+
+            <!-- Tenant Export (her admin görebilir) -->
+            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-4">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-base">🏢</span>
+                    <h4 class="text-[10px] font-black text-emerald-800 uppercase tracking-widest">Kendi Verilerimi Yedekle</h4>
+                </div>
+                <p class="text-[10px] text-emerald-700 mb-3 font-medium leading-relaxed">
+                    Yalnızca <strong>sizin tenant'ınıza ait</strong> işlemler, planlar ve varlıklar indirilir. Başka kullanıcıların verisi dahil edilmez.
+                </p>
+                <button type="button" onclick="exportTenantBackup()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-black text-[9px] uppercase tracking-wider shadow hover:bg-emerald-700 transition flex items-center gap-2">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    Tenant Yedeğimi İndir
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Tam DB Export (sadece sistem_yoneticisi) -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <div class="flex items-center gap-2 mb-1">
+                        <h4 class="text-[10px] font-black text-slate-700 uppercase tracking-widest">Tam Platform Yedeği</h4>
+                        {% if not current_user.is_super_admin %}
+                        <span class="bg-rose-100 text-rose-600 px-2 py-0.5 rounded text-[8px] font-bold border border-rose-200">Sadece Platform Sahibi</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-[10px] text-slate-500 mb-3 font-medium leading-relaxed">
+                        Tüm tenantların verilerini içeren tam platform yedeği.
+                        {% if not current_user.is_super_admin %}<strong class="text-rose-600">Bu işlem yalnızca sistem yöneticisine açıktır.</strong>{% endif %}
+                    </p>
+
+                    {% if current_user.is_super_admin %}
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="encrypt_backup" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                            <label for="encrypt_backup" class="text-[9px] text-slate-600 font-semibold">Şifreli Yedek (AES-256)</label>
+                        </div>
+                        <div id="backup_password_container" class="hidden">
+                            <input type="password" id="backup_password" placeholder="Yedek şifresi" class="w-full p-2 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 outline-none font-bold">
+                        </div>
+                        <button type="button" onclick="exportBackup()" class="w-full bg-indigo-600 text-white px-4 py-2.5 rounded-lg font-black text-[9px] uppercase tracking-wider shadow-lg hover:bg-indigo-700 transition">
+                            <svg class="w-3 h-3 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Tam Yedek İndir
+                        </button>
+                    </div>
+                    {% else %}
+                    <div class="text-[9px] text-slate-400 italic">Bu bölüme erişim yetkiniz yok.</div>
+                    {% endif %}
+                </div>
+
+                <!-- Import (sadece sistem_yoneticisi) -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <div class="flex items-center gap-2 mb-1">
+                        <h4 class="text-[10px] font-black text-slate-700 uppercase tracking-widest">Yedek Geri Yükle</h4>
+                        {% if not current_user.is_super_admin %}
+                        <span class="bg-rose-100 text-rose-600 px-2 py-0.5 rounded text-[8px] font-bold border border-rose-200">Sadece Platform Sahibi</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-[10px] text-slate-500 mb-3 font-medium leading-relaxed">Daha önce alınan tam platform yedeğini geri yükler.</p>
+                    {% if current_user.is_super_admin %}
+                    <form action="/import_db_json" method="POST" enctype="multipart/form-data" class="space-y-2">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="relative">
+                            <input type="file" name="db_file" accept=".json" class="w-full text-[9px] text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[9px] file:font-black file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" required>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="import_encrypted" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                            <label for="import_encrypted" class="text-[9px] text-slate-600 font-semibold">Şifreli Yedek</label>
+                        </div>
+                        <div id="import_password_container" class="hidden">
+                            <input type="password" name="backup_password" placeholder="Yedek şifresi" class="w-full p-2 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 outline-none font-bold">
+                        </div>
+                        <button type="submit" onclick="return confirmSettingSubmit(this.form, 'Veritabanı İçe Aktar', 'Veritabanı içe aktarılacak. Emin misiniz?', false)" class="w-full bg-slate-800 text-white px-4 py-2.5 rounded-lg font-black text-[9px] uppercase tracking-wider shadow-lg hover:bg-slate-900 transition">
+                            <svg class="w-3 h-3 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            Yedek Yükle
+                        </button>
+                    </form>
+                    {% else %}
+                    <div class="text-[9px] text-slate-400 italic">Bu bölüme erişim yetkiniz yok.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if can_reset_data %}
+        <div class="settings-section premium-card p-5 border-2 border-rose-500/50 bg-gradient-to-br from-rose-50/30 to-rose-100/20 shadow-xl shadow-rose-500/10">
+            <div class="flex items-center mb-3">
+                <div class="bg-rose-500 p-2 rounded-lg mr-3">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                </div>
+                <div class="flex-grow">
+                    <h3 class="text-sm font-black text-rose-600 uppercase tracking-tight">Tehlike Bölgesi</h3>
+                    <p class="text-[9px] text-rose-500 font-semibold mt-1">Yalnızca Veri &amp; Yedekleme sekmesinde kullanılabilecek kalıcı işlemler.</p>
+                </div>
+            </div>
+            <div id="danger-zone-content">
+                <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3 flex gap-2 items-start">
+                    <span class="text-base flex-shrink-0">🏢</span>
+                    <div>
+                        <div class="text-[9px] font-black text-amber-800 uppercase tracking-wide mb-0.5">Tenant-Scope Sıfırlama</div>
+                        <div class="text-[9px] text-amber-700 leading-relaxed">
+                            Bu işlem yalnızca <strong>kendi workspace'inizdeki</strong> finansal verileri siler. Diğer kullanıcıların veya başka tenantların verileri etkilenmez.
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white/60 rounded-lg p-4 border border-rose-200">
+                    <p class="text-[10px] text-rose-600 font-bold mb-3 uppercase tracking-wider leading-relaxed">⚠️ Tüm işlemler, planlar ve varlıklar kalıcı olarak silinecektir.</p>
+                    <form action="/reset_data" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-3" id="resetDataForm">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="password" name="reset_pass" placeholder="Onay için mevcut şifreniz" class="p-2 border border-rose-300 rounded-lg text-[10px] bg-white focus:ring-2 focus:ring-rose-500 outline-none font-bold" required>
+                        <button type="submit" class="bg-rose-600 text-white rounded-lg font-black text-[9px] uppercase tracking-wider shadow-lg hover:bg-rose-700 transition">Workspace'i Sıfırla</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {% endif %}
+
+        {% if can_load_demo_data %}
+        <!-- Örnek Veri (Sandbox) -->
+        <div class="settings-section premium-card p-5 bg-white/80 border-l-4 border-green-600 shadow-lg">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="bg-green-100 p-2 rounded-lg">
+                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5 9 6.343 9 8s1.343 3 3 3zM12 14c-4.418 0-8 2.239-8 5v1h16v-1c0-2.761-3.582-5-8-5z"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">Örnek Veri Yükle</h3>
+                    <span class="text-[8px] font-bold text-slate-400 uppercase">Uygulamayı test etmek için demo veri seti</span>
+                </div>
+            </div>
+
+            <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 mb-3 flex gap-2 items-start">
+                <span class="text-base flex-shrink-0">⚠️</span>
+                <div class="text-[9px] text-rose-700 leading-relaxed font-medium">
+                    Demo veri seti <strong>kendi workspace'inize</strong> yazılır ve mevcut finansal geçmişinizle karışır.
+                    Canlı verisi olan bir hesapta kullanmayın.
+                </div>
+            </div>
+
+            <form method="post" action="/settings" class="space-y-3" id="adminAutoDataForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" id="adminAutoDataAction" value="admin_advanced_fill">
+                <div>
+                    <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">Onay için şifreniz</label>
+                    <input type="password" name="admin_pass" placeholder="Şifreniz" class="w-full md:w-1/2 p-2.5 border border-slate-200 rounded-lg bg-slate-50 text-xs focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition font-bold" required>
+                </div>
+                <div class="bg-indigo-50 p-3 rounded-lg border border-indigo-100">
+                    <p class="text-[9px] text-indigo-700 font-semibold leading-relaxed">
+                        <strong>3 Yıllık Gelişmiş Veri:</strong> Mantıklı gelir-gider-yatırım dengesi ile gerçekçi finansal simülasyon. Aylık ortalama: ~60.500 TL gelir, ~28.000 TL gider, ~15.000 TL yatırım. Grafiklerde bu dengeyi görebilirsiniz.
+                    </p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button type="submit" onclick="return confirmSettingSubmit(this.form, '3 Yıllık Veri Gir', 'Geliştirilmiş 3 yıllık demo veri seti oluşturulacak. Bu işlem birkaç dakika sürebilir. Devam etmek istiyor musunuz?', false, 'admin_advanced_fill')" class="flex-1 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-4 py-2.5 rounded-lg font-black text-[9px] uppercase tracking-wider shadow-lg hover:shadow-xl transition">
+                        3 Yıllık Veri Gir
+                    </button>
+                    <button type="submit" onclick="return confirmSettingSubmit(this.form, 'Verileri Sil', 'Otomatik oluşturulan tüm veriler silinecek. Devam etmek istiyor musunuz?', true, 'admin_clear_data')" class="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-2.5 rounded-lg font-black text-[9px] uppercase tracking-wider shadow-lg hover:shadow-xl transition">
+                        Verileri Sil
+                    </button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if can_manage_household %}
+    <!-- ============ SEKME 5: AİLE & ORTAK BÜTÇE ============ -->
+    <div data-panel="household" class="settings-panel space-y-4 hidden">
+        <div class="settings-section premium-card p-5 bg-white/80 border-l-4 border-blue-500 shadow-lg">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="bg-blue-100 p-2 rounded-lg">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">Bütçe Paylaşımı</h3>
+                    <span class="text-[8px] font-bold text-slate-400 uppercase">Eşinizi veya aile üyenizi workspace'inize davet edin</span>
+                </div>
+            </div>
+
+            <p class="text-[10px] text-slate-500 font-medium leading-relaxed mb-4">
+                Davet ettiğiniz kişiler <strong>aynı workspace'i</strong> paylaşır: işlemler, planlar ve varlıklar ortak görünür.
+                Erişimi istediğiniz zaman kaldırabilirsiniz.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <a href="{{ url_for('tenant.invite') }}" class="flex items-center p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200 hover:shadow-md transition group">
+                    <div class="bg-green-100 p-2 rounded-lg mr-3 group-hover:bg-green-200 transition">
+                        <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"></path></svg>
+                    </div>
+                    <div>
+                        <h4 class="font-black text-slate-800 text-xs">Aile Üyesi Davet Et</h4>
+                        <p class="text-[9px] text-slate-500 font-semibold">E-posta ile davet linki gönder</p>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('tenant.invites') }}" class="flex items-center p-3 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg border border-amber-200 hover:shadow-md transition group">
+                    <div class="bg-amber-100 p-2 rounded-lg mr-3 group-hover:bg-amber-200 transition">
+                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                    </div>
+                    <div>
+                        <h4 class="font-black text-slate-800 text-xs">Bekleyen Davetler</h4>
+                        <p class="text-[9px] text-slate-500 font-semibold">Gönderilen davetleri görüntüle</p>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('tenant.users') }}" class="flex items-center p-3 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg border border-blue-200 hover:shadow-md transition group">
+                    <div class="bg-blue-100 p-2 rounded-lg mr-3 group-hover:bg-blue-200 transition">
+                        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 20h5v-1a3 3 0 00-5.356-1.857M17 20H7m10 0v-1a5.99 5.99 0 00-.75-2.906M7 20H2v-1a3 3 0 015.356-1.857M7 20v-1c0-1.06.275-2.057.75-2.906m0 0a5.002 5.002 0 019.5 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    </div>
+                    <div>
+                        <h4 class="font-black text-slate-800 text-xs">Workspace Üyeleri</h4>
+                        <p class="text-[9px] text-slate-500 font-semibold">Erişimi olan kişiler ve yetkileri</p>
+                    </div>
+                </a>
+
+                {% if current_user.role == 'sistem_yoneticisi' %}
+                <a href="{{ url_for('admin.tenants') }}" class="flex items-center p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200 hover:shadow-md transition group">
+                    <div class="bg-purple-100 p-2 rounded-lg mr-3 group-hover:bg-purple-200 transition">
+                        <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                    </div>
+                    <div>
+                        <h4 class="font-black text-slate-800 text-xs">Tenant Yönetimi</h4>
+                        <p class="text-[9px] text-slate-500 font-semibold">Platform sahibi paneli</p>
+                    </div>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+
+
+<script>
+    /* ---------- Risksiz faiz: manuel alan görünürlüğü ---------- */
+    document.querySelectorAll('input[name="risk_free_rate_mode"]').forEach(function (radio) {
+        radio.addEventListener('change', function () {
+            const manual = document.getElementById('rf_mode_manual');
+            document.getElementById('rf_manual_container')?.classList.toggle('hidden', !manual?.checked);
+        });
+    });
+
+    /* ---------- Sekme yönetimi ---------- */
+    (function initSettingsTabs() {
+        const tabs = Array.from(document.querySelectorAll('.settings-tab'));
+        const panels = Array.from(document.querySelectorAll('.settings-panel'));
+        if (!tabs.length) return;
+
+        function activate(name, persist) {
+            const target = tabs.find(t => t.dataset.tab === name) || tabs[0];
+            const activeName = target.dataset.tab;
+            tabs.forEach(t => t.setAttribute('aria-selected', String(t.dataset.tab === activeName)));
+            panels.forEach(p => p.classList.toggle('hidden', p.dataset.panel !== activeName));
+            if (persist) {
+                try { localStorage.setItem('settingsActiveTab', activeName); } catch (e) { /* storage kapalı */ }
+                history.replaceState(null, '', '#' + activeName);
+            }
+        }
+
+        tabs.forEach(t => t.addEventListener('click', () => activate(t.dataset.tab, true)));
+
+        let initial = (location.hash || '').replace('#', '');
+        if (!initial) {
+            try { initial = localStorage.getItem('settingsActiveTab') || ''; } catch (e) { initial = ''; }
+        }
+        activate(initial, false);
+    })();
+
+    function changeLang(lang) {
+        fetch('/set_language/' + lang)
+            .then(response => response.json())
+            .then(data => { if (data.status === 'success') location.reload(true); });
+    }
+
+    function checkPasswordStrength(password) {
+        let strength = 0;
+        if (password.length >= 8) strength++;
+        if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++;
+        if (password.match(/\d/)) strength++;
+        if (password.match(/[^a-zA-Z\d]/)) strength++;
+        const bars = [1,2,3,4].map(i => document.getElementById('strength-' + i));
+        const text = document.getElementById('strength-text');
+        const colors = ['#ef4444', '#f59e0b', '#84cc16', '#10b981'];
+        const labels = ['Zayıf', 'Orta', 'Güçlü', 'Çok Güçlü'];
+        bars.forEach((bar, index) => {
+            if (!bar) return;
+            bar.style.backgroundColor = index < strength ? colors[strength - 1] : '#e2e8f0';
+        });
+        if (text) { text.textContent = 'Şifre gücü: ' + (labels[strength - 1] || 'Çok Zayıf'); text.style.color = colors[strength - 1] || '#94a3b8'; }
+    }
+
+    function confirmSettingSubmit(form, title, msg, isDanger = false, actionVal = null) {
+        if (actionVal) { const el = document.getElementById('adminAutoDataAction'); if (el) el.value = actionVal; }
+        // Use native confirm for debugging
+        if (confirm(msg)) {
+            console.log('Confirmed, submitting form...');
+            form.submit();
+            return false; // Prevent double submission
+        }
+        return false; // Prevent submission if cancelled
+    }
+
+    /* Şifre eşleşme doğrulaması — client-side guard */
+    function validatePasswordForm(form) {
+        const newPw = form.querySelector('[name="new_pw"]');
+        const confirm = form.querySelector('#confirm_password');
+        if (!newPw || !confirm) return true;
+        if (newPw.value.length < 8) {
+            if (window.showToast) window.showToast('Şifre en az 8 karakter olmalıdır.', 'error');
+            else alert('Şifre en az 8 karakter olmalıdır.');
+            newPw.focus();
+            return false;
+        }
+        if (newPw.value !== confirm.value) {
+            if (window.showToast) window.showToast('Şifreler eşleşmiyor.', 'error');
+            else alert('Şifreler eşleşmiyor.');
+            confirm.focus();
+            return false;
+        }
+        return true;
+    }
+
+    // Backup encryption toggle
+    document.getElementById('encrypt_backup')?.addEventListener('change', function() {
+        document.getElementById('backup_password_container')?.classList.toggle('hidden', !this.checked);
+    });
+    document.getElementById('import_encrypted')?.addEventListener('change', function() {
+        document.getElementById('import_password_container')?.classList.toggle('hidden', !this.checked);
+    });
+
+    /* Tenant export — sadece kendi verileri */
+    function exportTenantBackup() {
+        window.location.href = '/export_tenant_json';
+    }
+
+    /* Tam platform export — sadece sistem_yoneticisi */
+    function exportBackup() {
+        const encrypt = document.getElementById('encrypt_backup')?.checked;
+        const password = document.getElementById('backup_password')?.value;
+        if (encrypt && !password) { alert('Şifreli yedek için şifre gerekli.'); return; }
+        let url = '/export_db_json';
+        if (encrypt) url += '?encrypt=true&password=' + encodeURIComponent(password);
+        window.location.href = url;
+    }
+</script>
+
+{% endblock %}

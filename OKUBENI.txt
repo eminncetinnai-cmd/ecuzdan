@@ -1,0 +1,84 @@
+===========================================================
+  E-CUZDAN v15 — KURULUM VE CALISTIRMA
+===========================================================
+
+TEK TIKLA CALISTIRMA
+--------------------
+1. Bu zip dosyasini bir klasore cikartin
+   (ornek: Masaustu\E-Cuzdan)
+2. Klasordeki  E-CUZDAN_BASLAT.bat  dosyasina cift tiklayin
+3. Ilk calistirmada gerekli kutuphaneler otomatik yuklenir
+   (internet baglantisi gerekir, birkac dakika surebilir)
+4. Tarayici otomatik acilir: http://localhost:5000
+
+Sunucu penceresi acik kalmalidir. Kapattiginizda program durur.
+
+
+GEREKSINIMLER
+-------------
+- Windows
+- Python 3.10 veya uzeri  (https://www.python.org/downloads/)
+  Kurulum sirasinda "Add Python to PATH" secenegini isaretleyin.
+
+
+GIRIS BILGILERI
+---------------
+Paket, mevcut veritabaniniz ile birlikte gelir; kendi
+kullanici adiniz ve sifrenizle giris yapabilirsiniz.
+
+Veritabani silinir veya sifirdan baslatilirsa varsayilan
+yonetici hesabi olusur:
+    Kullanici : emin
+    Sifre     : 1
+Ilk giristen sonra Ayarlar > Profil & Guvenlik bolumunden
+sifrenizi mutlaka degistirin.
+
+
+BU SURUMDE YENI OLANLAR
+-----------------------
+Ayarlar sayfasi 5 sekmeye ayrildi:
+  - Profil & Guvenlik   : profil resmi, sifre / OAuth, oturum guvenligi
+  - Finansal Tercihler  : ana para birimi, FIRE hedefleri, guvenli cekim
+                          orani, risksiz faiz, bildirim tercihleri
+  - Dil & Gorunum       : TR/EN/DE/IT, ACIK-KOYU TEMA, GIZLILIK MODU
+  - Veri & Yedekleme    : kendi verinizi disa aktarma, ornek veri
+  - Aile & Ortak Butce  : es/aile uyesi daveti
+
+Yeni ozellikler:
+  * Koyu tema (Ayarlar > Dil & Gorunum)
+  * Gizlilik modu — ust bardaki goz simgesi ile tutarlari gizler
+  * Bildirim merkezi — ust bardaki zil simgesi
+      - Butce asim uyarisi (kategori butce limitine gore)
+      - Odeme hatirlatici (yaklasan ve gecikmis taksitler)
+  * Finansal Ozgurluk analizi artik sizin hedeflerinize gore
+    hesaplaniyor (emeklilik yasi, acil fon hedefi, cekim orani)
+
+Duzeltilenler:
+  * Analiz ve Strateji sayfalarindaki hata giderildi
+  * Odeme takvimi, planlar ve profil sayfalarindaki veri
+    yukleme sorunlari giderildi
+  * Nakit -> varlik transferindeki hesaplama hatasi giderildi
+
+
+SORUN GIDERME
+-------------
+"Python yuklu degil" hatasi
+    Python'u yukleyin ve kurulumda "Add Python to PATH" secin.
+
+"Port 5000 kullaniliyor" / sunucu baslamiyor
+    Baska bir E-Cuzdan penceresi acik olabilir; kapatip
+    tekrar deneyin.
+
+Kutuphane yukleme hatasi
+    Komut isteminde su komutu calistirin:
+        python -m pip install -r requirements.txt
+
+Loglar  logs\  klasorunde tutulur.
+
+
+VERI GUVENLIGI
+--------------
+Tum veriler bilgisayarinizdaki  e_cuzdan_v15.db  dosyasinda
+saklanir; disariya veri gonderilmez. Yedek almak icin bu
+dosyayi kopyalayin veya Ayarlar > Veri & Yedekleme
+bolumunden disa aktarin.

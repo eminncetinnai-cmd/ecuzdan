@@ -1,0 +1,285 @@
+# Data Templates for Demo Data Generation
+# Predefined templates for common transaction patterns
+
+transaction_templates:
+  monthly_salary:
+    name: "Aylık Maaş {year}"
+    category_mapping: "salary"
+    description_template: "{year}-{month} maaş ödemesi"
+    amount_rule: "salary"
+    frequency: "monthly"
+    day: 15
+    type: "Gelir"
+  
+  monthly_rent_income:
+    name: "Kira Geliri {year}"
+    category_mapping: "rent_income"
+    description_template: "{year}-{month} kira geliri"
+    amount_rule: "rent_income"
+    frequency: "monthly"
+    day: 1
+    type: "Gelir"
+  
+  quarterly_dividend:
+    name: "Çeyrek Faiz Geliri {year}"
+    category_mapping: "interest_income"
+    description_template: "Çeyrek dönem faiz geliri"
+    amount_rule: "interest_income"
+    frequency: "quarterly"
+    day: 1
+    months: [3, 6, 9, 12]
+    type: "Gelir"
+  
+  extra_income:
+    name: "Ek Gelir"
+    category_mapping: "extra_income"
+    description_template: "Ek proje geliri"
+    amount_rule: "extra_income"
+    frequency: "bi_monthly"
+    day_range: [5, 25]
+    type: "Gelir"
+  
+  monthly_rent_expense:
+    name: "Konut Kirası"
+    category_mapping: "monthly_fixed"
+    description_template: "Konut kirası"
+    amount_rule: "monthly_fixed"
+    frequency: "monthly"
+    day: 3
+    type: "Gider"
+  
+  weekly_food:
+    name: "Haftalık Gıda"
+    category_mapping: "food"
+    description_template: "Hafta {week} gıda alışverişi"
+    amount_rule: "food"
+    frequency: "weekly"
+    weeks_per_month: 4
+    type: "Gider"
+  
+  credit_card_payment:
+    name: "Kredi Kartı Ödemesi"
+    category_mapping: "credit_card"
+    description_template: "Kredi kartı ödemesi"
+    amount_rule: "credit_card"
+    frequency: "monthly"
+    day: 12
+    type: "Gider"
+  
+  tax_payment:
+    name: "Vergi Ödemesi"
+    category_mapping: "tax"
+    description_template: "Vergi / SGK kesintisi"
+    amount_rule: "tax"
+    frequency: "monthly"
+    day: 18
+    type: "Gider"
+  
+  credit_payment:
+    name: "Kredi Taksidi"
+    category_mapping: "credit"
+    description_template: "Banka kredisi taksiti"
+    amount_rule: "credit"
+    frequency: "monthly"
+    day: 22
+    type: "Gider"
+  
+  transport_expense:
+    name: "Ulaşım Harcaması"
+    category_mapping: "transport"
+    description_template: "Ulaşım harcaması"
+    amount_rule: "transport"
+    frequency: "monthly"
+    day: 20
+    type: "Gider"
+  
+  monthly_investment:
+    name: "Aylık Yatırım {year}"
+    category_mapping: "monthly_investment"
+    description_template: "Aylık portföy aktarımı"
+    amount_rule: "monthly_investment"
+    frequency: "monthly"
+    day: 10
+    type: "Yatırım"
+
+recurring_plan_templates:
+  salary_plan:
+    name: "Maaş Planı"
+    category_mapping: "salary"
+    amount_rule: "salary"
+    installments: 12
+    payment_day: 1
+    note_template: "{year} Admin — düzenli maaş"
+    type: "Gelir"
+  
+  rent_income_plan:
+    name: "Kira Geliri Planı"
+    category_mapping: "rent_income"
+    amount_rule: "rent_income"
+    installments: 12
+    payment_day: 1
+    note_template: "{year} Admin — kira geliri"
+    type: "Gelir"
+  
+  rent_expense_plan:
+    name: "Konut Kirası"
+    category_mapping: "monthly_fixed"
+    amount_rule: "monthly_fixed"
+    installments: 12
+    payment_day: 3
+    note_template: "{year} Admin — konut kirası"
+    type: "Gider"
+  
+  credit_plan:
+    name: "Konut Kredisi"
+    category_mapping: "credit"
+    amount_rule: "credit"
+    installments: 12
+    payment_day: 10
+    note_template: "{year} Admin — konut kredisi"
+    type: "Gider"
+  
+  credit_card_plan:
+    name: "Kredi Kartı Limit"
+    category_mapping: "credit_card"
+    amount_rule: "credit_card"
+    installments: 12
+    payment_day: 15
+    note_template: "{year} Admin — kart ödemesi"
+    type: "Gider"
+  
+  internet_plan:
+    name: "İnternet Aboneliği"
+    category_mapping: "food"
+    amount_rule:
+      base_amount: 450
+      amount_range:
+        min: 400
+        max: 500
+      variation_percent: 0.05
+    installments: 12
+    payment_day: 5
+    note_template: "{year} Admin — internet"
+    type: "Gider"
+  
+  investment_plan:
+    name: "Aylık Yatırım"
+    category_mapping: "monthly_investment"
+    amount_rule: "monthly_investment"
+    installments: 12
+    payment_day: 10
+    note_template: "Aylık yatırım {year}"
+    type: "Yatırım"
+
+asset_templates:
+  stock:
+    type: "Hisse Senedi"
+    category_mapping: "stocks"
+    base_quantity: 100
+    quantity_range:
+      min: 50
+      max: 500
+    base_price: 285
+    price_range:
+      min: 200
+      max: 400
+    currency: "TRY"
+    risk_level: "Orta"
+    liquidity: "Likit"
+    sync_cash: true
+  
+  gold:
+    type: "Altın"
+    category_mapping: "gold_bullion"
+    base_quantity: 50
+    quantity_range:
+      min: 10
+      max: 100
+    base_price: 2450
+    price_range:
+      min: 2000
+      max: 3000
+    currency: "TRY"
+    risk_level: "Düşük"
+    liquidity: "Likit"
+    sync_cash: true
+  
+  forex:
+    type: "Döviz"
+    category_mapping: "forex"
+    base_quantity: 2000
+    quantity_range:
+      min: 1000
+      max: 5000
+    base_price: 34.5
+    price_range:
+      min: 30
+      max: 40
+    currency: "TRY"
+    risk_level: "Düşük"
+    liquidity: "Likit"
+    sync_cash: false
+  
+  crypto:
+    type: "Kripto"
+    category_mapping: "other_investment"
+    base_quantity: 0.15
+    quantity_range:
+      min: 0.1
+      max: 0.5
+    base_price: 2800000
+    price_range:
+      min: 2000000
+      max: 3500000
+    currency: "TRY"
+    risk_level: "Yüksek"
+    liquidity: "Likit"
+    sync_cash: false
+  
+  fund:
+    type: "Fon"
+    category_mapping: "other_investment"
+    base_quantity: 1000
+    quantity_range:
+      min: 500
+      max: 2000
+    base_price: 12.5
+    price_range:
+      min: 10
+      max: 15
+    currency: "TRY"
+    risk_level: "Orta"
+    liquidity: "Yarı-Likit"
+    sync_cash: true
+  
+  bes:
+    type: "BES"
+    category_mapping: "other_investment"
+    base_quantity: 1
+    quantity_range:
+      min: 1
+      max: 1
+    base_price: 85000
+    price_range:
+      min: 80000
+      max: 90000
+    currency: "TRY"
+    risk_level: "Düşük"
+    liquidity: "İlik"
+    sync_cash: false
+  
+  real_estate:
+    type: "Gayrimenkul"
+    category_mapping: "other_investment"
+    base_quantity: 1
+    quantity_range:
+      min: 1
+      max: 1
+    base_price: 450000
+    price_range:
+      min: 400000
+      max: 500000
+    currency: "TRY"
+    risk_level: "Orta"
+    liquidity: "İlik"
+    sync_cash: false

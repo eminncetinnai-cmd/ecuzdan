@@ -1,0 +1,1047 @@
+{% extends "layout.html" %}
+{% block content %}
+<div id="financial-dashboard-page" 
+     data-market-assets="{{ market_data.assets | tojson if market_data and market_data.assets else '[]' }}"
+     data-sharpe-ratios="{{ analysis.sharpe_ratios | tojson if analysis and analysis.sharpe_ratios else '{}' }}"
+     data-market-stress="{{ analysis.market_stress.stress_index if analysis and analysis.market_stress else '0' }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/financial_dashboard.css') }}">
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     BAŞLIK
+══════════════════════════════════════════════════════════════════════════════ -->
+<div class="mb-8 fade-up">
+    <div class="flex flex-wrap justify-between items-start gap-4">
+        <div>
+            <h2 class="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none
+                       bg-gradient-to-r from-slate-900 via-indigo-800 to-purple-800 bg-clip-text text-transparent">
+                {{ _('financial_dashboard_title') }}
+            </h2>
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">
+                {{ _('financial_dashboard_subtitle') }}
+            </p>
+        </div>
+        <!-- Son güncelleme -->
+        {% if analysis and analysis.timestamp %}
+        <div class="text-right">
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Son Analiz</p>
+            <p class="text-xs font-black text-indigo-600">{{ analysis.timestamp }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     YASAL UYARI
+══════════════════════════════════════════════════════════════════════════════ -->
+<div class="mb-8 fade-up delay-1 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 flex items-start gap-3">
+    <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+    </svg>
+    <div>
+        <p class="font-black text-amber-800 text-xs mb-0.5">Yasal Uyarı &amp; Metodoloji Notu</p>
+        <p class="text-[11px] text-amber-700 leading-relaxed">
+            Bu sayfadaki tüm analizler <strong>istatistiksel ve akademik amaçlıdır</strong>; yatırım tavsiyesi niteliği taşımaz.
+            Kullanılan modeller (Z-Score, Sharpe Ratio, Korelasyon Matrisi) finans literatüründen alınmıştır.
+            Geçmiş performans gelecekteki getirileri garanti etmez. Tüm kararlarınızı kendi araştırmanıza ve
+            lisanslı bir finansal danışmana danışarak verin.
+        </p>
+    </div>
+</div>
+
+{% if not analysis or not analysis.data_available %}
+<!-- ─── Veri Yok Durumu ─────────────────────────────────────────────────── -->
+<div class="quant-card p-10 bg-rose-50/80 border-l-4 border-rose-500 mb-8 fade-up">
+    <div class="flex items-center gap-5">
+        <div class="w-14 h-14 rounded-2xl bg-rose-100 flex items-center justify-center flex-shrink-0">
+            <svg class="w-7 h-7 text-rose-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+            </svg>
+        </div>
+        <div>
+            <h3 class="font-black text-xl text-rose-900 uppercase tracking-tight mb-1">Piyasa Verisi Alınamıyor</h3>
+            <p class="text-rose-700 text-sm leading-relaxed">
+                Anlık piyasa verileri şu anda erişilemiyor. Bu durum genellikle internet bağlantısı veya
+                veri sağlayıcı (yfinance) kaynaklıdır. Lütfen birkaç dakika sonra tekrar deneyin.
+            </p>
+            {% if analysis and analysis.error %}
+            <p class="text-[10px] text-rose-500 mt-2 font-mono bg-rose-100 px-3 py-1 rounded-lg inline-block">
+                Hata: {{ analysis.error[:120] }}
+            </p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% else %}
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     BÖLÜM 1 — MAKRO EKONOMİK GÖSTERGELER
+══════════════════════════════════════════════════════════════════════════════ -->
+<div class="mb-3 fade-up delay-1">
+    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+        <span class="w-1.5 h-4 bg-indigo-500 rounded-full inline-block"></span>
+        Bölüm 1 — Makro Ekonomik Göstergeler
+    </h3>
+</div>
+
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10 fade-up delay-1">
+    <!-- Faiz -->
+    <div class="quant-card p-5 text-center border-t-4 border-indigo-500">
+        <div class="flex items-center justify-center gap-1 mb-1">
+            <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider">TCMB Politika Faizi</p>
+            <span class="info-tip">?
+                <span class="tip-box">Türkiye Cumhuriyet Merkez Bankası'nın belirlediği kısa vadeli faiz oranı. Yüksek faiz → borçlanma maliyeti artar, büyüme yavaşlar; düşük faiz → kredi genişler, enflasyon riski artar.</span>
+            </span>
+        </div>
+        {% if analysis.macro_regime %}
+        <p class="text-3xl font-black text-indigo-700">%{{ (analysis.macro_regime.interest_rate * 100)|round(1) }}</p>
+        <p class="text-[9px] text-slate-500 mt-1">
+            {% if analysis.macro_regime.interest_rate > 0.30 %}Sıkı Para Politikası
+            {% elif analysis.macro_regime.interest_rate > 0.15 %}Yüksek Faiz Ortamı
+            {% else %}Normal Faiz Ortamı{% endif %}
+        </p>
+        <p class="text-[8px] text-slate-400 mt-1">{{ analysis.macro_source }}</p>
+        {% else %}
+        <p class="text-2xl font-black text-slate-400">—</p>
+        {% endif %}
+    </div>
+    <!-- Enflasyon -->
+    <div class="quant-card p-5 text-center border-t-4 border-rose-500">
+        <div class="flex items-center justify-center gap-1 mb-1">
+            <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider">TÜFE Enflasyon</p>
+            <span class="info-tip">?
+                <span class="tip-box">Tüketici Fiyat Endeksi değişimi. Yüksek enflasyon, nakit varlıkların satın alma gücünü aşındırır. Reel getiri = Nominal Getiri − Enflasyon.</span>
+            </span>
+        </div>
+        {% if analysis.macro_regime %}
+        <p class="text-3xl font-black text-rose-600">%{{ (analysis.macro_regime.inflation_rate * 100)|round(1) }}</p>
+        <p class="text-[9px] text-slate-500 mt-1">
+            {% if analysis.macro_regime.inflation_rate > 0.40 %}Yüksek Enflasyon
+            {% elif analysis.macro_regime.inflation_rate > 0.20 %}Orta Enflasyon
+            {% else %}Düşük Enflasyon{% endif %}
+        </p>
+        {% else %}
+        <p class="text-2xl font-black text-slate-400">—</p>
+        {% endif %}
+    </div>
+    <!-- Reel Faiz -->
+    <div class="quant-card p-5 text-center border-t-4 border-emerald-500">
+        <div class="flex items-center justify-center gap-1 mb-1">
+            <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Reel Faiz</p>
+            <span class="info-tip">?
+                <span class="tip-box">Reel Faiz = Politika Faizi − Enflasyon. Pozitif reel faiz para birimini destekler; negatif reel faiz enflasyona karşı korumasız bırakır.</span>
+            </span>
+        </div>
+                    <!-- VaR -->
+                    <div class="glossary-item">
+                        <p class="font-black text-xs text-slate-800 mb-0.5">VaR (Value at Risk — Riske Maruz Değer)</p>
+                        <p class="text-[11px] text-slate-600 leading-relaxed">Belirli bir güven düzeyinde (örn. %95) ve zaman diliminde (örn. 1 gün) portföyün uğrayabileceği maksimum kaybı ifade eder. <strong>Örnek:</strong> 1 günlük %95 VaR = 10.000 TL → Portföyün %5 olasılıkla 10.000 TL'den fazla kaybedeceği anlamına gelir.</p>
+                        <div class="mt-1 font-mono text-[9px] bg-white rounded px-2 py-1 text-slate-500">VaR₉₅ = μ − 1.645 × σ × √t</div>
+                    </div>
+                    <!-- Drawdown -->
+                    <div class="glossary-item">
+                        <p class="font-black text-xs text-slate-800 mb-0.5">Drawdown (Maksimum Düşüş)</p>
+                        <p class="text-[11px] text-slate-600 leading-relaxed">Portföyün zirve değerinden en dip değerine kadar yaşadığı maksimum yüzde düşüşü. Yatırımcının psikolojik dayanıklılığını test eden kritik bir risk ölçütüdür. <strong>Örnek:</strong> 100 TL → 60 TL → Max Drawdown = %40.</p>
+                        <div class="mt-1 font-mono text-[9px] bg-white rounded px-2 py-1 text-slate-500">MDD = (Trough − Peak) / Peak × 100</div>
+                    </div>
+        {% if analysis.macro_regime %}
+        {% set real_rate = (analysis.macro_regime.interest_rate - analysis.macro_regime.inflation_rate) * 100 %}
+        <p class="text-3xl font-black {% if real_rate > 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">
+            {% if real_rate > 0 %}+{% endif %}%{{ real_rate|round(1) }}
+        </p>
+        <p class="text-[9px] text-slate-500 mt-1">
+            {% if real_rate > 0 %}Pozitif Reel Faiz{% else %}Negatif Reel Faiz{% endif %}
+        </p>
+        {% else %}
+        <p class="text-2xl font-black text-slate-400">—</p>
+        {% endif %}
+    </div>
+    <!-- Makro Rejim -->
+    <div class="quant-card p-5 text-center border-t-4
+        {% if analysis.macro_regime and analysis.macro_regime.regime == 'DEFANSIF' %}border-amber-500
+        {% elif analysis.macro_regime and analysis.macro_regime.regime == 'AGRESIF' %}border-emerald-500
+        {% else %}border-slate-400{% endif %}">
+        <div class="flex items-center justify-center gap-1 mb-1">
+            <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Makro Rejim</p>
+            <span class="info-tip">?
+                <span class="tip-box">Mevcut faiz ve enflasyon koşullarına göre belirlenen piyasa rejimidir. Defansif: Yüksek enflasyon/faiz → altın, emtia öne çıkar. Agresif: Düşük faiz/enflasyon → hisse, kripto öne çıkar.</span>
+            </span>
+        </div>
+        {% if analysis.macro_regime %}
+        <p class="text-2xl font-black
+            {% if analysis.macro_regime.regime == 'DEFANSIF' %}text-amber-600
+            {% elif analysis.macro_regime.regime == 'AGRESIF' %}text-emerald-600
+            {% else %}text-slate-600{% endif %}">
+            {{ analysis.macro_regime.regime }}
+        </p>
+        <p class="text-[9px] text-slate-500 mt-1 leading-tight">{{ analysis.macro_regime.description }}</p>
+        {% else %}
+        <p class="text-2xl font-black text-slate-400">—</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     BÖLÜM 2 — PİYASA STRES ENDEKSİ & VARLIK ÖNCELİKLERİ
+══════════════════════════════════════════════════════════════════════════════ -->
+<div class="mb-3 fade-up">
+    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+        <span class="w-1.5 h-4 bg-rose-500 rounded-full inline-block"></span>
+        Bölüm 2 — Piyasa Stres Endeksi &amp; Varlık Öncelikleri
+    </h3>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10 fade-up">
+    <!-- Stres Gauge -->
+    <div class="quant-card p-8 bg-white/80">
+        <div class="flex items-center gap-2 mb-6">
+            <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight">Piyasa Stres Endeksi</h4>
+            <span class="info-tip">?
+                <span class="tip-box">Varlıklar arası korelasyon yükseldikçe piyasa stresi artar. Kriz dönemlerinde normalde birbirinden bağımsız hareket eden varlıklar eş zamanlı düşer (korelasyon → 1). Endeks 0–100 arasındadır.</span>
+            </span>
+        </div>
+        {% if analysis.market_stress %}
+        <div class="gauge-wrap mb-4">
+            <canvas id="stressGauge" width="180" height="180"></canvas>
+            <div class="gauge-val">
+                <p class="text-4xl font-black
+                    {% if analysis.market_stress.stress_level == 'YÜKSEK' %}text-rose-600
+                    {% elif analysis.market_stress.stress_level == 'ORTA' %}text-amber-600
+                    {% else %}text-emerald-600{% endif %}">
+                    {{ analysis.market_stress.stress_index }}
+                </p>
+                <p class="text-[9px] text-slate-400 uppercase tracking-wider">/ 100</p>
+            </div>
+        </div>
+        <div class="text-center mb-4">
+            <span class="badge-base
+                {% if analysis.market_stress.stress_level == 'YÜKSEK' %}badge-sat
+                {% elif analysis.market_stress.stress_level == 'ORTA' %}bg-amber-100 text-amber-800
+                {% else %}badge-al{% endif %}">
+                {{ analysis.market_stress.stress_level }} STRES
+            </span>
+            {% if analysis.market_stress.crisis_mode %}
+            <p class="text-[10px] text-rose-600 font-black mt-2 animate-pulse">⚠ KRİZ MODU AKTİF — Korelasyonlar kritik eşiği aştı</p>
+            {% endif %}
+        </div>
+        <!-- Stres Yorumu -->
+        <div class="rounded-xl bg-slate-50 p-4 text-xs text-slate-600 leading-relaxed">
+            {% if analysis.market_stress.stress_index > 70 %}
+            <strong class="text-rose-700">Yüksek Stres:</strong> Varlıklar arası korelasyon kritik düzeyde. Bu ortamda çeşitlendirme etkisi azalır; defansif pozisyonlar (nakit, altın) ve stop-loss seviyeleri gözden geçirilmelidir.
+            {% elif analysis.market_stress.stress_index > 40 %}
+            <strong class="text-amber-700">Orta Stres:</strong> Piyasada belirli bir gerilim var. Portföy dengesini koruyun, yeni pozisyonlar açmadan önce risk/ödül oranını değerlendirin.
+            {% else %}
+            <strong class="text-emerald-700">Düşük Stres:</strong> Piyasa koşulları görece sakin. Çeşitlendirme etkisi yüksek; uzun vadeli yatırım fırsatları değerlendirilebilir.
+            {% endif %}
+        </div>
+        {% else %}
+        <p class="text-xs text-slate-400 italic text-center py-8">Stres verisi hesaplanamadı</p>
+        {% endif %}
+    </div>
+
+    <!-- Varlık Öncelikleri -->
+    <div class="quant-card p-8 bg-white/80">
+        <div class="flex items-center gap-2 mb-6">
+            <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight">Varlık Öncelik Skoru</h4>
+            <span class="info-tip">?
+                <span class="tip-box">Mevcut makro rejime göre her varlık sınıfına atanan göreli öncelik puanı (0–100). Yüksek puan, mevcut ekonomik ortamda o varlığın daha uygun olduğunu gösterir.</span>
+            </span>
+        </div>
+        {% if analysis.macro_regime and analysis.macro_regime.asset_scores %}
+        <div class="space-y-3">
+            {% for ticker, asset in analysis.macro_regime.asset_scores.items()|sort(attribute='1.score', reverse=True) %}
+            <div class="flex items-center gap-3">
+                <div class="w-20 text-[10px] font-bold text-slate-700 truncate">{{ asset.name }}</div>
+                <div class="flex-1">
+                    <div class="signal-track">
+                        <div class="signal-fill {% if asset.priority %}bg-indigo-500{% else %}bg-slate-300{% endif %}"
+                             style="width:{{ asset.score }}%"></div>
+                    </div>
+                </div>
+                <div class="w-10 text-right">
+                    <span class="text-[10px] font-black
+                        {% if asset.score >= 70 %}text-indigo-600
+                        {% elif asset.score >= 50 %}text-amber-600
+                        {% else %}text-slate-500{% endif %}">
+                        {{ asset.score }}
+                    </span>
+                </div>
+                {% if asset.priority %}
+                <span class="badge-base badge-al">Öncelikli</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        <div class="mt-5 p-3 rounded-xl bg-indigo-50 text-[10px] text-indigo-700 font-semibold leading-relaxed">
+            <strong>Rejim Yorumu:</strong>
+            {% if analysis.macro_regime.regime == 'DEFANSIF' %}
+            Yüksek enflasyon/faiz ortamında altın ve emtia enflasyona karşı koruma sağlar. Hisse ve kripto varlıklarda volatilite riski artar.
+            {% elif analysis.macro_regime.regime == 'AGRESIF' %}
+            Düşük faiz ortamında büyüme hisseleri ve kripto varlıklar öne çıkar. Risk iştahı yüksek; ancak değerleme riskleri izlenmelidir.
+            {% else %}
+            Dengeli rejimde çeşitlendirilmiş portföy stratejisi önerilir. Tek bir varlık sınıfına aşırı yoğunlaşmaktan kaçının.
+            {% endif %}
+        </div>
+        {% else %}
+        <p class="text-xs text-slate-400 italic text-center py-8">Varlık skoru verisi yok</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     BÖLÜM 3 — NORMALİZE PİYASA PERFORMANSI (BASE-100)
+══════════════════════════════════════════════════════════════════════════════ -->
+<div class="mb-3 fade-up">
+    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+        <span class="w-1.5 h-4 bg-amber-500 rounded-full inline-block"></span>
+        Bölüm 3 — Normalize Piyasa Performansı (Base-100)
+    </h3>
+</div>
+
+<div class="quant-card p-8 bg-white/80 mb-10 fade-up">
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div class="flex items-center gap-2">
+            <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight">Karşılaştırmalı Getiri Analizi</h4>
+            <span class="info-tip">?
+                <span class="tip-box">Tüm varlıklar başlangıç değeri 100 kabul edilerek normalize edilmiştir. Bu yöntem, farklı para birimlerindeki varlıkları aynı ölçekte karşılaştırmayı sağlar. 100'ün üzeri kazanç, altı kayıp anlamına gelir.</span>
+            </span>
+        </div>
+        <!-- YTD Getiri Özeti -->
+        {% if market_data and market_data.assets %}
+        <div class="flex flex-wrap gap-3">
+            {% for ticker, asset in market_data.assets.items() %}
+            <div class="flex items-center gap-1.5 bg-slate-50 rounded-xl px-3 py-1.5">
+                <span class="w-2.5 h-2.5 rounded-full inline-block" style="background:{{ loop.index|asset_color }}"></span>
+                <span class="text-[9px] font-bold text-slate-600">{{ asset.name }}</span>
+                <span class="text-[9px] font-black {% if asset.ytd_return >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">
+                    {% if asset.ytd_return >= 0 %}+{% endif %}%{{ asset.ytd_return|round(1) }}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    <div class="h-80">
+        <canvas id="mainChart"></canvas>
+    </div>
+    <p class="text-[9px] text-slate-400 text-center mt-3">
+        Veriler aylık kapanış fiyatlarına dayanmaktadır. Kaynak: Yahoo Finance (yfinance). Son güncelleme: {{ market_data.last_updated if market_data else '—' }}
+    </p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     BÖLÜM 4 — ORTALAMAYA DÖNÜŞ SİNYALLERİ (Z-SCORE)
+══════════════════════════════════════════════════════════════════════════════ -->
+<div class="mb-3 fade-up">
+    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+        <span class="w-1.5 h-4 bg-purple-500 rounded-full inline-block"></span>
+        Bölüm 4 — Ortalamaya Dönüş Sinyalleri (Z-Score Modeli)
+    </h3>
+</div>
+
+<div class="quant-card p-8 bg-white/80 mb-10 fade-up">
+    <div class="flex items-center gap-2 mb-2">
+        <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight">Z-Score Tabanlı Sinyal Analizi</h4>
+        <span class="info-tip">?
+            <span class="tip-box">Z-Score, bir varlığın mevcut fiyatının tarihsel ortalamasından kaç standart sapma uzakta olduğunu gösterir. Z > +2: Aşırı alım (SAT sinyali), Z < -2: Aşırı satım (AL sinyali), -2 < Z < +2: Nötr (TUT).</span>
+        </span>
+    </div>
+    <p class="text-[10px] text-slate-500 mb-6 leading-relaxed">
+        Ortalamaya dönüş (Mean Reversion) teorisi: Varlık fiyatları uzun vadeli ortalamasından sapsa da zamanla bu ortalamaya geri döner.
+        Z-Score bu sapmayı standartlaştırarak farklı varlıkları karşılaştırılabilir kılar. <em>Kaynak: Bollinger, 1992; Lo &amp; MacKinlay, 1988.</em>
+    </p>
+
+    {% if analysis.mean_reversion %}
+    <!-- Sinyal Özet Çubuğu -->
+    <div class="flex flex-wrap gap-3 mb-6 p-4 bg-slate-50 rounded-2xl">
+        {% set al_count = analysis.mean_reversion.values()|selectattr('signal','equalto','AL')|list|length %}
+        {% set sat_count = analysis.mean_reversion.values()|selectattr('signal','equalto','SAT')|list|length %}
+        {% set tut_count = analysis.mean_reversion.values()|selectattr('signal','equalto','TUT')|list|length %}
+        <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+            <span class="text-xs font-black text-emerald-700">AL: {{ al_count }}</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-rose-500"></span>
+            <span class="text-xs font-black text-rose-700">SAT: {{ sat_count }}</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-slate-400"></span>
+            <span class="text-xs font-black text-slate-600">TUT: {{ tut_count }}</span>
+        </div>
+        <div class="ml-auto text-[10px] text-slate-500 font-semibold">
+            Pencere: 252 iş günü (1 yıl) | Eşik: ±2σ
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for ticker, signal in analysis.mean_reversion.items() %}
+        <div class="rounded-2xl border border-slate-100 bg-slate-50/60 p-5 hover:bg-white transition">
+            <div class="flex justify-between items-start mb-3">
+                <div>
+                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-wider">{{ signal.name }}</p>
+                    <p class="text-[9px] text-slate-400">{{ ticker }}</p>
+                </div>
+                <span class="badge-base
+                    {% if signal.signal == 'AL' %}badge-al
+                    {% elif signal.signal == 'SAT' %}badge-sat
+                    {% else %}badge-tut{% endif %}">
+                    {{ signal.signal }}
+                </span>
+            </div>
+            <!-- Z-Score Görseli -->
+            <div class="mb-3">
+                <div class="flex justify-between text-[9px] text-slate-400 mb-1">
+                    <span>Aşırı Satım (-2)</span>
+                    <span>Nötr (0)</span>
+                    <span>Aşırı Alım (+2)</span>
+                </div>
+                <div class="relative h-3 bg-gradient-to-r from-emerald-200 via-slate-200 to-rose-200 rounded-full">
+                    <!-- Z-score iğnesi: -4 ile +4 arası normalize -->
+                    {% set z_pct = ((signal.current_z_score + 4) / 8 * 100)|round(1) %}
+                    {% set z_pct_clamped = [0, [100, z_pct]|min]|max %}
+                    <div class="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 border-white shadow-md
+                        {% if signal.signal == 'AL' %}bg-emerald-500
+                        {% elif signal.signal == 'SAT' %}bg-rose-500
+                        {% else %}bg-slate-500{% endif %}"
+                         style="left: calc({{ z_pct_clamped }}% - 6px)"></div>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-[10px]">
+                <div>
+                    <p class="text-slate-400">Z-Score</p>
+                    <p class="font-black text-slate-800">{{ signal.current_z_score }}</p>
+                </div>
+                <div>
+                    <p class="text-slate-400">Sinyal Gücü</p>
+                    <div class="signal-track mt-1">
+                        <div class="signal-fill
+                            {% if signal.signal == 'AL' %}bg-emerald-500
+                            {% elif signal.signal == 'SAT' %}bg-rose-500
+                            {% else %}bg-slate-400{% endif %}"
+                             style="width:{{ signal.strength }}%"></div>
+                    </div>
+                    <p class="font-black text-slate-800 mt-0.5">%{{ signal.strength }}</p>
+                </div>
+            </div>
+            <!-- Yorum -->
+            <div class="mt-3 text-[9px] text-slate-500 bg-white rounded-lg p-2 leading-relaxed">
+                {% if signal.signal == 'AL' %}
+                Fiyat tarihsel ortalamanın <strong>{{ signal.current_z_score|abs }} σ altında</strong>. Ortalamaya dönüş teorisine göre potansiyel yükseliş beklentisi.
+                {% elif signal.signal == 'SAT' %}
+                Fiyat tarihsel ortalamanın <strong>{{ signal.current_z_score }} σ üzerinde</strong>. Aşırı alım bölgesi; geri çekilme riski yüksek.
+                {% else %}
+                Fiyat tarihsel ortalama etrafında seyrediyor. Belirgin bir sapma yok; trend takibi önerilir.
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-xs text-slate-400 italic text-center py-8">Z-Score verisi hesaplanamadı</p>
+    {% endif %}
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     BÖLÜM 5 — SHARPE RATIO (RİSKE AYARLI GETİRİ)
+══════════════════════════════════════════════════════════════════════════════ -->
+<div class="mb-3 fade-up">
+    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+        <span class="w-1.5 h-4 bg-emerald-500 rounded-full inline-block"></span>
+        Bölüm 5 — Sharpe Ratio (Riske Ayarlı Getiri Analizi)
+    </h3>
+</div>
+
+<div class="quant-card p-8 bg-white/80 mb-10 fade-up">
+    <div class="flex items-center gap-2 mb-2">
+        <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight">Yıllıklandırılmış Sharpe Ratio</h4>
+        <span class="info-tip">?
+            <span class="tip-box">Sharpe Ratio = (Portföy Getirisi − Risksiz Faiz) / Standart Sapma. 1'in üzeri iyi, 2'nin üzeri çok iyi, negatif değer risk almaya değmediğini gösterir. Nobel ödüllü William Sharpe tarafından 1966'da geliştirilmiştir.</span>
+        </span>
+    </div>
+    <p class="text-[10px] text-slate-500 mb-6 leading-relaxed">
+        Sharpe Ratio, birim risk başına elde edilen fazla getiriyi ölçer. Risksiz faiz oranı olarak %{{ (analysis.get('risk_free_rate', 0.02) * 100)|round(1) }} kullanılmıştır.
+        <em>Kaynak: Sharpe, W.F. (1966). "Mutual Fund Performance." Journal of Business.</em>
+    </p>
+
+    {% if analysis.sharpe_ratios %}
+    <!-- Sharpe Karşılaştırma Grafiği -->
+    <div class="mb-6 h-48">
+        <canvas id="sharpeChart"></canvas>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for ticker, sharpe in analysis.sharpe_ratios.items() %}
+        <div class="rounded-2xl border border-slate-100 bg-slate-50/60 p-5 hover:bg-white transition">
+            <div class="flex justify-between items-start mb-3">
+                <div>
+                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-wider">{{ sharpe.name }}</p>
+                    <p class="text-[9px] text-slate-400">{{ ticker }}</p>
+                </div>
+                <p class="text-2xl font-black
+                    {% if sharpe.sharpe_ratio > 2 %}text-emerald-600
+                    {% elif sharpe.sharpe_ratio > 1 %}text-indigo-600
+                    {% elif sharpe.sharpe_ratio > 0 %}text-amber-600
+                    {% else %}text-rose-600{% endif %}">
+                    {{ sharpe.sharpe_ratio }}
+                </p>
+            </div>
+            <div class="signal-track mb-2">
+                {% set sharpe_pct = ([0, [100, (sharpe.sharpe_ratio / 3 * 100)]|min]|max)|round(1) %}
+                <div class="signal-fill
+                    {% if sharpe.sharpe_ratio > 2 %}bg-emerald-500
+                    {% elif sharpe.sharpe_ratio > 1 %}bg-indigo-500
+                    {% elif sharpe.sharpe_ratio > 0 %}bg-amber-500
+                    {% else %}bg-rose-500{% endif %}"
+                     style="width:{{ sharpe_pct }}%"></div>
+            </div>
+            <p class="text-[9px] text-slate-500 leading-relaxed">
+                {% if sharpe.sharpe_ratio > 2 %}
+                <strong class="text-emerald-700">Mükemmel:</strong> Birim risk başına çok yüksek getiri. Portföyde ağırlık artırılabilir.
+                {% elif sharpe.sharpe_ratio > 1 %}
+                <strong class="text-indigo-700">İyi:</strong> Kabul edilebilir risk/ödül dengesi. Portföyde tutulabilir.
+                {% elif sharpe.sharpe_ratio > 0 %}
+                <strong class="text-amber-700">Zayıf:</strong> Getiri var ancak risk karşılığı yetersiz. Alternatifler değerlendirilmeli.
+                {% else %}
+                <strong class="text-rose-700">Negatif:</strong> Risksiz faizin altında getiri. Risk almak değmemiş.
+                {% endif %}
+            </p>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-xs text-slate-400 italic text-center py-8">Sharpe Ratio verisi hesaplanamadı</p>
+    {% endif %}
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     BÖLÜM 6 — KORELASYON MATRİSİ
+══════════════════════════════════════════════════════════════════════════════ -->
+<div class="mb-3 fade-up">
+    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+        <span class="w-1.5 h-4 bg-cyan-500 rounded-full inline-block"></span>
+        Bölüm 6 — Korelasyon Matrisi (Çeşitlendirme Analizi)
+    </h3>
+</div>
+
+<div class="quant-card p-8 bg-white/80 mb-10 fade-up">
+    <div class="flex items-center gap-2 mb-2">
+        <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight">Varlıklar Arası Korelasyon</h4>
+        <span class="info-tip">?
+            <span class="tip-box">Korelasyon katsayısı -1 ile +1 arasındadır. +1: Tam pozitif korelasyon (birlikte hareket), -1: Tam negatif korelasyon (zıt hareket), 0: İlişkisiz. Çeşitlendirme için düşük/negatif korelasyonlu varlıklar seçilmelidir.</span>
+        </span>
+    </div>
+    <p class="text-[10px] text-slate-500 mb-6 leading-relaxed">
+        Modern Portföy Teorisi (Markowitz, 1952): Birbirleriyle düşük korelasyonlu varlıkları bir araya getirmek, toplam portföy riskini azaltır.
+        Aşağıdaki matris, varlıkların son dönem fiyat hareketleri arasındaki ilişkiyi göstermektedir.
+    </p>
+
+    {% if analysis.correlation_matrices %}
+    <!-- Periyot Seçici -->
+    <div class="flex gap-2 mb-6">
+        {% for period in analysis.correlation_matrices.keys() %}
+        <button type="button" onclick="showCorrelation({{ period }})"
+                id="corr-btn-{{ period }}"
+                class="tab-btn px-4 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-indigo-100 {% if loop.first %}active{% endif %}">
+            {{ period }} Gün
+        </button>
+        {% endfor %}
+    </div>
+
+    {% for period, corr_data in analysis.correlation_matrices.items() %}
+    <div id="corr-matrix-{{ period }}" class="corr-matrix-panel {% if not loop.first %}hidden{% endif %}">
+        {% if corr_data.matrix %}
+        {% set tickers = corr_data.matrix.keys()|list %}
+        <div class="overflow-x-auto">
+            <table class="mx-auto border-separate border-spacing-1">
+                <thead>
+                    <tr>
+                        <th class="w-16"></th>
+                        {% for t in tickers %}
+                        <th class="text-[9px] font-black text-slate-500 text-center w-12 pb-1">
+                            {{ analysis.mean_reversion[t].name if t in analysis.mean_reversion else t }}
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t1 in tickers %}
+                    <tr>
+                        <td class="text-[9px] font-black text-slate-500 text-right pr-2">
+                            {{ analysis.mean_reversion[t1].name if t1 in analysis.mean_reversion else t1 }}
+                        </td>
+                        {% for t2 in tickers %}
+                        {% set val = corr_data.matrix[t1][t2] if t1 in corr_data.matrix and t2 in corr_data.matrix[t1] else 0 %}
+                        <td>
+                            <div class="corr-cell
+                                {% if t1 == t2 %}bg-slate-200 text-slate-600
+                                {% elif val > 0.7 %}bg-rose-200 text-rose-800
+                                {% elif val > 0.4 %}bg-amber-100 text-amber-800
+                                {% elif val > 0 %}bg-slate-100 text-slate-600
+                                {% elif val > -0.4 %}bg-sky-100 text-sky-700
+                                {% else %}bg-emerald-100 text-emerald-800{% endif %}"
+                                title="{{ t1 }} / {{ t2 }}: {{ val|round(3) }}">
+                                {{ val|round(2) }}
+                            </div>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <!-- Renk Açıklaması -->
+        <div class="flex flex-wrap gap-3 mt-4 justify-center text-[9px] font-semibold">
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-rose-200"></span> Yüksek Korelasyon (&gt;0.7)</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-amber-100"></span> Orta Korelasyon (0.4–0.7)</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-slate-100"></span> Düşük Korelasyon (0–0.4)</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-sky-100"></span> Hafif Negatif (-0.4–0)</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-emerald-100"></span> Güçlü Negatif (&lt;-0.4)</span>
+        </div>
+        {% if corr_data.crisis_mode %}
+        <div class="mt-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-[10px] text-rose-700 font-semibold">
+            ⚠ Bu periyotta maksimum korelasyon <strong>{{ corr_data.max_correlation }}</strong> — Kriz korelasyonu eşiği (0.9) aşıldı. Çeşitlendirme etkisi zayıflıyor.
+        </div>
+        {% else %}
+        <div class="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-[10px] text-emerald-700 font-semibold">
+            Maksimum korelasyon: <strong>{{ corr_data.max_correlation }}</strong> — Çeşitlendirme etkisi korunuyor.
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <p class="text-xs text-slate-400 italic text-center py-8">Korelasyon matrisi hesaplanamadı</p>
+    {% endif %}
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     BÖLÜM 7 — FIRSAT MATRİSİ (RASYO ANALİZİ)
+══════════════════════════════════════════════════════════════════════════════ -->
+<div class="mb-3 fade-up">
+    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+        <span class="w-1.5 h-4 bg-orange-500 rounded-full inline-block"></span>
+        Bölüm 7 — Fırsat Matrisi (Varlıklar Arası Rasyo Analizi)
+    </h3>
+</div>
+
+<div class="quant-card p-8 bg-white/80 mb-10 fade-up">
+    <div class="flex items-center gap-2 mb-2">
+        <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight">Çapraz Varlık Rasyo Sinyalleri</h4>
+        <span class="info-tip">?
+            <span class="tip-box">İki varlık arasındaki fiyat rasyosu tarihsel medyanından sapması Z-Score ile ölçülür. Örneğin Altın/Gümüş rasyosu tarihsel ortalamanın üzerindeyse altın görece pahalı, gümüş görece ucuz demektir.</span>
+        </span>
+    </div>
+    <p class="text-[10px] text-slate-500 mb-6 leading-relaxed">
+        Çapraz varlık rasyo analizi, iki varlık arasındaki tarihsel ilişkinin bozulduğu dönemlerde göreceli değer fırsatlarını tespit eder.
+        <em>Kaynak: Pairs Trading — Gatev, Goetzmann &amp; Rouwenhorst (2006).</em>
+    </p>
+
+    {% if analysis.opportunity_matrix %}
+    <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+            <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-slate-400 text-[9px] uppercase font-black tracking-wider">
+                    <th class="p-4 text-left">Rasyo Çifti</th>
+                    <th class="p-4 text-center">Sinyal</th>
+                    <th class="p-4 text-left">Sinyal Gücü</th>
+                    <th class="p-4 text-right">Z-Score</th>
+                    <th class="p-4 text-right">Mevcut Rasyo</th>
+                    <th class="p-4 text-left">Yorum</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+                {% for opp in analysis.opportunity_matrix %}
+                <tr class="hover:bg-slate-50/60 transition">
+                    <td class="p-4">
+                        <p class="font-black text-slate-900">{{ opp.ratio_name }}</p>
+                        <p class="text-[9px] text-slate-400">{{ opp.ticker1 }} / {{ opp.ticker2 }}</p>
+                    </td>
+                    <td class="p-4 text-center">
+                        <span class="badge-base
+                            {% if opp.signal == 'AL' %}badge-al
+                            {% elif opp.signal == 'SAT' %}badge-sat
+                            {% else %}badge-tut{% endif %}">
+                            {{ opp.signal }}
+                        </span>
+                    </td>
+                    <td class="p-4 w-36">
+                        <div class="signal-track">
+                            <div class="signal-fill
+                                {% if opp.signal == 'AL' %}bg-emerald-500
+                                {% elif opp.signal == 'SAT' %}bg-rose-500
+                                {% else %}bg-slate-400{% endif %}"
+                                 style="width:{{ opp.strength }}%"></div>
+                        </div>
+                        <p class="text-[9px] text-slate-500 mt-0.5">%{{ opp.strength }}</p>
+                    </td>
+                    <td class="p-4 text-right font-black
+                        {% if opp.z_score > 2 %}text-rose-600
+                        {% elif opp.z_score < -2 %}text-emerald-600
+                        {% else %}text-slate-700{% endif %}">
+                        {{ opp.z_score }}
+                    </td>
+                    <td class="p-4 text-right text-slate-600 font-semibold">{{ opp.current_ratio|round(4) }}</td>
+                    <td class="p-4 text-[9px] text-slate-500 max-w-xs leading-relaxed">
+                        {% if opp.ratio_name == 'Altın/Gümüş' %}
+                            {% if opp.signal == 'AL' %}Altın/Gümüş rasyosu tarihsel düşük → Altın görece ucuz, gümüş görece pahalı.
+                            {% elif opp.signal == 'SAT' %}Altın/Gümüş rasyosu tarihsel yüksek → Altın görece pahalı.
+                            {% else %}Rasyo tarihsel ortalama etrafında.{% endif %}
+                        {% elif opp.ratio_name == 'Bitcoin/Nasdaq' %}
+                            {% if opp.signal == 'AL' %}BTC/Nasdaq rasyosu düşük → Bitcoin görece değer altında.
+                            {% elif opp.signal == 'SAT' %}BTC/Nasdaq rasyosu yüksek → Bitcoin görece aşırı değerli.
+                            {% else %}Kripto/hisse dengesi nötr.{% endif %}
+                        {% elif opp.ratio_name == 'Altın/Petrol' %}
+                            {% if opp.signal == 'AL' %}Altın/Petrol rasyosu düşük → Altın görece ucuz.
+                            {% elif opp.signal == 'SAT' %}Altın/Petrol rasyosu yüksek → Petrol görece ucuz.
+                            {% else %}Emtia dengesi nötr.{% endif %}
+                        {% else %}—{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-xs text-slate-400 italic text-center py-8">Fırsat matrisi verisi hesaplanamadı</p>
+    {% endif %}
+</div>
+
+{% endif %}{# /data_available #}
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     BÖLÜM 8 — FİNANSAL TERİMLER SÖZLÜĞÜ & ÖRNEK HESAPLAMALAR
+══════════════════════════════════════════════════════════════════════════════ -->
+<div class="mb-3 fade-up">
+    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+        <span class="w-1.5 h-4 bg-slate-500 rounded-full inline-block"></span>
+        Bölüm 8 — Finansal Terimler Sözlüğü &amp; Örnek Hesaplamalar
+    </h3>
+</div>
+
+<div class="quant-card p-8 bg-white/80 mb-10 fade-up">
+    <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-6">Kantitatif Finans Rehberi</h4>
+    <p class="text-[10px] text-slate-500 mb-6">
+        Bu sayfada kullanılan tüm finansal ve teknik terimler, akademik kaynakları ve pratik örnekleriyle aşağıda açıklanmıştır.
+    </p>
+
+    <!-- Sekme Navigasyonu -->
+    <div class="flex flex-wrap gap-2 mb-6">
+        <button type="button" onclick="showGlossaryTab('risk')" id="gtab-risk"
+                class="tab-btn active px-4 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100">
+            Risk Metrikleri
+        </button>
+        <button type="button" onclick="showGlossaryTab('market')" id="gtab-market"
+                class="tab-btn px-4 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100">
+            Piyasa Analizi
+        </button>
+        <button type="button" onclick="showGlossaryTab('macro')" id="gtab-macro"
+                class="tab-btn px-4 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100">
+            Makro Ekonomi
+        </button>
+        <button type="button" onclick="showGlossaryTab('calc')" id="gtab-calc"
+                class="tab-btn px-4 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100">
+            Örnek Hesaplamalar
+        </button>
+    </div>
+
+    <!-- Risk Metrikleri -->
+    <div id="gtab-panel-risk" class="glossary-panel">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="glossary-item">
+                <p class="font-black text-sm text-slate-800 mb-1">Sharpe Ratio</p>
+                <p class="text-[11px] text-slate-600 leading-relaxed mb-2">
+                    Birim risk başına elde edilen fazla getiriyi ölçer. Portföyleri karşılaştırmak için en yaygın kullanılan riske ayarlı getiri metriğidir.
+                </p>
+                <div class="bg-indigo-50 rounded-lg p-2 font-mono text-[10px] text-indigo-800">
+                    SR = (Rp − Rf) / σp
+                </div>
+                <p class="text-[9px] text-slate-400 mt-1">Rp: Portföy getirisi | Rf: Risksiz faiz | σp: Standart sapma</p>
+                <p class="text-[9px] text-indigo-600 mt-1 font-semibold">Kaynak: Sharpe (1966), Journal of Business</p>
+            </div>
+            <div class="glossary-item">
+                <p class="font-black text-sm text-slate-800 mb-1">Volatilite (Standart Sapma)</p>
+                <p class="text-[11px] text-slate-600 leading-relaxed mb-2">
+                    Getiri serilerinin ortalamadan ne kadar saptığını ölçer. Yüksek volatilite = yüksek risk. Yıllıklandırma için günlük σ × √252 formülü kullanılır.
+                </p>
+                <div class="bg-indigo-50 rounded-lg p-2 font-mono text-[10px] text-indigo-800">
+                    σ_yıllık = σ_günlük × √252
+                </div>
+                <p class="text-[9px] text-slate-400 mt-1">252: Yıllık işlem günü sayısı</p>
+            </div>
+            <div class="glossary-item">
+                <p class="font-black text-sm text-slate-800 mb-1">Korelasyon Katsayısı (ρ)</p>
+                <p class="text-[11px] text-slate-600 leading-relaxed mb-2">
+                    İki varlığın getirilerinin birlikte hareket etme derecesini -1 ile +1 arasında ölçer. Çeşitlendirme için ρ &lt; 0.3 olan çiftler tercih edilir.
+                </p>
+                <div class="bg-indigo-50 rounded-lg p-2 font-mono text-[10px] text-indigo-800">
+                    ρ(A,B) = Cov(A,B) / (σA × σB)
+                </div>
+                <p class="text-[9px] text-indigo-600 mt-1 font-semibold">Kaynak: Markowitz (1952), Journal of Finance</p>
+            </div>
+            <div class="glossary-item">
+                <p class="font-black text-sm text-slate-800 mb-1">Beta (β)</p>
+                <p class="text-[11px] text-slate-600 leading-relaxed mb-2">
+                    Varlığın piyasa endeksine göre duyarlılığını ölçer. β=1: Piyasayla aynı hareket, β&gt;1: Piyasadan daha volatil, β&lt;1: Daha az volatil.
+                </p>
+                <div class="bg-indigo-50 rounded-lg p-2 font-mono text-[10px] text-indigo-800">
+                    β = Cov(Ri, Rm) / Var(Rm)
+                </div>
+                <p class="text-[9px] text-slate-400 mt-1">Ri: Varlık getirisi | Rm: Piyasa getirisi</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Piyasa Analizi -->
+    <div id="gtab-panel-market" class="glossary-panel hidden">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="glossary-item">
+                <p class="font-black text-sm text-slate-800 mb-1">Z-Score (Ortalamaya Dönüş)</p>
+                <p class="text-[11px] text-slate-600 leading-relaxed mb-2">
+                    Bir değerin tarihsel ortalamasından kaç standart sapma uzakta olduğunu gösterir. Finansal piyasalarda aşırı alım/satım tespitinde kullanılır.
+                </p>
+                <div class="bg-indigo-50 rounded-lg p-2 font-mono text-[10px] text-indigo-800">
+                    Z = (X − μ) / σ
+                </div>
+                <p class="text-[9px] text-slate-400 mt-1">X: Mevcut değer | μ: Hareketli ortalama | σ: Hareketli standart sapma</p>
+                <p class="text-[9px] text-indigo-600 mt-1 font-semibold">Kaynak: Lo &amp; MacKinlay (1988), Review of Financial Studies</p>
+            </div>
+            <div class="glossary-item">
+                <p class="font-black text-sm text-slate-800 mb-1">Base-100 Normalizasyon</p>
+                <p class="text-[11px] text-slate-600 leading-relaxed mb-2">
+                    Farklı fiyat düzeylerindeki varlıkları karşılaştırmak için başlangıç değeri 100 kabul edilerek yeniden ölçeklendirme yöntemi.
+                </p>
+                <div class="bg-indigo-50 rounded-lg p-2 font-mono text-[10px] text-indigo-800">
+                    N(t) = (P(t) / P(0)) × 100
+                </div>
+                <p class="text-[9px] text-slate-400 mt-1">P(t): t anındaki fiyat | P(0): Başlangıç fiyatı</p>
+            </div>
+            <div class="glossary-item">
+                <p class="font-black text-sm text-slate-800 mb-1">Pairs Trading (Rasyo Analizi)</p>
+                <p class="text-[11px] text-slate-600 leading-relaxed mb-2">
+                    İki tarihsel olarak ilişkili varlık arasındaki fiyat rasyosunun tarihsel normdan sapmasını kullanarak işlem yapma stratejisi.
+                </p>
+                <div class="bg-indigo-50 rounded-lg p-2 font-mono text-[10px] text-indigo-800">
+                    Rasyo = P(A) / P(B)
+                    Z_rasyo = (Rasyo − Medyan) / σ_rasyo
+                </div>
+                <p class="text-[9px] text-indigo-600 mt-1 font-semibold">Kaynak: Gatev, Goetzmann &amp; Rouwenhorst (2006)</p>
+            </div>
+            <div class="glossary-item">
+                <p class="font-black text-sm text-slate-800 mb-1">Piyasa Stres Endeksi</p>
+                <p class="text-[11px] text-slate-600 leading-relaxed mb-2">
+                    Varlıklar arası korelasyonun yükselmesi, piyasa stresinin arttığına işaret eder. Kriz dönemlerinde normalde bağımsız varlıklar eş zamanlı düşer.
+                </p>
+                <div class="bg-indigo-50 rounded-lg p-2 font-mono text-[10px] text-indigo-800">
+                    Stres = max(0, (ρ_max − 0.5) × 200)
+                </div>
+                <p class="text-[9px] text-slate-400 mt-1">ρ_max: Maksimum çift korelasyonu | Aralık: 0–100</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Makro Ekonomi -->
+    <div id="gtab-panel-macro" class="glossary-panel hidden">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="glossary-item">
+                <p class="font-black text-sm text-slate-800 mb-1">Makro Rejim</p>
+                <p class="text-[11px] text-slate-600 leading-relaxed mb-2">
+                    Faiz oranı ve enflasyon kombinasyonuna göre belirlenen ekonomik ortam. Her rejim farklı varlık sınıflarını ön plana çıkarır.
+                </p>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-[9px] mt-2">
+                        <thead><tr class="bg-slate-100">
+                            <th class="p-2 text-left">Rejim</th><th class="p-2">Faiz</th><th class="p-2">Enflasyon</th><th class="p-2">Önerilen</th>
+                        </tr></thead>
+                        <tbody>
+                            <tr class="border-b"><td class="p-2 font-bold text-amber-700">Defansif</td><td class="p-2 text-center">&gt;%20</td><td class="p-2 text-center">&gt;%40</td><td class="p-2">Altın, Emtia</td></tr>
+                            <tr class="border-b"><td class="p-2 font-bold text-emerald-700">Agresif</td><td class="p-2 text-center">&lt;%10</td><td class="p-2 text-center">&lt;%20</td><td class="p-2">Hisse, Kripto</td></tr>
+                            <tr><td class="p-2 font-bold text-slate-700">Nötr</td><td class="p-2 text-center">%10–20</td><td class="p-2 text-center">%20–40</td><td class="p-2">Dengeli</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="glossary-item">
+                <p class="font-black text-sm text-slate-800 mb-1">Reel Faiz Oranı</p>
+                <p class="text-[11px] text-slate-600 leading-relaxed mb-2">
+                    Enflasyondan arındırılmış faiz oranı. Paranın gerçek satın alma gücündeki değişimi gösterir. Negatif reel faiz, tasarruf sahiplerini varlıklara yönlendirir.
+                </p>
+                <div class="bg-indigo-50 rounded-lg p-2 font-mono text-[10px] text-indigo-800">
+                    Reel Faiz ≈ Nominal Faiz − Enflasyon
+                    (Fisher Denklemi: (1+r) = (1+n)/(1+π))
+                </div>
+                <p class="text-[9px] text-indigo-600 mt-1 font-semibold">Kaynak: Fisher (1930), The Theory of Interest</p>
+            </div>
+            <div class="glossary-item">
+                <p class="font-black text-sm text-slate-800 mb-1">TÜFE (Tüketici Fiyat Endeksi)</p>
+                <p class="text-[11px] text-slate-600 leading-relaxed mb-2">
+                    Belirli bir mal ve hizmet sepetinin fiyat değişimini ölçen endeks. Türkiye'de TÜİK tarafından aylık yayımlanır. Yatırım kararlarında reel getiriyi hesaplamak için kullanılır.
+                </p>
+            </div>
+            <div class="glossary-item">
+                <p class="font-black text-sm text-slate-800 mb-1">Altın/Gümüş Rasyosu (GSR)</p>
+                <p class="text-[11px] text-slate-600 leading-relaxed mb-2">
+                    Bir ons altının kaç ons gümüşe eşit olduğunu gösterir. Tarihsel ortalama 60–80 arasındadır. GSR &gt; 80 → Gümüş görece ucuz; GSR &lt; 50 → Altın görece ucuz.
+                </p>
+                <div class="bg-indigo-50 rounded-lg p-2 font-mono text-[10px] text-indigo-800">
+                    GSR = Altın Fiyatı / Gümüş Fiyatı
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Örnek Hesaplamalar -->
+    <div id="gtab-panel-calc" class="glossary-panel hidden">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Sharpe Hesabı -->
+            <div class="calc-box">
+                <p class="font-black text-sm text-slate-800 mb-3">📐 Sharpe Ratio Hesabı</p>
+                <div class="text-[11px] text-slate-600 space-y-1.5 leading-relaxed">
+                    <p><strong>Senaryo:</strong> Bir hisse senedi portföyü</p>
+                    <div class="bg-white rounded-lg p-3 font-mono text-[10px] space-y-1">
+                        <p>Yıllık Getiri (Rp)    = %18</p>
+                        <p>Risksiz Faiz (Rf)     = %2</p>
+                        <p>Yıllık Volatilite (σ) = %12</p>
+                        <p class="border-t pt-1 font-black text-indigo-700">SR = (18% − 2%) / 12% = <strong>1.33</strong></p>
+                    </div>
+                    <p class="text-[9px] text-slate-500">SR = 1.33 → İyi bir riske ayarlı getiri. Her 1 birim risk için 1.33 birim fazla getiri elde edilmiştir.</p>
+                </div>
+            </div>
+            <!-- Z-Score Hesabı -->
+            <div class="calc-box">
+                <p class="font-black text-sm text-slate-800 mb-3">📐 Z-Score Hesabı</p>
+                <div class="text-[11px] text-slate-600 space-y-1.5 leading-relaxed">
+                    <p><strong>Senaryo:</strong> Altın fiyatı analizi</p>
+                    <div class="bg-white rounded-lg p-3 font-mono text-[10px] space-y-1">
+                        <p>Mevcut Fiyat (X)       = 2.400 USD</p>
+                        <p>252 Günlük Ort. (μ)   = 2.000 USD</p>
+                        <p>Std. Sapma (σ)         = 150 USD</p>
+                        <p class="border-t pt-1 font-black text-rose-700">Z = (2400 − 2000) / 150 = <strong>+2.67</strong></p>
+                    </div>
+                    <p class="text-[9px] text-slate-500">Z = +2.67 → SAT sinyali. Fiyat tarihsel ortalamanın 2.67 standart sapma üzerinde; aşırı alım bölgesi.</p>
+                </div>
+            </div>
+            <!-- Korelasyon Yorumu -->
+            <div class="calc-box">
+                <p class="font-black text-sm text-slate-800 mb-3">📐 Korelasyon ve Çeşitlendirme</p>
+                <div class="text-[11px] text-slate-600 space-y-1.5 leading-relaxed">
+                    <p><strong>Senaryo:</strong> 2 varlıklı portföy</p>
+                    <div class="bg-white rounded-lg p-3 font-mono text-[10px] space-y-1">
+                        <p>Varlık A: σ = %15, Ağırlık = %50</p>
+                        <p>Varlık B: σ = %20, Ağırlık = %50</p>
+                        <p>Korelasyon (ρ) = 0.2</p>
+                        <p class="border-t pt-1 font-black text-emerald-700">σ_portföy ≈ %13.5 (Tek başına &lt; %17.5)</p>
+                    </div>
+                    <p class="text-[9px] text-slate-500">Düşük korelasyon sayesinde portföy riski, ağırlıklı ortalama riskten daha düşük oldu.</p>
+                </div>
+            </div>
+            <!-- Reel Getiri Hesabı -->
+            <div class="calc-box">
+                <p class="font-black text-sm text-slate-800 mb-3">📐 Reel Getiri Hesabı</p>
+                <div class="text-[11px] text-slate-600 space-y-1.5 leading-relaxed">
+                    <p><strong>Senaryo:</strong> Türkiye yatırımcısı</p>
+                    <div class="bg-white rounded-lg p-3 font-mono text-[10px] space-y-1">
+                        <p>Mevduat Faizi (nominal) = %45</p>
+                        <p>TÜFE Enflasyon          = %50</p>
+                        <p class="border-t pt-1 font-black text-rose-700">Reel Getiri ≈ 45% − 50% = <strong>−5%</strong></p>
+                    </div>
+                    <p class="text-[9px] text-slate-500">Nominal olarak %45 kazanılsa da enflasyon nedeniyle gerçek satın alma gücü %5 azalmıştır.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Akademik Referanslar -->
+        <div class="mt-6 p-5 bg-slate-900 rounded-2xl text-white">
+            <p class="font-black text-xs uppercase tracking-wider text-amber-400 mb-4">Akademik Referans Listesi</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-[10px] text-slate-300 leading-relaxed">
+                <p>• Sharpe, W.F. (1966). "Mutual Fund Performance." <em>Journal of Business</em>, 39(1), 119–138.</p>
+                <p>• Markowitz, H. (1952). "Portfolio Selection." <em>Journal of Finance</em>, 7(1), 77–91.</p>
+                <p>• Lo, A.W. &amp; MacKinlay, A.C. (1988). "Stock Market Prices Do Not Follow Random Walks." <em>Review of Financial Studies</em>, 1(1), 41–66.</p>
+                <p>• Gatev, E., Goetzmann, W.N. &amp; Rouwenhorst, K.G. (2006). "Pairs Trading." <em>Review of Financial Studies</em>, 19(3), 797–827.</p>
+                <p>• Fisher, I. (1930). <em>The Theory of Interest</em>. Macmillan.</p>
+                <p>• Bengen, W.P. (1994). "Determining Withdrawal Rates Using Historical Data." <em>Journal of Financial Planning</em>.</p>
+                <p>• Black, F. &amp; Scholes, M. (1973). "The Pricing of Options and Corporate Liabilities." <em>Journal of Political Economy</em>.</p>
+                <p>• Fama, E.F. (1970). "Efficient Capital Markets." <em>Journal of Finance</em>, 25(2), 383–417.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════════════════════════════ -->
+<script>
+(function() {
+    const pageData = document.getElementById('financial-dashboard-page');
+    if (!pageData) return;
+    
+    try {
+        const marketStress = parseFloat(pageData.getAttribute('data-market-stress') || '0');
+        const marketAssets = JSON.parse(pageData.getAttribute('data-market-assets') || '[]');
+        const sharpeRatios = JSON.parse(pageData.getAttribute('data-sharpe-ratios') || '{}');
+    
+    // ─── Piyasa Stres Gauge ────────────────────────────────────────────────────
+    if (marketStress && typeof initStressGauge === 'function') {
+        initStressGauge(marketStress);
+    }
+
+    // ─── Normalize Piyasa Grafiği ─────────────────────────────────────────────
+    if (marketAssets && marketAssets.length > 0 && typeof initMainChart === 'function') {
+        initMainChart(marketAssets);
+    }
+
+    // ─── Sharpe Ratio Karşılaştırma Grafiği ──────────────────────────────────
+    if (sharpeRatios && Object.keys(sharpeRatios).length > 0) {
+        (function() {
+            const ctx = document.getElementById('sharpeChart');
+            if (!ctx) return;
+            const data = sharpeRatios;
+            const labels = Object.values(data).map(d => d.name);
+            const values = Object.values(data).map(d => d.sharpe_ratio);
+            const colors = values.map(v =>
+                v > 2 ? 'rgba(16,185,129,0.8)' :
+                v > 1 ? 'rgba(99,102,241,0.8)' :
+                v > 0 ? 'rgba(245,158,11,0.8)' :
+                        'rgba(239,68,68,0.8)'
+            );
+            new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Sharpe Ratio',
+                        data: values,
+                        backgroundColor: colors,
+                        borderRadius: 6,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: c => `SR: ${c.parsed.x.toFixed(2)}` } }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(0,0,0,0.04)' },
+                            ticks: { font: { size: 10 } },
+                            title: { display: true, text: 'Sharpe Ratio', font: { size: 10 } }
+                        },
+                        y: { grid: { display: false }, ticks: { font: { size: 10, weight: '700' } } }
+                    }
+                }
+            });
+        })();
+    }
+    } catch(e) {
+        console.error('Error parsing financial dashboard data:', e);
+    }
+})();
+</script>
+
+<script src="{{ url_for('static', filename='js/financial_dashboard.js') }}"></script>
+</div>
+{% endblock %}

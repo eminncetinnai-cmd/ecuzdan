@@ -1,0 +1,66 @@
+/* E-Cüzdan v15 — Gizlilik Modu
+ *
+ * Halka açık ortamlarda ekrandaki para tutarlarını gizler.
+ *
+ * Kapsama üç katmanda sağlanır:
+ *   1. Jinja `format_money` filtresi tutarı <span class="amount"> ile sarar
+ *      (şablonlardaki açık kullanımlar).
+ *   2. privacy-mode.js, sunucu tarafı f-string'lerden gelen ve filtreden
+ *      geçmeyen tutarları metin düğümü taramasıyla işaretler.
+ *   3. Grafik canvas'ları tek tek değer taşımadığı için bütün olarak bulanıklaşır.
+ *
+ * Bulanıklaştırma geri döndürülebilir olmalı: kullanıcı üzerine gelince
+ * (veya klavyeyle odaklanınca) değeri görebilir.
+ */
+
+html.privacy .amount,
+html.privacy canvas {
+    filter: blur(7px);
+    transition: filter 0.15s ease;
+    /* Bulanık metnin seçilip kopyalanmasını engelle */
+    user-select: none;
+}
+
+/* Üzerine gelince göster — tek bir değeri kontrol etmek için.
+   Klavye kullanıcısı üst bardaki düğmeyle tümünü açar (tutarlara tek tek
+   tabindex verilmiyor; sayfa başına 25+ durak gezinmeyi bozardı). */
+html.privacy .amount:hover,
+html.privacy canvas:hover {
+    filter: none;
+    user-select: auto;
+}
+
+/* Gizlilik açıkken üst bardaki düğme durumu belli olmalı */
+html.privacy .privacy-toggle {
+    background: rgba(245, 158, 11, 0.22);
+    border-color: rgba(245, 158, 11, 0.55);
+}
+
+.privacy-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.privacy-toggle:hover {
+    background: rgba(245, 158, 11, 0.2);
+}
+
+/* Simge duruma göre değişir: kapalıyken açık göz, açıkken üstü çizili göz */
+.privacy-icon-closed { display: none; }
+html.privacy .privacy-icon-open { display: none; }
+html.privacy .privacy-icon-closed { display: inline; }
+
+/* Yazdırmada gizlilik korunur */
+@media print {
+    html.privacy .amount,
+    html.privacy canvas { filter: blur(8px) !important; }
+}

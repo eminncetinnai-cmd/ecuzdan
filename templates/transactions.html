@@ -1,0 +1,616 @@
+{% extends "layout.html" %}
+{% from 'macros/forms.html' import date_field %}
+{% block vendor_head %}
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/tr.js"></script>
+{% endblock %}
+{% block content %}
+<style>
+    .transaction-card {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .transaction-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 40px -15px rgba(0, 0, 0, 0.1);
+    }
+    .form-section {
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        border-radius: 0.75rem;
+        padding: 0.75rem;
+        margin-bottom: 0.75rem;
+        background: rgba(255, 255, 255, 0.5);
+    }
+    .form-section-title {
+        font-size: 9px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #64748b;
+        margin-bottom: 0.5rem;
+    }
+    .readonly-field { background-color: rgba(16, 185, 129, 0.06); cursor: not-allowed; }
+    #transaction_form.edit-mode { border-left: 4px solid #f59e0b; }
+</style>
+
+<div class="max-w-6xl mx-auto">
+    <div class="mb-8">
+        <h2 class="text-4xl font-black text-slate-900 tracking-tighter uppercase leading-none bg-gradient-to-r from-slate-900 via-amber-700 to-slate-900 bg-clip-text text-transparent">{{ _('tx_single_title') }}</h2>
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">{{ _('tx_single_subtitle') }}</p>
+    </div>
+
+    <div class="space-y-6">
+        <!-- FORM ON TOP - HIDDEN, WILL BE SHOWN IN MODAL -->
+        <div id="mainFormContainer" class="hidden">
+            <div class="transaction-card premium-card p-6 bg-white/80 border-l-4 border-amber-400 shadow-lg">
+                <div class="flex items-center mb-6">
+                    <div class="bg-amber-100 p-3 rounded-xl mr-4">
+                        <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight" id="form_title">{{ _('tx_new_title') }}</h3>
+                        <p class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider" id="form_subtitle">{{ _('tx_new_subtitle') }}</p>
+                    </div>
+                </div>
+                <form id="transaction_form" action="/new_transaction" method="POST" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('tx_date_label') }}</label>
+                        {{ date_field('date', edit_tx.date|format_date if edit_tx else today_display, '', 'w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-amber-400 outline-none text-xs font-bold text-slate-800') }}
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('tx_category_label') }}</label>
+                        <select name="category" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-amber-400 outline-none text-xs font-black text-indigo-600">
+                            {% for c in cats %}<option value="{{ c.name }}" {{ 'selected' if edit_tx and edit_tx.category == c.name else '' }}>{{ c.name }} ({{ c.type }})</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('tx_amount_label') }}</label>
+                        <input type="number" step="0.01" name="amount" placeholder="0.00" value="{{ edit_tx.amount if edit_tx else '' }}" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-black text-xl text-slate-800 focus:ring-2 focus:ring-amber-400 outline-none" required>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('tx_description_label') }}</label>
+                        <input type="text" name="description" placeholder="{{ _('tx_description_label') }}" value="{{ edit_tx.description if edit_tx else '' }}" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-amber-400 outline-none text-xs text-slate-700">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('tx_note_label') }}</label>
+                        <input type="text" name="note" placeholder="{{ _('tx_note_label') }}" value="{{ edit_tx.note if edit_tx else '' }}" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-amber-400 outline-none text-xs text-slate-500 italic">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('tx_status_label') }}</label>
+                        <select name="status" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-amber-400 outline-none text-xs font-bold text-slate-700">
+                            <option value="Bekliyor" {{ 'selected' if edit_tx and edit_tx.status == 'Bekliyor' else '' }}>{{ _('tx_status_pending') }}</option>
+                            <option value="Ödendi" {{ 'selected' if edit_tx and edit_tx.status == 'Ödendi' else '' }}>{{ _('tx_status_paid') }}</option>
+                        </select>
+                    </div>
+
+                    <p id="edit_hint" class="{{ '' if edit_tx else 'hidden' }} text-[9px] font-bold text-amber-600 uppercase tracking-wide bg-amber-50 p-2 rounded-lg border border-amber-100 md:col-span-2 lg:col-span-3">
+                        Düzenleme modu: işlem detayları güncellenecek.
+                    </p>
+
+                    <div class="flex space-x-2 md:col-span-2 lg:col-span-3">
+                        <button type="submit" id="transaction_submit_btn" class="flex-1 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-900 font-black p-4 rounded-xl shadow-lg uppercase text-[10px] tracking-wider hover:shadow-xl transition transform hover:scale-[1.02]">
+                            {{ _('tx_save_btn') }}
+                        </button>
+                        <button type="button" id="transaction_cancel_btn" class="{{ '' if edit_tx else 'hidden' }} px-4 bg-slate-200 text-slate-700 p-4 rounded-xl font-black text-[10px] uppercase tracking-wider hover:bg-slate-300 transition shadow-lg" onclick="cancelEdit()">{{ _('tx_cancel_btn') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- TABLE ON BOTTOM -->
+        <div class="transaction-card premium-card p-6 bg-white/80 shadow-lg">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">{{ _('tx_recent_title') }}</h3>
+                    <div class="flex items-center gap-3">
+                        <a href="/transactions/explorer" class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-900 rounded-xl text-xs font-black shadow-lg hover:shadow-xl transition transform hover:scale-105">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                            <span>Gezgin</span>
+                        </a>
+                        <button type="button" onclick="openNewTransactionModal()" class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl text-sm font-black shadow-lg hover:shadow-xl transition transform hover:scale-105">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                            <span>Yeni İşlem</span>
+                        </button>
+                        <a href="/" class="text-[10px] font-bold text-indigo-600 hover:underline">{{ _('tx_cash_flow_link') }}</a>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-5 p-4 bg-slate-50/80 rounded-2xl border border-slate-100">
+                    <div class="lg:col-span-2">
+                        <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">{{ _('tx_search_label') }}</label>
+                        <input type="text" id="txSearch" placeholder="{{ _('tx_search_placeholder') }}" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white focus:ring-2 focus:ring-amber-400 outline-none font-semibold">
+                    </div>
+                    <div>
+                        <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">{{ _('tx_filter_category') }}</label>
+                        <select id="txFilterCategory" class="w-full p-2.5 border border-slate-200 rounded-xl text-[10px] font-bold bg-white outline-none">
+                            <option value="">{{ _('tx_filter_all') }}</option>
+                            {% for c in cats %}<option value="{{ c.name }}">{{ c.name }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">{{ _('tx_filter_type') }}</label>
+                        <select id="txFilterType" class="w-full p-2.5 border border-slate-200 rounded-xl text-[10px] font-bold bg-white outline-none">
+                            <option value="">{{ _('tx_filter_all') }}</option>
+                            <option value="Gelir">{{ _('tx_type_income') }}</option>
+                            <option value="Gider">{{ _('tx_type_expense') }}</option>
+                            <option value="Yatırım">{{ _('tx_type_investment') }}</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">{{ _('tx_filter_status') }}</label>
+                        <select id="txFilterStatus" class="w-full p-2.5 border border-slate-200 rounded-xl text-[10px] font-bold bg-white outline-none">
+                            <option value="">{{ _('tx_filter_all') }}</option>
+                            <option value="Ödendi">{{ _('tx_status_paid') }}</option>
+                            <option value="Bekliyor">{{ _('tx_status_pending') }}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table id="transTable" class="w-full text-left text-[11px] display">
+                        <thead class="text-slate-400 uppercase text-[9px] font-bold border-b border-slate-200">
+                            <tr>
+                                <th class="py-3 px-2">{{ _('table_date') }}</th>
+                                <th>{{ _('table_category') }}</th>
+                                <th>{{ _('table_description') }}</th>
+                                <th>{{ _('table_note') }}</th>
+                                <th>{{ _('table_amount') }}</th>
+                                <th>{{ _('table_status') }}</th>
+                                <th class="text-right px-2">{{ _('table_action') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody class="font-semibold text-slate-700">
+                            {% for t in last_t.items %}
+                            <tr class="border-b border-slate-100 hover:bg-slate-50/40 transition tx-row"
+                                data-category="{{ t.category }}"
+                                data-type="{{ t.type }}"
+                                data-status="{{ t.status }}"
+                                data-search="{{ ((t.description or '') ~ ' ' ~ (t.note or ''))|lower }}">
+                                <td class="py-2 px-2" data-order="{{ t.date }}">{{ t.date|format_date }}</td>
+                                <td class="py-2 text-indigo-600 font-bold text-[10px]">{{ t.category }}</td>
+                                <td class="py-2 text-[11px] text-slate-700">{{ t.description }}</td>
+                                <td class="py-2 text-[11px] italic text-slate-500">{{ t.note or '—' }}</td>
+                                <td class="py-2 font-black text-[11px] {% if t.type == 'Gelir' %}text-emerald-600{% elif t.type == 'Yatırım' %}text-blue-500{% else %}text-rose-600{% endif %}" data-order="{{ t.amount }}">{{ t.amount|format_money }} ₺</td>
+                                <td class="py-2">
+                                    <span class="px-2 py-0.5 rounded-lg font-bold text-[9px] {{ 'bg-emerald-100 text-emerald-700' if t.status == 'Ödendi' else 'bg-rose-100 text-rose-700' }}">{{ t.status }}</span>
+                                </td>
+                                <td class="text-right py-2 px-2 whitespace-nowrap">
+                                    {% if t.source_type in ['asset', 'asset_sale'] and t.source_id %}
+                                    <a href="{{ url_for('assets.assets_management', edit=t.source_id) }}"
+                                       class="text-emerald-600 font-bold text-[9px] hover:underline"
+                                       title="{{ _('table_asset_linked_hint') }}">{{ _('table_go_to_asset') }}</a>
+                                    {% else %}
+                                    <button type="button" class="edit-tx-btn text-indigo-500 font-bold text-[9px] hover:underline mr-2 bg-transparent border-none cursor-pointer"
+                                            data-id="{{ t.id }}"
+                                            data-date="{{ t.date|format_date }}"
+                                            data-category="{{ t.category }}"
+                                            data-amount="{{ t.amount }}"
+                                            data-description="{{ t.description }}"
+                                            data-note="{{ t.note or '' }}"
+                                            data-status="{{ t.status }}">{{ _('table_edit') }}</button>
+                                    <button type="button" class="delete-tx-btn text-rose-500 font-bold text-[9px] hover:underline bg-transparent border-none cursor-pointer"
+                                            data-id="{{ t.id }}">{{ _('table_delete') }}</button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Transaction Modal -->
+<div id="editModal" class="edit-modal hidden">
+    <div class="edit-modal-backdrop" onclick="closeEditTransactionModal()"></div>
+    <div class="edit-modal-content">
+        <div class="edit-modal-card">
+            <div class="edit-modal-header">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center;">
+                        <div style="background: #fef3c7; padding: 0.5rem; border-radius: 0.75rem; margin-right: 0.75rem;">
+                            <svg style="width: 1.25rem; height: 1.25rem; color: #d97706;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 1.125rem; font-weight: 900; color: #1e293b; text-transform: uppercase; letter-spacing: -0.025em;">İşlemi Düzenle</h3>
+                            <p style="font-size: 0.625rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">İşlem detaylarını güncelle</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="closeEditTransactionModal()" style="color: #94a3b8; background: none; border: none; cursor: pointer; transition: color 0.2s;">
+                        <svg style="width: 1.5rem; height: 1.5rem;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            </div>
+            
+            <form id="editModalForm" class="edit-modal-body">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="transaction_id" id="modalTransactionId">
+                
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Tarih</label>
+                    <input type="text" name="date" id="modalDate" class="edit-modal-input" required>
+                </div>
+                
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Kategori</label>
+                    <select name="category" id="modalCategory" class="edit-modal-input">
+                        {% for c in cats %}<option value="{{ c.name }}">{{ c.name }} ({{ c.type }})</option>{% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Tutar</label>
+                    <input type="number" step="0.01" name="amount" id="modalAmount" placeholder="0.00" class="edit-modal-input" style="font-size: 1.25rem; font-weight: 900;" required>
+                </div>
+                
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Açıklama</label>
+                    <input type="text" name="description" id="modalDescription" placeholder="Açıklama" class="edit-modal-input" style="font-weight: 400;">
+                </div>
+                
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Not</label>
+                    <input type="text" name="note" id="modalNote" placeholder="Not" class="edit-modal-input" style="font-style: italic; color: #64748b;">
+                </div>
+                
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Durum</label>
+                    <select name="status" id="modalStatus" class="edit-modal-input">
+                        <option value="Bekliyor">Bekliyor</option>
+                        <option value="Ödendi">Ödendi</option>
+                    </select>
+                </div>
+                
+                <div class="flex space-x-2 pt-2" style="display: flex; gap: 0.5rem;">
+                    <button type="submit" style="flex: 1; background: linear-gradient(to right, #fbbf24, #f59e0b); color: #0f172a; font-weight: 900; padding: 1rem; border-radius: 0.75rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); text-transform: uppercase; font-size: 0.625rem; letter-spacing: 0.05em; border: none; cursor: pointer; transition: box-shadow 0.2s;">
+                        İŞLEMİ GÜNCELLE
+                    </button>
+                    <button type="button" onclick="closeEditTransactionModal()" style="padding: 1rem; background: #e2e8f0; color: #334155; border-radius: 0.75rem; font-weight: 900; font-size: 0.625rem; text-transform: uppercase; letter-spacing: 0.05em; border: none; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); transition: background 0.2s;">
+                        İPTAL
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- New Transaction Modal -->
+<div id="newTransactionModal" class="edit-modal hidden">
+    <div class="edit-modal-backdrop" onclick="closeNewTransactionModal()"></div>
+    <div class="edit-modal-content">
+        <div class="edit-modal-card">
+            <div class="edit-modal-header">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center;">
+                        <div style="background: #d1fae5; padding: 0.5rem; border-radius: 0.75rem; margin-right: 0.75rem;">
+                            <svg style="width: 1.25rem; height: 1.25rem; color: #059669;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 1.125rem; font-weight: 900; color: #1e293b; text-transform: uppercase; letter-spacing: -0.025em;">Yeni İşlem Ekle</h3>
+                            <p style="font-size: 0.625rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Tek seferlik işlem kaydı</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="closeNewTransactionModal()" style="color: #94a3b8; background: none; border: none; cursor: pointer; transition: color 0.2s;">
+                        <svg style="width: 1.5rem; height: 1.5rem;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            </div>
+            
+            <form id="newTransactionForm" action="/new_transaction" method="POST" class="edit-modal-body">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Tarih</label>
+                    {{ date_field('date', today_display, '', 'edit-modal-input', true, 'newTxDate') }}
+                </div>
+                
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Kategori</label>
+                    <select name="category" id="newTxCategory" class="edit-modal-input">
+                        {% for c in cats %}<option value="{{ c.name }}">{{ c.name }} ({{ c.type }})</option>{% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Tutar</label>
+                    <input type="number" step="0.01" name="amount" id="newTxAmount" placeholder="0.00" class="edit-modal-input" style="font-size: 1.25rem; font-weight: 900;" required>
+                </div>
+                
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Açıklama</label>
+                    <input type="text" name="description" id="newTxDescription" placeholder="Açıklama" class="edit-modal-input" style="font-weight: 400;">
+                </div>
+                
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Not</label>
+                    <input type="text" name="note" id="newTxNote" placeholder="Not" class="edit-modal-input" style="font-style: italic; color: #64748b;">
+                </div>
+                
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Durum</label>
+                    <select name="status" id="newTxStatus" class="edit-modal-input">
+                        <option value="Bekliyor">Bekliyor</option>
+                        <option value="Ödendi">Ödendi</option>
+                    </select>
+                </div>
+                
+                <div class="flex space-x-2 pt-2" style="display: flex; gap: 0.5rem;">
+                    <button type="submit" style="flex: 1; background: linear-gradient(to right, #10b981, #059669); color: white; font-weight: 900; padding: 1rem; border-radius: 0.75rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); text-transform: uppercase; font-size: 0.625rem; letter-spacing: 0.05em; border: none; cursor: pointer; transition: box-shadow 0.2s;">
+                        İŞLEM EKLE
+                    </button>
+                    <button type="button" onclick="closeNewTransactionModal()" style="padding: 1rem; background: #e2e8f0; color: #334155; border-radius: 0.75rem; font-weight: 900; font-size: 0.625rem; text-transform: uppercase; letter-spacing: 0.05em; border: none; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); transition: background 0.2s;">
+                        İPTAL
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Server-side edit mode initialization
+    var editTxId = {% if edit_tx %}{{ edit_tx.id }}{% else %}null{% endif %};
+    var editTxDate = {% if edit_tx %}'{{ edit_tx.date|format_date }}'{% else %}''{% endif %};
+
+    $(document).ready(function(){
+        if (editTxId) {
+            const form = document.getElementById('transaction_form');
+            form.action = '/edit_t/' + editTxId;
+            form.classList.add('edit-mode');
+            
+            document.getElementById('form_title').textContent = 'İşlemi Düzenle';
+            document.getElementById('form_subtitle').textContent = 'İşlem detaylarını güncelle';
+            
+            const submitBtn = document.getElementById('transaction_submit_btn');
+            submitBtn.innerText = 'İŞLEMİ GÜNCELLE';
+            submitBtn.classList.add('ring-4', 'ring-amber-300');
+            
+            // Initialize flatpickr with the edit date
+            const dateInput = form.querySelector(`input[name="date"]`);
+            if (dateInput._flatpickr && editTxDate) {
+                dateInput._flatpickr.setDate(editTxDate, false, "d/m/Y");
+            }
+        }
+
+        const table = $('#transTable').DataTable({
+            order: [[0, 'desc']],
+            pageLength: 50,
+            lengthMenu: [[25, 50, 100, -1], [25, 50, 100, 'Tümü']],
+            dom: '<"flex flex-wrap justify-between items-center gap-2 mb-3"lip>rtip',
+            columnDefs: [
+                { orderable: false, targets: [6] }
+            ],
+            language: {
+                emptyTable: 'Kayıt bulunamadı',
+                info: '_TOTAL_ kayıttan _START_ - _END_ arası gösteriliyor',
+                infoEmpty: 'Kayıt yok',
+                lengthMenu: 'Sayfada _MENU_ kayıt göster',
+                paginate: { next: 'Sonraki', previous: 'Önceki' }
+            }
+        });
+
+        const filterFn = function(settings, data, dataIndex) {
+            if (settings.nTable.id !== 'transTable') return true;
+            const row = table.row(dataIndex).node();
+            const $row = $(row);
+            const category = $('#txFilterCategory').val();
+            const type = $('#txFilterType').val();
+            const status = $('#txFilterStatus').val();
+            const q = $('#txSearch').val().toLowerCase().trim();
+            if (category && $row.data('category') !== category) return false;
+            if (type && $row.data('type') !== type) return false;
+            if (status && $row.data('status') !== status) return false;
+            if (q && ($row.data('search') || '').indexOf(q) === -1) return false;
+            return true;
+        };
+
+        $.fn.dataTable.ext.search.push(filterFn);
+
+        $('#txSearch, #txFilterCategory, #txFilterType, #txFilterStatus').on('keyup change', function() {
+            table.draw();
+        });
+
+        // Event delegation for edit and delete buttons (handles DataTables pagination)
+        $('#transTable tbody').on('click', '.edit-tx-btn', function(e) {
+            e.preventDefault();
+            console.log('Edit button clicked via delegation');
+            openEditModal(this);
+        });
+
+        $('#transTable tbody').on('click', '.delete-tx-btn', function(e) {
+            e.preventDefault();
+            console.log('Delete button clicked via delegation');
+            const transactionId = parseInt(this.dataset.id);
+            deleteTransaction(transactionId);
+        });
+    });
+
+    // Modal Functions
+    function openEditModal(btn) {
+        console.log('openEditModal called');
+        const form = document.getElementById('editModalForm');
+        
+        // Get transaction data from button
+        const id = btn.dataset.id;
+        const date = btn.dataset.date;
+        const category = btn.dataset.category;
+        const amount = btn.dataset.amount;
+        const description = btn.dataset.description;
+        const note = btn.dataset.note;
+        const status = btn.dataset.status;
+        
+        console.log('Transaction data:', { id, date, category, amount, description, note, status });
+        
+        // Populate modal form
+        document.getElementById('modalTransactionId').value = id;
+        document.getElementById('modalDate').value = date;
+        document.getElementById('modalCategory').value = category;
+        document.getElementById('modalAmount').value = amount;
+        document.getElementById('modalDescription').value = description;
+        document.getElementById('modalNote').value = note;
+        document.getElementById('modalStatus').value = status;
+        
+        console.log('Opening modal');
+        window.openModal('editModal');
+    }
+
+    function closeEditTransactionModal() {
+        window.closeModal('editModal');
+        // Clear form
+        const form = document.getElementById('editModalForm');
+        if (form) {
+            form.reset();
+        }
+    }
+
+    function openNewTransactionModal() {
+        const dateInput = document.getElementById('newTxDate');
+        if (dateInput && !dateInput.value.trim()) {
+            dateInput.value = '{{ today_display }}';
+        }
+        window.openModal('newTransactionModal');
+    }
+
+    function closeNewTransactionModal() {
+        window.closeModal('newTransactionModal');
+        // Clear form
+        const form = document.getElementById('newTransactionForm');
+        if (form) {
+            form.reset();
+            const dateInput = document.getElementById('newTxDate');
+            if (dateInput) dateInput.value = '{{ today_display }}';
+        }
+    }
+
+    // Delete Transaction Function
+    function deleteTransaction(transactionId) {
+        console.log('deleteTransaction called with id:', transactionId);
+        if (typeof window.showGlobalConfirm === 'function') {
+            window.showGlobalConfirm('İşlemi Sil', 'Bu işlemi silmek istediğinize emin misiniz?', () => {
+                performDelete(transactionId);
+            }, true);
+        } else if (confirm('Bu işlemi silmek istediğinize emin misiniz?')) {
+            performDelete(transactionId);
+        }
+    }
+
+    function performDelete(transactionId) {
+        console.log('performDelete called with id:', transactionId);
+        fetch('/delete_t/' + transactionId, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message || 'İşlem silindi', 'success');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                showToast(data.message || 'Bir hata oluştu', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+        });
+    }
+
+    // AJAX Form Submission
+    document.getElementById('editModalForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const form = this;
+        const formData = new FormData(form);
+        const transactionId = document.getElementById('modalTransactionId').value;
+        
+        // Send AJAX request
+        fetch('/edit_t/' + transactionId, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message || 'İşlem güncellendi', 'success');
+                setTimeout(() => {
+                    closeEditTransactionModal();
+                    window.location.reload();
+                }, 1500);
+            } else {
+                showToast(data.message || 'Bir hata oluştu', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+        });
+    });
+
+    // New Transaction Form AJAX
+    document.getElementById('newTransactionForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const form = this;
+        const dateInput = document.getElementById('newTxDate');
+        if (dateInput && !dateInput.value.trim()) {
+            dateInput.value = '{{ today_display }}';
+        }
+        const formData = new FormData(form);
+        if (dateInput) {
+            formData.set('date', dateInput.value.trim());
+        }
+        
+        // Send AJAX request
+        fetch('/new_transaction', {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message || 'İşlem eklendi', 'success');
+                setTimeout(() => {
+                    closeNewTransactionModal();
+                    window.location.reload();
+                }, 1500);
+            } else {
+                showToast(data.message || 'Bir hata oluştu', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+        });
+    });
+
+    // Check if modal parameter is present in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('modal') === 'new') {
+        // Remove parameter from URL without reloading
+        window.history.replaceState({}, document.title, window.location.pathname);
+        // Open modal after a short delay to ensure page is loaded
+        setTimeout(function() {
+            openNewTransactionModal();
+        }, 100);
+    }
+
+</script>
+{% endblock %}

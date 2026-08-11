@@ -1,0 +1,68 @@
+{# Modal Component Macros #}
+
+{% macro modal(modal_id, title, content, footer='', size='md') %}
+<div id="{{ modal_id }}" class="modal-overlay hidden">
+    <div class="modal-content modal-{{ size }}">
+        <div class="modal-header">
+            <h3 class="modal-title">{{ title }}</h3>
+            <button type="button" class="modal-close" onclick="closeModal('{{ modal_id }}')">&times;</button>
+        </div>
+        <div class="modal-body">
+            {{ content|safe }}
+        </div>
+        {% if footer %}
+        <div class="modal-footer">
+            {{ footer|safe }}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}
+
+{% macro confirm_modal(modal_id, title, message, confirm_text='Evet', cancel_text='İptal', confirm_action='') %}
+<div id="{{ modal_id }}" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3 class="modal-title">{{ title }}</h3>
+            <button type="button" class="modal-close" onclick="closeModal('{{ modal_id }}')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p class="text-slate-600">{{ message }}</p>
+        </div>
+        <div class="modal-footer flex gap-3 justify-end">
+            <button type="button" class="btn-secondary" onclick="closeModal('{{ modal_id }}')">{{ cancel_text }}</button>
+            <button type="button" class="btn-danger" onclick="{{ confirm_action }}; closeModal('{{ modal_id }}')">{{ confirm_text }}</button>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro alert_modal(modal_id, title, message, type='info') %}
+<div id="{{ modal_id }}" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3 class="modal-title">{{ title }}</h3>
+            <button type="button" class="modal-close" onclick="closeModal('{{ modal_id }}')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="flex items-start gap-4">
+                <div class="bg-{{ type }}-100 p-3 rounded-xl">
+                    {% if type == 'success' %}
+                    <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    {% elif type == 'error' %}
+                    <svg class="w-6 h-6 text-rose-600" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    {% elif type == 'warning' %}
+                    <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    {% else %}
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    {% endif %}
+                </div>
+                <p class="text-slate-600">{{ message }}</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-primary w-full" onclick="closeModal('{{ modal_id }}')">Tamam</button>
+        </div>
+    </div>
+</div>
+{% endmacro %}

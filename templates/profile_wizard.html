@@ -1,0 +1,378 @@
+{% extends "layout.html" %}
+
+{% block title %}Yatırımcı Profil Testi - E-Cüzdan{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Yatırımcı Profil Testi</h1>
+        <p>5 boyutlu analiz ile risk profilinizi belirleyin</p>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3>Test Adımları</h3>
+                    <p class="mb-0">Adım {{ current_step }} / {{ total_steps }}</p>
+                </div>
+                <div class="progress" style="width: 300px;">
+                    <div class="progress-bar" role="progressbar" style="width: {{ (current_step / total_steps) * 100 }}%;" aria-valuenow="{{ current_step }}" aria-valuemin="0" aria-valuemax="{{ total_steps }}">
+                        {{ (current_step / total_steps) * 100 }}%
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            <div id="wizard-container">
+                <!-- Sorular buraya AJAX ile yüklenecek -->
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Yükleniyor...</span>
+                    </div>
+                    <p>Sorular yükleniyor...</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-footer">
+            <div class="d-flex justify-content-between">
+                <button type="button" onclick="goBack()" disabled>Geri</button>
+                <button type="button" onclick="goNext()" disabled>İleri</button>
+                <button type="button" onclick="submitTest()" style="display: none;">Testi Tamamla</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.progress {
+    height: 25px;
+    background-color: #e9ecef;
+    border-radius: 5px;
+}
+
+.progress-bar {
+    background-color: #0f172a;
+    transition: width 0.3s ease;
+}
+
+.question-card {
+    background: #f8fafc;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.option-btn {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 10px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    background: white;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.option-btn:hover {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.option-btn.selected {
+    border-color: #3b82f6;
+    background: #dbeafe;
+}
+
+.explanation {
+    background: #fef3c7;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+    display: none;
+}
+
+.explanation.show {
+    display: block;
+}
+</style>
+
+<script>
+let currentStep = 1;
+let totalSteps = 7;
+let answers = {};
+let questions = {};
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadQuestions();
+});
+
+async function loadQuestions() {
+    try {
+        const response = await fetch('/profile/api/questions');
+        const data = await response.json();
+        
+        if (data.success) {
+            // Soruları boyut bazlı grupla
+            questions = {};
+            data.questions.forEach(q => {
+                if (!questions[q.dimension]) {
+                    questions[q.dimension] = [];
+                }
+                questions[q.dimension].push(q);
+            });
+            
+            renderStep(currentStep);
+        } else {
+            if(typeof window.showToast === 'function') window.showToast('Sorular yüklenirken hata oluştu.', 'error');
+            else alert('Sorular yüklenirken hata oluştu.');
+        }
+    } catch (error) {
+        console.error('Error loading questions:', error);
+        if(typeof window.showToast === 'function') window.showToast('Sorular yüklenirken hata oluştu.', 'error');
+        else alert('Sorular yüklenirken hata oluştu.');
+    }
+}
+
+function renderStep(step) {
+    const container = document.getElementById('wizard-container');
+    const stepTitles = [
+        'Giriş',
+        'Finansal Okuryazarlık',
+        'Risk Kapasitesi',
+        'Risk Toleransı',
+        'Davranışsal Finans',
+        'Yatırım Deneyimi',
+        'Özet ve Gönderim'
+    ];
+    
+    const stepDescriptions = [
+        'Bu test, yatırım profilinizi belirlemek için 5 farklı boyutta analiz yapacaktır.',
+        'Finansal temel kavramlar hakkında bilginizi ölçeceğiz.',
+        'Finansal durumunuz ve risk kapasitenizi analiz edeceğiz.',
+        'Risk toleransınız ve kayıp durumunda davranışınızı değerlendireceğiz.',
+        'Yatırım kararlarınızı etkileyen davranışsal faktörleri inceleyeceğiz.',
+        'Yatırım deneyiminizi ve kullandığınız araçları değerlendireceğiz.',
+        'Cevaplarınızı gözden geçirin ve profilinizi oluşturun.'
+    ];
+    
+    let html = `
+        <div class="step-header">
+            <h4>${stepTitles[step - 1]}</h4>
+            <p class="text-muted">${stepDescriptions[step - 1]}</p>
+        </div>
+    `;
+    
+    if (step === 1) {
+        html += `
+            <div class="text-center py-5">
+                <div style="font-size: 64px; margin-bottom: 20px;">📊</div>
+                <h5>Yatırımcı Profil Analizi</h5>
+                <p>Bu test yaklaşık 5-10 dakika sürecektir.</p>
+                <p>Tüm cevaplarınız gizli tutulacak ve sadece profil oluşturma için kullanılacaktır.</p>
+                <div class="alert alert-info mt-4">
+                    <strong>Dikkat:</strong> Lütfen tüm soruları dürüstçe cevaplayın. Bu, size en uygun yatırım önerilerini sunmamızı sağlayacaktır.
+                </div>
+            </div>
+        `;
+    } else if (step === 7) {
+        html += renderSummary();
+    } else {
+        const dimensionKeys = Object.keys(questions);
+        const dimension = dimensionKeys[step - 2];
+        const dimensionQuestions = questions[dimension];
+        
+        html += `<div class="dimension-questions">`;
+        dimensionQuestions.forEach((q, index) => {
+            html += renderQuestion(q, index);
+        });
+        html += `</div>`;
+    }
+    
+    container.innerHTML = html;
+    
+    // Buton durumlarını güncelle
+    document.getElementById('btn-back').disabled = step === 1;
+    
+    // "İleri" butonunu enable et (step 1'den sonra ve step 7 hariç)
+    const nextBtn = document.getElementById('btn-next');
+    if (step === 1) {
+        nextBtn.disabled = false; // İlk adımda da enable et
+    } else if (step === 7) {
+        nextBtn.style.display = 'none';
+        document.getElementById('btn-submit').style.display = 'inline-block';
+    } else {
+        nextBtn.disabled = false;
+        nextBtn.style.display = 'inline-block';
+        document.getElementById('btn-submit').style.display = 'none';
+    }
+    
+    // Progress bar güncelle
+    const progressBar = document.querySelector('.progress-bar');
+    progressBar.style.width = `${(step / totalSteps) * 100}%`;
+    progressBar.setAttribute('aria-valuenow', step);
+}
+
+function renderQuestion(question, index) {
+    let optionsHtml = '';
+    question.options.forEach(option => {
+        const isSelected = answers[question.id] === option.value ? 'selected' : '';
+        optionsHtml += `
+            <button type="button" onclick="selectOption('${question.id}', ${option.value}, this)">
+                ${option.text}
+            </button>
+        `;
+    });
+    
+    return `
+        <div class="question-card" id="question-${question.id}">
+            <h5>${index + 1}. ${question.question}</h5>
+            <div class="options">
+                ${optionsHtml}
+            </div>
+            ${question.explanation ? `
+                <button type="button" onclick="toggleExplanation('${question.id}')">
+                    💡 Açıklama
+                </button>
+                <div class="explanation" id="explanation-${question.id}">
+                    ${question.explanation}
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+function renderSummary() {
+    let html = '<div class="summary">';
+    html += '<h5>Cevap Özeti</h5>';
+    
+    const dimensionNames = {
+        'literacy': 'Finansal Okuryazarlık',
+        'capacity': 'Risk Kapasitesi',
+        'tolerance': 'Risk Toleransı',
+        'behavioral': 'Davranışsal Finans',
+        'experience': 'Yatırım Deneyimi'
+    };
+    
+    let answeredCount = 0;
+    let totalCount = 0;
+    
+    Object.keys(questions).forEach(dimension => {
+        const dimensionQuestions = questions[dimension];
+        html += `<div class="dimension-summary mb-3">`;
+        html += `<h6>${dimensionNames[dimension]}</h6>`;
+        
+        dimensionQuestions.forEach(q => {
+            totalCount++;
+            if (answers[q.id] !== undefined) {
+                answeredCount++;
+                const selectedOption = q.options.find(o => o.value === answers[q.id]);
+                html += `<p><strong>${q.question}</strong>: ${selectedOption ? selectedOption.text : 'Cevaplanmadı'}</p>`;
+            }
+        });
+        
+        html += `</div>`;
+    });
+    
+    html += `<div class="alert alert-info">`;
+    html += `<strong>${answeredCount}/${totalCount}</strong> soru cevaplandı.`;
+    html += `</div>`;
+    
+    if (answeredCount < totalCount) {
+        html += `<div class="alert alert-warning">`;
+        html += `Tüm soruları cevaplamadan testi tamamlayamazsınız. Lütfen geri dönüp eksik soruları cevaplayın.`;
+        html += `</div>`;
+        document.getElementById('btn-submit').disabled = true;
+    } else {
+        document.getElementById('btn-submit').disabled = false;
+    }
+    
+    html += '</div>';
+    return html;
+}
+
+function selectOption(questionId, value, buttonElement) {
+    answers[questionId] = value;
+    
+    // Seçimi görsel olarak güncelle
+    const container = document.getElementById(`question-${questionId}`);
+    const buttons = container.querySelectorAll('.option-btn');
+    buttons.forEach(btn => btn.classList.remove('selected'));
+    buttonElement.classList.add('selected');
+}
+
+function toggleExplanation(questionId) {
+    const explanation = document.getElementById(`explanation-${questionId}`);
+    explanation.classList.toggle('show');
+}
+
+function goBack() {
+    if (currentStep > 1) {
+        currentStep--;
+        renderStep(currentStep);
+    }
+}
+
+function goNext() {
+    if (currentStep < totalSteps) {
+        currentStep++;
+        renderStep(currentStep);
+    }
+}
+
+async function submitTest() {
+    const submitBtn = document.getElementById('btn-submit');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Gönderiliyor...';
+    
+    try {
+        // Cevapları API formatına dönüştür
+        const answersData = [];
+        Object.keys(questions).forEach(dimension => {
+            questions[dimension].forEach(q => {
+                if (answers[q.id] !== undefined) {
+                    const selectedOption = q.options.find(o => o.value === answers[q.id]);
+                    answersData.push({
+                        question_id: q.id,
+                        dimension: q.dimension,
+                        value: answers[q.id],
+                        text: selectedOption ? selectedOption.text : ''
+                    });
+                }
+            });
+        });
+        
+        const response = await fetch('/profile/api/submit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ answers: answersData })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            if(typeof window.showToast === 'function') window.showToast('Profil başarıyla oluşturuldu!', 'success');
+            else alert('Profil başarıyla oluşturuldu!');
+            window.location.href = `/profile/result/${data.profile_id}`;
+        } else {
+            if(typeof window.showToast === 'function') window.showToast('Profil oluşturulurken hata oluştu: ' + data.message, 'error');
+            else alert('Profil oluşturulurken hata oluştu: ' + data.message);
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Testi Tamamla';
+        }
+    } catch (error) {
+        console.error('Error submitting test:', error);
+        if(typeof window.showToast === 'function') window.showToast('Profil gönderilirken hata oluştu.', 'error');
+        else alert('Profil gönderilirken hata oluştu.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Testi Tamamla';
+    }
+}
+</script>
+{% endblock %}

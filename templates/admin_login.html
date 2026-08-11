@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="premium-card p-8 bg-white/80 mb-10">
+    <h2 class="text-xl font-black text-slate-800 mb-4">{{ _('admin_login_title') }}</h2>
+    <form method="post" class="space-y-4">
+        <div>
+            <label class="block text-sm font-medium text-slate-700">{{ _('login_username') }}</label>
+            <input type="text" name="username" class="w-full px-3 py-2 border rounded" required>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-slate-700">{{ _('login_password') }}</label>
+            <input type="password" name="password" class="w-full px-3 py-2 border rounded" required>
+        </div>
+        <button type="submit" class="btn-success">{{ _('btn_login') }}</button>
+    </form>
+</div>
+{% endblock %}

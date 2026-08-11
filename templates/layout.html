@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+<html lang="{{ get_locale() }}" data-user-theme="{{ user_theme if user_theme is defined else 'light' }}" data-privacy-mode="{{ privacy_mode if privacy_mode is defined else false }}">
+<head>
+    <meta charset="UTF-8">
+    <script>
+        /* Tema, ilk boyamadan ÖNCE uygulanır — aksi halde koyu temada
+           kısa bir beyaz parlama (FOUC) görülür. Sunucudan gelen tercih
+           esastır; 'system' seçildiyse işletim sistemi tercihine bakılır. */
+        (function () {
+            var userTheme = document.documentElement.getAttribute('data-user-theme') || 'light';
+            var privacyMode = document.documentElement.getAttribute('data-privacy-mode') === 'true';
+            var dark = userTheme === 'dark' || (
+                userTheme === 'system' &&
+                window.matchMedia &&
+                window.matchMedia('(prefers-color-scheme: dark)').matches
+            );
+            document.documentElement.classList.toggle('dark', dark);
+            document.documentElement.classList.toggle('privacy', privacyMode);
+        })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ session.get('csrf_token', '') }}">
+    <title>{{ brand }} | Premium Wealth Management</title>
+    <!-- Outfit Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/utilities.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+    
+    <!-- Design Token Sistemi -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/design-tokens.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/spacing-normalize.css') }}">
+    <!-- External Libraries (will be replaced with local build after npm install) -->
+    <script src="{{ url_for('static', filename='js/tailwind-cdn.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/chart.min.js') }}" defer></script>
+    {% block vendor_head %}{% endblock %}
+    
+    <!-- UI Modern CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ui-modern.css') }}">
+
+    <!-- Koyu tema katmanı — Tailwind CDN kurallarını geçebilmesi için EN SON yüklenir -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme-dark.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/privacy-mode.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications-page.css') }}">
+</head>
+<body>
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
+
+    <!-- Notification Modal -->
+    <div id="notificationModal" class="notification-modal hidden fixed inset-0 z-[100]">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeNotificationModal()"></div>
+        <div class="absolute right-4 top-16 w-full max-w-md bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200/50 max-h-[80vh] flex flex-col">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between p-4 border-b border-slate-200/50">
+                <h3 class="text-sm font-bold text-slate-800">Bildirimler</h3>
+                <div class="flex items-center gap-2">
+                    <button onclick="markAllAsRead()" class="text-xs text-slate-500 hover:text-slate-700 transition">Tümünü Okundu İşaretle</button>
+                    <button onclick="closeNotificationModal()" class="p-1 hover:bg-slate-100 rounded-lg transition">
+                        <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <!-- Modal Content -->
+            <div id="notificationList" class="flex-1 overflow-y-auto p-2">
+                <div class="text-center py-8 text-slate-500 text-sm">Bildirimler yükleniyor...</div>
+            </div>
+            <!-- Modal Footer -->
+            <div class="p-3 border-t border-slate-200/50">
+                <a href="/notifications" class="block text-center text-xs font-semibold text-slate-600 hover:text-slate-800 transition">Tüm Bildirimleri Gör</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash Messages Data -->
+    <script id="flash-messages-data" type="application/json">
+        {% with msgs = get_flashed_messages(with_categories=true) %}
+        [
+        {% for cat, msg in msgs %}
+            {"message": {{ msg|tojson }}, "category": {{ cat|tojson }}}{% if not loop.last %},{% endif %}
+        {% endfor %}
+        ]
+        {% endwith %}
+    </script>
+
+    <script>
+        window._pendingToasts = window._pendingToasts || [];
+        (function() {
+            var flashData = document.getElementById('flash-messages-data');
+            if (flashData) {
+                var messages = JSON.parse(flashData.textContent);
+                messages.forEach(function(item) {
+                    window.addEventListener('DOMContentLoaded', function() {
+                        window.showToast(item.message, item.category);
+                    });
+                });
+            }
+        })();
+    </script>
+
+    <aside class="sidebar-premium" data-global-income-cats="{{ global_income_cats | tojson if global_income_cats is not none and global_income_cats else '[]' }}" data-global-expense-cats="{{ global_expense_cats | tojson if global_expense_cats is not none and global_expense_cats else '[]' }}" data-global-investment-cats="{{ global_investment_cats | tojson if global_investment_cats is not none and global_investment_cats else '[]' }}">
+        <div class="sidebar-content">
+            <div class="sidebar-top">
+                <a href="/" class="brand-area">
+                    <div class="brand-logo">E.Ç.</div>
+                    <div class="brand-info">
+                        <p class="brand-kicker">Emin Çetin</p>
+                        <h1 class="brand-title">{{ brand }}</h1>
+                        <p class="brand-subtitle">{{ _('sidebar_premium_wealth') }}</p>
+                    </div>
+                </a>
+                <div class="px-3 flex justify-center gap-3 mt-3">
+                    <div class="relative group">
+                        <a href="/transactions?modal=new" class="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-sky-400 to-sky-600 hover:from-sky-500 hover:to-sky-700 text-white rounded-2xl transition-all shadow-md hover:shadow-lg shadow-sky-200 hover:scale-105 transform duration-200 cursor-pointer">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                            </svg>
+                        </a>
+                        <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 scale-95 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-200 bg-slate-900/95 backdrop-blur-sm text-white text-[9px] font-black uppercase tracking-wider py-1.5 px-2.5 rounded-lg whitespace-nowrap shadow-xl z-50 pointer-events-none">
+                            Hızlı İşlem (Tüm Yönler)
+                        </div>
+                    </div>
+                    <div class="relative group">
+                        <a href="/plans" class="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-sky-400 to-sky-600 hover:from-sky-500 hover:to-sky-700 text-white rounded-2xl transition-all shadow-md hover:shadow-lg shadow-sky-200 hover:scale-105 transform duration-200 cursor-pointer">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                            </svg>
+                        </a>
+                        <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 scale-95 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-200 bg-slate-900/95 backdrop-blur-sm text-white text-[9px] font-black uppercase tracking-wider py-1.5 px-2.5 rounded-lg whitespace-nowrap shadow-xl z-50 pointer-events-none">
+                            {{ _('btn_add_planned') }}
+                        </div>
+                    </div>
+                    <div class="relative group">
+                        <a href="/assets" class="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-sky-400 to-sky-600 hover:from-sky-500 hover:to-sky-700 text-white rounded-2xl transition-all shadow-md hover:shadow-lg shadow-sky-200 hover:scale-105 transform duration-200 cursor-pointer">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </a>
+                        <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 scale-95 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-200 bg-slate-900/95 backdrop-blur-sm text-white text-[9px] font-black uppercase tracking-wider py-1.5 px-2.5 rounded-lg whitespace-nowrap shadow-xl z-50 pointer-events-none">
+                            Varlık Ekle
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <nav id="sidebar-nav" class="sidebar-middle">
+                <div class="nav-section-title collapsible" data-target="overview-section">
+                    <span>{{ _('nav_overview') }}</span>
+                    <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+                <div id="overview-section" class="nav-section-content">
+                    <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                        {{ _('nav_cash_flow') }}
+                    </a>
+                    <a href="/transactions" class="nav-link {% if request.path == '/transactions' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                        İşlemler
+                    </a>
+                    <a href="/monthly_dashboard" class="nav-link {% if request.path == '/monthly_dashboard' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        {{ _('nav_dashboard') }}
+                    </a>
+                    <a href="/payment_calendar" class="nav-link {% if request.path == '/payment_calendar' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        {{ _('nav_calendar') }}
+                    </a>
+                </div>
+
+                <div class="nav-section-title collapsible" data-target="assets-section">
+                    <span>{{ _('nav_assets_analysis') }}</span>
+                    <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+                <div id="assets-section" class="nav-section-content">
+                    <a href="/assets" class="nav-link {% if request.path == '/assets' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        {{ _('nav_assets_management') }}
+                    </a>
+                    <a href="/investment_performance" class="nav-link {% if request.path == '/investment_performance' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                        {{ _('nav_investment_performance') }}
+                    </a>
+                    <a href="/analysis" class="nav-link {% if request.path == '/analysis' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                        {{ _('nav_financial_health') }}
+                    </a>
+                </div>
+
+                <div class="nav-section-title collapsible" data-target="strategy-section">
+                    <span>{{ _('nav_strategy_center') }}</span>
+                    <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+                <div id="strategy-section" class="nav-section-content">
+                    <a href="/financial_freedom" class="nav-link {% if request.path == '/financial_freedom' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        {{ _('nav_financial_freedom') }}
+                    </a>
+                    <a href="/strategy" class="nav-link {% if request.path == '/strategy' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                        {{ _('nav_strategy_panel') }}
+                    </a>
+                    <a href="/financial_dashboard" class="nav-link {% if request.path == '/financial_dashboard' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        {{ _('nav_market_analysis') }}
+                    </a>
+                    <a href="/logbook" class="nav-link {% if request.path == '/logbook' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                        Finansal Seyir Defteri
+                    </a>
+                    <a href="/profile" class="nav-link {% if request.path == '/profile' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        Yatırımcı Profil Analizi
+                    </a>
+                </div>
+
+                <div class="nav-section-title collapsible" data-target="settings-section">
+                    <span>{{ _('nav_settings_title') }}</span>
+                    <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+                <div id="settings-section" class="nav-section-content">
+                    <a href="/notifications" class="nav-link {% if request.path == '/notifications' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                        Bildirimler
+                    </a>
+                    <a href="/categories" class="nav-link {% if request.path == '/categories' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                        Kategori Ayarları
+                    </a>
+                    <a href="/settings" class="nav-link {% if request.path == '/settings' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        Profil Ayarları
+                    </a>
+                </div>
+
+                <div class="nav-section-title collapsible" data-target="resources-section">
+                    <span>Kaynaklar</span>
+                    <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+                <div id="resources-section" class="nav-section-content">
+                    <a href="/user_guide" class="nav-link {% if request.path == '/user_guide' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                        Kullanım Kılavuzu
+                    </a>
+                    <a href="/financial_education" class="nav-link {% if request.path == '/financial_education' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                        Finansal Eğitim
+                    </a>
+                    <a href="/monitoring" class="nav-link {% if request.path == '/monitoring' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        Monitoring
+                    </a>
+                </div>
+            </nav>
+        </div>
+    </aside>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="mobile-sidebar" class="fixed inset-0 z-50 hidden lg:hidden">
+        <div class="absolute inset-0 bg-black/50" onclick="toggleMobileMenu()"></div>
+        <div class="absolute left-0 top-0 h-full w-80 bg-white shadow-xl overflow-y-auto">
+            <div class="flex items-center justify-between p-3 border-b">
+                <div class="flex items-center gap-3">
+                    <div class="brand-logo">E.Ç.</div>
+                    <div class="text-sm font-bold">{{ brand }}</div>
+                </div>
+                <button type="button" onclick="toggleMobileMenu()">
+                    <svg class="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <!-- Mobile Sidebar Content Clone -->
+            <div class="sidebar-content">
+                <div class="sidebar-top">
+                    <a href="/" class="brand-area">
+                        <div class="brand-logo">E.Ç.</div>
+                        <div class="brand-info">
+                            <p class="brand-kicker">Emin Çetin</p>
+                            <h1 class="brand-title">{{ brand }}</h1>
+                            <p class="brand-subtitle">{{ _('sidebar_premium_wealth') }}</p>
+                        </div>
+                    </a>
+                    <div class="px-3 flex justify-center gap-3 mt-3">
+                        <div class="relative group">
+                            <a href="/transactions?modal=new" class="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-sky-400 to-sky-600 hover:from-sky-500 hover:to-sky-700 text-white rounded-2xl transition-all shadow-md hover:shadow-lg shadow-sky-200 hover:scale-105 transform duration-200 cursor-pointer">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                                </svg>
+                            </a>
+                            <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 scale-95 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-200 bg-slate-900/95 backdrop-blur-sm text-white text-[9px] font-black uppercase tracking-wider py-1.5 px-2.5 rounded-lg whitespace-nowrap shadow-xl z-50 pointer-events-none">
+                                {{ _('btn_quick_transaction') }}
+                            </div>
+                        </div>
+                        <div class="relative group">
+                            <a href="/plans" class="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-sky-400 to-sky-600 hover:from-sky-500 hover:to-sky-700 text-white rounded-2xl transition-all shadow-md hover:shadow-lg shadow-sky-200 hover:scale-105 transform duration-200 cursor-pointer">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                </svg>
+                            </a>
+                            <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 scale-95 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-200 bg-slate-900/95 backdrop-blur-sm text-white text-[9px] font-black uppercase tracking-wider py-1.5 px-2.5 rounded-lg whitespace-nowrap shadow-xl z-50 pointer-events-none">
+                                {{ _('btn_add_planned') }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <nav class="sidebar-middle">
+                    <div class="nav-section-title">{{ _('nav_overview') }}</div>
+                    <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                        {{ _('nav_cash_flow') }}
+                    </a>
+                    <a href="/monthly_dashboard" class="nav-link {% if request.path == '/monthly_dashboard' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        {{ _('nav_dashboard') }}
+                    </a>
+                    <a href="/payment_calendar" class="nav-link {% if request.path == '/payment_calendar' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        {{ _('nav_calendar') }}
+                    </a>
+                    <div class="nav-section-title">{{ _('nav_assets_analysis') }}</div>
+                    <a href="/assets" class="nav-link {% if request.path == '/assets' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        {{ _('nav_assets_management') }}
+                    </a>
+                    <a href="/investment_performance" class="nav-link {% if request.path == '/investment_performance' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                        {{ _('nav_investment_performance') }}
+                    </a>
+                    <a href="/analysis" class="nav-link {% if request.path == '/analysis' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                        {{ _('nav_financial_health') }}
+                    </a>
+                    <div class="nav-section-title">{{ _('nav_strategy_center') }}</div>
+                    <a href="/financial_freedom" class="nav-link {% if request.path == '/financial_freedom' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        {{ _('nav_financial_freedom') }}
+                    </a>
+                    <a href="/strategy" class="nav-link {% if request.path == '/strategy' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                        {{ _('nav_strategy_panel') }}
+                    </a>
+                    <a href="/financial_dashboard" class="nav-link {% if request.path == '/financial_dashboard' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        {{ _('nav_market_analysis') }}
+                    </a>
+                    <div class="nav-section-title">{{ _('nav_settings_title') }}</div>
+                    <a href="/notifications" class="nav-link {% if request.path == '/notifications' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                        Bildirimler
+                    </a>
+                    <a href="/categories" class="nav-link {% if request.path == '/categories' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                        {{ _('nav_categories') }}
+                    </a>
+                    <a href="/settings" class="nav-link {% if request.path == '/settings' %}active{% endif %}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
+                        {{ _('nav_system_settings') }}
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <div class="layout-wrapper">
+        <div class="sidebar-spacer"></div>
+        <main id="main-content" role="main">
+            <header class="header-bar" id="headerBar">
+                <div class="header-left flex items-center gap-3">
+                    <!-- Mobile Menu Button -->
+                    <button id="mobile-menu-btn" type="button" aria-expanded="false" aria-controls="mobile-sidebar" class="lg:hidden p-2 rounded-lg bg-slate-200/50 hover:bg-slate-200 transition" onclick="toggleMobileMenu()">
+                        <svg class="w-6 h-6 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+                    
+                    <!-- Global Search -->
+                    <div class="global-search-wrapper relative">
+                        <button type="button" onclick="openGlobalSearch()" class="global-search-btn flex items-center gap-2 px-4 py-2.5 bg-slate-100/80 hover:bg-slate-200/80 rounded-xl border border-slate-200/50 transition-all hover:shadow-md">
+                            <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                            <span class="text-sm font-semibold text-slate-700">Ara...</span>
+                            <span class="text-xs font-bold text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded">⌘K</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Breadcrumbs -->
+                    <div id="breadcrumbs" class="hidden md:flex items-center"></div>
+                    
+                    <div class="time-display">
+                        <div class="time-icon">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="time-text" id="live-clock">{{ current_time }}</span>
+                            <span class="day-text">{{ today_display }} {{ current_day }}</span>
+                        </div>
+                    </div>
+                    <div class="market-ticker-bar flex items-center gap-2" style="display: flex !important; visibility: visible !important; opacity: 1 !important; background: rgba(30, 41, 59, 0.8); padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.2);">
+                        <div class="ticker-item ticker-usd" style="display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 6px; background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4);">
+                            <span class="ticker-label" style="font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.9; color: #34d399;">USD</span>
+                            <span class="ticker-value" style="font-size: 12px; font-weight: 800; color: #34d399;">{{ live.usd if live else '--' }} ₺</span>
+                        </div>
+                        <div class="ticker-item ticker-eur" style="display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 6px; background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(99, 102, 241, 0.4);">
+                            <span class="ticker-label" style="font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.9; color: #818cf8;">EUR</span>
+                            <span class="ticker-value" style="font-size: 12px; font-weight: 800; color: #818cf8;">{{ live.eur if live else '--' }} ₺</span>
+                        </div>
+                        <div class="ticker-item ticker-gold" style="display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 6px; background: rgba(245, 158, 11, 0.2); border: 1px solid rgba(245, 158, 11, 0.4);">
+                            <span class="ticker-label" style="font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.9; color: #fbbf24;">ALTIN</span>
+                            <span class="ticker-value" style="font-size: 12px; font-weight: 800; color: #fbbf24;">{{ live.gold if live else '--' }} ₺</span>
+                        </div>
+                        <div class="ticker-item ticker-weather" style="display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 6px; background: rgba(100, 116, 139, 0.2); border: 1px solid rgba(100, 116, 139, 0.4);">
+                            <span class="ticker-label" style="font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.9; color: #94a3b8;">BURSA</span>
+                            <span class="ticker-value" style="font-size: 12px; font-weight: 800; color: #94a3b8;">{{ live.weather if live else '--' }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="flex items-center gap-3">
+                        <!-- Quick Actions -->
+                        <div class="quick-actions-wrapper relative">
+                            <button type="button" onclick="toggleQuickActions()" class="quick-actions-btn flex items-center gap-2 px-3 py-2 bg-slate-100/80 hover:bg-slate-200/80 rounded-xl border border-slate-200/50 transition-all hover:shadow-md">
+                                <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                <span class="text-sm font-semibold text-slate-600 hidden sm:inline">Hızlı</span>
+                            </button>
+                            <div id="quickActionsPanel" class="quick-actions-panel hidden absolute right-0 top-full mt-2 w-64 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200/50 p-2 z-50">
+                                <a href="#" onclick="openGlobalQuickTxModal(); toggleQuickActions(); return false;" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 transition">
+                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                    </div>
+                                    <div>
+                                        <div class="text-xs font-bold text-slate-800">Hızlı İşlem</div>
+                                        <div class="text-[10px] text-slate-500">Gelir, gider, yatırım</div>
+                                    </div>
+                                </a>
+                                <a href="/plans" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 transition">
+                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                    </div>
+                                    <div>
+                                        <div class="text-xs font-bold text-slate-800">Plan Ekle</div>
+                                        <div class="text-[10px] text-slate-500">Düzenli ödemeler</div>
+                                    </div>
+                                </a>
+                                <a href="/assets" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 transition">
+                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                    </div>
+                                    <div>
+                                        <div class="text-xs font-bold text-slate-800">Varlık Ekle</div>
+                                        <div class="text-[10px] text-slate-500">Yatırım takibi</div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Calculator -->
+                        <button type="button" onclick="openCalculator()" class="calculator-btn flex items-center justify-center w-10 h-10 bg-slate-100/80 hover:bg-slate-200/80 rounded-xl border border-slate-200/50 transition-all hover:shadow-md" title="Hesap Makinesi">
+                            <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+
+                        <!-- Theme Toggle -->
+                        <button type="button" onclick="toggleTheme()" class="theme-toggle-btn flex items-center justify-center w-10 h-10 bg-slate-100/80 hover:bg-slate-200/80 rounded-xl border border-slate-200/50 transition-all hover:shadow-md" title="Tema Değiştir">
+                            <svg class="w-5 h-5 text-slate-600 dark-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                            </svg>
+                            <svg class="w-5 h-5 text-slate-600 light-icon hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                            </svg>
+                        </button>
+
+                        <button type="button" class="privacy-toggle" id="privacyToggle"
+                                onclick="window.privacyMode.toggle()"
+                                title="Gizlilik modu — ekrandaki tutarları gizler"
+                                aria-label="Gizlilik modunu aç/kapat">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path class="privacy-icon-open" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path class="privacy-icon-open" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                <path class="privacy-icon-closed" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+                            </svg>
+                        </button>
+
+                        <!-- User Dropdown -->
+                        <div class="user-dropdown-wrapper relative">
+                            <button type="button" onclick="toggleUserDropdown()" class="user-dropdown-btn flex items-center gap-2 px-3 py-2 bg-slate-100/80 hover:bg-slate-200/80 rounded-xl border border-slate-200/50 transition-all hover:shadow-md">
+                                <div class="user-avatar-mini relative">
+                                    {% set user = current_user if current_user else None %}
+                                    {% set username = user.username if user and user.username else session.get('username', _('guest_user')) %}
+                                    {% if user and user.profile_image %}
+                                    <img src="{{ user.profile_image }}" alt="P" class="w-8 h-8 rounded-lg object-cover">
+                                    {% else %}
+                                    <span class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">{{ username[0].upper() if username else 'U' }}</span>
+                                    {% endif %}
+                                    <!-- Notification Badge -->
+                                    <span id="notificationBadge" class="notification-badge hidden absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg">0</span>
+                                </div>
+                                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                            <div id="userDropdownPanel" class="user-dropdown-panel hidden absolute right-0 top-full mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200/50 p-2 z-50">
+                                <!-- Notifications Link -->
+                                <a href="#" onclick="openNotificationModal(); return false;" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 transition">
+                                    <div class="relative">
+                                        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                                        <span id="dropdownNotificationBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">0</span>
+                                    </div>
+                                    <span class="text-xs font-semibold text-slate-700">Bildirimler</span>
+                                </a>
+                                <a href="/settings#profile" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 transition">
+                                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                    <span class="text-xs font-semibold text-slate-700">Profil</span>
+                                </a>
+                                <a href="/settings" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 transition">
+                                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/></svg>
+                                    <span class="text-xs font-semibold text-slate-700">Ayarlar</span>
+                                </a>
+                                <div class="border-t border-slate-100 mt-2 pt-2">
+                                    <a href="/logout" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-red-50 transition text-red-600">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                                        <span class="text-xs font-semibold">Çıkış</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Logout Button -->
+                        <a href="/logout" class="logout-btn-header" title="Güvenli Çıkış">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </header>
+            <div class="content-area">
+                <div class="page-container">
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer>&copy; 2026 E-Cüzdan — Finansal Yönetim Paneli. {{ _('footer_rights') }}.</footer>
+    
+    <!-- JavaScript Modules -->
+    <!-- Gizlilik modu: module DEĞİL — window.privacyMode'u inline onclick'e açar -->
+    <script src="{{ url_for('static', filename='js/privacy-mode.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/charts.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/tables.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/forms.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/utils.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/navigation.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/undo.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/lazyload.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/date-picker.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/payment-calendar.js') }}"></script>
+    
+    <!-- Calculator Modal -->
+    <div id="calculatorModal" class="modal-overlay hidden" style="z-index: 9999; position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeCalculator()"></div>
+        <div class="relative bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 border border-slate-100 transform transition-all z-10">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="font-black text-slate-900 text-xl uppercase tracking-tight">Hesap Makinesi</h3>
+                <button type="button" onclick="closeCalculator()" class="p-3 hover:bg-slate-100 rounded-xl transition">
+                    <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Calculator Display -->
+            <div class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-6 mb-6 shadow-inner">
+                <div id="calculatorHistory" class="text-right text-slate-400 text-base font-mono tracking-wider overflow-hidden h-8 mb-2"></div>
+                <div id="calculatorDisplay" class="text-right text-white text-4xl font-bold font-mono tracking-wider overflow-hidden">0</div>
+            </div>
+            
+            <!-- Calculator Buttons -->
+            <div class="grid grid-cols-4 gap-3">
+                <button type="button" onclick="calculatorClear()" class="col-span-2 py-6 rounded-2xl font-bold text-lg uppercase bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95">C</button>
+                <button type="button" onclick="calculatorBackspace()" class="py-6 rounded-2xl font-bold text-lg uppercase bg-gradient-to-r from-slate-200 to-slate-300 hover:from-slate-300 hover:to-slate-400 text-slate-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95">⌫</button>
+                <button type="button" onclick="calculatorOperator('/')" class="py-6 rounded-2xl font-bold text-lg uppercase bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95">÷</button>
+                
+                <button type="button" onclick="calculatorNumber('7')" class="py-6 rounded-2xl font-bold text-lg uppercase bg-gradient-to-r from-slate-100 to-slate-200 hover:from-slate-200 hover:to-slate-300 text-slate-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95">7</button>
+                <button type="button" onclick="calculatorNumber('8')" class="py-6 rounded-2xl font-bold text-lg uppercase bg-gradient-to-r from-slate-100 to-slate-200 hover:from-slate-200 hover:to-slate-300 text-slate-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95">8</button>
+                <button type="button" onclick="calculatorNumber('9')" class="py-6 rounded-2xl font-bold text-lg uppercase bg-gradient-to-r from-slate-100 to-slate-200 hover:from-slate-200 hover:to-slate-300 text-slate-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95">9</button>
+                <button type="button" onclick="calculatorOperator('*')" class="py-6 rounded-2xl font-bold text-lg uppercase bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95">×</button>
+                
+                <button type="button" onclick="calculatorNumber('4')" class="py-6 rounded-2xl font-bold text-lg uppercase bg-gradient-to-r from-slate-100 to-slate-200 hover:from-slate-200 hover:to-slate-300 text-slate-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95">4</button>
+                <button type="button" onclick="calculatorNumber('5')" class="py-6 rounded-2xl font-bold text-lg uppercase bg-gradient-to-r from-slate-100 to-slate-200 hover:from-slate-200 hover:to-slate-300 text-slate-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95">5</button>
+                <button type="button" onclick="calculatorNumber('6')" class="py-6 rounded-2xl font-bold text-lg uppercase bg-gradient-to-r from-slate-100 to-slate-200 hover:from-slate-200 hover:to-slate-300 text-slate-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95">6</button>
+                <button type="button" onclick="calculatorOperator('-')" class="py-6 rounded-2xl font-bold text-lg uppercase bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95">−</button>
+                
+                <button type="button" onclick="calculatorNumber('1')" class="py-6 rounded-2xl font-bold text-lg uppercase bg-gradient-to-r from-slate-100 to-slate-200 hover:from-slate-200 hover:to-slate-300 text-slate-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95">1</button>
+                <button type="button" onclick="calculatorNumber('2')" class="py-6 rounded-2xl font-bold text-lg uppercase bg-gradient-to-r from-slate-100 to-slate-200 hover:from-slate-200 hover:to-slate-300 text-slate-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95">2</button>
+                <button type="button" onclick="calculatorNumber('3')" class="py-6 rounded-2xl font-bold text-lg uppercase bg-gradient-to-r from-slate-100 to-slate-200 hover:from-slate-200 hover:to-slate-300 text-slate-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95">3</button>
+                <button type="button" onclick="calculatorOperator('+')" class="py-6 rounded-2xl font-bold text-lg uppercase bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95">+</button>
+                
+                <button type="button" onclick="calculatorNumber('0')" class="col-span-2 py-6 rounded-2xl font-bold text-lg uppercase bg-gradient-to-r from-slate-100 to-slate-200 hover:from-slate-200 hover:to-slate-300 text-slate-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95">0</button>
+                <button type="button" onclick="calculatorDecimal()" class="py-6 rounded-2xl font-bold text-lg uppercase bg-gradient-to-r from-slate-100 to-slate-200 hover:from-slate-200 hover:to-slate-300 text-slate-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95">.</button>
+                <button type="button" onclick="calculatorEquals()" class="py-6 rounded-2xl font-bold text-lg uppercase bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95">=</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Confirm Modal -->
+    <div id="globalConfirmModal" class="modal-overlay hidden" style="z-index: 10000;">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeGlobalConfirm()"></div>
+        <div class="relative bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full mx-4 border border-slate-100 transform transition-all">
+            <div class="flex items-center gap-4 mb-5">
+                <div id="globalConfirmIconContainer" class="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 bg-indigo-100 text-indigo-600">
+                    <svg id="globalConfirmIcon" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 id="globalConfirmTitle" class="font-black text-slate-900 text-base uppercase tracking-tight">Onay Bekleniyor</h3>
+                    <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Lütfen işlemi onaylayın</p>
+                </div>
+            </div>
+            
+            <p id="globalConfirmMessage" class="text-sm text-slate-600 font-medium mb-6">Bu işlemi gerçekleştirmek istediğinize emin misiniz?</p>
+            
+            <div class="flex gap-3">
+                <button type="button" onclick="closeGlobalConfirm()" class="flex-1 px-4 py-3 rounded-xl font-bold text-[11px] uppercase bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">
+                    İptal
+                </button>
+                <button type="button" id="globalConfirmBtn" class="flex-1 px-4 py-3 rounded-xl font-black text-[11px] uppercase text-white shadow-lg transition cursor-pointer">
+                    Onayla
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Global Functions (no module dependency) -->
+    <script>
+        /* ============================================================
+           CORE GLOBAL FUNCTIONS - Inline, no module dependency
+           Bu fonksiyonlar type=module beklenmeden anında kullanılabilir
+        ============================================================ */
+
+        // ---- TOAST ----
+        window.showToast = function(message, type, duration) {
+            type = type || 'success';
+            duration = duration || 4000;
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const colors = {
+                success: 'bg-emerald-600 text-white',
+                error:   'bg-rose-600 text-white',
+                warning: 'bg-amber-500 text-white',
+                info:    'bg-sky-600 text-white'
+            };
+            const el = document.createElement('div');
+            el.className = 'flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl font-bold text-sm max-w-sm transition-all duration-300 translate-x-full opacity-0 ' + (colors[type] || colors.success);
+            el.innerHTML = '<span>' + message + '</span>';
+            container.appendChild(el);
+
+            requestAnimationFrame(function() {
+                requestAnimationFrame(function() {
+                    el.classList.remove('translate-x-full', 'opacity-0');
+                });
+            });
+
+            setTimeout(function() {
+                el.classList.add('translate-x-full', 'opacity-0');
+                setTimeout(function() { if (el.parentNode) el.remove(); }, 350);
+            }, duration);
+        };
+
+        // ---- MODAL OPEN / CLOSE ----
+        window.openModal = function(modalId) {
+            var modal = document.getElementById(modalId);
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            modal.classList.add('active');
+            modal.setAttribute('aria-hidden', 'false');
+            if (modal.classList.contains('edit-modal') ||
+                modal.classList.contains('delete-modal') ||
+                modal.classList.contains('modal-overlay') ||
+                modal.classList.contains('modal')) {
+                modal.style.display = 'flex';
+            } else {
+                modal.style.display = 'block';
+            }
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeModal = function(modalId) {
+            var closeOne = function(modal) {
+                modal.classList.remove('active');
+                modal.classList.add('hidden');
+                modal.setAttribute('aria-hidden', 'true');
+                modal.style.display = '';
+            };
+            if (modalId) {
+                var m = document.getElementById(modalId);
+                if (m) closeOne(m);
+            } else {
+                document.querySelectorAll('.modal.active, .edit-modal.active, .delete-modal.active, .modal-overlay.active').forEach(closeOne);
+            }
+            var stillOpen = document.querySelector('.modal.active, .edit-modal.active, .delete-modal.active, .modal-overlay.active');
+            if (!stillOpen) document.body.style.overflow = '';
+        };
+
+        // ---- CALCULATOR ----
+        var calculatorState = {
+            current: '0',
+            previous: '',
+            operator: null,
+            waitingForOperand: false,
+            history: ''
+        };
+
+        window.openCalculator = function() {
+            var modal = document.getElementById('calculatorModal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            modal.classList.add('active');
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            calculatorClear();
+        };
+
+        window.closeCalculator = function() {
+            var modal = document.getElementById('calculatorModal');
+            if (!modal) return;
+            modal.classList.remove('active');
+            modal.classList.add('hidden');
+            modal.style.display = '';
+            document.body.style.overflow = '';
+        };
+
+        window.updateCalculatorDisplay = function() {
+            var display = document.getElementById('calculatorDisplay');
+            var history = document.getElementById('calculatorHistory');
+            if (display) {
+                display.textContent = calculatorState.current;
+            }
+            if (history) {
+                history.textContent = calculatorState.history;
+            }
+        };
+
+        window.calculatorNumber = function(num) {
+            if (calculatorState.waitingForOperand) {
+                calculatorState.current = num;
+                calculatorState.waitingForOperand = false;
+            } else {
+                calculatorState.current = calculatorState.current === '0' ? num : calculatorState.current + num;
+            }
+            updateCalculatorDisplay();
+        };
+
+        window.calculatorOperator = function(op) {
+            var current = parseFloat(calculatorState.current);
+            if (calculatorState.operator && !calculatorState.waitingForOperand) {
+                var previous = parseFloat(calculatorState.previous);
+                var result;
+                switch (calculatorState.operator) {
+                    case '+': result = previous + current; break;
+                    case '-': result = previous - current; break;
+                    case '*': result = previous * current; break;
+                    case '/': result = previous / current; break;
+                }
+                calculatorState.current = String(result);
+                calculatorState.previous = '';
+            } else {
+                calculatorState.previous = calculatorState.current;
+            }
+            
+            // Operatör sembolünü güncelle
+            var opSymbol = '';
+            switch(op) {
+                case '+': opSymbol = '+'; break;
+                case '-': opSymbol = '−'; break;
+                case '*': opSymbol = '×'; break;
+                case '/': opSymbol = '÷'; break;
+            }
+            
+            calculatorState.history = calculatorState.previous + ' ' + opSymbol;
+            calculatorState.operator = op;
+            calculatorState.waitingForOperand = true;
+            updateCalculatorDisplay();
+        };
+
+        window.calculatorDecimal = function() {
+            if (calculatorState.waitingForOperand) {
+                calculatorState.current = '0.';
+                calculatorState.waitingForOperand = false;
+            } else if (calculatorState.current.indexOf('.') === -1) {
+                calculatorState.current += '.';
+            }
+            updateCalculatorDisplay();
+        };
+
+        window.calculatorClear = function() {
+            calculatorState.current = '0';
+            calculatorState.previous = '';
+            calculatorState.operator = null;
+            calculatorState.waitingForOperand = false;
+            calculatorState.history = '';
+            updateCalculatorDisplay();
+        };
+
+        window.calculatorBackspace = function() {
+            if (calculatorState.waitingForOperand) {
+                calculatorState.operator = null;
+                calculatorState.waitingForOperand = false;
+                calculatorState.history = '';
+            } else if (calculatorState.current.length > 1) {
+                calculatorState.current = calculatorState.current.slice(0, -1);
+            } else {
+                calculatorState.current = '0';
+            }
+            updateCalculatorDisplay();
+        };
+
+        window.calculatorEquals = function() {
+            if (!calculatorState.operator || calculatorState.waitingForOperand) return;
+            var current = parseFloat(calculatorState.current);
+            var previous = parseFloat(calculatorState.previous);
+            var result;
+            switch (calculatorState.operator) {
+                case '+': result = previous + current; break;
+                case '-': result = previous - current; break;
+                case '*': result = previous * current; break;
+                case '/': result = current !== 0 ? previous / current : 'Error'; break;
+            }
+            
+            // Geçmişe işlemi ekle
+            var opSymbol = '';
+            switch (calculatorState.operator) {
+                case '+': opSymbol = '+'; break;
+                case '-': opSymbol = '−'; break;
+                case '*': opSymbol = '×'; break;
+                case '/': opSymbol = '÷'; break;
+            }
+            calculatorState.history = calculatorState.previous + ' ' + opSymbol + ' ' + current + ' =';
+            
+            calculatorState.current = String(result);
+            calculatorState.previous = '';
+            calculatorState.operator = null;
+            calculatorState.waitingForOperand = true;
+            updateCalculatorDisplay();
+        };
+
+        // Klavye desteği
+        document.addEventListener('keydown', function(e) {
+            var modal = document.getElementById('calculatorModal');
+            if (!modal || modal.classList.contains('hidden')) return;
+            
+            var key = e.key;
+            
+            // Sayılar
+            if (key >= '0' && key <= '9') {
+                e.preventDefault();
+                calculatorNumber(key);
+            }
+            // Ondalık nokta
+            else if (key === '.' || key === ',') {
+                e.preventDefault();
+                calculatorDecimal();
+            }
+            // Operatörler
+            else if (key === '+') {
+                e.preventDefault();
+                calculatorOperator('+');
+            }
+            else if (key === '-') {
+                e.preventDefault();
+                calculatorOperator('-');
+            }
+            else if (key === '*') {
+                e.preventDefault();
+                calculatorOperator('*');
+            }
+            else if (key === '/') {
+                e.preventDefault();
+                calculatorOperator('/');
+            }
+            // Enter veya = için eşittir
+            else if (key === 'Enter' || key === '=') {
+                e.preventDefault();
+                calculatorEquals();
+            }
+            // Backspace
+            else if (key === 'Backspace') {
+                e.preventDefault();
+                calculatorBackspace();
+            }
+            // Escape ile kapat
+            else if (key === 'Escape') {
+                e.preventDefault();
+                closeCalculator();
+            }
+            // Delete veya C ile temizle
+            else if (key === 'Delete' || key.toLowerCase() === 'c') {
+                e.preventDefault();
+                calculatorClear();
+            }
+        });
+
+        // ---- GLOBAL QUICK TX MODAL ----
+        window.openGlobalQuickTxModal = function() {
+            try {
+                console.log('Opening quick transaction modal...');
+                var form = document.getElementById('globalQuickTxForm');
+                console.log('Form element:', form);
+                if (form) {
+                    form.reset();
+                }
+                var dateInput = document.getElementById('globalQuickTxDate');
+                console.log('Date input element:', dateInput);
+                if (dateInput) {
+                    dateInput.value = new Date().toISOString().slice(0, 10);
+                }
+                console.log('Calling updateGlobalQuickTxCategory...');
+                updateGlobalQuickTxCategory();
+                console.log('Opening modal...');
+                window.openModal('globalQuickTxModal');
+                console.log('Modal opened successfully');
+            } catch (e) {
+                console.error('Error opening quick transaction modal:', e);
+                window.showToast('Modal açılırken hata oluştu: ' + e.message, 'error');
+            }
+        };
+
+        window.closeGlobalQuickTxModal = function() {
+            window.closeModal('globalQuickTxModal');
+        };
+
+        const globalCatData = {
+            'Gelir': (function() {
+                try {
+                    const sidebar = document.querySelector('.sidebar-premium');
+                    if (!sidebar) return [];
+                    const val = sidebar.getAttribute('data-global-income-cats');
+                    if (!val || val.trim() === '' || val === 'null' || val === 'undefined' || val === '[]' || val === '""') return [];
+                    if (val === '[]') return [];
+                    const parsed = JSON.parse(val);
+                    return Array.isArray(parsed) ? parsed : [];
+                } catch(e) {
+                    console.error('Error parsing income cats:', e, 'Value:', sidebar?.getAttribute('data-global-income-cats'));
+                    return [];
+                }
+            })(),
+            'Gider': (function() {
+                try {
+                    const sidebar = document.querySelector('.sidebar-premium');
+                    if (!sidebar) return [];
+                    const val = sidebar.getAttribute('data-global-expense-cats');
+                    if (!val || val.trim() === '' || val === 'null' || val === 'undefined' || val === '[]' || val === '""') return [];
+                    if (val === '[]') return [];
+                    const parsed = JSON.parse(val);
+                    return Array.isArray(parsed) ? parsed : [];
+                } catch(e) {
+                    console.error('Error parsing expense cats:', e, 'Value:', sidebar?.getAttribute('data-global-expense-cats'));
+                    return [];
+                }
+            })(),
+            'Yatırım': (function() {
+                try {
+                    const sidebar = document.querySelector('.sidebar-premium');
+                    if (!sidebar) return [];
+                    const val = sidebar.getAttribute('data-global-investment-cats');
+                    if (!val || val.trim() === '' || val === 'null' || val === 'undefined' || val === '[]' || val === '""') return [];
+                    if (val === '[]') return [];
+                    const parsed = JSON.parse(val);
+                    return Array.isArray(parsed) ? parsed : [];
+                } catch(e) {
+                    console.error('Error parsing investment cats:', e, 'Value:', sidebar?.getAttribute('data-global-investment-cats'));
+                    return [];
+                }
+            })()
+        };
+
+        window.updateGlobalQuickTxCategory = function() {
+            try {
+                const flowSelect = document.getElementById('globalQuickTxFlowType');
+                const catSelect = document.getElementById('globalQuickTxCategory');
+                if (!flowSelect || !catSelect) {
+                    console.error('Required elements not found for category update');
+                    return;
+                }
+                const flow = flowSelect.value;
+                catSelect.innerHTML = '';
+                const cats = globalCatData[flow] || [];
+                cats.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = c;
+                    catSelect.appendChild(opt);
+                });
+            } catch (e) {
+                console.error('Error updating quick transaction category:', e);
+            }
+        };
+
+        // Form submit listener will be attached in DOMContentLoaded
+
+        // ---- MOBILE MENU ----
+        window.toggleMobileMenu = function() {
+            var sidebar = document.querySelector('.sidebar-premium');
+            if (!sidebar) return;
+            sidebar.classList.toggle('open');
+            document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+            var btn = document.getElementById('mobile-menu-btn');
+            if (btn) btn.setAttribute('aria-expanded', String(sidebar.classList.contains('open')));
+        };
+
+        // ---- GLOBAL CONFIRM MODAL ----
+        var _gcCallback = null;
+
+        window.showGlobalConfirm = function(title, message, callback, isDanger) {
+            document.getElementById('globalConfirmTitle').textContent = title;
+            document.getElementById('globalConfirmMessage').textContent = message;
+            var btn = document.getElementById('globalConfirmBtn');
+            var iconCont = document.getElementById('globalConfirmIconContainer');
+            var icon = document.getElementById('globalConfirmIcon');
+            if (isDanger) {
+                btn.className = 'flex-1 px-4 py-3 rounded-xl font-black text-[11px] uppercase text-white shadow-lg transition cursor-pointer bg-rose-600 hover:bg-rose-700';
+                btn.textContent = 'Evet, Sil';
+                iconCont.className = 'w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 bg-rose-100 text-rose-600';
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>';
+            } else {
+                btn.className = 'flex-1 px-4 py-3 rounded-xl font-black text-[11px] uppercase text-white shadow-lg transition cursor-pointer bg-indigo-600 hover:bg-indigo-700';
+                btn.textContent = 'Onayla';
+                iconCont.className = 'w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 bg-indigo-100 text-indigo-600';
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>';
+            }
+            _gcCallback = callback;
+            document.getElementById('globalConfirmModal').classList.remove('hidden');
+            document.getElementById('globalConfirmModal').style.display = 'flex';
+        };
+
+        window.closeGlobalConfirm = function() {
+            document.getElementById('globalConfirmModal').classList.add('hidden');
+            document.getElementById('globalConfirmModal').style.display = '';
+            _gcCallback = null;
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var confirmBtn = document.getElementById('globalConfirmBtn');
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', function() {
+                    if (_gcCallback) _gcCallback();
+                    window.closeGlobalConfirm();
+                });
+            }
+
+            // Backdrop click closes modal
+            document.addEventListener('click', function(e) {
+                if (e.target.matches('.edit-modal-backdrop, .delete-modal-backdrop')) {
+                    window.closeModal();
+                }
+            });
+
+            // Escape key closes modals
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    window.closeModal();
+                    window.closeGlobalConfirm();
+                }
+            });
+
+            // Show any pending flash toasts
+            if (window._pendingToasts) {
+                window._pendingToasts.forEach(function(t) {
+                    window.showToast(t.msg, t.cat);
+                });
+            }
+
+            // Navigation helpers
+            if (window.ECuzdanNavigation) {
+                var pageTitle = document.title.split('|')[0].trim();
+                ECuzdanNavigation.addToRecentlyVisited(pageTitle, window.location.pathname);
+            }
+            if (window.ECuzdanLazyLoad) {
+                ECuzdanLazyLoad.initAllLazyLoading();
+            }
+
+            // Attach form submit listener for quick transaction modal
+            var quickTxForm = document.getElementById('globalQuickTxForm');
+            if (quickTxForm) {
+                quickTxForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const formData = new FormData(this);
+                    fetch('/new_transaction', {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        },
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            window.showToast(data.message || 'İşlem başarıyla eklendi', 'success');
+                            setTimeout(() => window.location.reload(), 1000);
+                        } else {
+                            window.showToast(data.message || 'Bir hata oluştu', 'error');
+                        }
+                    })
+                    .catch(error => window.showToast('Bir hata oluştu', 'error'));
+                });
+            }
+        });
+    </script>
+
+<!-- Global Hızlı İşlem Modal HTML -->
+<div id="globalQuickTxModal" class="edit-modal hidden">
+    <div class="edit-modal-backdrop" onclick="closeGlobalQuickTxModal()"></div>
+    <div class="edit-modal-content">
+        <div class="edit-modal-card">
+            <div class="edit-modal-header">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center;">
+                        <div style="background: #e0f2fe; padding: 0.5rem; border-radius: 0.75rem; margin-right: 0.75rem;">
+                            <svg style="width: 1.25rem; height: 1.25rem; color: #0284c7;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 1.125rem; font-weight: 900; color: #1e293b; text-transform: uppercase; letter-spacing: -0.025em;">Hızlı İşlem</h3>
+                            <p style="font-size: 0.625rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Tek seferlik gelir, gider, yatırım</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="closeGlobalQuickTxModal()" style="color: #94a3b8; background: none; border: none; cursor: pointer; transition: color 0.2s;">
+                        <svg style="width: 1.5rem; height: 1.5rem;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            </div>
+            
+            <form id="globalQuickTxForm" class="edit-modal-body space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="grid grid-cols-2 gap-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                    <div>
+                        <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">İşlem Yönü</label>
+                        <select id="globalQuickTxFlowType" class="edit-modal-input font-bold" onchange="updateGlobalQuickTxCategory()" required>
+                            <option value="Gider">Gider (Çıkış)</option>
+                            <option value="Gelir">Gelir (Giriş)</option>
+                            <option value="Yatırım">Yatırım (Transfer)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Kategori</label>
+                        <select name="category" id="globalQuickTxCategory" class="edit-modal-input font-bold" required>
+                            <!-- JS ile doldurulacak -->
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Tanım</label>
+                    <input type="text" name="description" placeholder="Örn: Market Alışverişi" class="edit-modal-input" required>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
+                    <div>
+                        <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Tutar (₺)</label>
+                        <input type="number" step="0.01" min="0.01" name="amount" placeholder="0.00" class="edit-modal-input font-bold text-sky-700" required>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Tarih</label>
+                        <input type="date" name="date" id="globalQuickTxDate" class="edit-modal-input" required>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Durum</label>
+                        <select name="status" class="edit-modal-input font-bold" required>
+                            <option value="Ödendi">Ödendi</option>
+                            <option value="Bekliyor">Bekliyor</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Not (isteğe bağlı)</label>
+                    <input type="text" name="note" placeholder="Ek açıklama" class="edit-modal-input">
+                </div>
+                
+                <div class="flex space-x-2 pt-2" style="display: flex; gap: 0.5rem;">
+                    <button type="submit" style="flex: 1; background: linear-gradient(to right, #0284c7, #0369a1); color: white; font-weight: 900; padding: 1rem; border-radius: 0.75rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); text-transform: uppercase; font-size: 0.625rem; letter-spacing: 0.05em; border: none; cursor: pointer; transition: box-shadow 0.2s;">
+                        KAYDET
+                    </button>
+                    <button type="button" onclick="closeGlobalQuickTxModal()" style="padding: 1rem; background: #e2e8f0; color: #334155; border-radius: 0.75rem; font-weight: 900; font-size: 0.625rem; text-transform: uppercase; letter-spacing: 0.05em; border: none; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); transition: background 0.2s;">
+                        İPTAL
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+
+<script>
+// Header scroll effect
+window.addEventListener('scroll', function() {
+    const header = document.getElementById('headerBar');
+    if (header) {
+        if (window.scrollY > 10) {
+            header.classList.add('scrolled');
+        } else {
+            header.classList.remove('scrolled');
+        }
+    }
+});
+
+// Quick Actions Toggle
+function toggleQuickActions() {
+    const panel = document.getElementById('quickActionsPanel');
+    if (panel) {
+        panel.classList.toggle('hidden');
+    }
+}
+
+// User Dropdown Toggle
+function toggleUserDropdown() {
+    const panel = document.getElementById('userDropdownPanel');
+    if (panel) {
+        panel.classList.toggle('hidden');
+    }
+}
+
+// Notification Modal Functions
+function openNotificationModal() {
+    const modal = document.getElementById('notificationModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        loadNotifications();
+    }
+    // Close user dropdown
+    const panel = document.getElementById('userDropdownPanel');
+    if (panel) {
+        panel.classList.add('hidden');
+    }
+}
+
+function closeNotificationModal() {
+    const modal = document.getElementById('notificationModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+async function loadNotifications() {
+    const list = document.getElementById('notificationList');
+    if (!list) return;
+    
+    try {
+        const response = await fetch('/notifications/api');
+        const data = await response.json();
+        
+        if (data.success) {
+            renderNotifications(data.items);
+            updateNotificationBadge(data.unread);
+        } else {
+            list.innerHTML = '<div class="text-center py-8 text-slate-500 text-sm">Bildirimler yüklenemedi.</div>';
+        }
+    } catch (error) {
+        console.error('Error loading notifications:', error);
+        list.innerHTML = '<div class="text-center py-8 text-slate-500 text-sm">Bildirimler yüklenemedi.</div>';
+    }
+}
+
+function renderNotifications(items) {
+    const list = document.getElementById('notificationList');
+    if (!list) return;
+    
+    if (items.length === 0) {
+        list.innerHTML = '<div class="text-center py-8 text-slate-500 text-sm">Henüz bildirim yok.</div>';
+        return;
+    }
+    
+    list.innerHTML = items.map(item => `
+        <div class="notification-item p-3 rounded-xl hover:bg-slate-50 transition cursor-pointer ${item.is_read ? 'opacity-60' : ''}" onclick="markAsRead(${item.id})">
+            <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 w-2 h-2 rounded-full mt-2 ${getSeverityColor(item.severity)}"></div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-semibold text-slate-800 truncate">${escapeHtml(item.title)}</p>
+                    <p class="text-[10px] text-slate-500 mt-1 line-clamp-2">${escapeHtml(item.body)}</p>
+                    <p class="text-[9px] text-slate-400 mt-1">${item.created_at}</p>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function getSeverityColor(severity) {
+    const colors = {
+        'info': 'bg-blue-500',
+        'success': 'bg-green-500',
+        'warning': 'bg-yellow-500',
+        'error': 'bg-red-500',
+        'critical': 'bg-red-600'
+    };
+    return colors[severity] || 'bg-slate-500';
+}
+
+async function markAsRead(notificationId) {
+    try {
+        const response = await fetch(`/notifications/${notificationId}/read`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            updateNotificationBadge(data.unread);
+            loadNotifications(); // Reload to update UI
+        } else {
+            console.error('Mark as read failed:', data.message);
+        }
+    } catch (error) {
+        console.error('Error marking notification as read:', error);
+    }
+}
+
+async function markAllAsRead() {
+    try {
+        const response = await fetch('/notifications/read_all', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            updateNotificationBadge(0);
+            loadNotifications(); // Reload to update UI
+        } else {
+            console.error('Mark all as read failed:', data.message);
+        }
+    } catch (error) {
+        console.error('Error marking all notifications as read:', error);
+    }
+}
+
+function updateNotificationBadge(count) {
+    const badge = document.getElementById('notificationBadge');
+    const dropdownBadge = document.getElementById('dropdownNotificationBadge');
+    
+    if (count > 0) {
+        if (badge) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.classList.remove('hidden');
+        }
+        if (dropdownBadge) {
+            dropdownBadge.textContent = count > 99 ? '99+' : count;
+            dropdownBadge.classList.remove('hidden');
+        }
+    } else {
+        if (badge) badge.classList.add('hidden');
+        if (dropdownBadge) dropdownBadge.classList.add('hidden');
+    }
+}
+
+async function fetchUnreadCount() {
+    try {
+        const response = await fetch('/notifications/unread_count');
+        const data = await response.json();
+        
+        if (data.success) {
+            updateNotificationBadge(data.unread);
+        }
+    } catch (error) {
+        console.error('Error fetching unread count:', error);
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Load unread count on page load
+document.addEventListener('DOMContentLoaded', function() {
+    fetchUnreadCount();
+    // Refresh unread count every 30 seconds
+    setInterval(fetchUnreadCount, 30000);
+});
+
+// Theme Toggle
+function toggleTheme() {
+    const html = document.documentElement;
+    const darkIcon = document.querySelector('.dark-icon');
+    const lightIcon = document.querySelector('.light-icon');
+    
+    if (html.classList.contains('dark')) {
+        html.classList.remove('dark');
+        darkIcon.classList.remove('hidden');
+        lightIcon.classList.add('hidden');
+        localStorage.setItem('theme', 'light');
+    } else {
+        html.classList.add('dark');
+        darkIcon.classList.add('hidden');
+        lightIcon.classList.remove('hidden');
+        localStorage.setItem('theme', 'dark');
+    }
+}
+
+// Initialize theme from localStorage
+document.addEventListener('DOMContentLoaded', function() {
+    const savedTheme = localStorage.getItem('theme');
+    const darkIcon = document.querySelector('.dark-icon');
+    const lightIcon = document.querySelector('.light-icon');
+    
+    if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+        darkIcon.classList.add('hidden');
+        lightIcon.classList.remove('hidden');
+    }
+
+    // Initialize collapsible sections
+    initCollapsibleSections();
+});
+
+// Collapsible Sections
+function toggleSection(sectionId, titleElement) {
+    const content = document.getElementById(sectionId);
+    if (content) {
+        titleElement.classList.toggle('collapsed');
+        content.classList.toggle('collapsed');
+    }
+}
+
+function initCollapsibleSections() {
+    const collapsibles = document.querySelectorAll('.nav-section-title.collapsible');
+    
+    collapsibles.forEach(title => {
+        title.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const targetId = this.getAttribute('data-target');
+            const content = document.getElementById(targetId);
+            
+            if (content) {
+                this.classList.toggle('collapsed');
+                content.classList.toggle('collapsed');
+            }
+        });
+    });
+}
+
+// Global Search
+function openGlobalSearch() {
+    const existingModal = document.getElementById('globalSearchModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    const modal = document.createElement('div');
+    modal.id = 'globalSearchModal';
+    modal.className = 'fixed inset-0 z-[100] flex items-start justify-center pt-20 px-4';
+    modal.innerHTML = `
+        <div class="absolute inset-0 bg-black/30 backdrop-blur-sm" onclick="closeGlobalSearch()"></div>
+        <div class="relative w-full max-w-2xl bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200/50 overflow-hidden">
+            <div class="flex items-center gap-3 p-4 border-b border-slate-100">
+                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <input type="text" id="globalSearchInput" placeholder="Ara... (sayfalar, işlemler, kategoriler)" class="flex-1 bg-transparent border-none outline-none text-slate-800 placeholder-slate-400" autocomplete="off" oninput="handleSearchInput(this.value)">
+                <button type="button" onclick="closeGlobalSearch()" class="p-2 hover:bg-slate-100 rounded-lg transition">
+                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="searchResults" class="p-4">
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Hızlı Erişim</div>
+                <div class="grid grid-cols-2 gap-2">
+                    <a href="/" onclick="closeGlobalSearch()" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition">
+                        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                        </div>
+                        <div>
+                            <div class="text-sm font-bold text-slate-800">Dashboard</div>
+                            <div class="text-xs text-slate-500">Genel bakış</div>
+                        </div>
+                    </a>
+                    <a href="/transactions" onclick="closeGlobalSearch()" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition">
+                        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                        </div>
+                        <div>
+                            <div class="text-sm font-bold text-slate-800">İşlemler</div>
+                            <div class="text-xs text-slate-500">Tüm hareketler</div>
+                        </div>
+                    </a>
+                    <a href="/assets" onclick="closeGlobalSearch()" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition">
+                        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <div>
+                            <div class="text-sm font-bold text-slate-800">Varlıklar</div>
+                            <div class="text-xs text-slate-500">Yatırımlar</div>
+                        </div>
+                    </a>
+                    <a href="/settings" onclick="closeGlobalSearch()" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition">
+                        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/></svg>
+                        </div>
+                        <div>
+                            <div class="text-sm font-bold text-slate-800">Ayarlar</div>
+                            <div class="text-xs text-slate-500">Sistem ayarları</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    setTimeout(() => {
+        const input = document.getElementById('globalSearchInput');
+        if (input) {
+            input.focus();
+        }
+    }, 100);
+}
+
+function handleSearchInput(query) {
+    const resultsContainer = document.getElementById('searchResults');
+    if (!resultsContainer) return;
+    
+    const lowerQuery = query.toLowerCase().trim();
+    
+    if (lowerQuery === '') {
+        resultsContainer.innerHTML = `
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Hızlı Erişim</div>
+            <div class="grid grid-cols-2 gap-2">
+                <a href="/" onclick="closeGlobalSearch()" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition">
+                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold text-slate-800">Dashboard</div>
+                        <div class="text-xs text-slate-500">Genel bakış</div>
+                    </div>
+                </a>
+                <a href="/transactions" onclick="closeGlobalSearch()" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition">
+                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold text-slate-800">İşlemler</div>
+                        <div class="text-xs text-slate-500">Tüm hareketler</div>
+                    </div>
+                </a>
+                <a href="/assets" onclick="closeGlobalSearch()" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition">
+                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold text-slate-800">Varlıklar</div>
+                        <div class="text-xs text-slate-500">Yatırımlar</div>
+                    </div>
+                </a>
+                <a href="/settings" onclick="closeGlobalSearch()" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition">
+                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/></svg>
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold text-slate-800">Ayarlar</div>
+                        <div class="text-xs text-slate-500">Sistem ayarları</div>
+                    </div>
+                </a>
+            </div>
+        `;
+        return;
+    }
+    
+    const searchItems = [
+        { name: 'Dil Ayarları', url: '/settings#language', keywords: ['dil', 'language', 'lang', 'türkçe', 'english'], icon: '🌐', category: 'Ayarlar' },
+        { name: 'Profil Ayarları', url: '/settings#profile', keywords: ['profil', 'profile', 'kullanıcı', 'user'], icon: '👤', category: 'Ayarlar' },
+        { name: 'Güvenlik Ayarları', url: '/settings#security', keywords: ['güvenlik', 'security', 'şifre', 'password'], icon: '🔒', category: 'Ayarlar' },
+        { name: 'Dashboard', url: '/', keywords: ['dashboard', 'genel', 'bakış', 'ana'], icon: '📊', category: 'Sayfalar' },
+        { name: 'İşlemler', url: '/transactions', keywords: ['işlem', 'transaction', 'hareket', 'gelir', 'gider'], icon: '💰', category: 'Sayfalar' },
+        { name: 'Varlıklar', url: '/assets', keywords: ['varlık', 'asset', 'yatırım', 'portfolio'], icon: '💎', category: 'Sayfalar' },
+        { name: 'Kategoriler', url: '/categories', keywords: ['kategori', 'category', 'sınıflandırma'], icon: '🏷️', category: 'Sayfalar' },
+        { name: 'Aylık Dashboard', url: '/monthly_dashboard', keywords: ['aylık', 'monthly', 'rapor', 'report'], icon: '📈', category: 'Sayfalar' },
+        { name: 'Ödeme Takvimi', url: '/payment_calendar', keywords: ['takvim', 'calendar', 'ödeme', 'payment'], icon: '📅', category: 'Sayfalar' },
+        { name: 'Finansal Eğitim', url: '/financial_education', keywords: ['eğitim', 'education', 'öğren', 'kurs'], icon: '📚', category: 'Eğitim' },
+    ];
+    
+    const filtered = searchItems.filter(item => {
+        return item.name.toLowerCase().includes(lowerQuery) || 
+               item.keywords.some(keyword => keyword.includes(lowerQuery));
+    });
+    
+    if (filtered.length === 0) {
+        resultsContainer.innerHTML = `
+            <div class="text-center py-8">
+                <div class="text-4xl mb-3">🔍</div>
+                <div class="text-sm font-semibold text-slate-600">Sonuç bulunamadı</div>
+                <div class="text-xs text-slate-400 mt-1">Başka bir arama terimi deneyin</div>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '<div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Arama Sonuçları</div>';
+    
+    filtered.forEach(item => {
+        html += `
+            <a href="${item.url}" onclick="closeGlobalSearch()" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition mb-2">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-lg">
+                    ${item.icon}
+                </div>
+                <div class="flex-1">
+                    <div class="text-sm font-bold text-slate-800">${item.name}</div>
+                    <div class="text-xs text-slate-500">${item.category}</div>
+                </div>
+                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+        `;
+    });
+    
+    resultsContainer.innerHTML = html;
+}
+
+function closeGlobalSearch() {
+    const modal = document.getElementById('globalSearchModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(e) {
+    const quickActionsBtn = document.querySelector('.quick-actions-btn');
+    const quickActionsPanel = document.getElementById('quickActionsPanel');
+    const userDropdownBtn = document.querySelector('.user-dropdown-btn');
+    const userDropdownPanel = document.getElementById('userDropdownPanel');
+    
+    if (quickActionsBtn && quickActionsPanel && !quickActionsBtn.contains(e.target) && !quickActionsPanel.contains(e.target)) {
+        quickActionsPanel.classList.add('hidden');
+    }
+    
+    if (userDropdownBtn && userDropdownPanel && !userDropdownBtn.contains(e.target) && !userDropdownPanel.contains(e.target)) {
+        userDropdownPanel.classList.add('hidden');
+    }
+});
+
+// Toggle Quick Actions Panel
+function toggleQuickActions() {
+    const panel = document.getElementById('quickActionsPanel');
+    if (panel) {
+        panel.classList.toggle('hidden');
+    }
+}
+
+// Open Global Quick Transaction Modal
+function openGlobalQuickTxModal() {
+    // Redirect to transactions page with modal parameter
+    window.location.href = '/transactions?modal=new';
+}
+
+// Make functions globally accessible
+window.toggleQuickActions = toggleQuickActions;
+window.openGlobalQuickTxModal = openGlobalQuickTxModal;
+
+// Keyboard shortcut for global search
+document.addEventListener('keydown', function(e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        openGlobalSearch();
+    }
+});
+</script>

@@ -1,0 +1,3024 @@
+{
+  "version": "1.0",
+  "last_updated": "2024-06-19",
+  "total_insights": 500,
+  "categories": [
+    "Yatırım",
+    "Risk Yönetimi",
+    "Davranışsal Finans",
+    "Bileşik Getiri",
+    "Enflasyon",
+    "Portföy Yönetimi",
+    "Finansal Disiplin",
+    "Psikoloji",
+    "Zenginlik Oluşturma",
+    "Emeklilik",
+    "Nakit Akışı",
+    "Borç Yönetimi",
+    "Uzun Vadeli Yatırım",
+    "Fonlar",
+    "Hisse Senetleri"
+  ],
+  "insights": [
+    {
+      "id": 1,
+      "category": "Davranışsal Finans",
+      "text": "Piyasalar düştüğünde paniğe kapılmak çoğu zaman yatırımcının en pahalı hatasıdır.",
+      "source": "Davranışsal Finans Prensibi"
+    },
+    {
+      "id": 2,
+      "category": "Bileşik Getiri",
+      "text": "Zaman, bileşik faizin en güçlü müttefikidir; erken başlamak her zaman iyidir.",
+      "source": "Bileşik Faiz Prensibi"
+    },
+    {
+      "id": 3,
+      "category": "Risk Yönetimi",
+      "text": "Diversifikasyon, riski azaltmanın en etkili ve en ucuz yoludur.",
+      "source": "Modern Portföy Teorisi"
+    },
+    {
+      "id": 4,
+      "category": "Finansal Disiplin",
+      "text": "Düzenli tasarruf, gelir düzeyinden daha önemlidir.",
+      "source": "Finansal Disiplin Prensibi"
+    },
+    {
+      "id": 5,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Kısa vadeli dalgalanmalar, uzun vadeli yatırımcı için fırsattır.",
+      "source": "Uzun Vadeli Yatırım Stratejisi"
+    },
+    {
+      "id": 6,
+      "category": "Enflasyon",
+      "text": "Enflasyon, paranın satın alma gücünü sessizce eriten görünmez bir vergidir.",
+      "source": "Enflasyon Ekonomisi"
+    },
+    {
+      "id": 7,
+      "category": "Portföy Yönetimi",
+      "text": "Portföy dengeleme, risk-getiri profilini korumak için düzenli yapılmalıdır.",
+      "source": "Portföy Yönetimi Prensibi"
+    },
+    {
+      "id": 8,
+      "category": "Psikoloji",
+      "text": "Aşırı özgüven, başarılı yatırımcıların en büyük düşmanıdır.",
+      "source": "Davranışsal Finans"
+    },
+    {
+      "id": 9,
+      "category": "Zenginlik Oluşturma",
+      "text": "Zenginlik, gelirle değil, harcama alışkanlıklarıyla oluşturulur.",
+      "source": "Zenginlik Oluşturma Prensibi"
+    },
+    {
+      "id": 10,
+      "category": "Emeklilik",
+      "text": "Emeklilik planlaması, iş hayatının ilk gününden başlamalıdır.",
+      "source": "Emeklilik Planlama Stratejisi"
+    },
+    {
+      "id": 11,
+      "category": "Nakit Akışı",
+      "text": "Nakit akışı yönetimi, finansal sağlığın temelidir.",
+      "source": "Nakit Akışı Yönetimi"
+    },
+    {
+      "id": 12,
+      "category": "Borç Yönetimi",
+      "text": "Kötü borçtan kaçınmak, iyi borcu stratejik kullanmaktan daha önemlidir.",
+      "source": "Borç Yönetimi Prensibi"
+    },
+    {
+      "id": 13,
+      "category": "Fonlar",
+      "text": "Düşük maliyetli index fonları, çoğu yatırımcı için en iyi seçenektir.",
+      "source": "Index Fon Yatırımı"
+    },
+    {
+      "id": 14,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi alırken şirket satın, hisse satın.",
+      "source": "Değer Yatırımı Prensibi"
+    },
+    {
+      "id": 15,
+      "category": "Yatırım",
+      "text": "Piyasa zamanlaması yerine, piyasada kalma zamanlaması önemlidir.",
+      "source": "Time in the Market Prensibi"
+    },
+    {
+      "id": 16,
+      "category": "Davranışsal Finans",
+      "text": "Kayıptan kaçınma, rasyonel yatırım kararlarını engeller.",
+      "source": "Kayıp Kaçınma Yanlılığı"
+    },
+    {
+      "id": 17,
+      "category": "Bileşik Getiri",
+      "text": "Yıllık %10 getiri, 7 yılda sermayeyi ikiye katlar.",
+      "source": "Bileşik Faiz Kuralı"
+    },
+    {
+      "id": 18,
+      "category": "Risk Yönetimi",
+      "text": "Risk, sadece kaybedemeyeceğiniz kadar alınmalıdır.",
+      "source": "Risk Yönetimi Prensibi"
+    },
+    {
+      "id": 19,
+      "category": "Finansal Disiplin",
+      "text": "Otomatik tasarruf, irade gücüne ihtiyaç duymaz.",
+      "source": "Otomatik Finansal Disiplin"
+    },
+    {
+      "id": 20,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "10 yıllık dönemde, piyasa zamanlaması neredeyse imkansızdır.",
+      "source": "Uzun Vadeli Yatırım İstatistiği"
+    },
+    {
+      "id": 21,
+      "category": "Enflasyon",
+      "text": "Reel getiri, enflasyon düşüldükten sonra kalan gerçek kazançtır.",
+      "source": "Reel Getiri Hesaplama"
+    },
+    {
+      "id": 22,
+      "category": "Portföy Yönetimi",
+      "text": "Varlık sınıfı korelasyonu, diversifikasyonun etkinliğini belirler.",
+      "source": "Korelasyon ve Diversifikasyon"
+    },
+    {
+      "id": 23,
+      "category": "Psikoloji",
+      "text": "Sürü psikolojisi, kalabalığı takip etmenin pahalıya mal olabilir.",
+      "source": "Sürü Psikolojisi"
+    },
+    {
+      "id": 24,
+      "category": "Zenginlik Oluşturma",
+      "text": "Pasif gelir, finansal özgürlüğün anahtarıdır.",
+      "source": "Pasif Gelir Stratejisi"
+    },
+    {
+      "id": 25,
+      "category": "Emeklilik",
+      "text": "Erken emeklilik, yüksek tasarruf oranı ve akıllı yatırımla mümkündür.",
+      "source": "Erken Emeklilik Hesaplama"
+    },
+    {
+      "id": 26,
+      "category": "Nakit Akışı",
+      "text": "Acil durum fonu, 3-6 aylık gideri kapsamalıdır.",
+      "source": "Acil Durum Fonu Prensibi"
+    },
+    {
+      "id": 27,
+      "category": "Borç Yönetimi",
+      "text": "Kredi kartı borcu, en yüksek faizli ve en tehlikeli borç türüdür.",
+      "source": "Borç Önceliklendirme"
+    },
+    {
+      "id": 28,
+      "category": "Fonlar",
+      "text": "Yönetim ücretleri, uzun vadeli getirileri önemli ölçüde etkiler.",
+      "source": "Yönetim Ücreti Etkisi"
+    },
+    {
+      "id": 29,
+      "category": "Hisse Senetleri",
+      "text": "Temel analiz, hisse senedi değerlemesinde en güvenilir yöntemdir.",
+      "source": "Temel Analiz Prensibi"
+    },
+    {
+      "id": 30,
+      "category": "Yatırım",
+      "text": "Düzenli yatırım, piyasa zamanlamasından daha etkilidir.",
+      "source": "Dolar Cost Averaging"
+    },
+    {
+      "id": 31,
+      "category": "Davranışsal Finans",
+      "text": "FOMO, fırsatı kaçırmak korkusuyla mantıksız alımlara yol açar.",
+      "source": "FOMO Yanlılığı"
+    },
+    {
+      "id": 32,
+      "category": "Bileşik Getiri",
+      "text": "Erken başlamak, daha yüksek tasarruf oranından daha önemlidir.",
+      "source": "Zaman Değeri Prensibi"
+    },
+    {
+      "id": 33,
+      "category": "Risk Yönetimi",
+      "text": "Risk toleransı, kayıp kabiliyetinden ayrı değerlendirilmelidir.",
+      "source": "Risk Toleransı Analizi"
+    },
+    {
+      "id": 34,
+      "category": "Finansal Disiplin",
+      "text": "Bütçe yapmak, harcamaları kontrol etmenin ilk adımıdır.",
+      "source": "Bütçe Yönetimi Prensibi"
+    },
+    {
+      "id": 35,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa düştüğünde satmak, kayıpları gerçekleştirir.",
+      "source": "Piyasa Düşüşü Stratejisi"
+    },
+    {
+      "id": 36,
+      "category": "Enflasyon",
+      "text": "Yüksek enflasyon dönemlerinde, nakit varlıklar değer kaybeder.",
+      "source": "Enflasyon ve Varlık Sınıfları"
+    },
+    {
+      "id": 37,
+      "category": "Portföy Yönetimi",
+      "text": "Yaş ilerledikçe, risk seviyesi kademeli olarak düşürülmelidir.",
+      "source": "Yaş Bazlı Varlık Dağılımı"
+    },
+    {
+      "id": 38,
+      "category": "Psikoloji",
+      "text": "Doğrulama yanlılığı, sadece kendi görüşlerinizi destekleyen bilgileri arar.",
+      "source": "Doğrulama Yanlılığı"
+    },
+    {
+      "id": 39,
+      "category": "Zenginlik Oluşturma",
+      "text": "Çoklu gelir kaynakları, finansal güvenliği artırır.",
+      "source": "Gelir Çeşitlendirmesi"
+    },
+    {
+      "id": 40,
+      "category": "Emeklilik",
+      "text": "Emeklilik hesabına düzenli katkı, bileşik faizden maksimum yarar sağlar.",
+      "source": "Emeklilik Katkı Stratejisi"
+    },
+    {
+      "id": 41,
+      "category": "Nakit Akışı",
+      "text": "Gelir artışı kadar önemli olan, giderleri kontrol edebilmektir.",
+      "source": "Gelir-Gider Dengesi"
+    },
+    {
+      "id": 42,
+      "category": "Borç Yönetimi",
+      "text": "Borç konsolidasyonu, faiz maliyetlerini düşürebilir.",
+      "source": "Borç Konsolidasyonu"
+    },
+    {
+      "id": 43,
+      "category": "Fonlar",
+      "text": "Sektör fonları, belirli sektörlere yatırım yapmak için uygundur.",
+      "source": "Sektör Fon Yatırımı"
+    },
+    {
+      "id": 44,
+      "category": "Hisse Senetleri",
+      "text": "Temettü hisseleri, düzenli pasif gelir sağlar.",
+      "source": "Temettü Yatırımı"
+    },
+    {
+      "id": 45,
+      "category": "Yatırım",
+      "text": "Küçük yatırımlar bile, bileşik faizle büyüyebilir.",
+      "source": "Küçük Yatırım Gücü"
+    },
+    {
+      "id": 46,
+      "category": "Davranışsal Finans",
+      "text": "Tersine düşünce, piyasa zirvesinde alıp dipte satmaya yol açar.",
+      "source": "Tersine Düşünce"
+    },
+    {
+      "id": 47,
+      "category": "Bileşik Getiri",
+      "text": "Faiz oranı, yatırım süresi kadar önemlidir.",
+      "source": "Faiz Oranı Etkisi"
+    },
+    {
+      "id": 48,
+      "category": "Risk Yönetimi",
+      "text": "Stop-loss kullanımı, kayıpları sınırlamaya yardımcı olur.",
+      "source": "Stop-Loss Stratejisi"
+    },
+    {
+      "id": 49,
+      "category": "Finansal Disiplin",
+      "text": "İmpulsif harcamalar, bütçe dengesini bozar.",
+      "source": "İmpulsif Harcama Kontrolü"
+    },
+    {
+      "id": 50,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa volatilitesi, uzun vadeli yatırımcı için dosttur.",
+      "source": "Volatilite ve Uzun Vadeli Yatırım"
+    },
+    {
+      "id": 51,
+      "category": "Enflasyon",
+      "text": "TIPS gibi enflasyon korumalı menkul kıymetler riski azaltır.",
+      "source": "Enflasyon Korumalı Yatırım"
+    },
+    {
+      "id": 52,
+      "category": "Portföy Yönetimi",
+      "text": "Uluslararası diversifikasyon, ülke riskini azaltır.",
+      "source": "Uluslararası Yatırım"
+    },
+    {
+      "id": 53,
+      "category": "Psikoloji",
+      "text": "Kumarbaz yanılgısı, geçmiş başarıların geleceği garanti ettiğini düşünür.",
+      "source": "Kumarbaz Yanılgısı"
+    },
+    {
+      "id": 54,
+      "category": "Zenginlik Oluşturma",
+      "text": "Finansal eğitim, en yüksek getirili yatırımdır.",
+      "source": "Finansal Eğitim Değeri"
+    },
+    {
+      "id": 55,
+      "category": "Emeklilik",
+      "text": "Emeklilik yaşı, beklenen yaşam süresine göre planlanmalıdır.",
+      "source": "Emeklilik Yaşı Planlaması"
+    },
+    {
+      "id": 56,
+      "category": "Nakit Akışı",
+      "text": "Nakit akışı tablosu, finansal sağlığın gerçek resmini gösterir.",
+      "source": "Nakit Akışı Tablosu"
+    },
+    {
+      "id": 57,
+      "category": "Borç Yönetimi",
+      "text": "Borç önceliği, yüksek faizli borçlardan başlamalıdır.",
+      "source": "Borç Ödeme Stratejisi"
+    },
+    {
+      "id": 58,
+      "category": "Fonlar",
+      "text": "ETF'ler, düşük maliyetli ve kolay diversifikasyon sağlar.",
+      "source": "ETF Yatırımı"
+    },
+    {
+      "id": 59,
+      "category": "Hisse Senetleri",
+      "text": "P/E oranı, hissenin değerli olup olmadığını gösterir.",
+      "source": "P/E Oranı Analizi"
+    },
+    {
+      "id": 60,
+      "category": "Yatırım",
+      "text": "Yatırım hedefleri, ölçülebilir ve zamanlı olmalıdır.",
+      "source": "Yatırım Hedef Belirleme"
+    },
+    {
+      "id": 61,
+      "category": "Davranışsal Finans",
+      "text": "Çapa etkisi, ilk bilgiyi referans noktası olarak kullanır.",
+      "source": "Çapa Etkisi"
+    },
+    {
+      "id": 62,
+      "category": "Bileşik Getiri",
+      "text": "Aylık yatırım, yıllık bileşik faizden daha etkilidir.",
+      "source": "Aylık Yatırım Stratejisi"
+    },
+    {
+      "id": 63,
+      "category": "Risk Yönetimi",
+      "text": "Kontrat yatırım, riski azaltmanın önemli bir yoludur.",
+      "source": "Kontrat Yatırım"
+    },
+    {
+      "id": 64,
+      "category": "Finansal Disiplin",
+      "text": "Harcanan her kuruş, gelecekteki yatırım fırsatından kaçmaktır.",
+      "source": "Fırsat Maliyeti"
+    },
+    {
+      "id": 65,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "10 yıllık hisse getirileri, diğer varlık sınıflarını geride bırakır.",
+      "source": "Hisse Senedi Getiri İstatistiği"
+    },
+    {
+      "id": 66,
+      "category": "Enflasyon",
+      "text": "Merkez bankası politikaları, enflasyonu doğrudan etkiler.",
+      "source": "Merkez Bankası Politikaları"
+    },
+    {
+      "id": 67,
+      "category": "Portföy Yönetimi",
+      "text": "Rebalancing, portföy dengesini korumak için gereklidir.",
+      "source": "Portföy Rebalancing"
+    },
+    {
+      "id": 68,
+      "category": "Psikoloji",
+      "text": "Mental accounting, parayı farklı kaynaklardan geldiği şekilde farklı değerlendirir.",
+      "source": "Mental Accounting"
+    },
+    {
+      "id": 69,
+      "category": "Zenginlik Oluşturma",
+      "text": "Kendi işini kurmak, zenginlik oluşturmanın hızlı yoludur.",
+      "source": "Girişimcilik ve Zenginlik"
+    },
+    {
+      "id": 70,
+      "category": "Emeklilik",
+      "text": "Sosyal güvenlik, emeklilik planının tamamı olmamalıdır.",
+      "source": "Sosyal Güvenlik Tamamlayıcılığı"
+    },
+    {
+      "id": 71,
+      "category": "Nakit Akışı",
+      "text": "Pasif gelir, aktif gelirden daha değerlidir.",
+      "source": "Pasif Gelir Değeri"
+    },
+    {
+      "id": 72,
+      "category": "Borç Yönetimi",
+      "text": "İyi borç, gelecekteki getiri sağlayan yatırımlar için kullanılabilir.",
+      "source": "İyi Borç Kavramı"
+    },
+    {
+      "id": 73,
+      "category": "Fonlar",
+      "text": "Borsa yatırım fonları, hisse senedi riskini azaltır.",
+      "source": "Borsa Yatırım Fonu"
+    },
+    {
+      "id": 74,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi seçimi, sektör analizi ile başlar.",
+      "source": "Sektör Analizi"
+    },
+    {
+      "id": 75,
+      "category": "Yatırım",
+      "text": "Yatırım stratejisi, kişisel hedeflerle uyumlu olmalıdır.",
+      "source": "Kişisel Yatırım Stratejisi"
+    },
+    {
+      "id": 76,
+      "category": "Davranışsal Finans",
+      "text": "Mevcut statüko koruma, değişim fırsatlarını kaçırır.",
+      "source": "Statüko Yanlılığı"
+    },
+    {
+      "id": 77,
+      "category": "Bileşik Getiri",
+      "text": "Günlük bileşik faiz, yıllık getiri hesaplamasında kullanılır.",
+      "source": "Günlük Bileşik Faiz"
+    },
+    {
+      "id": 78,
+      "category": "Risk Yönetimi",
+      "text": "Risk iştahı, risk kapasitesinden ayrı değerlendirilmelidir.",
+      "source": "Risk İştahı Analizi"
+    },
+    {
+      "id": 79,
+      "category": "Finansal Disiplin",
+      "text": "Düzenli finansal kontrol, sürprizleri önler.",
+      "source": "Düzenli Finansal Kontrol"
+    },
+    {
+      "id": 80,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa döngüleri, uzun vadeli yatırımcı için fırsattır.",
+      "source": "Piyasa Döngüleri"
+    },
+    {
+      "id": 81,
+      "category": "Enflasyon",
+      "text": "Reel faiz oranı, nominal faiz eksi enflasyondur.",
+      "source": "Reel Faiz Hesaplama"
+    },
+    {
+      "id": 82,
+      "category": "Portföy Yönetimi",
+      "text": "Varlık tahsisi, risk-getiri hedeflerine göre belirlenir.",
+      "source": "Varlık Tahsisi"
+    },
+    {
+      "id": 83,
+      "category": "Psikoloji",
+      "text": "Aşırı tepki, küçük haberlere büyük tepki vermektir.",
+      "source": "Aşırı Tepki"
+    },
+    {
+      "id": 84,
+      "category": "Zenginlik Oluşturma",
+      "text": "Ağ oluşturma, fırsatları artırır.",
+      "source": "Networking ve Fırsatlar"
+    },
+    {
+      "id": 85,
+      "category": "Emeklilik",
+      "text": "Emeklilik yaşam tarzı, maliyetleri belirler.",
+      "source": "Emeklilik Yaşam Tarzı"
+    },
+    {
+      "id": 86,
+      "category": "Nakit Akışı",
+      "text": "Gelir çeşitlendirmesi, nakit akışı istikrarını artırır.",
+      "source": "Gelir Çeşitlendirmesi"
+    },
+    {
+      "id": 87,
+      "category": "Borç Yönetimi",
+      "text": "Kredi skoru, gelecekteki finansal fırsatları etkiler.",
+      "source": "Kredi Skoru Önemi"
+    },
+    {
+      "id": 88,
+      "category": "Fonlar",
+      "text": "Döviz fonları, para birimi riskini yönetir.",
+      "source": "Döviz Fon Yatırımı"
+    },
+    {
+      "id": 89,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi volatilitesi, risk göstergesidir.",
+      "source": "Volatilite Analizi"
+    },
+    {
+      "id": 90,
+      "category": "Yatırım",
+      "text": "Yatırım portföyü, düzenli olarak gözden geçirilmelidir.",
+      "source": "Portföy Gözden Geçirme"
+    },
+    {
+      "id": 91,
+      "category": "Davranışsal Finans",
+      "text": "Kısa vadeli odaklanma, uzun vadeli başarıyı engeller.",
+      "source": "Kısa Vadeli Odaklanma"
+    },
+    {
+      "id": 92,
+      "category": "Bileşik Getiri",
+      "text": "Yıllık %15 getiri, 5 yılda sermayeyi ikiye katlar.",
+      "source": "Bileşik Faiz Hızlandırması"
+    },
+    {
+      "id": 93,
+      "category": "Risk Yönetimi",
+      "text": "Beta katsayısı, hissenin piyasa duyarlılığını gösterir.",
+      "source": "Beta Katsayısı"
+    },
+    {
+      "id": 94,
+      "category": "Finansal Disiplin",
+      "text": "Finansal hedefler, yazılı ve ölçülebilir olmalıdır.",
+      "source": "Finansal Hedef Belirleme"
+    },
+    {
+      "id": 95,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Dolar cost averaging, piyasa zamanlaması riskini azaltır.",
+      "source": "Dolar Cost Averaging"
+    },
+    {
+      "id": 96,
+      "category": "Enflasyon",
+      "text": "Enflasyon beklentileri, yatırım kararlarını etkiler.",
+      "source": "Enflasyon Beklentileri"
+    },
+    {
+      "id": 97,
+      "category": "Portföy Yönetimi",
+      "text": "Küresel diversifikasyon, sistemik riski azaltır.",
+      "source": "Küresel Diversifikasyon"
+    },
+    {
+      "id": 98,
+      "category": "Psikoloji",
+      "text": "Kendi yeteneklerini abartma, büyük kayıplara yol açabilir.",
+      "source": "Yetenek Abartma"
+    },
+    {
+      "id": 99,
+      "category": "Zenginlik Oluşturma",
+      "text": "Finansal özgürlük, pasif gelir ile gelir harcamasını aşmaktır.",
+      "source": "Finansal Özgürlük Tanımı"
+    },
+    {
+      "id": 100,
+      "category": "Emeklilik",
+      "text": "Emeklilik tasarrufları, vergi avantajlı hesaplarda tutulmalıdır.",
+      "source": "Vergi Avantajlı Emeklilik"
+    },
+    {
+      "id": 101,
+      "category": "Nakit Akışı",
+      "text": "Giderleri azaltmak, geliri artırmak kadar etkilidir.",
+      "source": "Gider Azaltma Stratejisi"
+    },
+    {
+      "id": 102,
+      "category": "Borç Yönetimi",
+      "text": "Borç-kredi oranı, finansal sağlığı gösterir.",
+      "source": "Borç-Kredi Oranı"
+    },
+    {
+      "id": 103,
+      "category": "Fonlar",
+      "text": "Altın fonları, portföy çeşitlendirmesi için uygundur.",
+      "source": "Altın Fon Yatırımı"
+    },
+    {
+      "id": 104,
+      "category": "Hisse Senetleri",
+      "text": "Temettü verimi, hisse senedi getirisinin önemli kısmıdır.",
+      "source": "Temettü Verimi"
+    },
+    {
+      "id": 105,
+      "category": "Yatırım",
+      "text": "Yatırım eğitimi, risk yönetimini geliştirir.",
+      "source": "Yatırım Eğitimi"
+    },
+    {
+      "id": 106,
+      "category": "Davranışsal Finans",
+      "text": "Sonuç yanlılığı, son olaylara aşırı önem verir.",
+      "source": "Sonuç Yanlılığı"
+    },
+    {
+      "id": 107,
+      "category": "Bileşik Getiri",
+      "text": "Aylık yatırım, yıllık getiri hesaplamasında bileşik faiz kullanır.",
+      "source": "Aylık Bileşik Faiz"
+    },
+    {
+      "id": 108,
+      "category": "Risk Yönetimi",
+      "text": "Standart sapma, yatırım riskini ölçer.",
+      "source": "Standart Sapma"
+    },
+    {
+      "id": 109,
+      "category": "Finansal Disiplin",
+      "text": "Düzenli tasarruf, finansal hedeflere ulaşmanın anahtarıdır.",
+      "source": "Düzenli Tasarruf"
+    },
+    {
+      "id": 110,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa düzeltmeleri, alım fırsatıdır.",
+      "source": "Piyasa Düzeltmesi"
+    },
+    {
+      "id": 111,
+      "category": "Enflasyon",
+      "text": "Fiyat istikrarı, ekonomik büyüme için önemlidir.",
+      "source": "Fiyat İstikrarı"
+    },
+    {
+      "id": 112,
+      "category": "Portföy Yönetimi",
+      "text": "Sektör rotasyonu, piyasa döngülerine göre ayarlama yapar.",
+      "source": "Sektör Rotasyonu"
+    },
+    {
+      "id": 113,
+      "category": "Psikoloji",
+      "text": "Grup düşüncesi, bireysel analizi engeller.",
+      "source": "Grup Düşüncesi"
+    },
+    {
+      "id": 114,
+      "category": "Zenginlik Oluşturma",
+      "text": "Yatırım getirisini yeniden yatırma, zenginliği hızlandırır.",
+      "source": "Getiri Yeniden Yatırımı"
+    },
+    {
+      "id": 115,
+      "category": "Emeklilik",
+      "text": "Emeklilik yaşı, sağlık durumuna göre ayarlanmalıdır.",
+      "source": "Sağlık ve Emeklilik"
+    },
+    {
+      "id": 116,
+      "category": "Nakit Akışı",
+      "text": "Nakit rezervi, beklenmedik giderler için önemlidir.",
+      "source": "Nakit Rezerv"
+    },
+    {
+      "id": 117,
+      "category": "Borç Yönetimi",
+      "text": "Borç ödeme planı, düzenli ve tutarlı olmalıdır.",
+      "source": "Borç Ödeme Planı"
+    },
+    {
+      "id": 118,
+      "category": "Fonlar",
+      "text": "Karma fonlar, otomatik diversifikasyon sağlar.",
+      "source": "Karma Fon Yatırımı"
+    },
+    {
+      "id": 119,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi likiditesi, çıkış kolaylığını belirler.",
+      "source": "Hisse Likiditesi"
+    },
+    {
+      "id": 120,
+      "category": "Yatırım",
+      "text": "Yatırım danışmanı, karmaşık durumlarda yardımcı olabilir.",
+      "source": "Yatırım Danışmanlığı"
+    },
+    {
+      "id": 121,
+      "category": "Davranışsal Finans",
+      "text": "Kullanılabilirlik yanlılığı, eldeki nakde aşırı değer verir.",
+      "source": "Kullanılabilirlik Yanlılığı"
+    },
+    {
+      "id": 122,
+      "category": "Bileşik Getiri",
+      "text": "Haftalık yatırım, aylık bileşik faizden daha az etkilidir.",
+      "source": "Haftalık Yatırım"
+    },
+    {
+      "id": 123,
+      "category": "Risk Yönetimi",
+      "text": "Sharpe oranı, risk ayarlı getiriyi gösterir.",
+      "source": "Sharpe Oranı"
+    },
+    {
+      "id": 124,
+      "category": "Finansal Disiplin",
+      "text": "Finansal plan, yaşam değişikliklerine uyum sağlamalıdır.",
+      "source": "Esnek Finansal Planlama"
+    },
+    {
+      "id": 125,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa trendleri, uzun vadeli yatırımcı için önemlidir.",
+      "source": "Piyasa Trendleri"
+    },
+    {
+      "id": 126,
+      "category": "Enflasyon",
+      "text": "Çekirdek enflasyon, gıda ve enerji hariç enflasyonu gösterir.",
+      "source": "Çekirdek Enflasyon"
+    },
+    {
+      "id": 127,
+      "category": "Portföy Yönetimi",
+      "text": "Stil yatırımı, büyüme veya değer odaklı olabilir.",
+      "source": "Stil Yatırımı"
+    },
+    {
+      "id": 128,
+      "category": "Psikoloji",
+      "text": "Kendine güven, aşırı özgüvenle karıştırılmamalıdır.",
+      "source": "Sağlıklı Özgüven"
+    },
+    {
+      "id": 129,
+      "category": "Zenginlik Oluşturma",
+      "text": "Yüksek gelirli beceriler, zenginlik oluşturmayı hızlandırır.",
+      "source": "Yüksek Gelirli Beceriler"
+    },
+    {
+      "id": 130,
+      "category": "Emeklilik",
+      "text": "Emeklilik planı, sağlık giderlerini içermelidir.",
+      "source": "Sağlık Gideri Planlaması"
+    },
+    {
+      "id": 131,
+      "category": "Nakit Akışı",
+      "text": "Gelir artışı, otomatik tasarruf artışı ile eşleşmelidir.",
+      "source": "Gelir Artışı ve Tasarruf"
+    },
+    {
+      "id": 132,
+      "category": "Borç Yönetimi",
+      "text": "Borç konsolidasyonu, ödemeleri basitleştirir.",
+      "source": "Borç Basitleştirme"
+    },
+    {
+      "id": 133,
+      "category": "Fonlar",
+      "text": "Borçlanma araçları fonları, sabit getiri sağlar.",
+      "source": "Borçlanma Fonu"
+    },
+    {
+      "id": 134,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi seçimi, şirket analizi gerektirir.",
+      "source": "Şirket Analizi"
+    },
+    {
+      "id": 135,
+      "category": "Yatırım",
+      "text": "Yatırım riski, kaybedilebilecek maksimum tutar olarak tanımlanır.",
+      "source": "Yatırım Riski Tanımı"
+    },
+    {
+      "id": 136,
+      "category": "Davranışsal Finans",
+      "text": "Sonsuz iyimserlik, riskleri göz ardı eder.",
+      "source": "Sonsuz İyimserlik"
+    },
+    {
+      "id": 137,
+      "category": "Bileşik Getiri",
+      "text": "Günlük faiz, kısa vadeli yatırımlar için kullanılır.",
+      "source": "Günlük Faiz"
+    },
+    {
+      "id": 138,
+      "category": "Risk Yönetimi",
+      "text": "VaR, değer riskini ölçen istatistiksel yöntemdir.",
+      "source": "Value at Risk"
+    },
+    {
+      "id": 139,
+      "category": "Finansal Disiplin",
+      "text": "Finansal hedefler, gerçekçi ve ulaşılabilir olmalıdır.",
+      "source": "Gerçekçi Hedefler"
+    },
+    {
+      "id": 140,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa verimliliği, uzun vadeli stratejiyi destekler.",
+      "source": "Piyasa Verimliliği"
+    },
+    {
+      "id": 141,
+      "category": "Enflasyon",
+      "text": "Enflasyon hedeflemesi, merkez bankası politikasıdır.",
+      "source": "Enflasyon Hedeflemesi"
+    },
+    {
+      "id": 142,
+      "category": "Portföy Yönetimi",
+      "text": "Faktör yatırımı, belirli faktörlere odaklanır.",
+      "source": "Faktör Yatırımı"
+    },
+    {
+      "id": 143,
+      "category": "Psikoloji",
+      "text": "Sabır, başarılı yatırımcının en önemli özelliğidir.",
+      "source": "Yatırımcı Sabrı"
+    },
+    {
+      "id": 144,
+      "category": "Zenginlik Oluşturma",
+      "text": "Sermaye birikimi, zenginlik oluşturmanın temelidir.",
+      "source": "Sermaye Birikimi"
+    },
+    {
+      "id": 145,
+      "category": "Emeklilik",
+      "text": "Emeklilik planı, yaşam beklentisini içermelidir.",
+      "source": "Yaşam Beklentisi"
+    },
+    {
+      "id": 146,
+      "category": "Nakit Akışı",
+      "text": "Gider kategorileri, bütçe planlamasında önemlidir.",
+      "source": "Gider Kategorizasyonu"
+    },
+    {
+      "id": 147,
+      "category": "Borç Yönetimi",
+      "text": "Borç refinansmanı, faiz maliyetlerini düşürebilir.",
+      "source": "Borç Refinansmanı"
+    },
+    {
+      "id": 148,
+      "category": "Fonlar",
+      "text": "Para piyasası fonları, kısa vadeli nakit yönetimi için uygundur.",
+      "source": "Para Piyasası Fonu"
+    },
+    {
+      "id": 149,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi volatilitesi, getiri potansiyelini gösterir.",
+      "source": "Volatilite ve Getiri"
+    },
+    {
+      "id": 150,
+      "category": "Yatırım",
+      "text": "Yatırım portföyü, risk toleransına uygun olmalıdır.",
+      "source": "Risk Toleransı ve Portföy"
+    },
+    {
+      "id": 151,
+      "category": "Davranışsal Finans",
+      "text": "Mental accounting, rasyonel finansal kararları engeller.",
+      "source": "Mental Accounting Etkisi"
+    },
+    {
+      "id": 152,
+      "category": "Bileşik Getiri",
+      "text": "Çeyrek yıllık bileşik faiz, kısa vadeli getiri hesaplaması.",
+      "source": "Çeyrek Yıllık Bileşik Faiz"
+    },
+    {
+      "id": 153,
+      "category": "Risk Yönetimi",
+      "text": "Stres testi, portföy dayanıklılığını ölçer.",
+      "source": "Stres Testi"
+    },
+    {
+      "id": 154,
+      "category": "Finansal Disiplin",
+      "text": "Finansal hedefler, düzenli olarak gözden geçirilmelidir.",
+      "source": "Hedef Gözden Geçirme"
+    },
+    {
+      "id": 155,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa döngüleri, yatırım stratejisini belirler.",
+      "source": "Piyasa Döngüleri ve Strateji"
+    },
+    {
+      "id": 156,
+      "category": "Enflasyon",
+      "text": "Enflasyon beklentileri, faiz oranlarını etkiler.",
+      "source": "Enflasyon ve Faiz Oranları"
+    },
+    {
+      "id": 157,
+      "category": "Portföy Yönetimi",
+      "text": "Dinamik varlık tahsisi, piyasa koşullarına göre ayarlama yapar.",
+      "source": "Dinamik Varlık Tahsisi"
+    },
+    {
+      "id": 158,
+      "category": "Psikoloji",
+      "text": "Duygusal kararlar, finansal kayıplara yol açar.",
+      "source": "Duygusal Yatırım Kararları"
+    },
+    {
+      "id": 159,
+      "category": "Zenginlik Oluşturma",
+      "text": "Yatırım getirisi, sermaye birikimini hızlandırır.",
+      "source": "Yatırım Getirisi"
+    },
+    {
+      "id": 160,
+      "category": "Emeklilik",
+      "text": "Emeklilik planı, enflasyon etkisini içermelidir.",
+      "source": "Enflasyon ve Emeklilik"
+    },
+    {
+      "id": 161,
+      "category": "Nakit Akışı",
+      "text": "Gelir istikrarı, finansal güvenliği artırır.",
+      "source": "Gelir İstikrarı"
+    },
+    {
+      "id": 162,
+      "category": "Borç Yönetimi",
+      "text": "Borç ödeme takvimi, finansal sağlığı gösterir.",
+      "source": "Borç Ödeme Takvimi"
+    },
+    {
+      "id": 163,
+      "category": "Fonlar",
+      "text": "Hisse senedi fonları, profesyonel yönetim sağlar.",
+      "source": "Hisse Fon Yatırımı"
+    },
+    {
+      "id": 164,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi likiditesi, piyasa koşullarına göre değişir.",
+      "source": "Piyasa Likiditesi"
+    },
+    {
+      "id": 165,
+      "category": "Yatırım",
+      "text": "Yatırım stratejisi, piyasa koşullarına göre ayarlanmalıdır.",
+      "source": "Esnek Yatırım Stratejisi"
+    },
+    {
+      "id": 166,
+      "category": "Davranışsal Finans",
+      "text": "Sonuç yanlılığı, kısa vadeli olaylara aşırı ağırlık verir.",
+      "source": "Sonuç Yanlılığı Etkisi"
+    },
+    {
+      "id": 167,
+      "category": "Bileşik Getiri",
+      "text": "Sürekli bileşik faiz, en yüksek getiri sağlar.",
+      "source": "Sürekli Bileşik Faiz"
+    },
+    {
+      "id": 168,
+      "category": "Risk Yönetimi",
+      "text": "Korelasyon katsayısı, varlık ilişkisini gösterir.",
+      "source": "Korelasyon Katsayısı"
+    },
+    {
+      "id": 169,
+      "category": "Finansal Disiplin",
+      "text": "Finansal hedefler, motivasyon kaynağıdır.",
+      "source": "Hedef Motivasyonu"
+    },
+    {
+      "id": 170,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa verimliliği, pasif yatırımı destekler.",
+      "source": "Piyasa Verimliliği ve Pasif Yatırım"
+    },
+    {
+      "id": 171,
+      "category": "Enflasyon",
+      "text": "Enflasyon, borçluları etkileyen önemli faktördür.",
+      "source": "Enflasyon ve Borçlular"
+    },
+    {
+      "id": 172,
+      "category": "Portföy Yönetimi",
+      "text": "Sektör tahsisi, ekonomik görünümü yansıtır.",
+      "source": "Sektör Tahsisi"
+    },
+    {
+      "id": 173,
+      "category": "Psikoloji",
+      "text": "Aşırı tepki, piyasa volatilitesini artırır.",
+      "source": "Aşırı Tepki ve Volatilite"
+    },
+    {
+      "id": 174,
+      "category": "Zenginlik Oluşturma",
+      "text": "Yüksek tasarruf oranı, zenginliği hızlandırır.",
+      "source": "Yüksek Tasarruf Oranı"
+    },
+    {
+      "id": 175,
+      "category": "Emeklilik",
+      "text": "Emeklilik planı, vergi etkilerini içermelidir.",
+      "source": "Vergi ve Emeklilik"
+    },
+    {
+      "id": 176,
+      "category": "Nakit Akışı",
+      "text": "Gider optimizasyonu, nakit akışını iyileştirir.",
+      "source": "Gider Optimizasyonu"
+    },
+    {
+      "id": 177,
+      "category": "Borç Yönetimi",
+      "text": "Borç konsolidasyonu, finansal stresi azaltır.",
+      "source": "Borç ve Finansal Stres"
+    },
+    {
+      "id": 178,
+      "category": "Fonlar",
+      "text": "Endeks fonları, piyasa getirisini takip eder.",
+      "source": "Endeks Fon Takibi"
+    },
+    {
+      "id": 179,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi seçimi, risk-getiri analizini gerektirir.",
+      "source": "Risk-Getiri Analizi"
+    },
+    {
+      "id": 180,
+      "category": "Yatırım",
+      "text": "Yatırım zaman çizelgesi, hedeflere ulaşmayı kolaylaştırır.",
+      "source": "Yatırım Zaman Çizelgesi"
+    },
+    {
+      "id": 181,
+      "category": "Davranışsal Finans",
+      "text": "Sürü psikolojisi, piyasa balonlarını besler.",
+      "source": "Sürü Psikolojisi ve Balonlar"
+    },
+    {
+      "id": 182,
+      "category": "Bileşik Getiri",
+      "text": "Yıllık bileşik faiz, uzun vadeli getiri hesaplaması.",
+      "source": "Yıllık Bileşik Faiz"
+    },
+    {
+      "id": 183,
+      "category": "Risk Yönetimi",
+      "text": "Alfa, piyasa üzerindeki getiriyi gösterir.",
+      "source": "Alfa Katsayısı"
+    },
+    {
+      "id": 184,
+      "category": "Finansal Disiplin",
+      "text": "Finansal hedefler, önceliklendirilmelidir.",
+      "source": "Hedef Önceliklendirme"
+    },
+    {
+      "id": 185,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa döngüleri, varlık sınıfı performansını etkiler.",
+      "source": "Piyasa Döngüleri ve Varlık Sınıfları"
+    },
+    {
+      "id": 186,
+      "category": "Enflasyon",
+      "text": "Enflasyon, tasarruf değerini zamanla eritir.",
+      "source": "Enflasyon ve Tasarruf Değeri"
+    },
+    {
+      "id": 187,
+      "category": "Portföy Yönetimi",
+      "text": "Stil yatırımı, faktör bazlı stratejidir.",
+      "source": "Stil Yatırımı ve Faktörler"
+    },
+    {
+      "id": 188,
+      "category": "Psikoloji",
+      "text": "Sabır, piyasa volatilitesinde korunma sağlar.",
+      "source": "Sabır ve Volatilite"
+    },
+    {
+      "id": 189,
+      "category": "Zenginlik Oluşturma",
+      "text": "Yatırım çeşitlendirmesi, riski azaltır.",
+      "source": "Yatırım Çeşitlendirmesi"
+    },
+    {
+      "id": 190,
+      "category": "Emeklilik",
+      "text": "Emeklilik planı, yaşam tarzı değişikliklerini içermelidir.",
+      "source": "Yaşam Tarzı Değişiklikleri"
+    },
+    {
+      "id": 191,
+      "category": "Nakit Akışı",
+      "text": "Gelir artışı, yaşam standartını iyileştirir.",
+      "source": "Gelir ve Yaşam Standardı"
+    },
+    {
+      "id": 192,
+      "category": "Borç Yönetimi",
+      "text": "Borç refinansmanı, ödeme koşullarını iyileştirir.",
+      "source": "Borç Refinansmanı Avantajları"
+    },
+    {
+      "id": 193,
+      "category": "Fonlar",
+      "text": "Karma fonlar, otomatik rebalancing sağlar.",
+      "source": "Otomatik Rebalancing"
+    },
+    {
+      "id": 194,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi volatilitesi, risk yönetimini gerektirir.",
+      "source": "Volatilite ve Risk Yönetimi"
+    },
+    {
+      "id": 195,
+      "category": "Yatırım",
+      "text": "Yatırım stratejisi, kişisel risk profiline uygun olmalıdır.",
+      "source": "Kişisel Risk Profili"
+    },
+    {
+      "id": 196,
+      "category": "Davranışsal Finans",
+      "text": "Mental accounting, bütçe planlamasını engeller.",
+      "source": "Mental Accounting ve Bütçe"
+    },
+    {
+      "id": 197,
+      "category": "Bileşik Getiri",
+      "text": "Aylık bileşik faiz, düzenli yatırım için idealdir.",
+      "source": "Aylık Bileşik Faiz Avantajı"
+    },
+    {
+      "id": 198,
+      "category": "Risk Yönetimi",
+      "text": "Stres testi, extreme senaryoları simüle eder.",
+      "source": "Extreme Senaryo Simülasyonu"
+    },
+    {
+      "id": 199,
+      "category": "Finansal Disiplin",
+      "text": "Finansal hedefler, vizyonla uyumlu olmalıdır.",
+      "source": "Vizyon ve Hedef Uyumu"
+    },
+    {
+      "id": 200,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa döngüleri, yatırım zamanlamasını etkiler.",
+      "source": "Piyasa Döngüleri ve Zamanlama"
+    },
+    {
+      "id": 201,
+      "category": "Enflasyon",
+      "text": "Enflasyon beklentileri, yatırım kararlarını yönlendirir.",
+      "source": "Enflasyon Beklentileri ve Yatırım"
+    },
+    {
+      "id": 202,
+      "category": "Portföy Yönetimi",
+      "text": "Dinamik varlık tahsisi, risk yönetimini iyileştirir.",
+      "source": "Dinamik Tahsis ve Risk"
+    },
+    {
+      "id": 203,
+      "category": "Psikoloji",
+      "text": "Duygusal kararlar, uzun vadeli başarıyı engeller.",
+      "source": "Duygusal Kararlar ve Başarı"
+    },
+    {
+      "id": 204,
+      "category": "Zenginlik Oluşturma",
+      "text": "Yatırım getirisi, sermaye büyümesini hızlandırır.",
+      "source": "Yatırım Getirisi ve Sermaye"
+    },
+    {
+      "id": 205,
+      "category": "Emeklilik",
+      "text": "Emeklilik planı, sağlık risklerini içermelidir.",
+      "source": "Sağlık Riskleri ve Emeklilik"
+    },
+    {
+      "id": 206,
+      "category": "Nakit Akışı",
+      "text": "Gelir çeşitlendirmesi, finansal istikrar sağlar.",
+      "source": "Gelir Çeşitlendirmesi ve İstikrar"
+    },
+    {
+      "id": 207,
+      "category": "Borç Yönetimi",
+      "text": "Borç ödeme takvimi, kredi skorunu etkiler.",
+      "source": "Borç Ödeme ve Kredi Skoru"
+    },
+    {
+      "id": 208,
+      "category": "Fonlar",
+      "text": "Hisse senedi fonları, diversifikasyon kolaylığı sağlar.",
+      "source": "Diversifikasyon Kolaylığı"
+    },
+    {
+      "id": 209,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi likiditesi, çıkış stratejisini belirler.",
+      "source": "Likidite ve Çıkış Stratejisi"
+    },
+    {
+      "id": 210,
+      "category": "Yatırım",
+      "text": "Yatırım stratejisi, yaşam hedeflerine hizmet etmelidir.",
+      "source": "Yatırım ve Yaşam Hedefleri"
+    },
+    {
+      "id": 211,
+      "category": "Davranışsal Finans",
+      "text": "Sonuç yanlılığı, piyasa analizini bozar.",
+      "source": "Sonuç Yanlılığı ve Piyasa Analizi"
+    },
+    {
+      "id": 212,
+      "category": "Bileşik Getiri",
+      "text": "Sürekli bileşik faiz, maksimum sermaye büyümesi sağlar.",
+      "source": "Maksimum Sermaye Büyümesi"
+    },
+    {
+      "id": 213,
+      "category": "Risk Yönetimi",
+      "text": "Korelasyon katsayısı, diversifikasyon etkinliğini gösterir.",
+      "source": "Korelasyon ve Diversifikasyon Etkinliği"
+    },
+    {
+      "id": 214,
+      "category": "Finansal Disiplin",
+      "text": "Finansal hedefler, aylık olarak takip edilmelidir.",
+      "source": "Aylık Hedef Takibi"
+    },
+    {
+      "id": 215,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa verimliliği, endeks yatırımını destekler.",
+      "source": "Piyasa Verimliliği ve Endeks"
+    },
+    {
+      "id": 216,
+      "category": "Enflasyon",
+      "text": "Enflasyon, borç ödeme gücünü etkiler.",
+      "source": "Enflasyon ve Borç Ödeme Gücü"
+    },
+    {
+      "id": 217,
+      "category": "Portföy Yönetimi",
+      "text": "Sektör tahsisi, sektör riskini yönetir.",
+      "source": "Sektör Riski Yönetimi"
+    },
+    {
+      "id": 218,
+      "category": "Psikoloji",
+      "text": "Aşırı tepki, piyasa döngülerini şiddetlendirir.",
+      "source": "Aşırı Tepki ve Piyasa Döngüleri"
+    },
+    {
+      "id": 219,
+      "category": "Zenginlik Oluşturma",
+      "text": "Yüksek tasarruf oranı, erken emekliliği mümkün kılar.",
+      "source": "Yüksek Tasarruf ve Erken Emeklilik"
+    },
+    {
+      "id": 220,
+      "category": "Emeklilik",
+      "text": "Emeklilik planı, vergi avantajlarını kullanmalıdır.",
+      "source": "Vergi Avantajı Kullanımı"
+    },
+    {
+      "id": 221,
+      "category": "Nakit Akışı",
+      "text": "Gider optimizasyonu, yaşam kalitesini korur.",
+      "source": "Gider Optimizasyonu ve Yaşam Kalitesi"
+    },
+    {
+      "id": 222,
+      "category": "Borç Yönetimi",
+      "text": "Borç konsolidasyonu, finansal özgürlüğü artırır.",
+      "source": "Borç Konsolidasyonu ve Özgürlük"
+    },
+    {
+      "id": 223,
+      "category": "Fonlar",
+      "text": "Endeks fonları, düşük maliyetli yatırımdır.",
+      "source": "Düşük Maliyetli Yatırım"
+    },
+    {
+      "id": 224,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi seçimi, sektör analizini gerektirir.",
+      "source": "Sektör Analizi ve Seçim"
+    },
+    {
+      "id": 225,
+      "category": "Yatırım",
+      "text": "Yatırım zaman çizelgesi, motivasyonu artırır.",
+      "source": "Zaman Çizelgesi ve Motivasyon"
+    },
+    {
+      "id": 226,
+      "category": "Davranışsal Finans",
+      "text": "Sürü psikolojisi, rasyonel analizi engeller.",
+      "source": "Sürü Psikolojisi ve Rasyonel Analiz"
+    },
+    {
+      "id": 227,
+      "category": "Bileşik Getiri",
+      "text": "Yıllık bileşik faiz, emeklilik hesaplamasında kullanılır.",
+      "source": "Bileşik Faiz ve Emeklilik"
+    },
+    {
+      "id": 228,
+      "category": "Risk Yönetimi",
+      "text": "Alfa, aktif yönetim başarısını gösterir.",
+      "source": "Alfa ve Aktif Yönetim"
+    },
+    {
+      "id": 229,
+      "category": "Finansal Disiplin",
+      "text": "Finansal hedefler, aile üyeleriyle paylaşılmalıdır.",
+      "source": "Aile ve Hedef Paylaşımı"
+    },
+    {
+      "id": 230,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa döngüleri, varlık tahsisini etkiler.",
+      "source": "Piyasa Döngüleri ve Varlık Tahsisi"
+    },
+    {
+      "id": 231,
+      "category": "Enflasyon",
+      "text": "Enflasyon, tasarruf stratejisini belirler.",
+      "source": "Enflasyon ve Tasarruf Stratejisi"
+    },
+    {
+      "id": 232,
+      "category": "Portföy Yönetimi",
+      "text": "Stil yatırımı, faktör yatırımı ile ilişkilidir.",
+      "source": "Stil ve Faktör Yatırımı İlişkisi"
+    },
+    {
+      "id": 233,
+      "category": "Psikoloji",
+      "text": "Sabır, bileşik faizin tam etkisini sağlar.",
+      "source": "Sabır ve Bileşik Faiz"
+    },
+    {
+      "id": 234,
+      "category": "Zenginlik Oluşturma",
+      "text": "Yatırım çeşitlendirmesi, portföy riskini azaltır.",
+      "source": "Çeşitlendirme ve Portföy Riski"
+    },
+    {
+      "id": 235,
+      "category": "Emeklilik",
+      "text": "Emeklilik planı, enflasyon korumasını içermelidir.",
+      "source": "Enflasyon Koruması ve Emeklilik"
+    },
+    {
+      "id": 236,
+      "category": "Nakit Akışı",
+      "text": "Gelir artışı, yatırım kapasitesini artırır.",
+      "source": "Gelir ve Yatırım Kapasitesi"
+    },
+    {
+      "id": 237,
+      "category": "Borç Yönetimi",
+      "text": "Borç refinansmanı, nakit akışını iyileştirir.",
+      "source": "Refinansman ve Nakit Akışı"
+    },
+    {
+      "id": 238,
+      "category": "Fonlar",
+      "text": "Karma fonlar, profesyonel yönetim avantajı sağlar.",
+      "source": "Profesyonel Yönetim Avantajı"
+    },
+    {
+      "id": 239,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi volatilitesi, zaman içinde azalır.",
+      "source": "Volatilite Zaman Etkisi"
+    },
+    {
+      "id": 240,
+      "category": "Yatırım",
+      "text": "Yatırım stratejisi, piyasa koşullarına göre güncellenmelidir.",
+      "source": "Strateji Güncellemesi"
+    },
+    {
+      "id": 241,
+      "category": "Davranışsal Finans",
+      "text": "Mental accounting, harcama kararlarını bozar.",
+      "source": "Mental Accounting ve Harcama"
+    },
+    {
+      "id": 242,
+      "category": "Bileşik Getiri",
+      "text": "Aylık bileşik faiz, düzenli tasarrufu teşvik eder.",
+      "source": "Bileşik Faiz ve Düzenli Tasarruf"
+    },
+    {
+      "id": 243,
+      "category": "Risk Yönetimi",
+      "text": "Stres testi, portföy dayanıklılığını gösterir.",
+      "source": "Portföy Dayanıklılığı"
+    },
+    {
+      "id": 244,
+      "category": "Finansal Disiplin",
+      "text": "Finansal hedefler, ölçülebilir ilerleme sağlar.",
+      "source": "Ölçülebilir İlerleme"
+    },
+    {
+      "id": 245,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa döngüleri, yatırım fırsatlarını yaratır.",
+      "source": "Piyasa Döngüleri ve Fırsatlar"
+    },
+    {
+      "id": 246,
+      "category": "Enflasyon",
+      "text": "Enflasyon beklentileri, faiz oranlarını belirler.",
+      "source": "Enflasyon ve Faiz Belirleme"
+    },
+    {
+      "id": 247,
+      "category": "Portföy Yönetimi",
+      "text": "Dinamik varlık tahsisi, piyasa uyumunu sağlar.",
+      "source": "Piyasa Uyumu"
+    },
+    {
+      "id": 248,
+      "category": "Psikoloji",
+      "text": "Duygusal kararlar, portföy performansını düşürür.",
+      "source": "Duygusal Kararlar ve Performans"
+    },
+    {
+      "id": 249,
+      "category": "Zenginlik Oluşturma",
+      "text": "Yatırım getirisi, finansal özgürlüğü hızlandırır.",
+      "source": "Yatırım ve Finansal Özgürlük"
+    },
+    {
+      "id": 250,
+      "category": "Emeklilik",
+      "text": "Emeklilik planı, sağlık giderlerini tahmin etmelidir.",
+      "source": "Sağlik Gideri Tahmini"
+    },
+    {
+      "id": 251,
+      "category": "Nakit Akışı",
+      "text": "Gelir çeşitlendirmesi, iş kaybı riskini azaltır.",
+      "source": "Gelir Çeşitlendirmesi ve İş Riski"
+    },
+    {
+      "id": 252,
+      "category": "Borç Yönetimi",
+      "text": "Borç ödeme takvimi, finansal planlama için önemlidir.",
+      "source": "Borç Ödeme ve Finansal Planlama"
+    },
+    {
+      "id": 253,
+      "category": "Fonlar",
+      "text": "Hisse senedi fonları, küçük yatırımcılar için idealdir.",
+      "source": "Küçük Yatırımcı ve Fonlar"
+    },
+    {
+      "id": 254,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi likiditesi, piyasa derinliğini gösterir.",
+      "source": "Likidite ve Piyasa Derinliği"
+    },
+    {
+      "id": 255,
+      "category": "Yatırım",
+      "text": "Yatırım stratejisi, risk-getiri hedeflerine uygun olmalıdır.",
+      "source": "Risk-Getiri Hedefleri"
+    },
+    {
+      "id": 256,
+      "category": "Davranışsal Finans",
+      "text": "Sonuç yanlılığı, kısa vadeli performansa aşırı önem verir.",
+      "source": "Kısa Vadeli Performans Yanlılığı"
+    },
+    {
+      "id": 257,
+      "category": "Bileşik Getiri",
+      "text": "Sürekli bileşik faiz, enflasyonu yeniden yatırma ile aşar.",
+      "source": "Bileşik Faiz ve Enflasyon Aşımı"
+    },
+    {
+      "id": 258,
+      "category": "Risk Yönetimi",
+      "text": "Korelasyon katsayısı, portföy riskini hesaplar.",
+      "source": "Korelasyon ve Portföy Riski"
+    },
+    {
+      "id": 259,
+      "category": "Finansal Disiplin",
+      "text": "Finansal hedefler, yaşam evrelerine göre ayarlanmalıdır.",
+      "source": "Yaşam Evreleri ve Hedefler"
+    },
+    {
+      "id": 260,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa verimliliği, pasif yatırımı destekler.",
+      "source": "Piyasa Verimliliği ve Pasif Yatırım"
+    },
+    {
+      "id": 261,
+      "category": "Enflasyon",
+      "text": "Enflasyon, borçlular için fırsat, alacaklılar için risktir.",
+      "source": "Enflasyon ve Borç-Alacak Dengesi"
+    },
+    {
+      "id": 262,
+      "category": "Portföy Yönetimi",
+      "text": "Sektör tahsisi, ekonomik sektörlere göre ayarlama yapar.",
+      "source": "Ekonomik Sektör Tahsisi"
+    },
+    {
+      "id": 263,
+      "category": "Psikoloji",
+      "text": "Aşırı tepki, piyasa volatilitesini artırır.",
+      "source": "Aşırı Tepki ve Piyasa Volatilitesi"
+    },
+    {
+      "id": 264,
+      "category": "Zenginlik Oluşturma",
+      "text": "Yüksek tasarruf oranı, yatırım fırsatlarını artırır.",
+      "source": "Yüksek Tasarruf ve Yatırım Fırsatları"
+    },
+    {
+      "id": 265,
+      "category": "Emeklilik",
+      "text": "Emeklilik planı, vergi stratejilerini içermelidir.",
+      "source": "Vergi Stratejileri"
+    },
+    {
+      "id": 266,
+      "category": "Nakit Akışı",
+      "text": "Gider optimizasyonu, tasarruf potansiyelini artırır.",
+      "source": "Tasarruf Potansiyeli"
+    },
+    {
+      "id": 267,
+      "category": "Borç Yönetimi",
+      "text": "Borç konsolidasyonu, finansal stresi azaltır.",
+      "source": "Finansal Stres Azaltma"
+    },
+    {
+      "id": 268,
+      "category": "Fonlar",
+      "text": "Endeks fonları, piyasa getirisini takip eder.",
+      "source": "Piyasa Getiri Takibi"
+    },
+    {
+      "id": 269,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi seçimi, şirket finansallarını gerektirir.",
+      "source": "Şirket Finansalları"
+    },
+    {
+      "id": 270,
+      "category": "Yatırım",
+      "text": "Yatırım zaman çizelgesi, hedeflere ulaşmayı kolaylaştırır.",
+      "source": "Hedef Ulaşma Kolaylığı"
+    },
+    {
+      "id": 271,
+      "category": "Davranışsal Finans",
+      "text": "Sürü psikolojisi, piyasa balonlarını besler.",
+      "source": "Piyasa Balonları"
+    },
+    {
+      "id": 272,
+      "category": "Bileşik Getiri",
+      "text": "Yıllık bileşik faiz, uzun vadeli hedefler için kullanılır.",
+      "source": "Uzun Vadeli Hedefler"
+    },
+    {
+      "id": 273,
+      "category": "Risk Yönetimi",
+      "text": "Alfa, portföy yöneticisi başarısını gösterir.",
+      "source": "Portföy Yöneticisi Başarısı"
+    },
+    {
+      "id": 274,
+      "category": "Finansal Disiplin",
+      "text": "Finansal hedefler, düzenli olarak güncellenmelidir.",
+      "source": "Düzenli Hedef Güncelleme"
+    },
+    {
+      "id": 275,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa döncüleri, varlık sınıfı seçimini etkiler.",
+      "source": "Varlık Sınıfı Seçimi"
+    },
+    {
+      "id": 276,
+      "category": "Enflasyon",
+      "text": "Enflasyon, reel faiz oranını belirler.",
+      "source": "Reel Faiz Oranı"
+    },
+    {
+      "id": 277,
+      "category": "Portföy Yönetimi",
+      "text": "Stil yatırımı, büyüme veya değer odaklı olabilir.",
+      "source": "Büyüme-Değer Odaklılık"
+    },
+    {
+      "id": 278,
+      "category": "Psikoloji",
+      "text": "Sabır, piyasa volatilitesinde korunma sağlar.",
+      "source": "Volatilite Koruması"
+    },
+    {
+      "id": 279,
+      "category": "Zenginlik Oluşturma",
+      "text": "Yatırım çeşitlendirmesi, sistematik riski azaltır.",
+      "source": "Sistematik Risk Azaltma"
+    },
+    {
+      "id": 280,
+      "category": "Emeklilik",
+      "text": "Emeklilik planı, yaşam tarzı değişikliklerini içermelidir.",
+      "source": "Yaşam Tarzı Değişiklikleri"
+    },
+    {
+      "id": 281,
+      "category": "Nakit Akışı",
+      "text": "Gelir artışı, finansal hedefleri hızlandırır.",
+      "source": "Finansal Hızlandırma"
+    },
+    {
+      "id": 282,
+      "category": "Borç Yönetimi",
+      "text": "Borç refinansmanı, ödeme koşullarını iyileştirir.",
+      "source": "Ödeme Koşulları İyileştirme"
+    },
+    {
+      "id": 283,
+      "category": "Fonlar",
+      "text": "Karma fonlar, otomatik rebalancing sağlar.",
+      "source": "Otomatik Rebalancing"
+    },
+    {
+      "id": 284,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi volatilitesi, risk yönetimini gerektirir.",
+      "source": "Risk Yönetimi Gereksinimi"
+    },
+    {
+      "id": 285,
+      "category": "Yatırım",
+      "text": "Yatırım stratejisi, kişisel risk profiline uygun olmalıdır.",
+      "source": "Kişisel Risk Profili"
+    },
+    {
+      "id": 286,
+      "category": "Davranışsal Finans",
+      "text": "Mental accounting, bütçe planlamasını engeller.",
+      "source": "Bütçe Planlama Engel"
+    },
+    {
+      "id": 287,
+      "category": "Bileşik Getiri",
+      "text": "Aylık bileşik faiz, düzenli yatırım için idealdir.",
+      "source": "Düzenli Yatırım İdeal"
+    },
+    {
+      "id": 288,
+      "category": "Risk Yönetimi",
+      "text": "Stres testi, extreme senaryoları simüle eder.",
+      "source": "Extreme Senaryo Simülasyon"
+    },
+    {
+      "id": 289,
+      "category": "Finansal Disiplin",
+      "text": "Finansal hedefler, vizyonla uyumlu olmalıdır.",
+      "source": "Vizyon Uyumu"
+    },
+    {
+      "id": 290,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa döngüleri, yatırım zamanlamasını etkiler.",
+      "source": "Yatırım Zamanlaması"
+    },
+    {
+      "id": 291,
+      "category": "Enflasyon",
+      "text": "Enflasyon beklentileri, yatırım kararlarını yönlendirir.",
+      "source": "Yatırım Karar Yönlendirme"
+    },
+    {
+      "id": 292,
+      "category": "Portföy Yönetimi",
+      "text": "Dinamik varlık tahsisi, risk yönetimini iyileştirir.",
+      "source": "Risk Yönetimi İyileştirme"
+    },
+    {
+      "id": 293,
+      "category": "Psikoloji",
+      "text": "Duygusal kararlar, uzun vadeli başarıyı engeller.",
+      "source": "Uzun Vadeli Başarı Engel"
+    },
+    {
+      "id": 294,
+      "category": "Zenginlik Oluşturma",
+      "text": "Yatırım getirisi, sermaye büyümesini hızlandırır.",
+      "source": "Sermaye Büyüme Hızlandırma"
+    },
+    {
+      "id": 295,
+      "category": "Emeklilik",
+      "text": "Emeklilik planı, sağlık risklerini içermelidir.",
+      "source": "Sağlık Riskleri"
+    },
+    {
+      "id": 296,
+      "category": "Nakit Akışı",
+      "text": "Gelir çeşitlendirmesi, finansal istikrar sağlar.",
+      "source": "Finansal İstikrar"
+    },
+    {
+      "id": 297,
+      "category": "Borç Yönetimi",
+      "text": "Borç ödeme takvimi, kredi skorunu etkiler.",
+      "source": "Kredi Skoru Etkisi"
+    },
+    {
+      "id": 298,
+      "category": "Fonlar",
+      "text": "Hisse senedi fonları, diversifikasyon kolaylığı sağlar.",
+      "source": "Diversifikasyon Kolaylığı"
+    },
+    {
+      "id": 299,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi likiditesi, çıkış stratejisini belirler.",
+      "source": "Çıkış Stratejisi Belirleme"
+    },
+    {
+      "id": 300,
+      "category": "Yatırım",
+      "text": "Yatırım stratejisi, yaşam hedeflerine hizmet etmelidir.",
+      "source": "Yaşam Hedefleri Hizmeti"
+    },
+    {
+      "id": 301,
+      "category": "Davranışsal Finans",
+      "text": "Sonuç yanlılığı, piyasa analizini bozar.",
+      "source": "Piyasa Analizi Bozulma"
+    },
+    {
+      "id": 302,
+      "category": "Bileşik Getiri",
+      "text": "Sürekli bileşik faiz, maksimum sermaye büyümesi sağlar.",
+      "source": "Maksimum Büyüme"
+    },
+    {
+      "id": 303,
+      "category": "Risk Yönetimi",
+      "text": "Korelasyon katsayısı, diversifikasyon etkinliğini gösterir.",
+      "source": "Diversifikasyon Etkinliği"
+    },
+    {
+      "id": 304,
+      "category": "Finansal Disiplin",
+      "text": "Finansal hedefler, aylık olarak takip edilmelidir.",
+      "source": "Aylık Takip"
+    },
+    {
+      "id": 305,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa verimliliği, endeks yatırımını destekler.",
+      "source": "Endeks Yatırım Desteği"
+    },
+    {
+      "id": 306,
+      "category": "Enflasyon",
+      "text": "Enflasyon, borç ödeme gücünü etkiler.",
+      "source": "Borç Ödeme Gücü"
+    },
+    {
+      "id": 307,
+      "category": "Portföy Yönetimi",
+      "text": "Sektör tahsisi, sektör riskini yönetir.",
+      "source": "Sektör Riski"
+    },
+    {
+      "id": 308,
+      "category": "Psikoloji",
+      "text": "Aşırı tepki, piyasa döngülerini şiddetlendirir.",
+      "source": "Piyasa Döngüleri Şiddetlendirme"
+    },
+    {
+      "id": 309,
+      "category": "Zenginlik Oluşturma",
+      "text": "Yüksek tasarruf oranı, erken emekliliği mümkün kılar.",
+      "source": "Erken Emeklilik Mümkün Kılma"
+    },
+    {
+      "id": 310,
+      "category": "Emeklilik",
+      "text": "Emeklilik planı, vergi avantajlarını kullanmalıdır.",
+      "source": "Vergi Avantajı Kullanımı"
+    },
+    {
+      "id": 311,
+      "category": "Nakit Akışı",
+      "text": "Gider optimizasyonu, yaşam kalitesini korur.",
+      "source": "Yaşam Kalitesi Koruma"
+    },
+    {
+      "id": 312,
+      "category": "Borç Yönetimi",
+      "text": "Borç konsolidasyonu, finansal özgürlüğü artırır.",
+      "source": "Finansal Özgürlük Artırma"
+    },
+    {
+      "id": 313,
+      "category": "Fonlar",
+      "text": "Endeks fonları, düşük maliyetli yatırımdır.",
+      "source": "Düşük Maliyetli Yatırım"
+    },
+    {
+      "id": 314,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi seçimi, sektör analizini gerektirir.",
+      "source": "Sektör Analizi Gereksinimi"
+    },
+    {
+      "id": 315,
+      "category": "Yatırım",
+      "text": "Yatırım zaman çizelgesi, motivasyonu artırır.",
+      "source": "Motivasyon Artırma"
+    },
+    {
+      "id": 316,
+      "category": "Davranışsal Finans",
+      "text": "Sürü psikolojisi, rasyonel analizi engeller.",
+      "source": "Rasyonel Analiz Engel"
+    },
+    {
+      "id": 317,
+      "category": "Bileşik Getiri",
+      "text": "Yıllık bileşik faiz, emeklilik hesaplamasında kullanılır.",
+      "source": "Emeklilik Hesaplama"
+    },
+    {
+      "id": 318,
+      "category": "Risk Yönetimi",
+      "text": "Alfa, aktif yönetim başarısını gösterir.",
+      "source": "Aktif Yönetim Başarısı"
+    },
+    {
+      "id": 319,
+      "category": "Finansal Disiplin",
+      "text": "Finansal hedefler, aile üyeleriyle paylaşılmalıdır.",
+      "source": "Aile Paylaşımı"
+    },
+    {
+      "id": 320,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa döngüleri, varlık tahsisini etkiler.",
+      "source": "Varlık Tahsis Etkisi"
+    },
+    {
+      "id": 321,
+      "category": "Enflasyon",
+      "text": "Enflasyon, tasarruf stratejisini belirler.",
+      "source": "Tasarruf Stratejisi Belirleme"
+    },
+    {
+      "id": 322,
+      "category": "Portföy Yönetimi",
+      "text": "Stil yatırımı, faktör yatırımı ile ilişkilidir.",
+      "source": "Faktör Yatırımı İlişkisi"
+    },
+    {
+      "id": 323,
+      "category": "Psikoloji",
+      "text": "Sabır, bileşik faizin tam etkisini sağlar.",
+      "source": "Bileşik Faiz Tam Etki"
+    },
+    {
+      "id": 324,
+      "category": "Zenginlik Oluşturma",
+      "text": "Yatırım çeşitlendirmesi, portföy riskini azaltır.",
+      "source": "Portföy Risk Azaltma"
+    },
+    {
+      "id": 325,
+      "category": "Emeklilik",
+      "text": "Emeklilik planı, enflasyon korumasını içermelidir.",
+      "source": "Enflasyon Koruması"
+    },
+    {
+      "id": 326,
+      "category": "Nakit Akışı",
+      "text": "Gelir artışı, yatırım kapasitesini artırır.",
+      "source": "Yatırım Kapasitesi Artırma"
+    },
+    {
+      "id": 327,
+      "category": "Borç Yönetimi",
+      "text": "Borç refinansmanı, nakit akışını iyileştirir.",
+      "source": "Nakit Akışı İyileştirme"
+    },
+    {
+      "id": 328,
+      "category": "Fonlar",
+      "text": "Karma fonlar, profesyonel yönetim avantajı sağlar.",
+      "source": "Profesyonel Yönetim"
+    },
+    {
+      "id": 329,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi volatilitesi, zaman içinde azalır.",
+      "source": "Zaman Azalma Etkisi"
+    },
+    {
+      "id": 330,
+      "category": "Yatırım",
+      "text": "Yatırım stratejisi, piyasa koşullarına göre güncellenmelidir.",
+      "source": "Piyasa Koşulları Güncelleme"
+    },
+    {
+      "id": 331,
+      "category": "Davranışsal Finans",
+      "text": "Mental accounting, harcama kararlarını bozar.",
+      "source": "Harcama Karar Bozulma"
+    },
+    {
+      "id": 332,
+      "category": "Bileşik Getiri",
+      "text": "Aylık bileşik faiz, düzenli tasarrufu teşvik eder.",
+      "source": "Düzenli Tasarruf Teşvik"
+    },
+    {
+      "id": 333,
+      "category": "Risk Yönetimi",
+      "text": "Stres testi, portföy dayanıklılığını gösterir.",
+      "source": "Portföy Dayanıklılık Gösterme"
+    },
+    {
+      "id": 334,
+      "category": "Finansal Disiplin",
+      "text": "Finansal hedefler, ölçülebilir ilerleme sağlar.",
+      "source": "Ölçülebilir İlerleme Sağlama"
+    },
+    {
+      "id": 335,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa döncüleri, yatırım fırsatlarını yaratır.",
+      "source": "Yatırım Fırsat Yaratma"
+    },
+    {
+      "id": 336,
+      "category": "Enflasyon",
+      "text": "Enflasyon beklentileri, faiz oranlarını belirler.",
+      "source": "Faiz Oranı Belirleme"
+    },
+    {
+      "id": 337,
+      "category": "Portföy Yönetimi",
+      "text": "Dinamik varlık tahsisi, piyasa uyumunu sağlar.",
+      "source": "Piyasa Uyumu Sağlama"
+    },
+    {
+      "id": 338,
+      "category": "Psikoloji",
+      "text": "Duygusal kararlar, portföy performansını düşürür.",
+      "source": "Portföy Performans Düşürme"
+    },
+    {
+      "id": 339,
+      "category": "Zenginlik Oluşturma",
+      "text": "Yatırım getirisi, finansal özgürlüğü hızlandırır.",
+      "source": "Finansal Özgürlük Hızlandırma"
+    },
+    {
+      "id": 340,
+      "category": "Emeklilik",
+      "text": "Emeklilik planı, sağlık giderlerini tahmin etmelidir.",
+      "source": "Sağlık Gideri Tahmini"
+    },
+    {
+      "id": 341,
+      "category": "Nakit Akışı",
+      "text": "Gelir çeşitlendirmesi, iş kaybı riskini azaltır.",
+      "source": "İş Kaybı Risk Azaltma"
+    },
+    {
+      "id": 342,
+      "category": "Borç Yönetimi",
+      "text": "Borç ödeme takvimi, finansal planlama için önemlidir.",
+      "source": "Finansal Planlama Önemi"
+    },
+    {
+      "id": 343,
+      "category": "Fonlar",
+      "text": "Hisse senedi fonları, küçük yatırımcılar için idealdir.",
+      "source": "Küçük Yatırımcı İdeal"
+    },
+    {
+      "id": 344,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi likiditesi, piyasa derinliğini gösterir.",
+      "source": "Piyasa Derinliği Gösterme"
+    },
+    {
+      "id": 345,
+      "category": "Yatırım",
+      "text": "Yatırım stratejisi, risk-getiri hedeflerine uygun olmalıdır.",
+      "source": "Risk-Getiri Hedef Uyumu"
+    },
+    {
+      "id": 346,
+      "category": "Davranışsal Finans",
+      "text": "Sonuç yanlılığı, kısa vadeli performansa aşırı önem verir.",
+      "source": "Kısa Vadeli Performans Aşırı Önem"
+    },
+    {
+      "id": 347,
+      "category": "Bileşik Getiri",
+      "text": "Sürekli bileşik faiz, enflasyonu yeniden yatırma ile aşar.",
+      "source": "Enflasyon Aşma"
+    },
+    {
+      "id": 348,
+      "category": "Risk Yönetimi",
+      "text": "Korelasyon katsayısı, portföy riskini hesaplar.",
+      "source": "Portföy Risk Hesaplama"
+    },
+    {
+      "id": 349,
+      "category": "Finansal Disiplin",
+      "text": "Finansal hedefler, yaşam evrelerine göre ayarlanmalıdır.",
+      "source": "Yaşam Evreleri Ayarlama"
+    },
+    {
+      "id": 350,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa verimliliği, pasif yatırımı destekler.",
+      "source": "Pasif Yatırım Desteği"
+    },
+    {
+      "id": 351,
+      "category": "Enflasyon",
+      "text": "Enflasyon, borçlular için fırsat, alacaklılar için risktir.",
+      "source": "Borç-Alacak Risk-Fırsat"
+    },
+    {
+      "id": 352,
+      "category": "Portföy Yönetimi",
+      "text": "Sektör tahsisi, ekonomik sektörlere göre ayarlama yapar.",
+      "source": "Ekonomik Sektör Ayarlama"
+    },
+    {
+      "id": 353,
+      "category": "Psikoloji",
+      "text": "Aşırı tepki, piyasa volatilitesini artırır.",
+      "source": "Piyasa Volatilitesi Artırma"
+    },
+    {
+      "id": 354,
+      "category": "Zenginlik Oluşturma",
+      "text": "Yüksek tasarruf oranı, yatırım fırsatlarını artırır.",
+      "source": "Yatırım Fırsat Artırma"
+    },
+    {
+      "id": 355,
+      "category": "Emeklilik",
+      "text": "Emeklilik planı, vergi stratejilerini içermelidir.",
+      "source": "Vergi Stratejileri İçerme"
+    },
+    {
+      "id": 356,
+      "category": "Nakit Akışı",
+      "text": "Gider optimizasyonu, tasarruf potansiyelini artırır.",
+      "source": "Tasarruf Potansiyel Artırma"
+    },
+    {
+      "id": 357,
+      "category": "Borç Yönetimi",
+      "text": "Borç konsolidasyonu, finansal stresi azaltır.",
+      "source": "Finansal Stres Azaltma"
+    },
+    {
+      "id": 358,
+      "category": "Fonlar",
+      "text": "Endeks fonları, piyasa getirisini takip eder.",
+      "source": "Piyasa Getiri Takibi"
+    },
+    {
+      "id": 359,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi seçimi, şirket finansallarını gerektirir.",
+      "source": "Şirket Finansalları Gereksinimi"
+    },
+    {
+      "id": 360,
+      "category": "Yatırım",
+      "text": "Yatırım zaman çizelgesi, hedeflere ulaşmayı kolaylaştırır.",
+      "source": "Hedef Ulaşma Kolaylaştırma"
+    },
+    {
+      "id": 361,
+      "category": "Davranışsal Finans",
+      "text": "Sürü psikolojisi, piyasa balonlarını besler.",
+      "source": "Piyasa Balonları Besleme"
+    },
+    {
+      "id": 362,
+      "category": "Bileşik Getiri",
+      "text": "Yıllık bileşik faiz, uzun vadeli hedefler için kullanılır.",
+      "source": "Uzun Vadeli Hedef Kullanımı"
+    },
+    {
+      "id": 363,
+      "category": "Risk Yönetimi",
+      "text": "Alfa, portföy yöneticisi başarısını gösterir.",
+      "source": "Portföy Yöneticisi Başarı Gösterme"
+    },
+    {
+      "id": 364,
+      "category": "Finansal Disiplin",
+      "text": "Finansal hedefler, düzenli olarak güncellenmelidir.",
+      "source": "Düzenli Güncelleme"
+    },
+    {
+      "id": 365,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa döncüleri, varlık sınıfı seçimini etkiler.",
+      "source": "Varlık Sınıfı Seçim Etkisi"
+    },
+    {
+      "id": 366,
+      "category": "Enflasyon",
+      "text": "Enflasyon, reel faiz oranını belirler.",
+      "source": "Reel Faiz Oranı Belirleme"
+    },
+    {
+      "id": 367,
+      "category": "Portföy Yönetimi",
+      "text": "Stil yatırımı, büyüme veya değer odaklı olabilir.",
+      "source": "Büyüme-Değer Odaklılık Seçimi"
+    },
+    {
+      "id": 368,
+      "category": "Psikoloji",
+      "text": "Sabır, piyasa volatilitesinde korunma sağlar.",
+      "source": "Piyasa Volatilitesi Koruması"
+    },
+    {
+      "id": 369,
+      "category": "Zenginlik Oluşturma",
+      "text": "Yatırım çeşitlendirmesi, sistematik riski azaltır.",
+      "source": "Sistematik Risk Azaltma"
+    },
+    {
+      "id": 370,
+      "category": "Emeklilik",
+      "text": "Emeklilik planı, yaşam tarzı değişikliklerini içermelidir.",
+      "source": "Yaşam Tarzı Değişiklikleri İçerme"
+    },
+    {
+      "id": 371,
+      "category": "Nakit Akışı",
+      "text": "Gelir artışı, finansal hedefleri hızlandırır.",
+      "source": "Finansal Hedef Hızlandırma"
+    },
+    {
+      "id": 372,
+      "category": "Borç Yönetimi",
+      "text": "Borç refinansmanı, ödeme koşullarını iyileştirir.",
+      "source": "Ödeme Koşulları İyileştirme"
+    },
+    {
+      "id": 373,
+      "category": "Fonlar",
+      "text": "Karma fonlar, otomatik rebalancing sağlar.",
+      "source": "Otomatik Rebalancing Sağlama"
+    },
+    {
+      "id": 374,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi volatilitesi, risk yönetimini gerektirir.",
+      "source": "Risk Yönetimi Gereksinimi"
+    },
+    {
+      "id": 375,
+      "category": "Yatırım",
+      "text": "Yatırım stratejisi, kişisel risk profiline uygun olmalıdır.",
+      "source": "Kişisel Risk Profili Uygunluk"
+    },
+    {
+      "id": 376,
+      "category": "Davranışsal Finans",
+      "text": "Mental accounting, bütçe planlamasını engeller.",
+      "source": "Bütçe Planlama Engel"
+    },
+    {
+      "id": 377,
+      "category": "Bileşik Getiri",
+      "text": "Aylık bileşik faiz, düzenli yatırım için idealdir.",
+      "source": "Düzenli Yatırım İdeal"
+    },
+    {
+      "id": 378,
+      "category": "Risk Yönetimi",
+      "text": "Stres testi, extreme senaryoları simüle eder.",
+      "source": "Extreme Senaryo Simülasyon"
+    },
+    {
+      "id": 379,
+      "category": "Finansal Disiplin",
+      "text": "Finansal hedefler, vizyonla uyumlu olmalıdır.",
+      "source": "Vizyon Uyumu"
+    },
+    {
+      "id": 380,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa döncüleri, yatırım zamanlamasını etkiler.",
+      "source": "Yatırım Zamanlama Etkisi"
+    },
+    {
+      "id": 381,
+      "category": "Enflasyon",
+      "text": "Enflasyon beklentileri, yatırım kararlarını yönlendirir.",
+      "source": "Yatırım Karar Yönlendirme"
+    },
+    {
+      "id": 382,
+      "category": "Portföy Yönetimi",
+      "text": "Dinamik varlık tahsisi, risk yönetimini iyileştirir.",
+      "source": "Risk Yönetimi İyileştirme"
+    },
+    {
+      "id": 383,
+      "category": "Psikoloji",
+      "text": "Duygusal kararlar, uzun vadeli başarıyı engeller.",
+      "source": "Uzun Vadeli Başarı Engel"
+    },
+    {
+      "id": 384,
+      "category": "Zenginlik Oluşturma",
+      "text": "Yatırım getirisi, sermaye büyümesini hızlandırır.",
+      "source": "Sermaye Büyüme Hızlandırma"
+    },
+    {
+      "id": 385,
+      "category": "Emeklilik",
+      "text": "Emeklilik planı, sağlık risklerini içermelidir.",
+      "source": "Sağlık Riskleri İçerme"
+    },
+    {
+      "id": 386,
+      "category": "Nakit Akışı",
+      "text": "Gelir çeşitlendirmesi, finansal istikrar sağlar.",
+      "source": "Finansal İstikrar Sağlama"
+    },
+    {
+      "id": 387,
+      "category": "Borç Yönetimi",
+      "text": "Borç ödeme takvimi, kredi skorunu etkiler.",
+      "source": "Kredi Skoru Etkisi"
+    },
+    {
+      "id": 388,
+      "category": "Fonlar",
+      "text": "Hisse senedi fonları, diversifikasyon kolaylığı sağlar.",
+      "source": "Diversifikasyon Kolaylığı"
+    },
+    {
+      "id": 389,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi likiditesi, çıkış stratejisini belirler.",
+      "source": "Çıkış Stratejisi Belirleme"
+    },
+    {
+      "id": 390,
+      "category": "Yatırım",
+      "text": "Yatırım stratejisi, yaşam hedeflerine hizmet etmelidir.",
+      "source": "Yaşam Hedefleri Hizmeti"
+    },
+    {
+      "id": 391,
+      "category": "Davranışsal Finans",
+      "text": "Sonuç yanlılığı, piyasa analizini bozar.",
+      "source": "Piyasa Analizi Bozulma"
+    },
+    {
+      "id": 392,
+      "category": "Bileşik Getiri",
+      "text": "Sürekli bileşik faiz, maksimum sermaye büyümesi sağlar.",
+      "source": "Maksimum Büyüme Sağlama"
+    },
+    {
+      "id": 393,
+      "category": "Risk Yönetimi",
+      "text": "Korelasyon katsayısı, diversifikasyon etkinliğini gösterir.",
+      "source": "Diversifikasyon Etkinliği Gösterme"
+    },
+    {
+      "id": 394,
+      "category": "Finansal Disiplin",
+      "text": "Finansal hedefler, aylık olarak takip edilmelidir.",
+      "source": "Aylık Takip Gerekliliği"
+    },
+    {
+      "id": 395,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa verimliliği, endeks yatırımını destekler.",
+      "source": "Endeks Yatırım Desteği"
+    },
+    {
+      "id": 396,
+      "category": "Enflasyon",
+      "text": "Enflasyon, borç ödeme gücünü etkiler.",
+      "source": "Borç Ödeme Gücü Etkisi"
+    },
+    {
+      "id": 397,
+      "category": "Portföy Yönetimi",
+      "text": "Sektör tahsisi, sektör riskini yönetir.",
+      "source": "Sektör Riski Yönetimi"
+    },
+    {
+      "id": 398,
+      "category": "Psikoloji",
+      "text": "Aşırı tepki, piyasa döncülerini şiddetlendirir.",
+      "source": "Piyasa Döncüleri Şiddetlendirme"
+    },
+    {
+      "id": 399,
+      "category": "Zenginlik Oluşturma",
+      "text": "Yüksek tasarruf oranı, erken emekliliği mümkün kılar.",
+      "source": "Erken Emeklilik Mümkün Kılma"
+    },
+    {
+      "id": 400,
+      "category": "Emeklilik",
+      "text": "Emeklilik planı, vergi avantajlarını kullanmalıdır.",
+      "source": "Vergi Avantajı Kullanımı"
+    },
+    {
+      "id": 401,
+      "category": "Nakit Akışı",
+      "text": "Gider optimizasyonu, yaşam kalitesini korur.",
+      "source": "Yaşam Kalitesi Koruma"
+    },
+    {
+      "id": 402,
+      "category": "Borç Yönetimi",
+      "text": "Borç konsolidasyonu, finansal özgürlüğü artırır.",
+      "source": "Finansal Özgürlük Artırma"
+    },
+    {
+      "id": 403,
+      "category": "Fonlar",
+      "text": "Endeks fonları, düşük maliyetli yatırımdır.",
+      "source": "Düşük Maliyetli Yatırım"
+    },
+    {
+      "id": 404,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi seçimi, sektör analizini gerektirir.",
+      "source": "Sektör Analizi Gereksinimi"
+    },
+    {
+      "id": 405,
+      "category": "Yatırım",
+      "text": "Yatırım zaman çizelgesi, motivasyonu artırır.",
+      "source": "Motivasyon Artırma"
+    },
+    {
+      "id": 406,
+      "category": "Davranışsal Finans",
+      "text": "Sürü psikolojisi, rasyonel analizi engeller.",
+      "source": "Rasyonel Analiz Engel"
+    },
+    {
+      "id": 407,
+      "category": "Bileşik Getiri",
+      "text": "Yıllık bileşik faiz, emeklilik hesaplamasında kullanılır.",
+      "source": "Emeklilik Hesaplama Kullanımı"
+    },
+    {
+      "id": 408,
+      "category": "Risk Yönetimi",
+      "text": "Alfa, aktif yönetim başarısını gösterir.",
+      "source": "Aktif Yönetim Başarısı Gösterme"
+    },
+    {
+      "id": 409,
+      "category": "Finansal Disiplin",
+      "text": "Finansal hedefler, aile üyeleriyle paylaşılmalıdır.",
+      "source": "Aile Paylaşımı Gerekliliği"
+    },
+    {
+      "id": 410,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa döncüleri, varlık tahsisini etkiler.",
+      "source": "Varlık Tahsis Etkisi"
+    },
+    {
+      "id": 411,
+      "category": "Enflasyon",
+      "text": "Enflasyon, tasarruf stratejisini belirler.",
+      "source": "Tasarruf Stratejisi Belirleme"
+    },
+    {
+      "id": 412,
+      "category": "Portföy Yönetimi",
+      "text": "Stil yatırımı, faktör yatırımı ile ilişkilidir.",
+      "source": "Faktör Yatırımı İlişkisi"
+    },
+    {
+      "id": 413,
+      "category": "Psikoloji",
+      "text": "Sabır, bileşik faizin tam etkisini sağlar.",
+      "source": "Bileşik Faiz Tam Etki Sağlama"
+    },
+    {
+      "id": 414,
+      "category": "Zenginlik Oluşturma",
+      "text": "Yatırım çeşitlendirmesi, portföy riskini azaltır.",
+      "source": "Portföy Risk Azaltma"
+    },
+    {
+      "id": 415,
+      "category": "Emeklilik",
+      "text": "Emeklilik planı, enflasyon korumasını içermelidir.",
+      "source": "Enflasyon Koruması"
+    },
+    {
+      "id": 416,
+      "category": "Nakit Akışı",
+      "text": "Gelir artışı, yatırım kapasitesini artırır.",
+      "source": "Yatırım Kapasitesi Artırma"
+    },
+    {
+      "id": 417,
+      "category": "Borç Yönetimi",
+      "text": "Borç refinansmanı, nakit akışını iyileştirir.",
+      "source": "Nakit Akışı İyileştirme"
+    },
+    {
+      "id": 418,
+      "category": "Fonlar",
+      "text": "Karma fonlar, profesyonel yönetim avantajı sağlar.",
+      "source": "Profesyonel Yönetim Avantajı"
+    },
+    {
+      "id": 419,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi volatilitesi, zaman içinde azalır.",
+      "source": "Zaman Azalma Etkisi"
+    },
+    {
+      "id": 420,
+      "category": "Yatırım",
+      "text": "Yatırım stratejisi, piyasa koşullarına göre güncellenmelidir.",
+      "source": "Piyasa Koşulları Güncelleme"
+    },
+    {
+      "id": 421,
+      "category": "Davranışsal Finans",
+      "text": "Mental accounting, harcama kararlarını bozar.",
+      "source": "Harcama Karar Bozulma"
+    },
+    {
+      "id": 422,
+      "category": "Bileşik Getiri",
+      "text": "Aylık bileşik faiz, düzenli tasarrufu teşvik eder.",
+      "source": "Düzenli Tasarruf Teşvik"
+    },
+    {
+      "id": 423,
+      "category": "Risk Yönetimi",
+      "text": "Stres testi, portföy dayanıklılığını gösterir.",
+      "source": "Portföy Dayanıklılık Gösterme"
+    },
+    {
+      "id": 424,
+      "category": "Finansal Disiplin",
+      "text": "Finansal hedefler, ölçülebilir ilerleme sağlar.",
+      "source": "Ölçülebilir İlerleme Sağlama"
+    },
+    {
+      "id": 425,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa döncüleri, yatırım fırsatlarını yaratır.",
+      "source": "Yatırım Fırsat Yaratma"
+    },
+    {
+      "id": 426,
+      "category": "Enflasyon",
+      "text": "Enflasyon beklentileri, faiz oranlarını belirler.",
+      "source": "Faiz Oranı Belirleme"
+    },
+    {
+      "id": 427,
+      "category": "Portföy Yönetimi",
+      "text": "Dinamik varlık tahsisi, piyasa uyumunu sağlar.",
+      "source": "Piyasa Uyumu Sağlama"
+    },
+    {
+      "id": 428,
+      "category": "Psikoloji",
+      "text": "Duygusal kararlar, portföy performansını düşürür.",
+      "source": "Portföy Performans Düşürme"
+    },
+    {
+      "id": 429,
+      "category": "Zenginlik Oluşturma",
+      "text": "Yatırım getirisi, finansal özgürlüğü hızlandırır.",
+      "source": "Finansal Özgürlük Hızlandırma"
+    },
+    {
+      "id": 430,
+      "category": "Emeklilik",
+      "text": "Emeklilik planı, sağlık giderlerini tahmin etmelidir.",
+      "source": "Sağlık Gideri Tahmini"
+    },
+    {
+      "id": 431,
+      "category": "Nakit Akışı",
+      "text": "Gelir çeşitlendirmesi, iş kaybı riskini azaltır.",
+      "source": "İş Kaybı Risk Azaltma"
+    },
+    {
+      "id": 432,
+      "category": "Borç Yönetimi",
+      "text": "Borç ödeme takvimi, finansal planlama için önemlidir.",
+      "source": "Finansal Planlama Önemi"
+    },
+    {
+      "id": 433,
+      "category": "Fonlar",
+      "text": "Hisse senedi fonları, küçük yatırımcılar için idealdir.",
+      "source": "Küçük Yatırımcı İdeal"
+    },
+    {
+      "id": 434,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi likiditesi, piyasa derinliğini gösterir.",
+      "source": "Piyasa Derinliği Gösterme"
+    },
+    {
+      "id": 435,
+      "category": "Yatırım",
+      "text": "Yatırım stratejisi, risk-getiri hedeflerine uygun olmalıdır.",
+      "source": "Risk-Getiri Hedef Uyumu"
+    },
+    {
+      "id": 436,
+      "category": "Davranışsal Finans",
+      "text": "Sonuç yanlılığı, kısa vadeli performansa aşırı önem verir.",
+      "source": "Kısa Vadeli Performans Aşırı Önem"
+    },
+    {
+      "id": 437,
+      "category": "Bileşik Getiri",
+      "text": "Sürekli bileşik faiz, enflasyonu yeniden yatırma ile aşar.",
+      "source": "Enflasyon Aşma"
+    },
+    {
+      "id": 438,
+      "category": "Risk Yönetimi",
+      "text": "Korelasyon katsayısı, portföy riskini hesaplar.",
+      "source": "Portföy Risk Hesaplama"
+    },
+    {
+      "id": 439,
+      "category": "Finansal Disiplin",
+      "text": "Finansal hedefler, yaşam evrelerine göre ayarlanmalıdır.",
+      "source": "Yaşam Evreleri Ayarlama"
+    },
+    {
+      "id": 440,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa verimliliği, pasif yatırımı destekler.",
+      "source": "Pasif Yatırım Desteği"
+    },
+    {
+      "id": 441,
+      "category": "Enflasyon",
+      "text": "Enflasyon, borçlular için fırsat, alacaklılar için risktir.",
+      "source": "Borç-Alacak Risk-Fırsat"
+    },
+    {
+      "id": 442,
+      "category": "Portföy Yönetimi",
+      "text": "Sektör tahsisi, ekonomik sektörlere göre ayarlama yapar.",
+      "source": "Ekonomik Sektör Ayarlama"
+    },
+    {
+      "id": 443,
+      "category": "Psikoloji",
+      "text": "Aşırı tepki, piyasa volatilitesini artırır.",
+      "source": "Piyasa Volatilitesi Artırma"
+    },
+    {
+      "id": 444,
+      "category": "Zenginlik Oluşturma",
+      "text": "Yüksek tasarruf oranı, yatırım fırsatlarını artırır.",
+      "source": "Yatırım Fırsat Artırma"
+    },
+    {
+      "id": 445,
+      "category": "Emeklilik",
+      "text": "Emeklilik planı, vergi stratejilerini içermelidir.",
+      "source": "Vergi Stratejileri İçerme"
+    },
+    {
+      "id": 446,
+      "category": "Nakit Akışı",
+      "text": "Gider optimizasyonu, tasarruf potansiyelini artırır.",
+      "source": "Tasarruf Potansiyel Artırma"
+    },
+    {
+      "id": 447,
+      "category": "Borç Yönetimi",
+      "text": "Borç konsolidasyonu, finansal stresi azaltır.",
+      "source": "Finansal Stres Azaltma"
+    },
+    {
+      "id": 448,
+      "category": "Fonlar",
+      "text": "Endeks fonları, piyasa getirisini takip eder.",
+      "source": "Piyasa Getiri Takibi"
+    },
+    {
+      "id": 449,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi seçimi, şirket finansallarını gerektirir.",
+      "source": "Şirket Finansalları Gereksinimi"
+    },
+    {
+      "id": 450,
+      "category": "Yatırım",
+      "text": "Yatırım zaman çizelgesi, hedeflere ulaşmayı kolaylaştırır.",
+      "source": "Hedef Ulaşma Kolaylaştırma"
+    },
+    {
+      "id": 451,
+      "category": "Davranışsal Finans",
+      "text": "Sürü psikolojisi, piyasa balonlarını besler.",
+      "source": "Piyasa Balonları Besleme"
+    },
+    {
+      "id": 452,
+      "category": "Bileşik Getiri",
+      "text": "Yıllık bileşik faiz, uzun vadeli hedefler için kullanılır.",
+      "source": "Uzun Vadeli Hedef Kullanımı"
+    },
+    {
+      "id": 453,
+      "category": "Risk Yönetimi",
+      "text": "Alfa, portföy yöneticisi başarısını gösterir.",
+      "source": "Portföy Yöneticisi Başarı Gösterme"
+    },
+    {
+      "id": 454,
+      "category": "Finansal Disiplin",
+      "text": "Finansal hedefler, düzenli olarak güncellenmelidir.",
+      "source": "Düzenli Güncelleme"
+    },
+    {
+      "id": 455,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa döncüleri, varlık sınıfı seçimini etkiler.",
+      "source": "Varlık Sınıfı Seçim Etkisi"
+    },
+    {
+      "id": 456,
+      "category": "Enflasyon",
+      "text": "Enflasyon, reel faiz oranını belirler.",
+      "source": "Reel Faiz Oranı Belirleme"
+    },
+    {
+      "id": 457,
+      "category": "Portföy Yönetimi",
+      "text": "Stil yatırımı, büyüme veya değer odaklı olabilir.",
+      "source": "Büyüme-Değer Odaklılık Seçimi"
+    },
+    {
+      "id": 458,
+      "category": "Psikoloji",
+      "text": "Sabır, piyasa volatilitesinde korunma sağlar.",
+      "source": "Piyasa Volatilitesi Koruması"
+    },
+    {
+      "id": 459,
+      "category": "Zenginlik Oluşturma",
+      "text": "Yatırım çeşitlendirmesi, sistematik riski azaltır.",
+      "source": "Sistematik Risk Azaltma"
+    },
+    {
+      "id": 460,
+      "category": "Emeklilik",
+      "text": "Emeklilik planı, yaşam tarzı değişikliklerini içermelidir.",
+      "source": "Yaşam Tarzı Değişiklikleri İçerme"
+    },
+    {
+      "id": 461,
+      "category": "Nakit Akışı",
+      "text": "Gelir artışı, finansal hedefleri hızlandırır.",
+      "source": "Finansal Hedef Hızlandırma"
+    },
+    {
+      "id": 462,
+      "category": "Borç Yönetimi",
+      "text": "Borç refinansmanı, ödeme koşullarını iyileştirir.",
+      "source": "Ödeme Koşulları İyileştirme"
+    },
+    {
+      "id": 463,
+      "category": "Fonlar",
+      "text": "Karma fonlar, otomatik rebalancing sağlar.",
+      "source": "Otomatik Rebalancing Sağlama"
+    },
+    {
+      "id": 464,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi volatilitesi, risk yönetimini gerektirir.",
+      "source": "Risk Yönetimi Gereksinimi"
+    },
+    {
+      "id": 465,
+      "category": "Yatırım",
+      "text": "Yatırım stratejisi, kişisel risk profiline uygun olmalıdır.",
+      "source": "Kişisel Risk Profili Uygunluk"
+    },
+    {
+      "id": 466,
+      "category": "Davranışsal Finans",
+      "text": "Mental accounting, bütçe planlamasını engeller.",
+      "source": "Bütçe Planlama Engel"
+    },
+    {
+      "id": 467,
+      "category": "Bileşik Getiri",
+      "text": "Aylık bileşik faiz, düzenli yatırım için idealdir.",
+      "source": "Düzenli Yatırım İdeal"
+    },
+    {
+      "id": 468,
+      "category": "Risk Yönetimi",
+      "text": "Stres testi, extreme senaryoları simüle eder.",
+      "source": "Extreme Senaryo Simülasyon"
+    },
+    {
+      "id": 469,
+      "category": "Finansal Disiplin",
+      "text": "Finansal hedefler, vizyonla uyumlu olmalıdır.",
+      "source": "Vizyon Uyumu"
+    },
+    {
+      "id": 470,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa döncüleri, yatırım zamanlamasını etkiler.",
+      "source": "Yatırım Zamanlama Etkisi"
+    },
+    {
+      "id": 471,
+      "category": "Enflasyon",
+      "text": "Enflasyon beklentileri, yatırım kararlarını yönlendirir.",
+      "source": "Yatırım Karar Yönlendirme"
+    },
+    {
+      "id": 472,
+      "category": "Portföy Yönetimi",
+      "text": "Dinamik varlık tahsisi, risk yönetimini iyileştirir.",
+      "source": "Risk Yönetimi İyileştirme"
+    },
+    {
+      "id": 473,
+      "category": "Psikoloji",
+      "text": "Duygusal kararlar, uzun vadeli başarıyı engeller.",
+      "source": "Uzun Vadeli Başarı Engel"
+    },
+    {
+      "id": 474,
+      "category": "Zenginlik Oluşturma",
+      "text": "Yatırım getirisi, sermaye büyümesini hızlandırır.",
+      "source": "Sermaye Büyüme Hızlandırma"
+    },
+    {
+      "id": 475,
+      "category": "Emeklilik",
+      "text": "Emeklilik planı, sağlık risklerini içermelidir.",
+      "source": "Sağlık Riskleri İçerme"
+    },
+    {
+      "id": 476,
+      "category": "Nakit Akışı",
+      "text": "Gelir çeşitlendirmesi, finansal istikrar sağlar.",
+      "source": "Finansal İstikrar Sağlama"
+    },
+    {
+      "id": 477,
+      "category": "Borç Yönetimi",
+      "text": "Borç ödeme takvimi, kredi skorunu etkiler.",
+      "source": "Kredi Skoru Etkisi"
+    },
+    {
+      "id": 478,
+      "category": "Fonlar",
+      "text": "Hisse senedi fonları, diversifikasyon kolaylığı sağlar.",
+      "source": "Diversifikasyon Kolaylığı"
+    },
+    {
+      "id": 479,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi likiditesi, çıkış stratejisini belirler.",
+      "source": "Çıkış Stratejisi Belirleme"
+    },
+    {
+      "id": 480,
+      "category": "Yatırım",
+      "text": "Yatırım stratejisi, yaşam hedeflerine hizmet etmelidir.",
+      "source": "Yaşam Hedefleri Hizmeti"
+    },
+    {
+      "id": 481,
+      "category": "Davranışsal Finans",
+      "text": "Sonuç yanlılığı, piyasa analizini bozar.",
+      "source": "Piyasa Analizi Bozulma"
+    },
+    {
+      "id": 482,
+      "category": "Bileşik Getiri",
+      "text": "Sürekli bileşik faiz, maksimum sermaye büyümesi sağlar.",
+      "source": "Maksimum Büyüme Sağlama"
+    },
+    {
+      "id": 483,
+      "category": "Risk Yönetimi",
+      "text": "Korelasyon katsayısı, diversifikasyon etkinliğini gösterir.",
+      "source": "Diversifikasyon Etkinliği Gösterme"
+    },
+    {
+      "id": 484,
+      "category": "Finansal Disiplin",
+      "text": "Finansal hedefler, aylık olarak takip edilmelidir.",
+      "source": "Aylık Takip Gerekliliği"
+    },
+    {
+      "id": 485,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa verimliliği, endeks yatırımını destekler.",
+      "source": "Endeks Yatırım Desteği"
+    },
+    {
+      "id": 486,
+      "category": "Enflasyon",
+      "text": "Enflasyon, borç ödeme gücünü etkiler.",
+      "source": "Borç Ödeme Gücü Etkisi"
+    },
+    {
+      "id": 487,
+      "category": "Portföy Yönetimi",
+      "text": "Sektör tahsisi, sektör riskini yönetir.",
+      "source": "Sektör Riski Yönetimi"
+    },
+    {
+      "id": 488,
+      "category": "Psikoloji",
+      "text": "Aşırı tepki, piyasa döncülerini şiddetlendirir.",
+      "source": "Piyasa Döncüleri Şiddetlendirme"
+    },
+    {
+      "id": 489,
+      "category": "Zenginlik Oluşturma",
+      "text": "Yüksek tasarruf oranı, erken emekliliği mümkün kılar.",
+      "source": "Erken Emeklilik Mümkün Kılma"
+    },
+    {
+      "id": 490,
+      "category": "Emeklilik",
+      "text": "Emeklilik planı, vergi avantajlarını kullanmalıdır.",
+      "source": "Vergi Avantajı Kullanımı"
+    },
+    {
+      "id": 491,
+      "category": "Nakit Akışı",
+      "text": "Gider optimizasyonu, yaşam kalitesini korur.",
+      "source": "Yaşam Kalitesi Koruma"
+    },
+    {
+      "id": 492,
+      "category": "Borç Yönetimi",
+      "text": "Borç konsolidasyonu, finansal özgürlüğü artırır.",
+      "source": "Finansal Özgürlük Artırma"
+    },
+    {
+      "id": 493,
+      "category": "Fonlar",
+      "text": "Endeks fonları, düşük maliyetli yatırımdır.",
+      "source": "Düşük Maliyetli Yatırım"
+    },
+    {
+      "id": 494,
+      "category": "Hisse Senetleri",
+      "text": "Hisse senedi seçimi, sektör analizini gerektirir.",
+      "source": "Sektör Analizi Gereksinimi"
+    },
+    {
+      "id": 495,
+      "category": "Yatırım",
+      "text": "Yatırım zaman çizelgesi, motivasyonu artırır.",
+      "source": "Motivasyon Artırma"
+    },
+    {
+      "id": 496,
+      "category": "Davranışsal Finans",
+      "text": "Sürü psikolojisi, rasyonel analizi engeller.",
+      "source": "Rasyonel Analiz Engel"
+    },
+    {
+      "id": 497,
+      "category": "Bileşik Getiri",
+      "text": "Yıllık bileşik faiz, emeklilik hesaplamasında kullanılır.",
+      "source": "Emeklilik Hesaplama Kullanımı"
+    },
+    {
+      "id": 498,
+      "category": "Risk Yönetimi",
+      "text": "Alfa, aktif yönetim başarısını gösterir.",
+      "source": "Aktif Yönetim Başarısı Gösterme"
+    },
+    {
+      "id": 499,
+      "category": "Finansal Disiplin",
+      "text": "Finansal hedefler, aile üyeleriyle paylaşılmalıdır.",
+      "source": "Aile Paylaşımı Gerekliliği"
+    },
+    {
+      "id": 500,
+      "category": "Uzun Vadeli Yatırım",
+      "text": "Piyasa döncüleri, varlık tahsisini etkiler.",
+      "source": "Varlık Tahsis Etkisi"
+    }
+  ]
+}

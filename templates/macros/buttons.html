@@ -1,0 +1,62 @@
+{# Button Component Macros #}
+
+{% macro button_primary(text, url=None, onclick=None, icon=None, extra_classes='') %}
+{% if url %}
+<a href="{{ url }}" class="btn-primary {{ extra_classes }}">
+{% else %}
+<button type="button" onclick="{{ onclick }}" class="btn-primary {{ extra_classes }}">
+{% endif %}
+    {% if icon %}<span class="mr-2">{{ icon }}</span>{% endif %}
+    {{ text }}
+{% if url %}</a>{% else %}</button>{% endif %}
+{% endmacro %}
+
+{% macro button_secondary(text, url=None, onclick=None, icon=None, extra_classes='') %}
+{% if url %}
+<a href="{{ url }}" class="btn-secondary {{ extra_classes }}">
+{% else %}
+<button type="button" onclick="{{ onclick }}" class="btn-secondary {{ extra_classes }}">
+{% endif %}
+    {% if icon %}<span class="mr-2">{{ icon }}</span>{% endif %}
+    {{ text }}
+{% if url %}</a>{% else %}</button>{% endif %}
+{% endmacro %}
+
+{% macro button_danger(text, url=None, onclick=None, icon=None, extra_classes='') %}
+{% if url %}
+<a href="{{ url }}" class="btn-danger {{ extra_classes }}">
+{% else %}
+<button type="button" onclick="{{ onclick }}" class="btn-danger {{ extra_classes }}">
+{% endif %}
+    {% if icon %}<span class="mr-2">{{ icon }}</span>{% endif %}
+    {{ text }}
+{% if url %}</a>{% else %}</button>{% endif %}
+{% endmacro %}
+
+{% macro button_success(text, url=None, onclick=None, icon=None, extra_classes='') %}
+{% if url %}
+<a href="{{ url }}" class="btn-success {{ extra_classes }}">
+{% else %}
+<button type="button" onclick="{{ onclick }}" class="btn-success {{ extra_classes }}">
+{% endif %}
+    {% if icon %}<span class="mr-2">{{ icon }}</span>{% endif %}
+    {{ text }}
+{% if url %}</a>{% else %}</button>{% endif %}
+{% endmacro %}
+
+{% macro button_gradient(text, gradient='from-indigo-600 to-indigo-700', url=None, onclick=None, icon=None, extra_classes='') %}
+{% if url %}
+<a href="{{ url }}" class="bg-gradient-to-r {{ gradient }} text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-wider shadow-lg hover:shadow-xl transition transform hover:scale-[1.02] {{ extra_classes }}">
+{% else %}
+<button type="button" onclick="{{ onclick }}" class="bg-gradient-to-r {{ gradient }} text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-wider shadow-lg hover:shadow-xl transition transform hover:scale-[1.02] {{ extra_classes }}">
+{% endif %}
+    {% if icon %}<span class="mr-2">{{ icon }}</span>{% endif %}
+    {{ text }}
+{% if url %}</a>{% else %}</button>{% endif %}
+{% endmacro %}
+
+{% macro button_icon(icon, onclick=None, title='', extra_classes='') %}
+<button type="button" onclick="{{ onclick }}" class="p-2 rounded-lg hover:bg-slate-100 transition {{ extra_classes }}" title="{{ title }}">
+    {{ icon }}
+</button>
+{% endmacro %}

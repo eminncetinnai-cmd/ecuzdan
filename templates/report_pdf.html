@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+    @page { size: A4; margin: 1.5cm; }
+    body { font-family: 'Arial', sans-serif; font-size: 10px; color: #333; }
+    h1 { color: #1F4E78; text-align: center; border-bottom: 2px solid #1F4E78; padding-bottom: 10px; font-family: 'Arial', sans-serif; }
+    h2 { color: #C00; font-size: 14px; margin-top: 20px; font-family: 'Arial', sans-serif; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th { background-color: #EEE; padding: 8px; text-align: left; border: 1px solid #CCC; font-family: 'Arial', sans-serif; }
+    td { padding: 8px; border: 1px solid #DDD; font-family: 'Arial', sans-serif; }
+    .amount { text-align: right; font-weight: bold; }
+    .footer { position: fixed; bottom: 0; width: 100%; text-align: center; font-size: 8px; color: #999; font-family: 'Arial', sans-serif; }
+</style>
+</head>
+<body>
+    <h1>EMIN VARLIK YONETIM SISTEMLERI</h1>
+    <h2>{{ title }}</h2>
+    <p>Rapor Tarihi: {{ today }}</p>
+    <table>
+        <thead><tr><th>TARIH</th><th>KATEGORI</th><th>ACIKLAMA</th><th style="text-align:right;">TUTAR</th></tr></thead>
+        <tbody>
+            {% for t in transactions %}
+            <tr>
+                <td>{{ t.date }}</td><td>{{ t.category }}</td><td>{{ t.description }}</td>
+                <td class="amount">{{ t.amount }} TL</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="footer">Bu belge otomatik olarak Emin Varlik sistemi tarafindan olusturulmustur.</div>
+</body>
+</html>

@@ -1,0 +1,714 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+    /* ─── Animasyonlar ────────────────────────────────────────────────────── */
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes scaleIn {
+        from { transform: scale(0.92); opacity: 0; }
+        to   { transform: scale(1); opacity: 1; }
+    }
+    @keyframes countUp {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+    @keyframes dashOffset {
+        from { stroke-dashoffset: 440; }
+    }
+    @keyframes pulseRing {
+        0%   { box-shadow: 0 0 0 0 rgba(245,158,11,0.4); }
+        70%  { box-shadow: 0 0 0 12px rgba(245,158,11,0); }
+        100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); }
+    }
+    @keyframes shimmer {
+        0%   { background-position: -200% center; }
+        100% { background-position: 200% center; }
+    }
+
+    .fade-up { animation: fadeUp 0.55s cubic-bezier(0.16,1,0.3,1) both; }
+    .delay-1 { animation-delay: 0.08s; }
+    .delay-2 { animation-delay: 0.16s; }
+    .delay-3 { animation-delay: 0.24s; }
+    .delay-4 { animation-delay: 0.32s; }
+    .scale-in { animation: scaleIn 0.5s cubic-bezier(0.16,1,0.3,1) both; }
+
+    /* ─── Premium Kart ────────────────────────────────────────────────────── */
+    .health-card {
+        background: rgba(255,255,255,0.85);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid rgba(255,255,255,0.5);
+        border-radius: 1.5rem;
+        box-shadow: 0 8px 32px -8px rgba(15,23,42,0.07), inset 0 1px 0 rgba(255,255,255,0.8);
+        transition: all 0.35s cubic-bezier(0.16,1,0.3,1);
+    }
+    .health-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 20px 48px -12px rgba(15,23,42,0.12);
+    }
+
+    /* ─── Score Gauge ─────────────────────────────────────────────────────── */
+    .gauge-circle {
+        animation: dashOffset 1.5s cubic-bezier(0.16,1,0.3,1) forwards;
+        animation-delay: 0.3s;
+        stroke-dashoffset: 440;
+    }
+    .score-pulse {
+        animation: pulseRing 2.5s infinite;
+    }
+
+    /* ─── Metrik Çubuk ────────────────────────────────────────────────────── */
+    .metric-bar-track {
+        height: 10px;
+        border-radius: 5px;
+        background: #e2e8f0;
+        overflow: hidden;
+    }
+    .metric-bar-fill {
+        height: 100%;
+        border-radius: 5px;
+        transition: width 1.4s cubic-bezier(0.16,1,0.3,1);
+        width: 0%;
+    }
+
+    /* ─── Karne Sütun ─────────────────────────────────────────────────────── */
+    .grade-badge {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        font-size: 13px; font-weight: 900;
+    }
+
+    /* ─── Shimmer loading ─────────────────────────────────────────────────── */
+    .shimmer-bg {
+        background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+        background-size: 200% auto;
+        animation: shimmer 1.5s linear infinite;
+    }
+
+    /* ─── Tablo ───────────────────────────────────────────────────────────── */
+    .karne-table th {
+        font-size: 9px; font-weight: 800; text-transform: uppercase;
+        letter-spacing: 0.08em; color: #94a3b8; padding: 0.75rem 1rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .karne-table td {
+        padding: 0.875rem 1rem;
+        font-size: 12px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .karne-table tr:last-child td { border-bottom: none; }
+    .karne-table tr:hover td { background: rgba(248,250,252,0.8); }
+
+    /* ─── Tooltip ─────────────────────────────────────────────────────────── */
+    .info-tip { display:inline-flex; align-items:center; justify-content:center;
+                width:15px; height:15px; border-radius:50%;
+                background:#e0e7ff; color:#4338ca;
+                font-size:9px; font-weight:900; cursor:help; position:relative; }
+    .info-tip:hover .tip-box { display:block; }
+    .tip-box { display:none; position:absolute; bottom:120%; left:50%; transform:translateX(-50%);
+               background:#1e293b; color:#f8fafc; font-size:10px; font-weight:500;
+               padding:8px 12px; border-radius:10px; width:220px; z-index:50;
+               line-height:1.5; white-space:normal; box-shadow:0 8px 24px rgba(0,0,0,.25); }
+    .tip-box::after { content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%);
+                      border:6px solid transparent; border-top-color:#1e293b; }
+</style>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     BAŞLIK
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="mb-10 fade-up">
+    <div class="flex flex-wrap justify-between items-start gap-6">
+        <div>
+            <h2 class="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none
+                       bg-gradient-to-r from-slate-900 via-amber-700 to-indigo-900 bg-clip-text text-transparent">
+                {{ _('analysis_title') }}
+            </h2>
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">
+                {{ _('analysis_subtitle') }}
+            </p>
+        </div>
+
+        <!-- Ana Skor Gauge -->
+        <div class="health-card p-6 flex items-center gap-5 border-b-4 border-amber-400 scale-in score-pulse">
+            <div class="relative" style="width:90px; height:90px;">
+                <svg width="90" height="90" viewBox="0 0 90 90" class="transform -rotate-90">
+                    <circle cx="45" cy="45" r="38" stroke="rgba(0,0,0,0.07)" stroke-width="8" fill="transparent"/>
+                    <circle cx="45" cy="45" r="38"
+                            stroke="{% if score > 75 %}#10b981{% elif score > 50 %}#f59e0b{% else %}#ef4444{% endif %}"
+                            stroke-width="8" fill="transparent"
+                            stroke-linecap="round"
+                            stroke-dasharray="238.76"
+                            stroke-dashoffset="{{ 238.76 - (238.76 * score) / 100 }}"
+                            class="gauge-circle"/>
+                </svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                    <span class="text-2xl font-black text-slate-900 leading-none" id="scoreCounter">{{ score }}</span>
+                    <span class="text-[8px] font-bold text-slate-400 uppercase">/100</span>
+                </div>
+            </div>
+            <div>
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Finansal Sağlık Skoru</p>
+                <p class="text-xl font-black uppercase tracking-tight leading-tight">
+                    {% if score > 75 %}
+                        <span class="text-emerald-600">Mükemmel</span>
+                    {% elif score > 50 %}
+                        <span class="text-amber-500">Stabil</span>
+                    {% else %}
+                        <span class="text-rose-600">Riskli</span>
+                    {% endif %}
+                </p>
+                <div class="flex items-center gap-1.5 mt-1.5">
+                    {% set trend_icon = '↑' if score > 50 else '↓' %}
+                    <span class="text-[10px] font-bold {% if score > 50 %}text-emerald-600{% else %}text-rose-600{% endif %}">
+                        {{ trend_icon }} Aktif İzleme
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     NET SERVET ÖZETİ
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-5 mb-10">
+    <div class="health-card p-6 text-center border-t-4 border-indigo-500 fade-up delay-1">
+        <h4 class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-center gap-1">
+            Yatırım Varlıkları
+            <span class="info-tip">?<span class="tip-box">Nakit dışındaki tüm yatırım varlıklarının toplam değeri (hisse, fon, kripto, gayrimenkul vb.)</span></span>
+        </h4>
+        <p class="text-2xl font-black text-slate-800">{{ (total_servet - actual_cash)|format_money }} ₺</p>
+        <p class="text-[9px] text-slate-400 mt-1 font-semibold">Portföy + Fiziki</p>
+    </div>
+    <div class="health-card p-6 text-center border-t-4 border-emerald-500 fade-up delay-2">
+        <h4 class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-center gap-1">
+            Likit Nakit
+            <span class="info-tip">?<span class="tip-box">Tüm ödenmiş gelir ve gider işlemlerinin net bakiyesi. Anlık kullanılabilir nakit.</span></span>
+        </h4>
+        <p class="text-2xl font-black {% if actual_cash >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">{{ actual_cash|format_money }} ₺</p>
+        <p class="text-[9px] text-slate-400 mt-1 font-semibold">Hesap Bakiyesi</p>
+    </div>
+    <div class="health-card p-6 text-center border-t-4 border-rose-500 fade-up delay-3">
+        <h4 class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-center gap-1">
+            Toplam Borç
+            <span class="info-tip">?<span class="tip-box">Tüm aktif kredi/borç planlarının kalan toplam tutarı.</span></span>
+        </h4>
+        <p class="text-2xl font-black text-rose-600">{{ total_debt|format_money }} ₺</p>
+        <p class="text-[9px] text-slate-400 mt-1 font-semibold">Borç Planları</p>
+    </div>
+    <div class="health-card p-6 text-center border-t-4 border-amber-500 fade-up delay-4 bg-gradient-to-br from-amber-50/60 to-white">
+        <h4 class="text-[9px] font-black text-amber-600 uppercase tracking-wider mb-2 flex items-center justify-center gap-1">
+            Net Servet
+            <span class="info-tip">?<span class="tip-box">Net Servet = Toplam Varlık (nakit + yatırım) − Toplam Borç. Gerçek finansal gücinizi gösterir.</span></span>
+        </h4>
+        <p class="text-2xl font-black {% if net_worth >= 0 %}text-amber-700{% else %}text-rose-700{% endif %}">{{ net_worth|format_money }} ₺</p>
+        <p class="text-[9px] text-amber-500 mt-1 font-bold uppercase">Kümülatif Birikim</p>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     DÖRT TEMEL METRİK KARNE KARTLARI
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="mb-4 fade-up">
+    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+        <span class="w-1.5 h-4 bg-amber-500 rounded-full inline-block"></span>
+        4 Temel Finansal Gösterge — Dinamik Karne
+    </h3>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
+
+    <!-- 1. LİKİDİTE -->
+    <div class="health-card p-7 border-t-8 {% if liq_status == 'success' %}border-emerald-500{% elif liq_status == 'warning' %}border-amber-400{% else %}border-rose-500{% endif %} fade-up delay-1">
+        <div class="flex justify-between items-start mb-4">
+            <div>
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Likidite Gücü</p>
+                <p class="text-3xl font-black text-slate-900">{{ liquidity }}<span class="text-base font-bold text-slate-400">x</span></p>
+            </div>
+            <div class="grade-badge {% if liq_status == 'success' %}bg-emerald-100 text-emerald-700{% elif liq_status == 'warning' %}bg-amber-100 text-amber-700{% else %}bg-rose-100 text-rose-700{% endif %}">
+                {% if liq_status == 'success' %}A{% elif liq_status == 'warning' %}B{% else %}D{% endif %}
+            </div>
+        </div>
+
+        <!-- Dinamik metrik çubuğu -->
+        <div class="metric-bar-track mb-3">
+            <div class="metric-bar-fill {% if liq_status == 'success' %}bg-emerald-500{% elif liq_status == 'warning' %}bg-amber-400{% else %}bg-rose-500{% endif %}"
+                 data-width="{{ [100, (liquidity / 3 * 100)|round(0)]|min }}"></div>
+        </div>
+
+        <span class="inline-block px-2.5 py-1 rounded-full text-[9px] font-bold uppercase
+            {% if liq_status == 'success' %}bg-emerald-100 text-emerald-700{% elif liq_status == 'warning' %}bg-amber-100 text-amber-700{% else %}bg-rose-100 text-rose-700{% endif %}">
+            {% if liq_status == 'success' %}Güçlü Likidite{% elif liq_status == 'warning' %}Yeterli{% else %}Zayıf Likidite{% endif %}
+        </span>
+        <p class="text-[9px] text-slate-500 mt-3 leading-relaxed font-semibold">{{ liq_msg }}</p>
+        <p class="text-[8px] text-slate-400 mt-2 font-bold uppercase border-t border-slate-100 pt-2">
+            Hedef: ≥ 1.5x · Formül: Nakit ÷ Aylık Gider
+        </p>
+    </div>
+
+    <!-- 2. BORÇ ORANI -->
+    <div class="health-card p-7 border-t-8 {% if dr_status == 'success' %}border-emerald-500{% elif dr_status == 'warning' %}border-amber-400{% else %}border-rose-500{% endif %} fade-up delay-2">
+        <div class="flex justify-between items-start mb-4">
+            <div>
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Borç/Servet Oranı</p>
+                <p class="text-3xl font-black text-slate-900">%{{ debt_ratio }}</p>
+            </div>
+            <div class="grade-badge {% if dr_status == 'success' %}bg-emerald-100 text-emerald-700{% elif dr_status == 'warning' %}bg-amber-100 text-amber-700{% else %}bg-rose-100 text-rose-700{% endif %}">
+                {% if dr_status == 'success' %}A{% elif dr_status == 'warning' %}C{% else %}F{% endif %}
+            </div>
+        </div>
+
+        <div class="metric-bar-track mb-3">
+            <div class="metric-bar-fill {% if dr_status == 'success' %}bg-emerald-500{% elif dr_status == 'warning' %}bg-amber-400{% else %}bg-rose-500{% endif %}"
+                 data-width="{{ [100, debt_ratio]|min }}"></div>
+        </div>
+
+        <span class="inline-block px-2.5 py-1 rounded-full text-[9px] font-bold uppercase
+            {% if dr_status == 'success' %}bg-emerald-100 text-emerald-700{% elif dr_status == 'warning' %}bg-amber-100 text-amber-700{% else %}bg-rose-100 text-rose-700{% endif %}">
+            {% if dr_status == 'success' %}Sağlıklı{% elif dr_status == 'warning' %}Uyarı Bölgesi{% else %}Kritik Risk{% endif %}
+        </span>
+        <p class="text-[9px] text-slate-500 mt-3 leading-relaxed font-semibold">{{ dr_msg }}</p>
+        <p class="text-[8px] text-slate-400 mt-2 font-bold uppercase border-t border-slate-100 pt-2">
+            Hedef: &lt;%30 · Formül: Borç ÷ Net Servet × 100
+        </p>
+    </div>
+
+    <!-- 3. TASARRUF ORANI -->
+    <div class="health-card p-7 border-t-8 {% if sr_status == 'success' %}border-emerald-500{% elif sr_status == 'warning' %}border-amber-400{% else %}border-rose-500{% endif %} fade-up delay-3">
+        <div class="flex justify-between items-start mb-4">
+            <div>
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Aylık Tasarruf</p>
+                <p class="text-3xl font-black {% if savings >= 0 %}text-slate-900{% else %}text-rose-700{% endif %}">%{{ savings }}</p>
+            </div>
+            <div class="grade-badge {% if sr_status == 'success' %}bg-emerald-100 text-emerald-700{% elif sr_status == 'warning' %}bg-amber-100 text-amber-700{% else %}bg-rose-100 text-rose-700{% endif %}">
+                {% if sr_status == 'success' %}A{% elif sr_status == 'warning' %}C{% else %}F{% endif %}
+            </div>
+        </div>
+
+        <div class="metric-bar-track mb-3">
+            {% set sr_bar = [0, [100, savings]|min]|max %}
+            <div class="metric-bar-fill {% if sr_status == 'success' %}bg-emerald-500{% elif sr_status == 'warning' %}bg-amber-400{% else %}bg-rose-500{% endif %}"
+                 data-width="{{ sr_bar }}"></div>
+        </div>
+
+        <span class="inline-block px-2.5 py-1 rounded-full text-[9px] font-bold uppercase
+            {% if sr_status == 'success' %}bg-emerald-100 text-emerald-700{% elif sr_status == 'warning' %}bg-amber-100 text-amber-700{% else %}bg-rose-100 text-rose-700{% endif %}">
+            {% if sr_status == 'success' %}Yüksek Tasarruf{% elif sr_status == 'warning' %}Düşük Tasarruf{% else %}Bütçe Açığı{% endif %}
+        </span>
+        <p class="text-[9px] text-slate-500 mt-3 leading-relaxed font-semibold">{{ sr_msg }}</p>
+        <p class="text-[8px] text-slate-400 mt-2 font-bold uppercase border-t border-slate-100 pt-2">
+            Hedef: ≥%20 · Formül: (Gelir − Gider) ÷ Gelir × 100
+        </p>
+    </div>
+
+    <!-- 4. DAYANIKLILIK -->
+    <div class="health-card p-7 border-t-8 {% if sus_status == 'success' %}border-emerald-500{% elif sus_status == 'warning' %}border-amber-400{% else %}border-rose-500{% endif %} fade-up delay-4">
+        <div class="flex justify-between items-start mb-4">
+            <div>
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Dayanıklılık Süresi</p>
+                <p class="text-3xl font-black text-slate-900">{{ sustain }}<span class="text-sm font-bold text-slate-500 ml-1">ay</span></p>
+            </div>
+            <div class="grade-badge {% if sus_status == 'success' %}bg-emerald-100 text-emerald-700{% elif sus_status == 'warning' %}bg-amber-100 text-amber-700{% else %}bg-rose-100 text-rose-700{% endif %}">
+                {% if sus_status == 'success' %}A{% elif sus_status == 'warning' %}B{% else %}D{% endif %}
+            </div>
+        </div>
+
+        <div class="metric-bar-track mb-3">
+            {% set sus_bar = [0, [100, (sustain / 12 * 100)|round(0)]|min]|max %}
+            <div class="metric-bar-fill {% if sus_status == 'success' %}bg-emerald-500{% elif sus_status == 'warning' %}bg-amber-400{% else %}bg-rose-500{% endif %}"
+                 data-width="{{ sus_bar }}"></div>
+        </div>
+
+        <span class="inline-block px-2.5 py-1 rounded-full text-[9px] font-bold uppercase
+            {% if sus_status == 'success' %}bg-emerald-100 text-emerald-700{% elif sus_status == 'warning' %}bg-amber-100 text-amber-700{% else %}bg-rose-100 text-rose-700{% endif %}">
+            {% if sus_status == 'success' %}Güvenli Tampon{% elif sus_status == 'warning' %}Yeterli Tampon{% else %}Kırılgan{% endif %}
+        </span>
+        <p class="text-[9px] text-slate-500 mt-3 leading-relaxed font-semibold">{{ sus_msg }}</p>
+        <p class="text-[8px] text-slate-400 mt-2 font-bold uppercase border-t border-slate-100 pt-2">
+            Hedef: ≥6 ay · Formül: Nakit ÷ Günlük Gider ÷ 30
+        </p>
+    </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     DİNAMİK SKOR METODOLOJİSİ TABLOSU
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="mb-4 fade-up">
+    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+        <span class="w-1.5 h-4 bg-indigo-500 rounded-full inline-block"></span>
+        Finansal Skor Metodolojisi — Ağırlıklı Hesaplama
+    </h3>
+</div>
+
+<div class="health-card p-8 bg-white/90 mb-10 fade-up delay-1">
+    <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+        <div>
+            <h4 class="font-black text-sm text-slate-800 uppercase tracking-tight mb-1">Skor Ağırlık Dağılımı</h4>
+            <p class="text-[10px] text-slate-500 leading-relaxed">
+                Her gösterge, akademik finans standartlarına göre ağırlıklandırılmıştır.
+                Skor, 4 faktörün dinamik bir bileşimidir; hiçbiri statik eşik değildir.
+            </p>
+        </div>
+        <div class="text-right">
+            <p class="text-[9px] font-bold text-slate-400 uppercase">Hesaplanan Skor</p>
+            <p class="text-4xl font-black {% if score > 75 %}text-emerald-600{% elif score > 50 %}text-amber-500{% else %}text-rose-600{% endif %}">{{ score }}<span class="text-lg text-slate-400">/100</span></p>
+        </div>
+    </div>
+
+    <table class="w-full karne-table">
+        <thead>
+            <tr>
+                <th class="text-left">Gösterge</th>
+                <th class="text-center">Değeriniz</th>
+                <th class="text-center">Puan (Max)</th>
+                <th class="text-left">Durum</th>
+                <th class="text-left w-48">Ağırlık Çubuğu</th>
+                <th class="text-right">Katkı</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Likidite -->
+            {# likidite/1.5 × 30 == likidite × 20 — tamsayı çarpanı Decimal ile güvenli, float bölme değil #}
+            {% set liq_pts = [0, [30, (liquidity * 20)|round(0)]|min]|max %}
+            <tr>
+                <td>
+                    <p class="font-black text-slate-800 text-xs">Likidite Oranı</p>
+                    <p class="text-[9px] text-slate-400 font-semibold">Nakit / Aylık Gider</p>
+                </td>
+                <td class="text-center font-black text-slate-700">{{ liquidity }}x</td>
+                <td class="text-center">
+                    <span class="font-black {% if liq_status == 'success' %}text-emerald-600{% elif liq_status == 'warning' %}text-amber-600{% else %}text-rose-600{% endif %}">{{ liq_pts }}</span>
+                    <span class="text-slate-400 text-[9px]">/30</span>
+                </td>
+                <td>
+                    <span class="px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase
+                        {% if liq_status == 'success' %}bg-emerald-100 text-emerald-700{% elif liq_status == 'warning' %}bg-amber-100 text-amber-700{% else %}bg-rose-100 text-rose-700{% endif %}">
+                        {{ 'Mükemmel' if liq_status == 'success' else ('Orta' if liq_status == 'warning' else 'Zayıf') }}
+                    </span>
+                </td>
+                <td>
+                    <div class="metric-bar-track">
+                        <div class="metric-bar-fill bg-indigo-400" data-width="{{ (liq_pts / 30 * 100)|round(0) }}"></div>
+                    </div>
+                </td>
+                <td class="text-right font-black text-indigo-600">%30</td>
+            </tr>
+            <!-- Borç Oranı -->
+            {% set dr_pts = [0, [35, ((100 - debt_ratio) / 100 * 35)|round(0)]|min]|max %}
+            <tr>
+                <td>
+                    <p class="font-black text-slate-800 text-xs">Borç/Servet Oranı</p>
+                    <p class="text-[9px] text-slate-400 font-semibold">Toplam Borç / Net Servet</p>
+                </td>
+                <td class="text-center font-black text-slate-700">%{{ debt_ratio }}</td>
+                <td class="text-center">
+                    <span class="font-black {% if dr_status == 'success' %}text-emerald-600{% elif dr_status == 'warning' %}text-amber-600{% else %}text-rose-600{% endif %}">{{ dr_pts }}</span>
+                    <span class="text-slate-400 text-[9px]">/35</span>
+                </td>
+                <td>
+                    <span class="px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase
+                        {% if dr_status == 'success' %}bg-emerald-100 text-emerald-700{% elif dr_status == 'warning' %}bg-amber-100 text-amber-700{% else %}bg-rose-100 text-rose-700{% endif %}">
+                        {{ 'Sağlıklı' if dr_status == 'success' else ('Dikkat' if dr_status == 'warning' else 'Kritik') }}
+                    </span>
+                </td>
+                <td>
+                    <div class="metric-bar-track">
+                        <div class="metric-bar-fill bg-rose-400" data-width="{{ (dr_pts / 35 * 100)|round(0) }}"></div>
+                    </div>
+                </td>
+                <td class="text-right font-black text-rose-600">%35</td>
+            </tr>
+            <!-- Tasarruf -->
+            {% set sr_pts = [0, [20, (savings / 20 * 20)|round(0)]|min]|max if savings >= 0 else 0 %}
+            <tr>
+                <td>
+                    <p class="font-black text-slate-800 text-xs">Tasarruf Oranı</p>
+                    <p class="text-[9px] text-slate-400 font-semibold">(Gelir − Gider) / Gelir</p>
+                </td>
+                <td class="text-center font-black text-slate-700">%{{ savings }}</td>
+                <td class="text-center">
+                    <span class="font-black {% if sr_status == 'success' %}text-emerald-600{% elif sr_status == 'warning' %}text-amber-600{% else %}text-rose-600{% endif %}">{{ sr_pts }}</span>
+                    <span class="text-slate-400 text-[9px]">/20</span>
+                </td>
+                <td>
+                    <span class="px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase
+                        {% if sr_status == 'success' %}bg-emerald-100 text-emerald-700{% elif sr_status == 'warning' %}bg-amber-100 text-amber-700{% else %}bg-rose-100 text-rose-700{% endif %}">
+                        {{ 'İdeal' if sr_status == 'success' else ('Geliştir' if sr_status == 'warning' else 'Acil') }}
+                    </span>
+                </td>
+                <td>
+                    <div class="metric-bar-track">
+                        <div class="metric-bar-fill bg-emerald-400" data-width="{{ (sr_pts / 20 * 100)|round(0) }}"></div>
+                    </div>
+                </td>
+                <td class="text-right font-black text-emerald-600">%20</td>
+            </tr>
+            <!-- Dayanıklılık -->
+            {% set sus_pts = [0, [15, (sustain / 6 * 15)|round(0)]|min]|max %}
+            <tr>
+                <td>
+                    <p class="font-black text-slate-800 text-xs">Dayanıklılık Süresi</p>
+                    <p class="text-[9px] text-slate-400 font-semibold">Nakit / Günlük Gider</p>
+                </td>
+                <td class="text-center font-black text-slate-700">{{ sustain }} ay</td>
+                <td class="text-center">
+                    <span class="font-black {% if sus_status == 'success' %}text-emerald-600{% elif sus_status == 'warning' %}text-amber-600{% else %}text-rose-600{% endif %}">{{ sus_pts }}</span>
+                    <span class="text-slate-400 text-[9px]">/15</span>
+                </td>
+                <td>
+                    <span class="px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase
+                        {% if sus_status == 'success' %}bg-emerald-100 text-emerald-700{% elif sus_status == 'warning' %}bg-amber-100 text-amber-700{% else %}bg-rose-100 text-rose-700{% endif %}">
+                        {{ 'Güvenli' if sus_status == 'success' else ('Tampon' if sus_status == 'warning' else 'Kırılgan') }}
+                    </span>
+                </td>
+                <td>
+                    <div class="metric-bar-track">
+                        <div class="metric-bar-fill bg-amber-400" data-width="{{ (sus_pts / 15 * 100)|round(0) }}"></div>
+                    </div>
+                </td>
+                <td class="text-right font-black text-amber-600">%15</td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr class="bg-slate-50/80">
+                <td colspan="2" class="font-black text-slate-700 text-xs py-4 px-4">TOPLAM SKOR</td>
+                <td class="text-center py-4">
+                    <span class="font-black text-lg {% if score > 75 %}text-emerald-600{% elif score > 50 %}text-amber-500{% else %}text-rose-600{% endif %}">{{ score }}</span>
+                    <span class="text-slate-400 text-[9px]">/100</span>
+                </td>
+                <td colspan="3" class="py-4 px-4">
+                    <div class="metric-bar-track">
+                        <div class="metric-bar-fill {% if score > 75 %}bg-emerald-500{% elif score > 50 %}bg-amber-400{% else %}bg-rose-500{% endif %}"
+                             data-width="{{ score }}"></div>
+                    </div>
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     RİSK UYARILARI VE TAVSİYELER
+════════════════════════════════════════════════════════════════════════════ -->
+{% if flags or recs %}
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10 fade-up">
+    <!-- Risk Uyarıları -->
+    <div class="health-card p-8 bg-rose-50/70 border-l-8 border-rose-500">
+        <h3 class="font-black text-sm text-rose-800 uppercase mb-5 tracking-wider flex items-center gap-2">
+            <svg class="w-5 h-5 text-rose-600 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            Finansal Risk Uyarıları
+            {% if flags %}<span class="bg-rose-600 text-white text-[9px] px-2 py-0.5 rounded-full">{{ flags|length }}</span>{% endif %}
+        </h3>
+        {% if flags %}
+        <ul class="space-y-3">
+            {% for f in flags %}
+            <li class="flex items-start gap-3 text-xs font-semibold text-rose-700 bg-white/70 rounded-xl p-3 border border-rose-200">
+                <span class="w-2 h-2 rounded-full bg-rose-500 mt-1 flex-shrink-0 animate-pulse"></span>
+                <span>⚠ <strong>{{ f }}</strong> Tespit Edildi</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+            <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <p class="text-xs font-semibold text-emerald-700">Kritik finansal risk uyarısı yok. Portföy yapısı dengeli.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Eylem Önerileri -->
+    <div class="health-card p-8 bg-indigo-50/70 border-l-8 border-indigo-600">
+        <h3 class="font-black text-sm text-indigo-800 uppercase mb-5 tracking-wider flex items-center gap-2">
+            <svg class="w-5 h-5 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+            Uzman Eylem Önerileri
+            {% if recs %}<span class="bg-indigo-600 text-white text-[9px] px-2 py-0.5 rounded-full">{{ recs|length }}</span>{% endif %}
+        </h3>
+        {% if recs %}
+        <ul class="space-y-3">
+            {% for r in recs %}
+            <li class="flex items-start gap-3 text-xs font-medium text-indigo-700 bg-white/70 rounded-xl p-3 border border-indigo-200 leading-relaxed">
+                <span class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[9px] font-black flex-shrink-0 mt-0.5">{{ loop.index }}</span>
+                {{ r }}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+            <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <p class="text-xs font-semibold text-emerald-700">Tüm oranlarınız ideal sınırlar dahilinde. Yatırım dengenizi koruyun.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     UZMAN STRATEJİ PANELİ
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="health-card p-10 bg-slate-900 text-white shadow-2xl relative overflow-hidden mb-10 fade-up">
+    <div class="absolute w-96 h-96 bg-indigo-600 rounded-full blur-[150px] -top-20 -right-20 opacity-20"></div>
+    <div class="absolute w-64 h-64 bg-amber-500 rounded-full blur-[120px] bottom-0 left-10 opacity-10"></div>
+    <div class="relative z-10">
+        <div class="flex flex-wrap items-start justify-between gap-6 mb-6">
+            <div>
+                <h3 class="font-black text-sm text-amber-400 uppercase mb-2 tracking-widest italic flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 bg-amber-400 rounded-full animate-pulse"></span>
+                    Finansal Portföy Baş Danışmanı Stratejisi
+                </h3>
+                <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Dinamik Durum Analizi</p>
+            </div>
+            <!-- Dinamik Skor Rozetleri -->
+            <div class="flex flex-wrap gap-3">
+                <div class="bg-white/10 backdrop-blur-sm rounded-2xl px-4 py-3 border border-white/10">
+                    <p class="text-[8px] font-bold text-slate-400 uppercase">Skor</p>
+                    <p class="text-xl font-black {% if score > 75 %}text-emerald-400{% elif score > 50 %}text-amber-400{% else %}text-rose-400{% endif %}">{{ score }}/100</p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm rounded-2xl px-4 py-3 border border-white/10">
+                    <p class="text-[8px] font-bold text-slate-400 uppercase">Risk</p>
+                    <p class="text-sm font-black {% if score > 75 %}text-emerald-400{% elif score > 50 %}text-amber-400{% else %}text-rose-400{% endif %}">
+                        {{ 'Düşük' if score > 75 else ('Orta' if score > 50 else 'Yüksek') }}
+                    </p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm rounded-2xl px-4 py-3 border border-white/10">
+                    <p class="text-[8px] font-bold text-slate-400 uppercase">Öneri Sınıfı</p>
+                    <p class="text-sm font-black text-white">
+                        {{ 'Büyüme' if score > 75 else ('Denge' if score > 50 else 'Tasarruf') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <p class="text-sm leading-relaxed font-medium text-slate-200 border-l-2 border-amber-400 pl-4 mb-6">
+            "{{ strategy }}"
+        </p>
+
+        <!-- Dinamik Eylem Adımları -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {% if score > 75 %}
+            <div class="bg-emerald-900/40 rounded-2xl p-4 border border-emerald-500/30">
+                <p class="text-[9px] font-black text-emerald-400 uppercase tracking-wider mb-2">Kısa Vade (1-3 Ay)</p>
+                <p class="text-xs text-slate-300 leading-relaxed">Portföyünüzdeki varlık dağılımını yeniden dengeleyin; %10-15 arası altın/döviz tutun.</p>
+            </div>
+            <div class="bg-indigo-900/40 rounded-2xl p-4 border border-indigo-500/30">
+                <p class="text-[9px] font-black text-indigo-400 uppercase tracking-wider mb-2">Orta Vade (3-12 Ay)</p>
+                <p class="text-xs text-slate-300 leading-relaxed">Hisse senedi veya fon birikimini artırın; yatırım oranınızı gelirinizin %30'una çekin.</p>
+            </div>
+            <div class="bg-amber-900/30 rounded-2xl p-4 border border-amber-500/30">
+                <p class="text-[9px] font-black text-amber-400 uppercase tracking-wider mb-2">Uzun Vade (1+ Yıl)</p>
+                <p class="text-xs text-slate-300 leading-relaxed">Emeklilik ve pasif gelir hedefleri için otomatik yatırım planları oluşturun.</p>
+            </div>
+            {% elif score > 50 %}
+            <div class="bg-amber-900/40 rounded-2xl p-4 border border-amber-500/30">
+                <p class="text-[9px] font-black text-amber-400 uppercase tracking-wider mb-2">Acil (Bu Ay)</p>
+                <p class="text-xs text-slate-300 leading-relaxed">Acil durum fonunuzu 3 aylık giderinize tamamlayın. Faizi yüksek borçları öncelikle ödeyin.</p>
+            </div>
+            <div class="bg-indigo-900/40 rounded-2xl p-4 border border-indigo-500/30">
+                <p class="text-[9px] font-black text-indigo-400 uppercase tracking-wider mb-2">Orta Vade</p>
+                <p class="text-xs text-slate-300 leading-relaxed">Tasarruf oranını %20'ye çıkarın; gider kalemlerini detaylı analiz ederek optimizasyon yapın.</p>
+            </div>
+            <div class="bg-slate-700/60 rounded-2xl p-4 border border-slate-600/30">
+                <p class="text-[9px] font-black text-slate-300 uppercase tracking-wider mb-2">Uzun Vade</p>
+                <p class="text-xs text-slate-300 leading-relaxed">Borç/servet oranı %30'un altına inerken düzenli yatırım alışkanlığı geliştirin.</p>
+            </div>
+            {% else %}
+            <div class="bg-rose-900/50 rounded-2xl p-4 border border-rose-500/40">
+                <p class="text-[9px] font-black text-rose-400 uppercase tracking-wider mb-2">⚡ Kritik (Hemen)</p>
+                <p class="text-xs text-slate-300 leading-relaxed">Tüm lüks harcamaları durdurun. Nakit akışını stabilize etmek için gider planı oluşturun.</p>
+            </div>
+            <div class="bg-amber-900/40 rounded-2xl p-4 border border-amber-500/30">
+                <p class="text-[9px] font-black text-amber-400 uppercase tracking-wider mb-2">Bu Ay</p>
+                <p class="text-xs text-slate-300 leading-relaxed">Yüksek faizli kredi kartı borçlarını minimum ödeyin ve ek gelir kaynağı arayın.</p>
+            </div>
+            <div class="bg-indigo-900/40 rounded-2xl p-4 border border-indigo-500/30">
+                <p class="text-[9px] font-black text-indigo-400 uppercase tracking-wider mb-2">3 Ay İçinde</p>
+                <p class="text-xs text-slate-300 leading-relaxed">Finansal danışman desteği alın. Borç yeniden yapılandırmasını değerlendirin.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     METODOLOJİ ŞEFFAFLIĞI
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="health-card p-8 bg-slate-50/80 fade-up">
+    <div class="flex items-center gap-3 mb-4">
+        <h4 class="font-black text-sm text-slate-700 uppercase tracking-tight">Skor Hesaplama Metodolojisi</h4>
+        <span class="bg-indigo-100 text-indigo-700 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">Akademik Tabanlı</span>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-[10px] text-slate-600 leading-relaxed">
+        <div class="bg-white rounded-xl p-4 border border-slate-100">
+            <p class="font-black text-slate-700 mb-2">📊 Finansal Sağlık Skoru (0–100)</p>
+            <div class="font-mono bg-slate-50 rounded-lg p-3 text-[9px] space-y-1">
+                <p>Likidite Puanı     = min(30, likidite/1.5 × 30)</p>
+                <p>Borç Puanı         = min(35, (100−borç_oran)/100 × 35)</p>
+                <p>Tasarruf Puanı     = min(20, tasarruf_oran/20 × 20)</p>
+                <p>Dayanıklılık Puanı = min(15, süre/6 × 15)</p>
+                <p class="border-t pt-1 font-black text-indigo-700">TOPLAM = Σ(4 Gösterge)</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl p-4 border border-slate-100">
+            <p class="font-black text-slate-700 mb-2">📚 Akademik Kaynaklar</p>
+            <ul class="space-y-1 text-[9px] text-slate-500">
+                <li>• <strong>Likidite:</strong> CFP Board (2023) — Emergency Fund Standard</li>
+                <li>• <strong>Borç Oranı:</strong> Consumer Financial Protection Bureau</li>
+                <li>• <strong>Tasarruf:</strong> Bengen (1994) — 4% Rule; FIRE Movement</li>
+                <li>• <strong>Dayanıklılık:</strong> Vanguard Retirement Research (2019)</li>
+                <li>• <strong>Net Servet:</strong> Federal Reserve SCF Methodology</li>
+            </ul>
+        </div>
+    </div>
+    <p class="text-[9px] text-slate-400 mt-4 italic">
+        ⚠ Bu analiz bilgi amaçlıdır; yatırım tavsiyesi niteliği taşımaz. Kararlarınızı lisanslı bir finansal danışmana danışarak verin.
+    </p>
+</div>
+
+<script>
+// ─── Metrik Çubuklarını Animasyonla Doldur ────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+    // Intersection Observer ile animasyon
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+                const fills = entry.target.querySelectorAll('.metric-bar-fill');
+                fills.forEach(function(fill) {
+                    const targetWidth = fill.dataset.width || 0;
+                    setTimeout(function() {
+                        fill.style.width = targetWidth + '%';
+                    }, 200);
+                });
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.2 });
+
+    document.querySelectorAll('.health-card').forEach(function(card) {
+        observer.observe(card);
+    });
+
+    // Skor sayacı animasyonu
+    const scoreEl = document.getElementById('scoreCounter');
+    if (scoreEl) {
+        const target = parseInt(scoreEl.textContent);
+        let current = 0;
+        const increment = Math.ceil(target / 40);
+        const timer = setInterval(function() {
+            current = Math.min(current + increment, target);
+            scoreEl.textContent = current;
+            if (current >= target) clearInterval(timer);
+        }, 30);
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,63 @@
+[tool.ruff]
+line-length = 120
+target-version = 'py310'
+exclude = ['venv', '__pycache__', '.pytest_cache']
+
+[tool.ruff.lint]
+select = ['E', 'F', 'W', 'C90', 'I']
+ignore = ['E501', 'C901']
+
+[tool.pytest.ini_options]
+addopts = '--cov=. --cov-report=term-missing --cov-report=html'
+testpaths = ['tests']
+
+[tool.coverage.run]
+omit = ['venv/*', 'tests/*', '*__init__.py', 'app.py']
+
+[tool.coverage.report]
+exclude_lines = [
+    'pragma: no cover',
+    'def __repr__',
+    'if self.debug:',
+    'if __name__ == .__main__.:',
+    'raise NotImplementedError',
+    'pass',
+    'except ImportError:'
+]
+
+[tool.importlinter]
+root_packages = [
+    "application",
+    "domain",
+    "infrastructure",
+    "routes",
+    "repositories"
+]
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "Domain layer should not import anything else"
+type = "forbidden"
+source_modules = ["domain"]
+forbidden_modules = [
+    "application",
+    "infrastructure",
+    "routes",
+    "repositories",
+    "bootstrap"
+]
+
+[[tool.importlinter.contracts]]
+name = "Application layer should not import infrastructure, routes, or repositories"
+type = "forbidden"
+source_modules = ["application"]
+forbidden_modules = [
+    "infrastructure",
+    "routes",
+    "repositories",
+    "bootstrap"
+]
+ignore_imports = [
+    "application.settings.settings_application -> infrastructure.i18n",
+    "application.providers -> bootstrap"
+]

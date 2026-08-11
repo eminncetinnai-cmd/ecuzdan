@@ -1,0 +1,132 @@
+# Category Mappings for Demo Data Generation
+# Maps logical/demo category names to standard category names in the system
+# These must match the actual category names in the database (seed_standard_categories.py)
+
+income:
+  salary:
+    standard_name: "Maaş / Ücret Geliri"
+    description: "Monthly salary income"
+    category_type: "Gelir"
+  
+  advance:
+    standard_name: "Avans"
+    description: "Advance payment"
+    category_type: "Gelir"
+  
+  extra_income:
+    standard_name: "Ek Gelir / Yan İş"
+    description: "Additional/freelance income"
+    category_type: "Gelir"
+  
+  rent_income:
+    standard_name: "Kira Geliri"
+    description: "Rental income"
+    category_type: "Gelir"
+  
+  interest_income:
+    standard_name: "Faiz Geliri"
+    description: "Interest/dividend income"
+    category_type: "Gelir"
+  
+  commission:
+    standard_name: "Serbest Meslek / Danışmanlık"
+    description: "Commission income"
+    category_type: "Gelir"
+  
+  bonus:
+    standard_name: "Prim & İkramiye"
+    description: "Bonus income"
+    category_type: "Gelir"
+  
+  other_income:
+    standard_name: "Yatırım / Sermaye Kazancı"
+    description: "Other miscellaneous income"
+    category_type: "Gelir"
+
+expense:
+  tax:
+    standard_name: "Vergi"
+    description: "Tax payments"
+    category_type: "Gider"
+  
+  credit:
+    standard_name: "Kredi"
+    description: "Credit/loan payments"
+    category_type: "Gider"
+  
+  credit_card:
+    standard_name: "Kredi Kartı"
+    description: "Credit card payments"
+    category_type: "Gider"
+  
+  monthly_fixed:
+    standard_name: "Konut & Kira"
+    description: "Monthly fixed expenses"
+    category_type: "Gider"
+  
+  food:
+    standard_name: "Market & Gıda"
+    description: "Food and grocery expenses"
+    category_type: "Gider"
+  
+  transport:
+    standard_name: "Ulaşım & Yakıt"
+    description: "Transportation expenses"
+    category_type: "Gider"
+  
+  entertainment:
+    standard_name: "Eğlence & Restoran"
+    description: "Entertainment expenses"
+    category_type: "Gider"
+  
+  other_expense:
+    standard_name: "Faturalar (Elektrik/Su/Gaz)"
+    description: "Other miscellaneous expenses"
+    category_type: "Gider"
+
+investment:
+  monthly_investment:
+    standard_name: "Yatırıma Aktarılan"
+    description: "Monthly investment transfer"
+    category_type: "Yatırım"
+  
+  stocks:
+    standard_name: "Hisse Senedi Alımı"
+    description: "Stock investments"
+    category_type: "Yatırım"
+  
+  gold_bullion:
+    standard_name: "Altın Alımı"
+    description: "Gold investments"
+    category_type: "Yatırım"
+  
+  forex:
+    standard_name: "Kripto Para Alımı"
+    description: "Foreign exchange investments"
+    category_type: "Yatırım"
+  
+  other_investment:
+    standard_name: "Yatırıma Aktarılan"
+    description: "Other investments"
+    category_type: "Yatırım"
+
+transfer:
+  account_transfer:
+    standard_name: "Hesap Arası Transfer"
+    description: "Transfer between accounts"
+    category_type: "Transfer"
+  
+  cash_withdrawal:
+    standard_name: "Nakit Çekme"
+    description: "Cash withdrawal"
+    category_type: "Transfer"
+  
+  cash_deposit:
+    standard_name: "Nakit Yatırma"
+    description: "Cash deposit"
+    category_type: "Transfer"
+  
+  other_transfer:
+    standard_name: "Diğer Transferler"
+    description: "Other transfers"
+    category_type: "Transfer"

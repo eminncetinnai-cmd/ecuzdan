@@ -1,0 +1,234 @@
+{% extends "layout.html" %}
+
+{% block title %}Kullanıcı Davet Et - E-Cüzdan{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Kullanıcı Davet Et</h1>
+        <p>Yeni kullanıcılarınızı tenant'a davet edin</p>
+    </div>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="card">
+        <div class="card-header">
+            <h2>Yeni Davet Oluştur</h2>
+        </div>
+        
+        <form method="POST" action="{{ url_for('tenant.invite') }}" class="invite-form">
+            <div class="form-group">
+                <label for="email">E-posta Adresi</label>
+                <input type="email" id="email" name="email" required placeholder="ornek@email.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="role">Rol</label>
+                <select id="role" name="role" required>
+                    <option value="kullanici">Kullanıcı</option>
+                    <option value="tenant_admin">Tenant Admin</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Davet Oluştur</button>
+        </form>
+        
+        {% if invite_link %}
+        <div class="invite-link-section">
+            <h3>Davet Linki</h3>
+            <div class="invite-link-box">
+                <input type="text" value="{{ invite_link }}" readonly id="inviteLink">
+                <button type="button" onclick="copyInviteLink()">Kopyala</button>
+            </div>
+            <p class="invite-note">Bu linki davet ettiğiniz kişiye gönderin. Link 24 saat geçerlidir.</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h2>Davet Geçmişi</h2>
+            <a href="{{ url_for('tenant.invites') }}" class="btn btn-secondary">Tüm Davetleri Gör</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.page-header {
+    margin-bottom: 30px;
+}
+
+.page-header h1 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.page-header p {
+    margin: 0;
+    color: #666;
+}
+
+.card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-header h2 {
+    margin: 0;
+    color: #333;
+}
+
+.invite-form {
+    padding: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #333;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary {
+    background-color: #667eea;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #5568d3;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+.invite-link-section {
+    padding: 20px;
+    border-top: 1px solid #eee;
+}
+
+.invite-link-section h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+}
+
+.invite-link-box {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.invite-link-box input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.invite-note {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.alert {
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+</style>
+
+<script>
+function copyInviteLink() {
+    const inviteLink = document.getElementById('inviteLink');
+    inviteLink.select();
+    document.execCommand('copy');
+    
+    // Kopyalandı mesajı göster
+    const btn = event.target;
+    const originalText = btn.textContent;
+    btn.textContent = 'Kopyalandı!';
+    setTimeout(() => {
+        btn.textContent = originalText;
+    }, 2000);
+}
+</script>
+{% endblock %}

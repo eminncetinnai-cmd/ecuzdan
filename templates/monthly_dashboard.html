@@ -1,0 +1,770 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+    .premium-card {
+        background: #ffffff;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        border-radius: 1.5rem;
+        box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 1);
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .premium-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 36px -8px rgba(15, 23, 42, 0.12);
+        border-color: #c7d2fe;
+    }
+    
+    /* Charts Grid Container */
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+    
+    @media (max-width: 1024px) {
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .chart-container {
+        position: relative;
+        width: 100%;
+        height: 320px;
+    }
+    .chart-container canvas {
+        max-height: 320px !important;
+    }
+    
+    .mini-chart-container {
+        position: relative;
+        width: 100%;
+        height: 180px;
+    }
+    .mini-chart-container canvas {
+        max-height: 180px !important;
+    }
+    
+    /* Tooltip styles */
+    .info-tip {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        background: #e2e8f0;
+        color: #64748b;
+        border-radius: 50%;
+        font-size: 11px;
+        font-weight: 700;
+        cursor: help;
+        transition: all 0.2s ease;
+        margin-left: 6px;
+        text-decoration: none;
+    }
+    .info-tip:hover {
+        background: #cbd5e1;
+        color: #475569;
+    }
+    
+    /* Glassmorphism effect for summary cards */
+    .summary-card {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.8) 100%);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(226, 232, 240, 0.5);
+    }
+    
+    /* Trend indicators */
+    .trend-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.5rem;
+    }
+    
+    .trend-up {
+        background: #dcfce7;
+        color: #15803d;
+    }
+    
+    .trend-down {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+    
+    /* Chart title styling */
+    .chart-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .chart-title h4 {
+        font-size: 1rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #1e293b;
+    }
+    
+    .chart-icon {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.5rem;
+        font-weight: 700;
+        font-size: 0.875rem;
+    }
+    
+    .icon-income {
+        background: #dcfce7;
+        color: #15803d;
+    }
+    
+    .icon-expense {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+    
+    .icon-investment {
+        background: #dbeafe;
+        color: #0369a1;
+    }
+    
+    /* Summary stats in chart cards */
+    .chart-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .stat-item {
+        text-align: center;
+    }
+    
+    .stat-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #64748b;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-value {
+        font-size: 1rem;
+        font-weight: 900;
+        color: #1e293b;
+    }
+    
+    /* Monthly breakdown grid - Premium 4-column layout */
+    .monthly-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem;
+        margin-top: 3rem;
+    }
+    
+    @media (max-width: 1280px) {
+        .monthly-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+    
+    @media (max-width: 1024px) {
+        .monthly-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (max-width: 640px) {
+        .monthly-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    /* Monthly card premium styling */
+    .monthly-card {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .monthly-card::before {
+        content: attr(data-month);
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        font-size: 3.5rem;
+        font-weight: 900;
+        color: rgba(203, 213, 225, 0.15);
+        pointer-events: none;
+        z-index: 0;
+    }
+    
+    .monthly-card-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    /* Glow effect for positive/negative months */
+    .monthly-card.positive {
+        box-shadow: 0 0 20px -8px rgba(16, 185, 129, 0.3), 0 4px 20px -4px rgba(15, 23, 42, 0.08);
+    }
+    
+    .monthly-card.negative {
+        box-shadow: 0 0 20px -8px rgba(239, 68, 68, 0.3), 0 4px 20px -4px rgba(15, 23, 42, 0.08);
+    }
+    
+    /* Investment ratio progress bar */
+    .investment-ratio-bar {
+        width: 100%;
+        height: 6px;
+        background: #e2e8f0;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+    }
+    
+    .investment-ratio-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #3b82f6 0%, #6366f1 100%);
+        border-radius: 3px;
+        transition: width 0.3s ease;
+    }
+    
+    /* Month number badge */
+    .month-badge {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #e0e7ff 0%, #f0f4ff 100%);
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 900;
+        color: #4f46e5;
+        z-index: 2;
+    }
+</style>
+
+<!-- Header with Year Selector -->
+<div class="flex items-center gap-3 mb-8">
+    <span class="text-sm font-bold text-slate-600">Gösterilen Yıl: {{ selected_year }}</span>
+    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Yıl Seç:</label>
+    <select id="yearSelector" onchange="changeYear(this.value)" class="px-4 py-2.5 rounded-xl text-xs font-bold bg-white border border-slate-200 shadow-sm focus:ring-2 focus:ring-indigo-400 outline-none cursor-pointer">
+        {% for y in available_years %}
+        <option value="{{ y }}" {{ 'selected' if y == selected_year }}>{{ y }}</option>
+        {% endfor %}
+    </select>
+</div>
+
+<!-- Yearly Summary Cards - Row 1 -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+    <div class="premium-card p-4 border-b-4 border-emerald-500 bg-white/60">
+        <div class="flex items-center justify-between mb-1">
+            <h3 class="text-slate-400 text-[9px] font-black uppercase tracking-wider">Yıllık Toplam Gelir</h3>
+            <span class="info-tip" title="Bu yıl içindeki tüm gelirlerin toplamı. Maaş, kira, faiz gibi tüm gelirler dahildir.">?</span>
+        </div>
+        <p class="text-xl font-black text-emerald-600">{{ total_income|format_money }} ₺</p>
+        <div class="mt-1 text-[7px] text-slate-400 font-bold uppercase">12 Ay Toplamı</div>
+    </div>
+    <div class="premium-card p-4 border-b-4 border-rose-500 bg-white/60">
+        <div class="flex items-center justify-between mb-1">
+            <h3 class="text-slate-400 text-[9px] font-black uppercase tracking-wider">Yıllık Toplam Gider</h3>
+            <span class="info-tip" title="Bu yıl içindeki tüm giderlerin toplamı. Fatura, kira, alışveriş gibi tüm harcamalar dahildir.">?</span>
+        </div>
+        <p class="text-xl font-black text-rose-600">{{ total_expense|format_money }} ₺</p>
+        <div class="mt-1 text-[7px] text-slate-400 font-bold uppercase">12 Ay Toplamı</div>
+    </div>
+    <div class="premium-card p-4 border-b-4 border-blue-500 bg-white/60">
+        <div class="flex items-center justify-between mb-1">
+            <h3 class="text-slate-400 text-[9px] font-black uppercase tracking-wider">Yıllık Toplam Yatırım</h3>
+            <span class="info-tip" title="Bu yıl içindeki tüm yatırım harcamalarının toplamı. Hisse senedi, fon, altın gibi yatırımlar dahildir.">?</span>
+        </div>
+        <p class="text-xl font-black text-blue-600">{{ total_investment|format_money }} ₺</p>
+        <div class="mt-1 text-[7px] text-slate-400 font-bold uppercase">12 Ay Toplamı</div>
+    </div>
+    <div class="premium-card p-4 border-b-4 {% if total_net >= 0 %}border-indigo-500{% else %}border-rose-600{% endif %} bg-white/60">
+        <div class="flex items-center justify-between mb-1">
+            <h3 class="text-slate-400 text-[9px] font-black uppercase tracking-wider">Yıllık Net Bakiye</h3>
+            <span class="info-tip" title="Gelir - Gider - Yatırım. Bu yıl toplam ne kadar para kaldığını gösterir.">?</span>
+        </div>
+        <p class="text-xl font-black {% if total_net >= 0 %}text-indigo-600{% else %}text-rose-600{% endif %}">{{ total_net|format_money }} ₺</p>
+        <div class="mt-1 text-[7px] text-slate-400 font-bold uppercase">Gelir - Gider - Yatırım</div>
+    </div>
+</div>
+
+<!-- Yearly Summary Cards - Row 2 -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+    <div class="premium-card p-4 border-b-4 border-emerald-500 bg-white/60">
+        <div class="flex items-center justify-between mb-1">
+            <h3 class="text-slate-400 text-[9px] font-black uppercase tracking-wider">Gerçekleşen Net Nakit</h3>
+            <span class="info-tip" title="Ödenmiş gelirler - Ödenmiş giderler - Ödenmiş yatırımlar. Gerçekten cebinizde kalan nakit.">?</span>
+        </div>
+        <p class="text-xl font-black {% if total_realized_net >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">{{ total_realized_net|format_money }} ₺</p>
+        <div class="mt-1 text-[7px] text-slate-400 font-bold uppercase">Ödenmiş gelir - gider - yatırım</div>
+    </div>
+    <div class="premium-card p-4 border-b-4 border-amber-500 bg-white/60">
+        <div class="flex items-center justify-between mb-1">
+            <h3 class="text-slate-400 text-[9px] font-black uppercase tracking-wider">Bekleyen Net Etki</h3>
+            <span class="info-tip" title="Henüz ödenmemiş gelirler - Henüz ödenmemiş giderler - Henüz ödenmemiş yatırımlar. Gelecekteki nakit etkisi.">?</span>
+        </div>
+        <p class="text-xl font-black {% if total_pending_net >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">{{ total_pending_net|format_money }} ₺</p>
+        <div class="mt-1 text-[7px] text-slate-400 font-bold uppercase">Bekleyen gelir - gider - yatırım</div>
+    </div>
+    <div class="premium-card p-4 border-b-4 border-sky-500 bg-white/60">
+        <div class="flex items-center justify-between mb-1">
+            <h3 class="text-slate-400 text-[9px] font-black uppercase tracking-wider">Yıllık Yatırım / Gelir Oranı</h3>
+            <span class="info-tip" title="Yatırım miktarının toplam gelire oranı. Ne kadarını yatırım yaptığınızı gösterir.">?</span>
+        </div>
+        <p class="text-xl font-black text-sky-600">%{{ total_investment_ratio }}</p>
+        <div class="mt-1 text-[7px] text-slate-400 font-bold uppercase">Yatırım / toplam gelir</div>
+    </div>
+    <div class="premium-card p-4 border-b-4 border-violet-500 bg-white/60">
+        <div class="flex items-center justify-between mb-1">
+            <h3 class="text-slate-400 text-[9px] font-black uppercase tracking-wider">Varlık Değerleme Farkı</h3>
+            <span class="info-tip" title="Varlıkların güncel piyasa değeri ile maliyet arasındaki fark. Bu nakit akışı değil, sadece kağıt üzerinde değer.">?</span>
+        </div>
+        <p class="text-xl font-black {% if total_valuation_delta >= 0 %}text-violet-600{% else %}text-rose-600{% endif %}">{{ total_valuation_delta|format_money }} ₺</p>
+        <div class="mt-1 text-[7px] text-slate-400 font-bold uppercase">Nakit akışı değildir</div>
+    </div>
+</div>
+
+<!-- Toast Container (bottom right) -->
+<div id="toastContainer" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
+
+<!-- Premium Charts Grid - 2x2 Layout -->
+<div class="charts-grid">
+    <!-- Income Trend Chart -->
+    <div class="premium-card p-8 bg-white/80">
+        <div class="chart-title">
+            <div class="chart-icon icon-income">📈</div>
+            <h4>Aylık Gelir Trendi</h4>
+        </div>
+        
+        <div class="chart-stats">
+            <div class="stat-item">
+                <div class="stat-label">Ortalama</div>
+                <div class="stat-value text-emerald-600">{{ (total_income / 12)|format_money }}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Toplam</div>
+                <div class="stat-value text-emerald-600">{{ total_income|format_money }}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Gerçekleşen</div>
+                <div class="stat-value {% if total_realized_net >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">{{ total_realized_net|format_money }}</div>
+            </div>
+        </div>
+        
+        <div class="chart-container"><canvas id="incomeChart"></canvas></div>
+    </div>
+
+    <!-- Expense Trend Chart -->
+    <div class="premium-card p-8 bg-white/80">
+        <div class="chart-title">
+            <div class="chart-icon icon-expense">📊</div>
+            <h4>Aylık Gider Trendi</h4>
+        </div>
+        
+        <div class="chart-stats">
+            <div class="stat-item">
+                <div class="stat-label">Ortalama</div>
+                <div class="stat-value text-rose-600">{{ (total_expense / 12)|format_money }}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Toplam</div>
+                <div class="stat-value text-rose-600">{{ total_expense|format_money }}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Gider Oranı</div>
+                <div class="stat-value text-rose-600">%{{ ((total_expense / total_income) * 100)|round(1) if total_income > 0 else 0 }}</div>
+            </div>
+        </div>
+        
+        <div class="chart-container"><canvas id="expenseChart"></canvas></div>
+    </div>
+
+    <!-- Investment Trend Chart -->
+    <div class="premium-card p-8 bg-white/80">
+        <div class="chart-title">
+            <div class="chart-icon icon-investment">💰</div>
+            <h4>Aylık Yatırım Trendi</h4>
+        </div>
+        
+        <div class="chart-stats">
+            <div class="stat-item">
+                <div class="stat-label">Ortalama</div>
+                <div class="stat-value text-blue-600">{{ (total_investment / 12)|format_money }}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Toplam</div>
+                <div class="stat-value text-blue-600">{{ total_investment|format_money }}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Yatırım Oranı</div>
+                <div class="stat-value text-blue-600">%{{ total_investment_ratio }}</div>
+            </div>
+        </div>
+        
+        <div class="chart-container"><canvas id="topInvestChart"></canvas></div>
+    </div>
+
+    <!-- Summary & Metrics Card -->
+    <div class="premium-card p-8 bg-gradient-to-br from-indigo-50 to-blue-50 border-l-4 border-indigo-500">
+        <div class="chart-title">
+            <div class="chart-icon" style="background: #e0e7ff; color: #4f46e5;">📋</div>
+            <h4>Yıl Özeti & Metrikler</h4>
+        </div>
+        
+        <div class="space-y-4">
+            <div class="flex items-center justify-between p-3 bg-white rounded-lg">
+                <span class="text-sm font-semibold text-slate-600">Net Bakiye</span>
+                <span class="text-lg font-black {% if total_net >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">{{ total_net|format_money }} ₺</span>
+            </div>
+            
+            <div class="flex items-center justify-between p-3 bg-white rounded-lg">
+                <span class="text-sm font-semibold text-slate-600">Gerçekleşen Nakit</span>
+                <span class="text-lg font-black {% if total_realized_net >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">{{ total_realized_net|format_money }} ₺</span>
+            </div>
+            
+            <div class="flex items-center justify-between p-3 bg-white rounded-lg">
+                <span class="text-sm font-semibold text-slate-600">Bekleyen Etki</span>
+                <span class="text-lg font-black {% if total_pending_net >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">{{ total_pending_net|format_money }} ₺</span>
+            </div>
+            
+            <div class="flex items-center justify-between p-3 bg-white rounded-lg">
+                <span class="text-sm font-semibold text-slate-600">Değerleme Farkı</span>
+                <span class="text-lg font-black {% if total_valuation_delta >= 0 %}text-violet-600{% else %}text-rose-600{% endif %}">{{ total_valuation_delta|format_money }} ₺</span>
+            </div>
+            
+            <div class="pt-3 border-t-2 border-indigo-200">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-500 uppercase">Gider / Gelir Oranı</span>
+                    <span class="text-sm font-black text-indigo-600">%{{ ((total_expense / total_income) * 100)|round(1) if total_income > 0 else 0 }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monthly Breakdown Grid - Premium 4-Column Layout -->
+<div class="mt-12">
+    <div class="mb-8">
+        <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Aylık Detay Analiz</h3>
+        <p class="text-sm text-slate-500 mt-1">Her ayın gelir, gider ve yatırım dağılımı</p>
+    </div>
+    
+    <div class="monthly-grid">
+        {% for m in months_data %}
+        <div class="premium-card monthly-card p-6 bg-gradient-to-br {% if m.net >= 0 %}from-white to-emerald-50/30 positive{% else %}from-white to-rose-50/30 negative{% endif %} border-t-4 {% if m.net >= 0 %}border-emerald-400{% else %}border-rose-500{% endif %} hover:shadow-xl hover:scale-105 transition-all duration-300" data-month="{{ loop.index }}">
+            <div class="month-badge">{{ loop.index }}</div>
+            
+            <div class="monthly-card-content">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="font-black text-sm text-slate-700 uppercase tracking-wider">{{ m.name }}</h3>
+                    <span class="px-2.5 py-1 rounded-full text-[8px] font-bold uppercase tracking-wider {% if m.net >= 0 %}bg-emerald-200 text-emerald-800{% else %}bg-rose-200 text-rose-800{% endif %}">
+                        {% if m.net >= 0 %}✓ Pozitif{% else %}✗ Negatif{% endif %}
+                    </span>
+                </div>
+                
+                <div class="mini-chart-container mb-4">
+                    <canvas id="chart-{{ loop.index }}"></canvas>
+                </div>
+                
+                <div class="space-y-2 text-[9px] font-bold uppercase">
+                    <!-- Gelir -->
+                    <div class="flex justify-between items-center py-2 px-2.5 rounded-lg bg-emerald-50 border-l-3 border-emerald-400">
+                        <span class="text-emerald-700">Gelir</span>
+                        <span class="text-emerald-800 font-black">{{ m.inc|format_money }} ₺</span>
+                    </div>
+                    
+                    <!-- Gider -->
+                    <div class="flex justify-between items-center py-2 px-2.5 rounded-lg bg-rose-50 border-l-3 border-rose-400">
+                        <span class="text-rose-700">Gider</span>
+                        <span class="text-rose-800 font-black">{{ m.exp|format_money }} ₺</span>
+                    </div>
+                    
+                    <!-- Yatırım -->
+                    <div class="flex justify-between items-center py-2 px-2.5 rounded-lg bg-blue-50 border-l-3 border-blue-400">
+                        <span class="text-blue-700">Yatırım</span>
+                        <span class="text-blue-800 font-black">{{ m.inv|format_money }} ₺</span>
+                    </div>
+                    
+                    <!-- Yatırım Oranı Progress Bar -->
+                    <div class="py-2 px-2.5 rounded-lg bg-sky-50 border-l-3 border-sky-400">
+                        <div class="flex justify-between items-center mb-1.5">
+                            <span class="text-sky-700">Yatırım Oranı</span>
+                            <span class="text-sky-800 font-black">%{{ m.inv_share|round(1) }}</span>
+                        </div>
+                        <div class="investment-ratio-bar">
+                            <div class="investment-ratio-fill" style="width: {{ m.inv_share|round(1) }}%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Net Bakiye -->
+                    <div class="flex justify-between items-center py-2.5 px-2.5 rounded-lg {% if m.net >= 0 %}bg-indigo-100 border-l-3 border-indigo-500{% else %}bg-rose-100 border-l-3 border-rose-600{% endif %} mt-2 font-black">
+                        <span class="{% if m.net >= 0 %}text-indigo-800{% else %}text-rose-800{% endif %}">Net</span>
+                        <span class="{% if m.net >= 0 %}text-indigo-900{% else %}text-rose-900{% endif %}">{{ m.net|format_money }} ₺</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+function formatMoneyTr(value) {
+    var val = value;
+    if (typeof value === 'string') {
+        val = parseFloat(value);
+        if (isNaN(val)) val = 0;
+    }
+    return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(val);
+}
+
+function changeYear(year) {
+    window.location.href = '/monthly_dashboard?year=' + year;
+}
+
+// Initialize charts after DOM and Chart.js are loaded
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js is not loaded');
+        return;
+    }
+
+    const CHART_COLORS = {
+        green: '#10b981',
+        red: '#ef4444',
+        blue: '#3b82f6',
+        indigo: '#6366f1',
+        amber: '#f59e0b'
+    };
+
+    // Main Investment Trend Chart
+    const ctxInvest = document.getElementById('topInvestChart');
+    if (ctxInvest) {
+        new Chart(ctxInvest.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: {{ months_tr|safe }},
+                datasets: [{
+                    label: 'Yatırım Miktarı',
+                    data: ({{ inv_data|safe }}).map(v => Number(v) || 0),
+                    backgroundColor: CHART_COLORS.blue,
+                    borderRadius: 8,
+                    borderSkipped: false,
+                    hoverBackgroundColor: CHART_COLORS.indigo
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                        titleFont: { size: 12, weight: 'bold' },
+                        bodyFont: { size: 13 },
+                        padding: 14,
+                        callbacks: {
+                            label: function(ctx) {
+                                return 'Yatırım: ' + formatMoneyTr(ctx.parsed.y);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 10, weight: '600' }, color: '#64748b' }
+                    },
+                    y: {
+                        grid: { color: '#e2e8f0', drawBorder: false },
+                        ticks: {
+                            font: { size: 10, weight: '600' },
+                            color: '#64748b',
+                            callback: function(value) { return formatMoneyTr(value); }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Monthly Breakdown Charts
+    {% for m in months_data %}
+    const ctx{{ loop.index }} = document.getElementById('chart-{{ loop.index }}');
+    if (ctx{{ loop.index }}) {
+        new Chart(ctx{{ loop.index }}.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['Gelir', 'Gider', 'Yatırım'],
+                datasets: [{
+                    data: [Number({{ m.inc }}), Number({{ m.exp }}), Number({{ m.inv }})],
+                    backgroundColor: [CHART_COLORS.green, CHART_COLORS.red, CHART_COLORS.blue],
+                    borderRadius: 6,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                        titleFont: { size: 11, weight: 'bold' },
+                        bodyFont: { size: 12 },
+                        padding: 12,
+                        callbacks: {
+                            label: function(ctx) {
+                                const labels = ['Gelir', 'Gider', 'Yatırım'];
+                                return labels[ctx.dataIndex] + ': ' + formatMoneyTr(ctx.parsed.y);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 11, weight: '700' }, color: '#64748b' }
+                    },
+                    y: { display: false }
+                }
+            }
+        });
+    }
+    {% endfor %}
+
+    // Income Trend Chart
+    const ctxIncome = document.getElementById('incomeChart');
+    if (ctxIncome) {
+        new Chart(ctxIncome.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: {{ months_tr|safe }},
+                datasets: [{
+                    label: 'Gelir Miktarı',
+                    data: ({{ inc_data|safe }}).map(v => Number(v) || 0),
+                    backgroundColor: CHART_COLORS.green,
+                    borderRadius: 8,
+                    borderSkipped: false,
+                    hoverBackgroundColor: CHART_COLORS.indigo
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                        titleFont: { size: 12, weight: 'bold' },
+                        bodyFont: { size: 13 },
+                        padding: 14,
+                        callbacks: {
+                            label: function(ctx) {
+                                return 'Gelir: ' + formatMoneyTr(ctx.parsed.y);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 10, weight: '600' }, color: '#64748b' }
+                    },
+                    y: {
+                        grid: { color: '#e2e8f0', drawBorder: false },
+                        ticks: {
+                            font: { size: 10, weight: '600' },
+                            color: '#64748b',
+                            callback: function(value) { return formatMoneyTr(value); }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Expense Trend Chart
+    const ctxExpense = document.getElementById('expenseChart');
+    if (ctxExpense) {
+        new Chart(ctxExpense.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: {{ months_tr|safe }},
+                datasets: [{
+                    label: 'Gider Miktarı',
+                    data: ({{ exp_data|safe }}).map(v => Number(v) || 0),
+                    backgroundColor: CHART_COLORS.red,
+                    borderRadius: 8,
+                    borderSkipped: false,
+                    hoverBackgroundColor: CHART_COLORS.indigo
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                        titleFont: { size: 12, weight: 'bold' },
+                        bodyFont: { size: 13 },
+                        padding: 14,
+                        callbacks: {
+                            label: function(ctx) {
+                                return 'Gider: ' + formatMoneyTr(ctx.parsed.y);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 10, weight: '600' }, color: '#64748b' }
+                    },
+                    y: {
+                        grid: { color: '#e2e8f0', drawBorder: false },
+                        ticks: {
+                            font: { size: 10, weight: '600' },
+                            color: '#64748b',
+                            callback: function(value) { return formatMoneyTr(value); }
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+
+function showToast(message, type) {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    const bgColor = type === 'success' ? 'bg-emerald-500' : type === 'error' ? 'bg-rose-500' : 'bg-amber-500';
+    const textColor = 'text-white';
+    toast.className = `px-4 py-2 rounded shadow ${bgColor} ${textColor} animate-fade-in`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => { toast.remove(); }, 4000);
+}
+</script>
+{% endblock %}

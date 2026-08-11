@@ -1,0 +1,583 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+    body {
+        font-family: 'Outfit', sans-serif;
+        background: radial-gradient(circle at 10% 20%, rgb(242, 246, 250) 0%, rgb(224, 233, 244) 90.1%);
+        min-height: 100vh;
+    }
+    .guide-card {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 1.5rem;
+        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+    .guide-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.08);
+    }
+    .section-header {
+        background: linear-gradient(135deg, #0f172a 0%, #312e81 100%);
+        color: white;
+        padding: 1.5rem 2rem;
+        border-radius: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .step-number {
+        background: linear-gradient(135deg, #0f172a 0%, #312e81 100%);
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+    .feature-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+    .faq-item {
+        border-left: 4px solid #0f172a;
+        padding-left: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .faq-question {
+        font-weight: 800;
+        color: #0f172a;
+        font-size: 14px;
+        margin-bottom: 0.5rem;
+    }
+    .faq-answer {
+        color: #64748b;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+    .toc-link {
+        display: block;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        color: #64748b;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 13px;
+        transition: all 0.2s;
+        border-left: 3px solid transparent;
+    }
+    .toc-link:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+        border-left-color: #0f172a;
+    }
+</style>
+
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Başlık -->
+    <div class="section-header mb-8">
+        <h1 class="text-3xl font-black mb-2">📘 {{ _('ug_title') }}</h1>
+        <p class="text-sky-200 font-semibold text-sm">{{ _('ug_subtitle') }}</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <!-- İçindekiler -->
+        <div class="lg:col-span-1">
+            <div class="guide-card p-6 sticky top-8">
+                <h3 class="font-black text-slate-800 text-sm uppercase tracking-wider mb-4">📑 {{ _('ug_toc') }}</h3>
+                <nav class="space-y-1">
+                    <a href="#intro" class="toc-link">{{ _('ug_toc_intro') }}</a>
+                    <a href="#getting-started" class="toc-link">{{ _('ug_toc_getting_started') }}</a>
+                    <a href="#transactions" class="toc-link">{{ _('ug_toc_transactions') }}</a>
+                    <a href="#planned" class="toc-link">{{ _('ug_toc_planned') }}</a>
+                    <a href="#assets" class="toc-link">{{ _('ug_toc_assets') }}</a>
+                    <a href="#dashboard" class="toc-link">{{ _('ug_toc_dashboard') }}</a>
+                    <a href="#calendar" class="toc-link">{{ _('ug_toc_calendar') }}</a>
+                    <a href="#strategy" class="toc-link">{{ _('ug_toc_strategy') }}</a>
+                    <a href="#education" class="toc-link">{{ _('ug_toc_education') }}</a>
+                    <a href="#faq" class="toc-link">{{ _('ug_toc_faq') }}</a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Ana İçerik -->
+        <div class="lg:col-span-3 space-y-8">
+            
+            <!-- Giriş -->
+            <div id="intro" class="guide-card p-8">
+                <h2 class="text-2xl font-black text-slate-800 mb-4 flex items-center gap-3">
+                    <span class="feature-icon bg-gradient-to-br from-sky-500 to-blue-600">🚀</span>
+                    {{ _('ug_intro_title') }}
+                </h2>
+                <p class="text-slate-600 leading-relaxed mb-4">
+                    <strong>E-Cüzdan</strong>, {{ _('ug_intro_desc') }}
+                </p>
+                <div class="bg-sky-50 border border-sky-200 rounded-xl p-4 mb-4">
+                    <p class="text-sky-800 font-semibold text-sm">🎯 {{ _('ug_intro_purpose') }}</p>
+                </div>
+                <h3 class="font-bold text-slate-800 mb-3">{{ _('ug_intro_features') }}</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="flex items-start gap-3">
+                        <span class="text-emerald-500 text-xl">✓</span>
+                        <span class="text-slate-600 text-sm">{{ _('ug_feature_1') }}</span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="text-emerald-500 text-xl">✓</span>
+                        <span class="text-slate-600 text-sm">{{ _('ug_feature_2') }}</span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="text-emerald-500 text-xl">✓</span>
+                        <span class="text-slate-600 text-sm">{{ _('ug_feature_3') }}</span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="text-emerald-500 text-xl">✓</span>
+                        <span class="text-slate-600 text-sm">{{ _('ug_feature_4') }}</span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="text-emerald-500 text-xl">✓</span>
+                        <span class="text-slate-600 text-sm">{{ _('ug_feature_5') }}</span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="text-emerald-500 text-xl">✓</span>
+                        <span class="text-slate-600 text-sm">{{ _('ug_feature_6') }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Başlangıç -->
+            <div id="getting-started" class="guide-card p-8">
+                <h2 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-3">
+                    <span class="feature-icon bg-gradient-to-br from-emerald-500 to-green-600">🎯</span>
+                    {{ _('ug_getting_started_title') }}
+                </h2>
+                
+                <div class="space-y-6">
+                    <div class="flex gap-4">
+                        <div class="step-number">1</div>
+                        <div>
+                            <h4 class="font-bold text-slate-800 mb-2">{{ _('ug_step_1_title') }}</h4>
+                            <p class="text-slate-600 text-sm">{{ _('ug_step_1_desc') }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-4">
+                        <div class="step-number">2</div>
+                        <div>
+                            <h4 class="font-bold text-slate-800 mb-2">{{ _('ug_step_2_title') }}</h4>
+                            <p class="text-slate-600 text-sm">{{ _('ug_step_2_desc') }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-4">
+                        <div class="step-number">3</div>
+                        <div>
+                            <h4 class="font-bold text-slate-800 mb-2">{{ _('ug_step_3_title') }}</h4>
+                            <p class="text-slate-600 text-sm">{{ _('ug_step_3_desc') }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-4">
+                        <div class="step-number">4</div>
+                        <div>
+                            <h4 class="font-bold text-slate-800 mb-2">{{ _('ug_step_4_title') }}</h4>
+                            <p class="text-slate-600 text-sm">{{ _('ug_step_4_desc') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- İşlem Yönetimi -->
+            <div id="transactions" class="guide-card p-8">
+                <h2 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-3">
+                    <span class="feature-icon bg-gradient-to-br from-indigo-500 to-purple-600">💰</span>
+                    {{ _('ug_transactions_title') }}
+                </h2>
+                
+                <p class="text-slate-600 mb-6">{{ _('ug_transactions_desc') }}</p>
+                
+                <h3 class="font-bold text-slate-800 mb-4">{{ _('ug_tx_types') }}</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                        <h4 class="font-bold text-emerald-700 mb-2">💵 {{ _('ug_tx_income') }}</h4>
+                        <p class="text-emerald-600 text-sm">{{ _('ug_tx_income_desc') }}</p>
+                    </div>
+                    <div class="bg-rose-50 border border-rose-200 rounded-xl p-4">
+                        <h4 class="font-bold text-rose-700 mb-2">💸 {{ _('ug_tx_expense') }}</h4>
+                        <p class="text-rose-600 text-sm">{{ _('ug_tx_expense_desc') }}</p>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                        <h4 class="font-bold text-blue-700 mb-2">📈 {{ _('ug_tx_investment') }}</h4>
+                        <p class="text-blue-600 text-sm">{{ _('ug_tx_investment_desc') }}</p>
+                    </div>
+                </div>
+                
+                <h3 class="font-bold text-slate-800 mb-4">{{ _('ug_tx_add_title') }}</h3>
+                <ol class="list-decimal list-inside space-y-2 text-slate-600 text-sm">
+                    <li>{{ _('ug_tx_add_1') }}</li>
+                    <li>{{ _('ug_tx_add_2') }}</li>
+                    <li>{{ _('ug_tx_add_3') }}</li>
+                    <li>{{ _('ug_tx_add_4') }}</li>
+                    <li>{{ _('ug_tx_add_5') }}</li>
+                    <li>{{ _('ug_tx_add_6') }}</li>
+                    <li>{{ _('ug_tx_add_7') }}</li>
+                </ol>
+            </div>
+
+            <!-- Planlı İşlemler -->
+            <div id="planned" class="guide-card p-8">
+                <h2 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-3">
+                    <span class="feature-icon bg-gradient-to-br from-orange-500 to-red-600">📅</span>
+                    {{ _('ug_planned_title') }}
+                </h2>
+                
+                <p class="text-slate-600 mb-6">{{ _('ug_planned_desc') }}</p>
+                
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+                    <p class="text-amber-800 font-semibold text-sm">💡 {{ _('ug_planned_tip') }}</p>
+                </div>
+                
+                <h3 class="font-bold text-slate-800 mb-4">{{ _('ug_planned_create_title') }}</h3>
+                <ol class="list-decimal list-inside space-y-2 text-slate-600 text-sm">
+                    <li>{{ _('ug_planned_create_1') }}</li>
+                    <li>{{ _('ug_planned_create_2') }}</li>
+                    <li>{{ _('ug_planned_create_3') }}</li>
+                    <li>{{ _('ug_planned_create_4') }}</li>
+                    <li>{{ _('ug_planned_create_5') }}</li>
+                </ol>
+            </div>
+
+            <!-- Varlık Yönetimi -->
+            <div id="assets" class="guide-card p-8">
+                <h2 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-3">
+                    <span class="feature-icon bg-gradient-to-br from-amber-500 to-yellow-600">🏆</span>
+                    {{ _('ug_assets_title') }}
+                </h2>
+                
+                <p class="text-slate-600 mb-6">{{ _('ug_assets_desc') }}</p>
+                
+                <h3 class="font-bold text-slate-800 mb-4">{{ _('ug_assets_types') }}</h3>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-3">
+                        <span class="text-2xl">🥇</span>
+                        <span class="text-slate-700 font-semibold text-sm">{{ _('ug_asset_gold') }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-3">
+                        <span class="text-2xl">🪙</span>
+                        <span class="text-slate-700 font-semibold text-sm">{{ _('ug_asset_silver') }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-3">
+                        <span class="text-2xl">🛢️</span>
+                        <span class="text-slate-700 font-semibold text-sm">{{ _('ug_asset_oil') }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-3">
+                        <span class="text-2xl">📊</span>
+                        <span class="text-slate-700 font-semibold text-sm">{{ _('ug_asset_bist') }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-3">
+                        <span class="text-2xl">₿</span>
+                        <span class="text-slate-700 font-semibold text-sm">{{ _('ug_asset_btc') }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-3">
+                        <span class="text-2xl">📈</span>
+                        <span class="text-slate-700 font-semibold text-sm">{{ _('ug_asset_nasdaq') }}</span>
+                    </div>
+                </div>
+                
+                <h3 class="font-bold text-slate-800 mb-4">{{ _('ug_assets_add_title') }}</h3>
+                <ol class="list-decimal list-inside space-y-2 text-slate-600 text-sm">
+                    <li>{{ _('ug_assets_add_1') }}</li>
+                    <li>{{ _('ug_assets_add_2') }}</li>
+                    <li>{{ _('ug_assets_add_3') }}</li>
+                    <li>{{ _('ug_assets_add_4') }}</li>
+                    <li>{{ _('ug_assets_add_5') }}</li>
+                </ol>
+            </div>
+
+            <!-- Dashboard & Analiz -->
+            <div id="dashboard" class="guide-card p-8">
+                <h2 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-3">
+                    <span class="feature-icon bg-gradient-to-br from-pink-500 to-rose-600">📊</span>
+                    {{ _('ug_dashboard_title') }}
+                </h2>
+                
+                <p class="text-slate-600 mb-6">{{ _('ug_dashboard_desc') }}</p>
+                
+                <h3 class="font-bold text-slate-800 mb-4">{{ _('ug_dashboard_pages') }}</h3>
+                <div class="space-y-4">
+                    <div class="border-l-4 border-indigo-500 pl-4">
+                        <h4 class="font-bold text-slate-800">{{ _('ug_dash_cash_flow') }}</h4>
+                        <p class="text-slate-600 text-sm">{{ _('ug_dash_cash_flow_desc') }}</p>
+                    </div>
+                    <div class="border-l-4 border-emerald-500 pl-4">
+                        <h4 class="font-bold text-slate-800">{{ _('ug_dash_dashboard') }}</h4>
+                        <p class="text-slate-600 text-sm">{{ _('ug_dash_dashboard_desc') }}</p>
+                    </div>
+                    <div class="border-l-4 border-blue-500 pl-4">
+                        <h4 class="font-bold text-slate-800">{{ _('ug_dash_health') }}</h4>
+                        <p class="text-slate-600 text-sm">{{ _('ug_dash_health_desc') }}</p>
+                    </div>
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <h4 class="font-bold text-slate-800">{{ _('ug_dash_market') }}</h4>
+                        <p class="text-slate-600 text-sm">{{ _('ug_dash_market_desc') }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ödeme Takvimi -->
+            <div id="calendar" class="guide-card p-8">
+                <h2 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-3">
+                    <span class="feature-icon bg-gradient-to-br from-cyan-500 to-teal-600">📆</span>
+                    {{ _('ug_calendar_title') }}
+                </h2>
+                
+                <p class="text-slate-600 mb-6">{{ _('ug_calendar_desc') }}</p>
+                
+                <h3 class="font-bold text-slate-800 mb-4">{{ _('ug_calendar_features') }}</h3>
+                <ul class="space-y-2 text-slate-600 text-sm">
+                    <li class="flex items-start gap-2">
+                        <span class="text-emerald-500">•</span>
+                        <span>{{ _('ug_calendar_feature_1') }}</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-emerald-500">•</span>
+                        <span>{{ _('ug_calendar_feature_2') }}</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-emerald-500">•</span>
+                        <span>{{ _('ug_calendar_feature_3') }}</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-emerald-500">•</span>
+                        <span>{{ _('ug_calendar_feature_4') }}</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Strateji Merkezi -->
+            <div id="strategy" class="guide-card p-8">
+                <h2 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-3">
+                    <span class="feature-icon bg-gradient-to-br from-violet-500 to-indigo-600">🎯</span>
+                    {{ _('ug_strategy_title') }}
+                </h2>
+                
+                <p class="text-slate-600 mb-6">{{ _('ug_strategy_desc') }}</p>
+                
+                <h3 class="font-bold text-slate-800 mb-4">{{ _('ug_strategy_tools') }}</h3>
+                <div class="space-y-4">
+                    <div class="bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl p-4">
+                        <h4 class="font-bold text-slate-800 mb-2">💰 {{ _('ug_strategy_freedom') }}</h4>
+                        <p class="text-slate-600 text-sm">{{ _('ug_strategy_freedom_desc') }}</p>
+                    </div>
+                    <div class="bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl p-4">
+                        <h4 class="font-bold text-slate-800 mb-2">🧠 {{ _('ug_strategy_panel') }}</h4>
+                        <p class="text-slate-600 text-sm">{{ _('ug_strategy_panel_desc') }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Finansal Eğitim Rehberi -->
+            <div id="education" class="guide-card p-8">
+                <h2 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-3">
+                    <span class="feature-icon bg-gradient-to-br from-emerald-500 to-teal-600">📚</span>
+                    {{ _('ug_education_title') }}
+                </h2>
+                
+                <p class="text-slate-600 mb-6">{{ _('ug_education_desc') }}</p>
+                
+                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6">
+                    <p class="text-emerald-800 font-semibold text-sm">🎓 {{ _('ug_education_levels') }}</p>
+                </div>
+                
+                <h3 class="font-bold text-slate-800 mb-4">{{ _('ug_education_level_details') }}</h3>
+                <div class="space-y-4 mb-6">
+                    <div class="border-l-4 border-green-500 pl-4">
+                        <h4 class="font-bold text-slate-800">{{ _('ug_education_beginner') }}</h4>
+                        <p class="text-slate-600 text-sm">{{ _('ug_education_beginner_desc') }}</p>
+                    </div>
+                    <div class="border-l-4 border-blue-500 pl-4">
+                        <h4 class="font-bold text-slate-800">{{ _('ug_education_intermediate') }}</h4>
+                        <p class="text-slate-600 text-sm">{{ _('ug_education_intermediate_desc') }}</p>
+                    </div>
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <h4 class="font-bold text-slate-800">{{ _('ug_education_advanced') }}</h4>
+                        <p class="text-slate-600 text-sm">{{ _('ug_education_advanced_desc') }}</p>
+                    </div>
+                    <div class="border-l-4 border-rose-500 pl-4">
+                        <h4 class="font-bold text-slate-800">{{ _('ug_education_expert') }}</h4>
+                        <p class="text-slate-600 text-sm">{{ _('ug_education_expert_desc') }}</p>
+                    </div>
+                </div>
+                
+                <h3 class="font-bold text-slate-800 mb-4">{{ _('ug_education_topics') }}</h3>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-2 mb-6">
+                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-2">
+                        <span class="text-emerald-500">•</span>
+                        <span class="text-slate-700 text-sm">{{ _('ug_topic_income') }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-2">
+                        <span class="text-emerald-500">•</span>
+                        <span class="text-slate-700 text-sm">{{ _('ug_topic_compound') }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-2">
+                        <span class="text-emerald-500">•</span>
+                        <span class="text-slate-700 text-sm">{{ _('ug_topic_assets') }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-2">
+                        <span class="text-emerald-500">•</span>
+                        <span class="text-slate-700 text-sm">{{ _('ug_topic_freedom') }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-2">
+                        <span class="text-emerald-500">•</span>
+                        <span class="text-slate-700 text-sm">{{ _('ug_topic_investing') }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-2">
+                        <span class="text-emerald-500">•</span>
+                        <span class="text-slate-700 text-sm">{{ _('ug_topic_risk') }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-2">
+                        <span class="text-emerald-500">•</span>
+                        <span class="text-slate-700 text-sm">{{ _('ug_topic_portfolio') }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-2">
+                        <span class="text-emerald-500">•</span>
+                        <span class="text-slate-700 text-sm">{{ _('ug_topic_behavioral') }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-2">
+                        <span class="text-emerald-500">•</span>
+                        <span class="text-slate-700 text-sm">{{ _('ug_topic_tax') }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-2">
+                        <span class="text-emerald-500">•</span>
+                        <span class="text-slate-700 text-sm">{{ _('ug_topic_retirement') }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-2">
+                        <span class="text-emerald-500">•</span>
+                        <span class="text-slate-700 text-sm">{{ _('ug_topic_international') }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-2">
+                        <span class="text-emerald-500">•</span>
+                        <span class="text-slate-700 text-sm">{{ _('ug_topic_derivatives') }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-2">
+                        <span class="text-emerald-500">•</span>
+                        <span class="text-slate-700 text-sm">{{ _('ug_topic_alternative') }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-2">
+                        <span class="text-emerald-500">•</span>
+                        <span class="text-slate-700 text-sm">{{ _('ug_topic_quantitative') }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-2">
+                        <span class="text-emerald-500">•</span>
+                        <span class="text-slate-700 text-sm">{{ _('ug_topic_algorithmic') }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-2">
+                        <span class="text-emerald-500">•</span>
+                        <span class="text-slate-700 text-sm">{{ _('ug_topic_ml') }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-2">
+                        <span class="text-emerald-500">•</span>
+                        <span class="text-slate-700 text-sm">{{ _('ug_topic_blockchain') }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-2">
+                        <span class="text-emerald-500">•</span>
+                        <span class="text-slate-700 text-sm">{{ _('ug_topic_esg') }}</span>
+                    </div>
+                </div>
+                
+                <h3 class="font-bold text-slate-800 mb-4">{{ _('ug_education_features') }}</h3>
+                <div class="space-y-3">
+                    <div class="flex items-start gap-3">
+                        <span class="text-emerald-500 text-xl">✓</span>
+                        <span class="text-slate-600 text-sm">{{ _('ug_education_feature_1') }}</span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="text-emerald-500 text-xl">✓</span>
+                        <span class="text-slate-600 text-sm">{{ _('ug_education_feature_2') }}</span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="text-emerald-500 text-xl">✓</span>
+                        <span class="text-slate-600 text-sm">{{ _('ug_education_feature_3') }}</span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="text-emerald-500 text-xl">✓</span>
+                        <span class="text-slate-600 text-sm">{{ _('ug_education_feature_4') }}</span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="text-emerald-500 text-xl">✓</span>
+                        <span class="text-slate-600 text-sm">{{ _('ug_education_feature_5') }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sıkça Sorulan Sorular -->
+            <div id="faq" class="guide-card p-8">
+                <h2 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-3">
+                    <span class="feature-icon bg-gradient-to-br from-slate-600 to-slate-800">❓</span>
+                    {{ _('ug_faq_title') }}
+                </h2>
+                
+                <div class="space-y-6">
+                    <div class="faq-item">
+                        <p class="faq-question">{{ _('ug_faq_1_q') }}</p>
+                        <p class="faq-answer">{{ _('ug_faq_1_a') }}</p>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <p class="faq-question">{{ _('ug_faq_2_q') }}</p>
+                        <p class="faq-answer">{{ _('ug_faq_2_a') }}</p>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <p class="faq-question">{{ _('ug_faq_3_q') }}</p>
+                        <p class="faq-answer">{{ _('ug_faq_3_a') }}</p>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <p class="faq-question">{{ _('ug_faq_4_q') }}</p>
+                        <p class="faq-answer">{{ _('ug_faq_4_a') }}</p>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <p class="faq-question">{{ _('ug_faq_5_q') }}</p>
+                        <p class="faq-answer">{{ _('ug_faq_5_a') }}</p>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <p class="faq-question">{{ _('ug_faq_6_q') }}</p>
+                        <p class="faq-answer">{{ _('ug_faq_6_a') }}</p>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <p class="faq-question">{{ _('ug_faq_7_q') }}</p>
+                        <p class="faq-answer">{{ _('ug_faq_7_a') }}</p>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <p class="faq-question">{{ _('ug_faq_8_q') }}</p>
+                        <p class="faq-answer">{{ _('ug_faq_8_a') }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- İletişim -->
+            <div class="guide-card p-8 bg-gradient-to-br from-slate-800 to-slate-900 text-white">
+                <h2 class="text-2xl font-black mb-4">📞 {{ _('ug_contact_title') }}</h2>
+                <p class="text-slate-300 mb-4">{{ _('ug_contact_desc') }}</p>
+                <div class="flex items-center gap-3">
+                    <span class="bg-sky-500 px-4 py-2 rounded-lg font-bold text-sm">E-Cüzdan v15.0</span>
+                    <span class="text-slate-400 text-sm">{{ _('ug_contact_version') }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

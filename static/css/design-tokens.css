@@ -1,0 +1,170 @@
+﻿/* E-Cüzdan v15 — Design Token Sistemi */
+:root {
+  /* ─── Spacing Scale (4px base) ─────────────────── */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ─── Container Genişlikleri ────────────────────── */
+  --container-xs:  360px;
+  --container-sm:  560px;
+  --container-md:  800px;
+  --container-lg:  1080px;
+  --container-xl:  1280px;
+
+  /* ─── Card / Panel Boşlukları ───────────────────── */
+  --card-padding-y: var(--space-6);
+  --card-padding-x: var(--space-8);
+  --card-padding-sm: var(--space-5);
+  --card-gap: var(--space-6);
+  --section-gap: var(--space-10);
+
+  /* ─── Form Elemanları ───────────────────────────── */
+  --input-padding-y: var(--space-3);
+  --input-padding-x: var(--space-4);
+  --input-gap: var(--space-4);
+  --label-gap: var(--space-2);
+  --button-padding-y: var(--space-3);
+  --button-padding-x: var(--space-6);
+
+  /* ─── Sayfa Kenarları ───────────────────────────── */
+  --page-padding-x: var(--space-6);
+  --page-padding-x-mobile: var(--space-4);
+  --page-padding-top: var(--space-8);
+
+  /* ─── Border Radius ─────────────────────────────── */
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   16px;
+  --radius-xl:   24px;
+  --radius-pill: 9999px;
+
+  /* ─── Renkler — Gri / Slate Paleti ─────────────── */
+  --slate-50:  #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-900: #0f172a;
+
+  /* ─── Renkler — İndigo / Primary ────────────────── */
+  --indigo-50:  #eef2ff;
+  --indigo-100: #e0e7ff;
+  --indigo-200: #c7d2fe;
+  --indigo-400: #818cf8;
+  --indigo-500: #6366f1;
+  --indigo-600: #4f46e5;
+  --indigo-700: #4338ca;
+  --indigo-800: #3730a3;
+  --indigo-900: #312e81;
+
+  /* ─── Renkler — Yeşil / Success ─────────────────── */
+  --green-100:   #dcfce7;
+  --green-200:   #bbf7d0;
+  --green-600:   #16a34a;
+  --green-800:   #166534;
+  --emerald-500: #10b981;
+  --emerald-600: #059669;
+
+  /* ─── Renkler — Kırmızı / Danger ────────────────── */
+  --red-100: #fee2e2;
+  --red-200: #fecaca;
+  --red-400: #f87171;
+  --red-500: #ef4444;
+  --red-600: #dc2626;
+  --red-700: #b91c1c;
+  --red-800: #991b1b;
+
+  /* ─── Renkler — Amber / Warning ─────────────────── */
+  --amber-100: #fef3c7;
+  --amber-200: #fde68a;
+  --amber-400: #fbbf24;
+  --amber-500: #f59e0b;
+  --amber-800: #92400e;
+
+  /* ─── Renkler — Mavi ─────────────────────────────── */
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+
+  /* ─── Renkler — Violet ───────────────────────────── */
+  --violet-500: #8b5cf6;
+  --violet-900: #4c1d95;
+
+  /* ─── Renkler — Turuncu ──────────────────────────── */
+  --orange-500: #f97316;
+
+  /* ─── Sayfa Arka Planı (Light Premium) ─────────────── */
+  /* Dark tema token'ları kaldırıldı — ui-modern.css light gradyan kullanıyor */
+
+  /* ─── Semantik Renk Aliases ──────────────────────── */
+  --color-primary:        var(--indigo-500);
+  --color-primary-hover:  var(--indigo-600);
+  --color-bg:             var(--slate-50);
+  --color-surface:        #ffffff;
+  --color-border:         var(--slate-200);
+  --color-text:           var(--slate-700);
+  --color-text-muted:     var(--slate-500);
+  --color-text-subtle:    var(--slate-400);
+  --color-text-strong:    var(--slate-900);
+  --color-danger:         var(--red-500);
+  --color-danger-hover:   var(--red-600);
+  --color-success:        var(--emerald-500);
+  --color-success-hover:  var(--emerald-600);
+  --color-warning:        var(--amber-500);
+
+  /* ─── Gölgeler ───────────────────────────────────── */
+  --shadow-sm:  0 1px 3px rgba(15, 23, 42, 0.08);
+  --shadow-md:  0 4px 20px rgba(15, 23, 42, 0.12);
+  --shadow-lg:  0 8px 32px rgba(15, 23, 42, 0.18);
+  --shadow-xl:  0 20px 60px rgba(15, 23, 42, 0.18);
+  --shadow-2xl: 0 24px 80px rgba(15, 23, 42, 0.18);
+
+  /* ─── Glassmorphism ──────────────────────────────── */
+  --glass-bg:     rgba(255, 255, 255, 0.97);
+  --glass-border: rgba(226, 232, 240, 0.80);
+
+  /* ─── Geçişler ───────────────────────────────────── */
+  --transition-fast:   0.15s ease;
+  --transition-normal: 0.2s ease;
+  --transition-slow:   0.4s ease;
+  --transition-spring: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  /* ─── Z-index Katmanları ─────────────────────────── */
+  --z-dropdown:     20;
+  --z-sticky:       30;
+  --z-overlay:      50;
+  --z-modal:        60;
+  --z-delete-modal: 70;
+  --z-top:          90;
+
+  /* ─── Tipografi ─────────────────────────────────── */
+  --font-size-xs:   12px;
+  --font-size-sm:   13px;
+  --font-size-base: 14px;
+  --font-size-md:   15px;
+  --font-size-lg:   16px;
+  --font-size-xl:   20px;
+  --font-size-2xl:  24px;
+  --font-size-3xl:  30px;
+
+  --line-height-tight:  1.25;
+  --line-height-normal: 1.5;
+  --line-height-loose:  1.75;
+
+  --font-weight-normal:   400;
+  --font-weight-medium:   500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:     700;
+  --font-weight-black:    900;
+}

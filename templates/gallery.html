@@ -1,0 +1,80 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+    body {
+        font-family: 'Outfit', sans-serif;
+        background: radial-gradient(circle at 10% 20%, rgb(242, 246, 250) 0%, rgb(224, 233, 244) 90.1%);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+    .premium-card {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 1.5rem;
+        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .premium-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.08);
+        border-color: rgba(255, 255, 255, 0.6);
+    }
+    .gallery-item {
+        transition: all 0.3s ease;
+    }
+    .gallery-item:hover {
+        transform: scale(1.02);
+    }
+    .gallery-item img {
+        border-radius: 1rem;
+        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+    }
+</style>
+
+<div class="mb-8">
+    <h2 class="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none bg-gradient-to-r from-slate-900 to-indigo-850 bg-clip-text text-transparent mb-2">Galeri</h2>
+    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Görsel Dokümantasyon ve Arşiv</p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div class="premium-card p-6 bg-white/80">
+        <div class="gallery-item">
+            <div class="mb-4">
+                <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase">Görsel 1</span>
+            </div>
+            <img src="/static/1.jpg" alt="Görsel 1" class="w-full h-auto object-cover" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23f1f5f9%22 width=%22400%22 height=%22300%22/%3E%3Ctext fill=%22%2364748b%22 font-family=%22sans-serif%22 font-size=%2220%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3EGörsel Bulunamadı%3C/text%3E%3C/svg%3E'">
+            <div class="mt-4 text-center">
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">1.jpg</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="premium-card p-6 bg-white/80">
+        <div class="gallery-item">
+            <div class="mb-4">
+                <span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase">Görsel 2</span>
+            </div>
+            <img src="/static/2.jpg" alt="Görsel 2" class="w-full h-auto object-cover" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23f1f5f9%22 width=%22400%22 height=%22300%22/%3E%3Ctext fill=%22%2364748b%22 font-family=%22sans-serif%22 font-size=%2220%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3EGörsel Bulunamadı%3C/text%3E%3C/svg%3E'">
+            <div class="mt-4 text-center">
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">2.jpg</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="premium-card p-8 bg-white/80 mt-8">
+    <div class="flex items-center justify-between">
+        <div>
+            <h3 class="text-sm font-black text-slate-800 uppercase italic tracking-tight mb-2">Görsel Dosyaları</h3>
+            <p class="text-xs text-slate-500">Proje kök dizinindeki 1.jpg ve 2.jpg dosyaları burada görüntülenir.</p>
+        </div>
+        <div class="flex space-x-2">
+            <a href="{{ url_for('static', filename='1.jpg') }}" download="1.jpg" class="bg-slate-900 text-white px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider hover:bg-slate-800 transition shadow-sm">1.jpg İndir</a>
+            <a href="{{ url_for('static', filename='2.jpg') }}" download="2.jpg" class="bg-slate-900 text-white px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider hover:bg-slate-800 transition shadow-sm">2.jpg İndir</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

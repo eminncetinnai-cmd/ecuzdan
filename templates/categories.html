@@ -1,0 +1,993 @@
+{% extends "layout.html" %}
+{% block content %}
+{#
+  Finansal Taksonomi Sayfası — Settings.html ile aynı premium mimari
+  Tab Bar + Premium Card sistemi · TDMS/IFRS GL kod standartları
+#}
+<style>
+    /* ── Settings ile özdeş premium kart mimarisi ─────────────────────── */
+    .cat-tab {
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+    .cat-tab[aria-selected="true"] {
+        background: linear-gradient(to right, #4f46e5, #4338ca);
+        color: #fff;
+        box-shadow: 0 4px 14px -4px rgba(79, 70, 229, 0.6);
+    }
+    .cat-tab[aria-selected="false"]:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+    .cat-panel { display: none; }
+    .cat-panel.active { display: block; }
+
+    /* ── Tablo ─────────────────────────────────────────────────────────── */
+    .data-table thead th {
+        background: rgba(248, 250, 252, 0.9);
+        text-transform: uppercase;
+        font-size: 9.5px;
+        letter-spacing: 0.08em;
+        color: #64748b;
+        padding: 0.75rem 1rem;
+        font-weight: 800;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .data-table tbody td {
+        padding: 0.875rem 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f8fafc;
+        transition: background 0.15s;
+    }
+    .data-table tbody tr:hover td { background: rgba(248, 250, 252, 0.7); }
+    .data-table tbody tr:last-child td { border-bottom: none; }
+
+    /* ── Kategori türü badge'leri ───────────────────────────────────────── */
+    .type-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 9.5px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+    .type-badge.gelir   { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+    .type-badge.gider   { background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; }
+    .type-badge.yatirim { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+    .type-badge.transfer{ background: #faf5ff; color: #7c3aed; border: 1px solid #e9d5ff; }
+
+    /* ── GL kodu chip ───────────────────────────────────────────────────── */
+    .gl-chip {
+        font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+        font-size: 10px;
+        letter-spacing: 0.05em;
+        padding: 2px 7px;
+        border-radius: 6px;
+        font-weight: 700;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        color: #475569;
+    }
+    .gl-chip.glr { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
+    .gl-chip.gdr { background: #fff1f2; border-color: #fecdd3; color: #be123c; }
+    .gl-chip.ytr { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+
+    /* ── Edit mode satır vurgusu ────────────────────────────────────────── */
+    .edit-mode-active td { background: rgba(254, 243, 199, 0.35) !important; }
+    .edit-mode-active td:first-child { border-left: 3px solid #f59e0b; }
+
+    /* ── Action butonları ───────────────────────────────────────────────── */
+    .action-btn {
+        width: 28px; height: 28px;
+        display: inline-flex; align-items: center; justify-content: center;
+        border-radius: 8px;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .action-btn:hover { transform: translateY(-1px) scale(1.08); }
+
+    /* ── Search & filter ────────────────────────────────────────────────── */
+    .search-input:focus { outline: none; box-shadow: 0 0 0 2px rgba(99,102,241,0.25); border-color: #6366f1; }
+
+    /* ── Budget progress bar ────────────────────────────────────────────── */
+    .budget-bar {
+        height: 3px; border-radius: 2px;
+        background: #e2e8f0;
+        overflow: hidden;
+    }
+    .budget-bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+
+    /* ── Empty state ────────────────────────────────────────────────────── */
+    .empty-state { text-align: center; padding: 2.5rem 1rem; color: #94a3b8; }
+
+    /* ── Scrollbar ──────────────────────────────────────────────────────── */
+    .cat-scroll { overflow-y: auto; max-height: 420px; }
+    .cat-scroll::-webkit-scrollbar { width: 4px; }
+    .cat-scroll::-webkit-scrollbar-track { background: transparent; }
+    .cat-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+    .cat-scroll::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+</style>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- HEADER — Settings ile aynı dil                             -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="max-w-6xl mx-auto space-y-4 mb-10">
+<div class="mb-4">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-black text-slate-900 tracking-tighter uppercase leading-none
+                        bg-gradient-to-r from-slate-900 via-indigo-800 to-slate-900 bg-clip-text text-transparent">
+                Finansal Taksonomi
+            </h2>
+            <p class="text-xs text-slate-500 font-semibold mt-0.5">
+                TDMS/IFRS uyumlu hesap planı · Varlık sınıfları · Sektörel yapılandırma
+            </p>
+        </div>
+        <!-- KPI badges -->
+        <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-lg">
+                <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>
+                <span class="text-[10px] font-black text-indigo-700 uppercase">{{ cats|length }} Kategori</span>
+            </div>
+            <div class="flex items-center gap-2 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-lg">
+                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                <span class="text-[10px] font-black text-emerald-700 uppercase">{{ asset_types|length }} Varlık Sınıfı</span>
+            </div>
+            <div class="flex items-center gap-2 bg-amber-50 border border-amber-100 px-3 py-1.5 rounded-lg">
+                <span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
+                <span class="text-[10px] font-black text-amber-700 uppercase">{{ asset_sectors|length }} Sektör</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- TAB BAR — Settings.html ile özdeş yapı                     -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="premium-card bg-white/80 p-1.5 shadow-lg overflow-x-auto">
+    <div class="flex items-center gap-1 min-w-max" role="tablist" aria-label="Taksonomi bölümleri">
+        <button type="button" role="tab" data-tab="categories" aria-selected="true"
+                class="cat-tab flex items-center gap-2 px-4 py-2.5 rounded-lg font-black text-[10px] uppercase tracking-wider text-slate-500">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            Nakit Akış Kategorileri
+        </button>
+        <button type="button" role="tab" data-tab="asset-types" aria-selected="false"
+                class="cat-tab flex items-center gap-2 px-4 py-2.5 rounded-lg font-black text-[10px] uppercase tracking-wider text-slate-500">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            Varlık Sınıfları
+        </button>
+        <button type="button" role="tab" data-tab="sectors" aria-selected="false"
+                class="cat-tab flex items-center gap-2 px-4 py-2.5 rounded-lg font-black text-[10px] uppercase tracking-wider text-slate-500">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            Varlık Sektörleri
+        </button>
+        <!-- GL Kodu Referans Sekmesi -->
+        <button type="button" role="tab" data-tab="gl-reference" aria-selected="false"
+                class="cat-tab flex items-center gap-2 px-4 py-2.5 rounded-lg font-black text-[10px] uppercase tracking-wider text-slate-500">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            GL Kodu Referansı
+        </button>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PANEL 1 — NAKİT AKIŞ KATEGORİLERİ                         -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div data-panel="categories" class="cat-panel active">
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
+
+        <!-- SOL: Form kartı — Settings'teki border-l-4 stili -->
+        <div class="lg:col-span-2">
+            <div class="premium-card p-5 bg-white/80 border-l-4 border-indigo-600 shadow-lg">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="bg-indigo-100 p-2 rounded-lg">
+                        <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    </div>
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight" id="cat_form_title">
+                        Yeni Kategori
+                    </h3>
+                </div>
+
+                <form id="cat_form" method="POST" action="/categories" class="space-y-3">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="action" id="cat_action" value="add_cat">
+                    <input type="hidden" name="cat_id" id="cat_id" value="">
+                    <input type="hidden" name="version" id="cat_version" value="">
+
+                    <!-- Kategori Adı -->
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                            Kategori Adı <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" name="name" id="cat_name"
+                               placeholder="Örn: Market & Gıda"
+                               class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-white text-xs
+                                      font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500
+                                      focus:border-transparent outline-none transition" required>
+                    </div>
+
+                    <!-- Kategori Türü -->
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">Tür</label>
+                        <div class="grid grid-cols-2 gap-1.5" id="type_selector">
+                            <label class="type-radio-label cursor-pointer">
+                                <input type="radio" name="type" value="Gider" class="sr-only" checked>
+                                <div class="flex items-center gap-1.5 px-3 py-2 rounded-xl border-2 border-transparent
+                                            bg-rose-50 text-rose-700 text-[10px] font-black uppercase tracking-wide
+                                            hover:border-rose-300 transition type-opt" data-val="Gider">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500 flex-shrink-0"></span> Gider
+                                </div>
+                            </label>
+                            <label class="type-radio-label cursor-pointer">
+                                <input type="radio" name="type" value="Gelir" class="sr-only">
+                                <div class="flex items-center gap-1.5 px-3 py-2 rounded-xl border-2 border-transparent
+                                            bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-wide
+                                            hover:border-emerald-300 transition type-opt" data-val="Gelir">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span> Gelir
+                                </div>
+                            </label>
+                            <label class="type-radio-label cursor-pointer">
+                                <input type="radio" name="type" value="Yatırım" class="sr-only">
+                                <div class="flex items-center gap-1.5 px-3 py-2 rounded-xl border-2 border-transparent
+                                            bg-blue-50 text-blue-700 text-[10px] font-black uppercase tracking-wide
+                                            hover:border-blue-300 transition type-opt" data-val="Yatırım">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0"></span> Yatırım
+                                </div>
+                            </label>
+                            <label class="type-radio-label cursor-pointer">
+                                <input type="radio" name="type" value="Transfer" class="sr-only">
+                                <div class="flex items-center gap-1.5 px-3 py-2 rounded-xl border-2 border-transparent
+                                            bg-purple-50 text-purple-700 text-[10px] font-black uppercase tracking-wide
+                                            hover:border-purple-300 transition type-opt" data-val="Transfer">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-purple-500 flex-shrink-0"></span> Transfer
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- GL Kodu & Bütçe Limiti -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                                GL Kodu
+                                <span class="text-slate-400 font-normal normal-case ml-1">(Opsiyonel)</span>
+                            </label>
+                            <input type="text" name="code" id="cat_code"
+                                   placeholder="Oto-atanır"
+                                   class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50/50 text-xs
+                                          font-mono font-bold text-slate-600 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                            <p class="text-[9px] text-slate-400 mt-0.5 font-medium">Boş bırakılırsa otomatik</p>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                                Aylık Bütçe
+                                <span class="text-slate-400 font-normal normal-case ml-1">(₺)</span>
+                            </label>
+                            <input type="number" step="0.01" min="0" name="budget_limit" id="cat_budget_limit"
+                                   placeholder="Örn: 5.000"
+                                   class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-xs
+                                          font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                        </div>
+                    </div>
+
+                    <!-- Düzenleme uyarısı -->
+                    <div id="cat_edit_hint" class="hidden flex items-center gap-2 p-2.5 rounded-xl
+                                                    bg-amber-50 border border-amber-200/60">
+                        <svg class="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        <span class="text-[10px] font-bold text-amber-700">Düzenleme modu aktif — değişiklikler kaydedilecek</span>
+                    </div>
+
+                    <!-- Butonlar -->
+                    <div class="flex gap-2 pt-1">
+                        <button type="submit" id="cat_submit_btn"
+                                class="flex-1 bg-slate-900 text-white py-2.5 rounded-xl font-black text-[10px]
+                                       uppercase tracking-widest hover:bg-indigo-600 transition
+                                       shadow-md shadow-slate-900/10 active:scale-[0.98]">
+                            Kategori Oluştur
+                        </button>
+                        <button type="button" id="cat_cancel_btn" onclick="cancelCatEdit()"
+                                class="hidden px-4 bg-slate-100 text-slate-600 py-2.5 rounded-xl font-black
+                                       text-[10px] uppercase tracking-wider hover:bg-slate-200 transition">
+                            İptal
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- GL Kodu Açıklama Kartı -->
+            <div class="premium-card p-4 bg-white/70 shadow mt-3 border-l-4 border-slate-300">
+                <p class="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2">GL Kodu Standartları</p>
+                <div class="space-y-1.5">
+                    <div class="flex items-center gap-2">
+                        <span class="gl-chip glr">GLR-6xxx</span>
+                        <span class="text-[10px] text-slate-600 font-semibold">Gelir — 600 Hesap Grubu</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="gl-chip gdr">GDR-7xxx</span>
+                        <span class="text-[10px] text-slate-600 font-semibold">Gider — 700 Hesap Grubu</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="gl-chip ytr">YTR-1xxx</span>
+                        <span class="text-[10px] text-slate-600 font-semibold">Yatırım — 100 Varlık Hesabı</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SAĞ: Kategori listesi -->
+        <div class="lg:col-span-3">
+            <div class="premium-card bg-white/80 shadow-lg overflow-hidden">
+                <!-- Liste başlık + arama -->
+                <div class="flex items-center justify-between p-4 border-b border-slate-100 bg-gradient-to-r from-indigo-50/40 to-transparent">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Kategori Planı</h3>
+                        <span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full text-[10px] font-black" id="cats_count">
+                            {{ cats|length }}
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <!-- Filtre butonları -->
+                        <div class="flex gap-1" id="type_filter_btns">
+                            <button type="button" onclick="filterCats('all')" data-filter="all"
+                                    class="filter-btn active px-2.5 py-1 rounded-lg text-[9px] font-black uppercase
+                                           tracking-wide bg-slate-900 text-white transition">Tümü</button>
+                            <button type="button" onclick="filterCats('Gelir')" data-filter="Gelir"
+                                    class="filter-btn px-2.5 py-1 rounded-lg text-[9px] font-black uppercase
+                                           tracking-wide bg-slate-100 text-slate-600 hover:bg-emerald-100 hover:text-emerald-700 transition">Gelir</button>
+                            <button type="button" onclick="filterCats('Gider')" data-filter="Gider"
+                                    class="filter-btn px-2.5 py-1 rounded-lg text-[9px] font-black uppercase
+                                           tracking-wide bg-slate-100 text-slate-600 hover:bg-rose-100 hover:text-rose-700 transition">Gider</button>
+                            <button type="button" onclick="filterCats('Yatırım')" data-filter="Yatırım"
+                                    class="filter-btn px-2.5 py-1 rounded-lg text-[9px] font-black uppercase
+                                           tracking-wide bg-slate-100 text-slate-600 hover:bg-blue-100 hover:text-blue-700 transition">Yatırım</button>
+                        </div>
+                        <!-- Arama -->
+                        <div class="relative">
+                            <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
+                            </svg>
+                            <input type="text" id="cat_search" oninput="searchCats(this.value)"
+                                   placeholder="Ara…"
+                                   class="search-input pl-7 pr-3 py-1.5 border border-slate-200 rounded-lg bg-white
+                                          text-[11px] font-semibold text-slate-700 w-32 transition">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tablo -->
+                <div class="cat-scroll">
+                    <table class="w-full data-table" id="cats_table">
+                        <thead>
+                            <tr>
+                                <th>Kategori</th>
+                                <th>Tür</th>
+                                <th>GL Kodu</th>
+                                <th>Aylık Bütçe</th>
+                                <th class="text-right">İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-xs text-slate-700" id="cats_tbody">
+                            {% for c in cats %}
+                            <tr class="cat-row transition" data-id="{{ c.id }}" data-type="{{ c.type }}" data-name="{{ c.name|lower }}">
+                                <td>
+                                    <span class="font-extrabold text-slate-900 text-[12px]">{{ c.name }}</span>
+                                </td>
+                                <td>
+                                    <span class="type-badge {{ c.type|lower }}">
+                                        {% if c.type == 'Gelir' %}↑{% elif c.type == 'Gider' %}↓{% elif c.type == 'Yatırım' %}◈{% else %}⇄{% endif %}
+                                        {{ c.type }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if c.code %}
+                                        {% if c.code.startswith('GLR') %}
+                                            <span class="gl-chip glr">{{ c.code }}</span>
+                                        {% elif c.code.startswith('GDR') %}
+                                            <span class="gl-chip gdr">{{ c.code }}</span>
+                                        {% elif c.code.startswith('YTR') %}
+                                            <span class="gl-chip ytr">{{ c.code }}</span>
+                                        {% else %}
+                                            <span class="gl-chip">{{ c.code }}</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-[10px] text-slate-400 italic">Oto-atanır</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if c.budget_limit %}
+                                        <div>
+                                            <span class="font-bold text-slate-700 text-[11px]">
+                                                ₺{{ "{:,.0f}".format(c.budget_limit) }}
+                                            </span>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-[10px] text-slate-300">—</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-right">
+                                    <div class="flex items-center justify-end gap-1">
+                                        <button type="button" onclick="editCategory({{ c.id }}, '{{ c.name }}', '{{ c.type }}', '{{ c.code or '' }}', '{{ c.budget_limit or '' }}', {{ c.version or 1 }}, this)"
+                                                class="action-btn bg-slate-100 text-slate-500 hover:bg-indigo-600 hover:text-white"
+                                                title="Düzenle">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                            </svg>
+                                        </button>
+                                        <button type="button" onclick="confirmDeleteCategory({{ c.id }}, '{{ c.name }}')"
+                                                class="action-btn bg-rose-50 text-rose-500 hover:bg-rose-600 hover:text-white"
+                                                title="Sil">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="5" class="empty-state">
+                                <svg class="w-8 h-8 mx-auto mb-2 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                                </svg>
+                                <p class="text-[11px] font-bold">Henüz kategori eklenmedi</p>
+                            </td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PANEL 2 — VARLIK SINIFLARI                                 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div data-panel="asset-types" class="cat-panel">
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
+
+        <!-- Form -->
+        <div class="lg:col-span-2">
+            <div class="premium-card p-5 bg-white/80 border-l-4 border-emerald-600 shadow-lg">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="bg-emerald-100 p-2 rounded-lg">
+                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight" id="asset_type_form_title">
+                        Yeni Varlık Sınıfı
+                    </h3>
+                </div>
+
+                <form id="asset_type_form" method="POST" action="/categories" class="space-y-3">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="action" id="asset_type_action" value="add_asset_type">
+                    <input type="hidden" name="asset_type_id" id="asset_type_id" value="">
+
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                            Sınıf Adı <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" name="asset_type_name" id="asset_type_name"
+                               placeholder="Örn: Hisse Senedi, Altın, Kripto"
+                               class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-white text-xs
+                                      font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none transition" required>
+                    </div>
+
+                    <div id="asset_type_edit_hint" class="hidden flex items-center gap-2 p-2.5 rounded-xl
+                                                           bg-amber-50 border border-amber-200/60">
+                        <svg class="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        <span class="text-[10px] font-bold text-amber-700">Düzenleme modu — varlık sınıfı güncellenecek</span>
+                    </div>
+
+                    <div class="flex gap-2 pt-1">
+                        <button type="submit" id="asset_type_submit_btn"
+                                class="flex-1 bg-slate-900 text-white py-2.5 rounded-xl font-black text-[10px]
+                                       uppercase tracking-widest hover:bg-emerald-600 transition
+                                       shadow-md shadow-slate-900/10 active:scale-[0.98]">
+                            Sınıf Oluştur
+                        </button>
+                        <button type="button" id="asset_type_cancel_btn" onclick="cancelAssetTypeEdit()"
+                                class="hidden px-4 bg-slate-100 text-slate-600 py-2.5 rounded-xl font-black
+                                       text-[10px] uppercase tracking-wider hover:bg-slate-200 transition">
+                            İptal
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="premium-card p-4 mt-3 bg-emerald-50/60 border border-emerald-100/70 shadow-sm">
+                <p class="text-[10px] font-black uppercase tracking-wider text-emerald-700 mb-1.5">ℹ️ Varlık Sınıfı Nedir?</p>
+                <p class="text-[11px] text-slate-600 leading-relaxed">
+                    Portföyünüzdeki yatırım araçlarını gruplar. Her varlık bir sınıfa aittir.
+                    Örnek: <strong>Hisse Senedi</strong>, <strong>Altın</strong>, <strong>Fon</strong>, <strong>Kripto</strong>.
+                </p>
+            </div>
+        </div>
+
+        <!-- Liste -->
+        <div class="lg:col-span-3">
+            <div class="premium-card bg-white/80 shadow-lg overflow-hidden">
+                <div class="flex items-center justify-between p-4 border-b border-slate-100 bg-gradient-to-r from-emerald-50/40 to-transparent">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Varlık Sınıf Planı</h3>
+                        <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-black">
+                            {{ asset_types|length }}
+                        </span>
+                    </div>
+                </div>
+                <div class="cat-scroll">
+                    <table class="w-full data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Varlık Sınıfı</th>
+                                <th class="text-right">İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-xs text-slate-700">
+                            {% for at in asset_types %}
+                            <tr class="asset-type-row transition" data-id="{{ at.id }}">
+                                <td><span class="text-slate-300 font-bold text-[11px]">{{ loop.index }}</span></td>
+                                <td>
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-200"></span>
+                                        <span class="font-extrabold text-slate-900">{{ at.name }}</span>
+                                    </div>
+                                </td>
+                                <td class="text-right">
+                                    <div class="flex items-center justify-end gap-1">
+                                        <button type="button" onclick="editAssetType({{ at.id }}, '{{ at.name }}', this)"
+                                                class="action-btn bg-slate-100 text-slate-500 hover:bg-emerald-600 hover:text-white" title="Düzenle">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                        </button>
+                                        <button type="button" onclick="confirmDeleteAssetType({{ at.id }}, '{{ at.name }}')"
+                                                class="action-btn bg-rose-50 text-rose-500 hover:bg-rose-600 hover:text-white" title="Sil">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="3" class="empty-state">
+                                <p class="text-[11px] font-bold">Varlık sınıfı tanımlanmadı</p>
+                            </td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PANEL 3 — VARLIK SEKTÖRLERİ                                -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div data-panel="sectors" class="cat-panel">
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
+
+        <!-- Form -->
+        <div class="lg:col-span-2">
+            <div class="premium-card p-5 bg-white/80 border-l-4 border-amber-500 shadow-lg">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="bg-amber-100 p-2 rounded-lg">
+                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight" id="asset_sector_form_title">
+                        Yeni Sektör
+                    </h3>
+                </div>
+
+                <form id="asset_sector_form" method="POST" action="/categories" class="space-y-3">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="action" id="asset_sector_action" value="add_asset_sector">
+                    <input type="hidden" name="asset_sector_id" id="asset_sector_id" value="">
+
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                            Sektör Adı <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" name="name" id="asset_sector_name"
+                               placeholder="Örn: Teknoloji, Enerji, İletişim"
+                               class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-white text-xs
+                                      font-bold text-slate-900 focus:ring-2 focus:ring-amber-500 outline-none transition" required>
+                    </div>
+
+                    <div id="asset_sector_edit_hint" class="hidden flex items-center gap-2 p-2.5 rounded-xl
+                                                            bg-amber-50 border border-amber-200/60">
+                        <svg class="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        <span class="text-[10px] font-bold text-amber-700">Düzenleme modu — sektör güncellenecek</span>
+                    </div>
+
+                    <div class="flex gap-2 pt-1">
+                        <button type="submit" id="asset_sector_submit_btn"
+                                class="flex-1 bg-slate-900 text-white py-2.5 rounded-xl font-black text-[10px]
+                                       uppercase tracking-widest hover:bg-amber-600 transition
+                                       shadow-md shadow-slate-900/10 active:scale-[0.98]">
+                            Sektör Oluştur
+                        </button>
+                        <button type="button" id="asset_sector_cancel_btn" onclick="cancelAssetSectorEdit()"
+                                class="hidden px-4 bg-slate-100 text-slate-600 py-2.5 rounded-xl font-black
+                                       text-[10px] uppercase tracking-wider hover:bg-slate-200 transition">
+                            İptal
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="premium-card p-4 mt-3 bg-amber-50/60 border border-amber-100/70 shadow-sm">
+                <p class="text-[10px] font-black uppercase tracking-wider text-amber-700 mb-1.5">ℹ️ Sektör Nedir?</p>
+                <p class="text-[11px] text-slate-600 leading-relaxed">
+                    Portföy çeşitlendirme analizinde kullanılır. Her varlık bir sektöre bağlanabilir.
+                    Örnek: <strong>Teknoloji</strong>, <strong>Enerji</strong>, <strong>Finans</strong>.
+                </p>
+            </div>
+        </div>
+
+        <!-- Liste -->
+        <div class="lg:col-span-3">
+            <div class="premium-card bg-white/80 shadow-lg overflow-hidden">
+                <div class="flex items-center justify-between p-4 border-b border-slate-100 bg-gradient-to-r from-amber-50/40 to-transparent">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Sektör Planı</h3>
+                        <span class="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-[10px] font-black">
+                            {{ asset_sectors|length }}
+                        </span>
+                    </div>
+                </div>
+                <div class="cat-scroll">
+                    <table class="w-full data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Sektör</th>
+                                <th class="text-right">İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-xs text-slate-700">
+                            {% for s in asset_sectors %}
+                            <tr class="asset-sector-row transition" data-id="{{ s.id }}">
+                                <td><span class="text-slate-300 font-bold text-[11px]">{{ loop.index }}</span></td>
+                                <td>
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-amber-400 shadow-sm shadow-amber-200"></span>
+                                        <span class="font-extrabold text-slate-900">{{ s.name }}</span>
+                                    </div>
+                                </td>
+                                <td class="text-right">
+                                    <div class="flex items-center justify-end gap-1">
+                                        <button type="button" onclick="editAssetSector({{ s.id }}, '{{ s.name }}', this)"
+                                                class="action-btn bg-slate-100 text-slate-500 hover:bg-amber-600 hover:text-white" title="Düzenle">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                        </button>
+                                        <button type="button" onclick="confirmDeleteAssetSector({{ s.id }}, '{{ s.name }}')"
+                                                class="action-btn bg-rose-50 text-rose-500 hover:bg-rose-600 hover:text-white" title="Sil">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="3" class="empty-state">
+                                <p class="text-[11px] font-bold">Sektör tanımlanmadı</p>
+                            </td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PANEL 4 — GL KODU REFERANSI                                -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div data-panel="gl-reference" class="cat-panel">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+        <!-- Gelir -->
+        <div class="premium-card p-5 bg-white/80 border-l-4 border-emerald-500 shadow-lg">
+            <div class="flex items-center gap-2 mb-4">
+                <div class="bg-emerald-100 p-2 rounded-lg">
+                    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Gelir Hesapları</h3>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase">GLR-6xxx · 600 Hesap Grubu</p>
+                </div>
+            </div>
+            <div class="space-y-1.5">
+                {% set gelir_cats = cats | selectattr('type', 'equalto', 'Gelir') | list %}
+                {% for c in gelir_cats %}
+                <div class="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0">
+                    <span class="text-[11px] font-semibold text-slate-700">{{ c.name }}</span>
+                    <span class="gl-chip glr">{{ c.code or '—' }}</span>
+                </div>
+                {% else %}
+                <p class="text-[11px] text-slate-400 italic">Gelir kategorisi yok</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Gider -->
+        <div class="premium-card p-5 bg-white/80 border-l-4 border-rose-500 shadow-lg">
+            <div class="flex items-center gap-2 mb-4">
+                <div class="bg-rose-100 p-2 rounded-lg">
+                    <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Gider Hesapları</h3>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase">GDR-7xxx · 700 Hesap Grubu</p>
+                </div>
+            </div>
+            <div class="space-y-1.5 max-h-80 overflow-y-auto cat-scroll pr-1">
+                {% set gider_cats = cats | selectattr('type', 'equalto', 'Gider') | list %}
+                {% for c in gider_cats %}
+                <div class="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0">
+                    <span class="text-[11px] font-semibold text-slate-700">{{ c.name }}</span>
+                    <span class="gl-chip gdr">{{ c.code or '—' }}</span>
+                </div>
+                {% else %}
+                <p class="text-[11px] text-slate-400 italic">Gider kategorisi yok</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Yatırım -->
+        <div class="premium-card p-5 bg-white/80 border-l-4 border-blue-500 shadow-lg">
+            <div class="flex items-center gap-2 mb-4">
+                <div class="bg-blue-100 p-2 rounded-lg">
+                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Yatırım Hesapları</h3>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase">YTR-1xxx · 100 Varlık Grubu</p>
+                </div>
+            </div>
+            <div class="space-y-1.5">
+                {% set yatirim_cats = cats | selectattr('type', 'equalto', 'Yatırım') | list %}
+                {% for c in yatirim_cats %}
+                <div class="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0">
+                    <span class="text-[11px] font-semibold text-slate-700">{{ c.name }}</span>
+                    <span class="gl-chip ytr">{{ c.code or '—' }}</span>
+                </div>
+                {% else %}
+                <p class="text-[11px] text-slate-400 italic">Yatırım kategorisi yok</p>
+                {% endfor %}
+            </div>
+            <!-- Standart not -->
+            <div class="mt-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                <p class="text-[9.5px] text-blue-700 font-semibold leading-relaxed">
+                    ⚠️ Yatırım transferleri muhasebede <strong>Gelir/Gider değil</strong>, Bilanço Varlık hesabıdır.
+                    YTR-1xxx serisi bu nedenle 100 (Dönen Varlıklar) hesap grubunu kullanır.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div><!-- /max-w-6xl -->
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- JAVASCRIPT                                                  -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<script>
+// ── Tab sistemi ───────────────────────────────────────────────────────────
+document.querySelectorAll('.cat-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        const target = tab.dataset.tab;
+        document.querySelectorAll('.cat-tab').forEach(t => t.setAttribute('aria-selected', 'false'));
+        document.querySelectorAll('.cat-panel').forEach(p => p.classList.remove('active'));
+        tab.setAttribute('aria-selected', 'true');
+        document.querySelector(`[data-panel="${target}"]`).classList.add('active');
+    });
+});
+
+// ── Tür seçici (radio buton görsel) ──────────────────────────────────────
+function updateTypeVisual() {
+    document.querySelectorAll('input[name="type"]').forEach(radio => {
+        const div = radio.nextElementSibling;
+        if (radio.checked) {
+            div.classList.add('border-current', 'shadow-sm');
+        } else {
+            div.classList.remove('border-current', 'shadow-sm');
+        }
+    });
+}
+document.querySelectorAll('input[name="type"]').forEach(radio => {
+    radio.addEventListener('change', updateTypeVisual);
+});
+updateTypeVisual();
+
+// ── Kategori arama ────────────────────────────────────────────────────────
+function searchCats(q) {
+    const rows = document.querySelectorAll('#cats_tbody .cat-row');
+    const lq = q.toLowerCase();
+    rows.forEach(row => {
+        const name = row.dataset.name || '';
+        row.style.display = name.includes(lq) ? '' : 'none';
+    });
+}
+
+// ── Kategori filtrele (Gelir/Gider/Yatırım) ──────────────────────────────
+let activeFilter = 'all';
+function filterCats(type) {
+    activeFilter = type;
+    const rows = document.querySelectorAll('#cats_tbody .cat-row');
+    rows.forEach(row => {
+        row.style.display = (type === 'all' || row.dataset.type === type) ? '' : 'none';
+    });
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        const active = btn.dataset.filter === type;
+        btn.classList.toggle('bg-slate-900', active);
+        btn.classList.toggle('text-white', active);
+        btn.classList.toggle('bg-slate-100', !active);
+        btn.classList.toggle('text-slate-600', !active);
+    });
+}
+
+// ── Kategori Düzenle ──────────────────────────────────────────────────────
+let currentCatRow = null;
+
+function editCategory(id, name, type, code, budgetLimit, version, btn) {
+    if (currentCatRow) currentCatRow.classList.remove('edit-mode-active');
+    const row = btn.closest('tr');
+    row.classList.add('edit-mode-active');
+    currentCatRow = row;
+
+    document.getElementById('cat_id').value = id;
+    document.getElementById('cat_name').value = name;
+    document.getElementById('cat_code').value = code || '';
+    document.getElementById('cat_budget_limit').value = budgetLimit || '';
+    document.getElementById('cat_version').value = version || 1;
+    document.getElementById('cat_action').value = 'update_cat';
+    document.getElementById('cat_form').action = '/update_category/' + id;
+
+    // Radio güncelle
+    document.querySelectorAll('input[name="type"]').forEach(r => {
+        r.checked = (r.value === type);
+    });
+    updateTypeVisual();
+
+    document.getElementById('cat_form_title').textContent = 'Kategoriyi Düzenle';
+    document.getElementById('cat_edit_hint').classList.remove('hidden');
+    const btn2 = document.getElementById('cat_submit_btn');
+    btn2.textContent = 'KATEGORİYİ GÜNCELLE';
+    btn2.classList.add('bg-amber-600'); btn2.classList.remove('hover:bg-indigo-600');
+    document.getElementById('cat_cancel_btn').classList.remove('hidden');
+
+    // Form'a scroll
+    document.getElementById('cat_form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function cancelCatEdit() {
+    if (currentCatRow) { currentCatRow.classList.remove('edit-mode-active'); currentCatRow = null; }
+    const form = document.getElementById('cat_form');
+    form.reset();
+    ['cat_id','cat_code','cat_budget_limit','cat_version'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('cat_action').value = 'add_cat';
+    form.action = '/categories';
+    document.getElementById('cat_form_title').textContent = 'Yeni Kategori';
+    document.getElementById('cat_edit_hint').classList.add('hidden');
+    const btn = document.getElementById('cat_submit_btn');
+    btn.textContent = 'Kategori Oluştur';
+    btn.classList.remove('bg-amber-600'); btn.classList.add('hover:bg-indigo-600');
+    document.getElementById('cat_cancel_btn').classList.add('hidden');
+    updateTypeVisual();
+}
+
+function confirmDeleteCategory(id, name) {
+    const execute = () => {
+        fetch('/delete_category/' + id, {
+            method: 'DELETE',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json' }
+        }).then(res => {
+            if (res.ok) window.location.reload();
+            else window.location.href = '/delete_category/' + id;
+        }).catch(() => window.location.href = '/delete_category/' + id);
+    };
+    if (typeof window.showGlobalConfirm === 'function') {
+        window.showGlobalConfirm('Kategori Sil', `"${name}" kategorisini silmek istediğinizden emin misiniz?`, execute, true);
+    } else if (confirm(`"${name}" kategorisini silmek istiyor musunuz?`)) { execute(); }
+}
+
+// ── Varlık Sınıfı ─────────────────────────────────────────────────────────
+let currentAssetTypeRow = null;
+
+function editAssetType(id, name, btn) {
+    if (currentAssetTypeRow) currentAssetTypeRow.classList.remove('edit-mode-active');
+    const row = btn.closest('tr');
+    row.classList.add('edit-mode-active');
+    currentAssetTypeRow = row;
+
+    document.getElementById('asset_type_id').value = id;
+    document.getElementById('asset_type_name').value = name;
+    document.getElementById('asset_type_action').value = 'update_asset_type';
+    document.getElementById('asset_type_form').action = '/update_asset_type/' + id;
+
+    document.getElementById('asset_type_form_title').textContent = 'Varlık Sınıfını Düzenle';
+    document.getElementById('asset_type_edit_hint').classList.remove('hidden');
+    const btn2 = document.getElementById('asset_type_submit_btn');
+    btn2.textContent = 'SINIFI GÜNCELLE';
+    btn2.classList.add('bg-amber-600'); btn2.classList.remove('hover:bg-emerald-600');
+    document.getElementById('asset_type_cancel_btn').classList.remove('hidden');
+}
+
+function cancelAssetTypeEdit() {
+    if (currentAssetTypeRow) { currentAssetTypeRow.classList.remove('edit-mode-active'); currentAssetTypeRow = null; }
+    const form = document.getElementById('asset_type_form');
+    form.reset();
+    document.getElementById('asset_type_id').value = '';
+    document.getElementById('asset_type_action').value = 'add_asset_type';
+    form.action = '/categories';
+    document.getElementById('asset_type_form_title').textContent = 'Yeni Varlık Sınıfı';
+    document.getElementById('asset_type_edit_hint').classList.add('hidden');
+    const btn = document.getElementById('asset_type_submit_btn');
+    btn.textContent = 'Sınıf Oluştur';
+    btn.classList.remove('bg-amber-600'); btn.classList.add('hover:bg-emerald-600');
+    document.getElementById('asset_type_cancel_btn').classList.add('hidden');
+}
+
+function confirmDeleteAssetType(id, name) {
+    if (typeof window.showGlobalConfirm === 'function') {
+        window.showGlobalConfirm('Varlık Sınıfı Sil', `"${name}" sınıfını silmek istediğinizden emin misiniz?`, () => window.location.href='/delete_asset_type/' + id, true);
+    } else if (confirm(`"${name}" sınıfını silmek istiyor musunuz?`)) { window.location.href = '/delete_asset_type/' + id; }
+}
+
+// ── Varlık Sektörü ─────────────────────────────────────────────────────────
+let currentAssetSectorRow = null;
+
+function editAssetSector(id, name, btn) {
+    if (currentAssetSectorRow) currentAssetSectorRow.classList.remove('edit-mode-active');
+    const row = btn.closest('tr');
+    row.classList.add('edit-mode-active');
+    currentAssetSectorRow = row;
+
+    document.getElementById('asset_sector_id').value = id;
+    document.getElementById('asset_sector_name').value = name;
+    document.getElementById('asset_sector_action').value = 'update_asset_sector';
+    document.getElementById('asset_sector_form').action = '/update_asset_sector/' + id;
+
+    document.getElementById('asset_sector_form_title').textContent = 'Sektörü Düzenle';
+    document.getElementById('asset_sector_edit_hint').classList.remove('hidden');
+    const btn2 = document.getElementById('asset_sector_submit_btn');
+    btn2.textContent = 'SEKTÖRÜ GÜNCELLE';
+    btn2.classList.add('bg-amber-600'); btn2.classList.remove('hover:bg-amber-600');
+    document.getElementById('asset_sector_cancel_btn').classList.remove('hidden');
+}
+
+function cancelAssetSectorEdit() {
+    if (currentAssetSectorRow) { currentAssetSectorRow.classList.remove('edit-mode-active'); currentAssetSectorRow = null; }
+    const form = document.getElementById('asset_sector_form');
+    form.reset();
+    document.getElementById('asset_sector_id').value = '';
+    document.getElementById('asset_sector_action').value = 'add_asset_sector';
+    form.action = '/categories';
+    document.getElementById('asset_sector_form_title').textContent = 'Yeni Sektör';
+    document.getElementById('asset_sector_edit_hint').classList.add('hidden');
+    const btn = document.getElementById('asset_sector_submit_btn');
+    btn.textContent = 'Sektör Oluştur';
+    btn.classList.remove('bg-amber-600');
+    document.getElementById('asset_sector_cancel_btn').classList.add('hidden');
+}
+
+function confirmDeleteAssetSector(id, name) {
+    if (typeof window.showGlobalConfirm === 'function') {
+        window.showGlobalConfirm('Sektör Sil', `"${name}" sektörünü silmek istediğinizden emin misiniz?`, () => window.location.href='/delete_asset_sector/' + id, true);
+    } else if (confirm(`"${name}" sektörünü silmek istiyor musunuz?`)) { window.location.href = '/delete_asset_sector/' + id; }
+}
+</script>
+{% endblock %}

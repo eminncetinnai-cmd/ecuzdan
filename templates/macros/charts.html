@@ -1,0 +1,33 @@
+{# Chart Component Macros #}
+
+{% macro chart_container(chart_id, height=300) %}
+<div class="chart-container" style="height: {{ height }}px;">
+    <canvas id="{{ chart_id }}"></canvas>
+</div>
+{% endmacro %}
+
+{% macro chart_wrapper(title, chart_id, height=300, extra_classes='') %}
+<div class="premium-card p-8 bg-white/80 {{ extra_classes }}">
+    {% if title %}
+    <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-6">{{ title }}</h4>
+    {% endif %}
+    <div class="chart-container" style="height: {{ height }}px;">
+        <canvas id="{{ chart_id }}"></canvas>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro chart_grid(chart_configs, columns=2) %}
+<div class="grid grid-cols-1 lg:grid-cols-{{ columns }} gap-8 mb-10">
+    {% for config in chart_configs %}
+    <div class="premium-card p-8 bg-white/80">
+        {% if config.title %}
+        <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-6">{{ config.title }}</h4>
+        {% endif %}
+        <div class="chart-container" style="height: {{ config.height or 300 }}px;">
+            <canvas id="{{ config.id }}"></canvas>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endmacro %}

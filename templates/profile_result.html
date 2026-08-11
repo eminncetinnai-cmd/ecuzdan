@@ -1,0 +1,265 @@
+{% extends "layout.html" %}
+
+{% block title %}Profil Sonuçları - E-Cüzdan{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Profil Sonuçları</h1>
+        <p>Yatırımcı profiliniz ve öneriler</p>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Radar Chart</h3>
+                </div>
+                <div class="card-body">
+                    <canvas id="radarChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Profil Özeti</h3>
+                </div>
+                <div class="card-body">
+                    <div class="profile-summary">
+                        <h4>Nihai Risk: {{ profile.final_risk_level }}</h4>
+                        <p><strong>Skor:</strong> {{ "%.1f"|format(profile.base_risk_score) }}/100</p>
+                        <p><strong>Güven Skoru:</strong> %{{ "%.1f"|format(profile.confidence_score) }}</p>
+                        
+                        {% if profile.risk_warnings %}
+                        <div class="alert alert-warning mt-3">
+                            <strong>Uyarılar:</strong>
+                            <ul>
+                                {% for warning in profile.risk_warnings %}
+                                <li>{{ warning }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mt-3">
+                            <p><strong>Test Tarihi:</strong> {{ profile.test_date.strftime('%d.%m.%Y %H:%M') }}</p>
+                            <p><strong>Geçerlilik:</strong> {{ profile.validity_date.strftime('%d.%m.%Y') if profile.validity_date else 'Belirsiz' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Güçlü Yönler</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="strengths">
+                        {% if profile.literacy_score >= 70 %}
+                        <li>✓ Finansal okuryazarlık</li>
+                        {% endif %}
+                        {% if profile.behavioral_score >= 70 %}
+                        <li>✓ Davranışal kontrol</li>
+                        {% endif %}
+                        {% if profile.capacity_score >= 70 %}
+                        <li>✓ Risk kapasitesi</li>
+                        {% endif %}
+                        {% if profile.tolerance_score >= 70 %}
+                        <li>✓ Risk toleransı</li>
+                        {% endif %}
+                        {% if profile.experience_score >= 70 %}
+                        <li>✓ Yatırım deneyimi</li>
+                        {% endif %}
+                        {% if profile.literacy_score < 70 and profile.behavioral_score < 70 and profile.capacity_score < 70 and profile.tolerance_score < 70 and profile.experience_score < 70 %}
+                        <li>Henüz belirgin güçlü yön yok</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Geliştirme Alanları</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="weaknesses">
+                        {% if profile.literacy_score < 50 %}
+                        <li>✗ Finansal okuryazarlık</li>
+                        {% endif %}
+                        {% if profile.behavioral_score < 50 %}
+                        <li>✗ Davranışal kontrol</li>
+                        {% endif %}
+                        {% if profile.capacity_score < 50 %}
+                        <li>✗ Risk kapasitesi</li>
+                        {% endif %}
+                        {% if profile.tolerance_score < 50 %}
+                        <li>✗ Risk toleransı</li>
+                        {% endif %}
+                        {% if profile.experience_score < 50 %}
+                        <li>✗ Yatırım deneyimi</li>
+                        {% endif %}
+                        {% if profile.literacy_score >= 50 and profile.behavioral_score >= 50 and profile.capacity_score >= 50 and profile.tolerance_score >= 50 and profile.experience_score >= 50 %}
+                        <li>Tüm alanlarda iyi durumda</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mt-4">
+        <div class="card-header">
+            <h3>Portföy Dağılım Önerisi</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="allocation-item">
+                        <h4>Nakit</h4>
+                        <div class="progress">
+                            <div class="progress-bar bg-info" style="width: {{ portfolio_allocation.cash }}%">
+                                %{{ portfolio_allocation.cash }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="allocation-item">
+                        <h4>Tahvil</h4>
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" style="width: {{ portfolio_allocation.bonds }}%">
+                                %{{ portfolio_allocation.bonds }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="allocation-item">
+                        <h4>Hisse</h4>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" style="width: {{ portfolio_allocation.stocks }}%">
+                                %{{ portfolio_allocation.stocks }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mt-4">
+        <div class="card-header">
+            <h3>Eğitim Önerileri</h3>
+        </div>
+        <div class="card-body">
+            <ul class="education-recommendations">
+                {% if profile.literacy_score < 60 %}
+                <li>📚 Finansal okuryazarlık eğitimi</li>
+                <li>📚 Temel yatırım kavramları kursu</li>
+                {% endif %}
+                {% if profile.behavioral_score < 60 %}
+                <li>📚 Davranışal finans eğitimi</li>
+                <li>📚 Psikolojik yatırımcılık kitabı</li>
+                {% endif %}
+                {% if profile.experience_score < 60 %}
+                <li>📚 Yatırım fonları eğitimi</li>
+                <li>📚 Portföy yönetimi kursu</li>
+                {% endif %}
+                {% if profile.capacity_score < 60 %}
+                <li>📚 Bütçe yönetimi eğitimi</li>
+                <li>📚 Acil durum fonu planlama</li>
+                {% endif %}
+                {% if profile.literacy_score >= 60 and profile.behavioral_score >= 60 and profile.experience_score >= 60 and profile.capacity_score >= 60 %}
+                <li>✅ Mevcut bilgi seviyeniz iyi, ileri seviye eğitimler önerebiliriz</li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+    
+    <div class="mt-4">
+        <a href="/profile" class="btn btn-primary">Profile Dön</a>
+        <a href="/profile/start" class="btn btn-outline-secondary">Yeniden Test Et</a>
+    </div>
+</div>
+
+<style>
+.profile-summary {
+    background: #f8fafc;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.strengths, .weaknesses, .education-recommendations {
+    list-style: none;
+    padding: 0;
+}
+
+.strengths li, .weaknesses li, .education-recommendations li {
+    padding: 8px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.allocation-item {
+    margin-bottom: 15px;
+}
+
+.allocation-item h4 {
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('radarChart').getContext('2d');
+    
+    new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: ['Finansal Okuryazarlık', 'Risk Kapasitesi', 'Risk Toleransı', 'Davranışal Finans', 'Yatırım Deneyimi'],
+            datasets: [{
+                label: 'Profil Skorları',
+                data: [
+                    {{ profile.literacy_score }},
+                    {{ profile.capacity_score }},
+                    {{ profile.tolerance_score }},
+                    {{ profile.behavioral_score }},
+                    {{ profile.experience_score }}
+                ],
+                backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 2,
+                pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgba(59, 130, 246, 1)'
+            }]
+        },
+        options: {
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        stepSize: 20
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

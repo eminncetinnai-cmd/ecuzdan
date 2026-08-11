@@ -1,0 +1,209 @@
+{% extends "layout.html" %}
+
+{% block title %}Admin Dashboard - E-Cüzdan{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Admin Dashboard</h1>
+        <p>Sistem istatistikleri ve yönetim paneli</p>
+    </div>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-info">
+                <h3>{{ stats.total_users }}</h3>
+                <p>Toplam Kullanıcı</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">🏢</div>
+            <div class="stat-info">
+                <h3>{{ stats.total_tenants }}</h3>
+                <p>Toplam Tenant</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-info">
+                <h3>{{ stats.active_tenants }}</h3>
+                <p>Aktif Tenant</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">💰</div>
+            <div class="stat-info">
+                <h3>{{ stats.total_transactions }}</h3>
+                <p>Toplam İşlem</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dashboard-actions">
+        <div class="action-card">
+            <h3>Kullanıcı Yönetimi</h3>
+            <p>Sistem kullanıcılarını görüntüleyin ve yönetin</p>
+            <a href="/admin/users" class="btn btn-primary">Kullanıcılar</a>
+        </div>
+        
+        <div class="action-card">
+            <h3>Tenant Yönetimi</h3>
+            <p>Tenant'ları görüntüleyin ve yönetin</p>
+            <a href="/admin/tenants" class="btn btn-primary">Tenant'lar</a>
+        </div>
+        
+        {% if stats.is_superadmin %}
+        <div class="action-card">
+            <h3>Sistem Ayarları</h3>
+            <p>Sistem genel ayarlarını yönetin</p>
+            <a href="/settings" class="btn btn-primary">Ayarlar</a>
+        </div>
+        {% endif %}
+        
+        <div class="action-card">
+            <h3>Dashboard</h3>
+            <p>Ana finance dashboard'ına dönün</p>
+            <a href="/" class="btn btn-secondary">Ana Sayfa</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.stat-icon {
+    font-size: 40px;
+}
+
+.stat-info h3 {
+    margin: 0;
+    font-size: 32px;
+    color: #333;
+}
+
+.stat-info p {
+    margin: 5px 0 0 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.dashboard-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.action-card {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.action-card h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.action-card p {
+    margin: 0 0 20px 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #545b62;
+}
+
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.page-header {
+    margin-bottom: 30px;
+}
+
+.page-header h1 {
+    margin: 0;
+    color: #333;
+}
+
+.page-header p {
+    margin: 5px 0 0 0;
+    color: #666;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% macro date_field(name, value='', form='', class='', required=true, id='') %}
+<div class="date-field-wrap relative w-full">
+    <input type="text" name="{{ name }}" {% if id %}id="{{ id }}"{% endif %} {% if form %}form="{{ form }}"{% endif %}
+        class="date-tr w-full pr-10 {{ class }}"
+        placeholder="gg/aa/yyyy"
+        inputmode="numeric"
+        autocomplete="off"
+        maxlength="10"
+        title="Gün/Ay/Yıl — yazın veya takvim simgesine tıklayın"
+        value="{% if value %}{{ value|format_date }}{% endif %}"
+        {% if required %}required{% endif %}>
+    <button type="button" class="date-picker-btn absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition"
+        tabindex="-1" aria-label="Takvimden tarih seç">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+        </svg>
+    </button>
+</div>
+{% endmacro %}

@@ -1,0 +1,1158 @@
+{% extends "layout.html" %}
+{% from 'macros/forms.html' import date_field %}
+{% block vendor_head %}
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/tr.js"></script>
+{% endblock %}
+{% block content %}
+<div id="assets-management-page" 
+     data-edit-id="{{ edit_id if edit_id else '' }}"
+     data-edit-asset-data="{{ edit_asset_data | tojson if edit_asset_data else '{}' }}">
+<style>
+    .asset-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .asset-card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px -15px rgba(0, 0, 0, 0.1); }
+    .form-section {
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        border-radius: 0.75rem;
+        padding: 0.75rem;
+        margin-bottom: 0.75rem;
+        background: rgba(255, 255, 255, 0.5);
+    }
+    .form-section-title {
+        font-size: 9px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #64748b;
+        margin-bottom: 0.5rem;
+    }
+    .readonly-field { background-color: rgba(16, 185, 129, 0.06); cursor: not-allowed; }
+    #asset_form.edit-mode #sync_cash_wrap { display: none; }
+    #asset_form.edit-mode #purchase_cost_wrap input { background-color: rgba(0,0,0,0.03); }
+
+    /* Edit Modal Styles */
+    .edit-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+    }
+    .edit-modal.active {
+        display: flex;
+    }
+    .edit-modal-backdrop {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+    }
+    .edit-modal-content {
+        position: relative;
+        z-index: 10;
+        width: 90%;
+        max-width: 800px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    .edit-modal-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        overflow: hidden;
+    }
+    .edit-modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+        background: linear-gradient(to right, #f0fdf4, #ffffff);
+    }
+    .edit-modal-body {
+        padding: 1.5rem;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    .edit-modal-body > div.full-width {
+        grid-column: span 2;
+    }
+    .edit-modal-input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #1e293b;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .edit-modal-input:focus {
+        border-color: #10b981;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+    .edit-modal-input[readonly] {
+        background-color: #f1f5f9;
+        cursor: not-allowed;
+    }
+    @media (max-width: 640px) {
+        .edit-modal-body {
+            grid-template-columns: 1fr;
+        }
+        .edit-modal-body > div.full-width {
+            grid-column: span 1;
+        }
+        .edit-modal-content {
+            width: 95%;
+            max-height: 95vh;
+        }
+    }
+</style>
+
+<div class="max-w-6xl mx-auto">
+    <div class="mb-8">
+        <h2 class="text-4xl font-black text-slate-900 tracking-tighter uppercase leading-none bg-gradient-to-r from-slate-900 via-emerald-700 to-slate-900 bg-clip-text text-transparent">Profesyonel Varlık Yönetimi</h2>
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Tek kayıt mantığı — ekle, listeden düzenle veya sil; detaylı analiz için izleme sayfasını kullanın</p>
+    </div>
+
+    <div class="space-y-6">
+        <!-- FORM ON TOP -->
+        <div class="asset-card premium-card p-6 bg-white/80 border-l-4 border-emerald-500 shadow-lg">
+            <div class="flex items-center mb-5">
+                <div class="bg-emerald-100 p-3 rounded-xl mr-4">
+                    <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6v12m6-6H6"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight" id="form_title">Yeni Varlık</h3>
+                    <p class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider" id="form_subtitle">Tek pozisyon, 1 kayıt</p>
+                </div>
+            </div>
+
+            <form id="asset_form" action="/new_asset" method="POST" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="form-section md:col-span-2 lg:col-span-3">
+                    <div class="form-section-title">Kimlik</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Varlık Türü</label>
+                            <select name="type" class="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none text-xs font-black text-emerald-700" required>
+                                {% for t in asset_types %}<option value="{{ t.name }}">{{ t.name }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Varlık Adı</label>
+                            <input type="text" name="name" placeholder="Örn: Garanti BES" class="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 text-xs focus:ring-2 focus:ring-emerald-500 outline-none font-bold" required>
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Sembol</label>
+                            <input type="text" name="symbol" placeholder="GARAN" class="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 text-xs focus:ring-2 focus:ring-emerald-500 outline-none font-bold" required>
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Para Birimi</label>
+                            <select name="currency" class="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 text-xs font-bold focus:ring-2 focus:ring-emerald-500 outline-none">
+                                <option value="TRY">TRY</option>
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="GBP">GBP</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2 lg:col-span-4">
+                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Açıklama</label>
+                            <input type="text" name="description" placeholder="Kısa tanım" class="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section md:col-span-2 lg:col-span-3">
+                    <div class="form-section-title">Değerleme</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Miktar</label>
+                            <input type="number" step="0.01" name="quantity" id="quantity" value="1" class="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 font-bold text-xs focus:ring-2 focus:ring-emerald-500 outline-none" required oninput="calculateValue()">
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Birim Fiyat (₺)</label>
+                            <input type="number" step="0.01" name="unit_price" id="unit_price" placeholder="0.00" class="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 font-bold text-xs focus:ring-2 focus:ring-emerald-500 outline-none" required oninput="calculateValue()">
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Güncel Değer</label>
+                            <input type="number" step="0.01" name="value" id="value" class="w-full p-2.5 border border-slate-200 rounded-xl readonly-field font-black text-lg text-emerald-700" readonly required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section md:col-span-2 lg:col-span-3">
+                    <div class="form-section-title">Alış Bilgisi</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Alış Tarihi</label>
+                            {{ date_field('purchase_date', today_display, '', 'w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none text-xs font-bold text-slate-800') }}
+                        </div>
+                        <div id="purchase_cost_wrap">
+                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Alış Maliyeti (₺)</label>
+                            <input type="number" step="0.01" name="purchase_cost" id="purchase_cost" placeholder="0.00" class="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 font-bold text-xs focus:ring-2 focus:ring-emerald-500 outline-none" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section md:col-span-2 lg:col-span-3">
+                    <div class="form-section-title">Risk &amp; Sektör</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Risk</label>
+                            <select name="risk_level" class="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 text-xs font-bold focus:ring-2 focus:ring-emerald-500 outline-none">
+                                <option value="Düşük">Düşük</option>
+                                <option value="Orta" selected>Orta</option>
+                                <option value="Yüksek">Yüksek</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Likidite</label>
+                            <select name="liquidity" class="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 text-xs font-bold focus:ring-2 focus:ring-emerald-500 outline-none">
+                                <option value="Likit" selected>Likit</option>
+                                <option value="Yarı-Likit">Yarı-Likit</option>
+                                <option value="İ-Likit">İ-Likit</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Sektör</label>
+                            <select name="sector_id" class="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 text-xs font-bold focus:ring-2 focus:ring-emerald-500 outline-none" required>
+                                {% for s in asset_sectors %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Aylık Kira (₺)</label>
+                            <input type="number" step="0.01" name="monthly_rent" placeholder="Gayrimenkul için" class="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 text-xs font-bold focus:ring-2 focus:ring-emerald-500 outline-none text-slate-700">
+                        </div>
+                        <div class="md:col-span-2 lg:col-span-4">
+                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Not</label>
+                            <input type="text" name="notes" placeholder="İsteğe bağlı" class="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 text-xs focus:ring-2 focus:ring-emerald-500 outline-none italic text-slate-500">
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <p id="edit_hint" class="hidden text-[9px] font-bold text-amber-600 uppercase tracking-wide bg-amber-50 p-2 rounded-lg border border-amber-100 md:col-span-2 lg:col-span-3">
+                    Düzenleme modu: alış maliyeti korunur, değer değişikliği deftere işlenir.
+                </p>
+
+                <div class="flex space-x-2 md:col-span-2 lg:col-span-3">
+                    <button type="submit" id="asset_submit_btn" class="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-black p-4 rounded-xl shadow-lg uppercase text-[10px] tracking-wider hover:shadow-xl transition transform hover:scale-[1.02]">
+                        Varlığı Kaydet
+                    </button>
+                    <button type="button" id="asset_cancel_btn" class="hidden px-4 bg-slate-200 text-slate-700 p-4 rounded-xl font-black text-[10px] uppercase tracking-wider hover:bg-slate-300 transition shadow-lg" onclick="cancelEdit()">İptal</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- TABLE ON BOTTOM -->
+        <div class="asset-card premium-card p-6 bg-white/80 shadow-lg">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">Portföy Kayıtları</h3>
+                    <a href="/assets_view" class="text-[10px] font-bold text-indigo-600 hover:underline">Varlık izleme &amp; analiz →</a>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-5 p-4 bg-slate-50/80 rounded-2xl border border-slate-100">
+                    <div class="lg:col-span-2">
+                        <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">Ara</label>
+                        <input type="text" id="assetSearch" placeholder="Varlık ara..." class="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white focus:ring-2 focus:ring-emerald-500 outline-none font-semibold">
+                    </div>
+                    <div>
+                        <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">Tür</label>
+                        <select id="assetFilterType" class="w-full p-2.5 border border-slate-200 rounded-xl text-[10px] font-bold bg-white outline-none">
+                            <option value="">Tümü</option>
+                            {% for t in asset_types %}<option value="{{ t.name }}">{{ t.name }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">Risk</label>
+                        <select id="assetFilterRisk" class="w-full p-2.5 border border-slate-200 rounded-xl text-[10px] font-bold bg-white outline-none">
+                            <option value="">Tümü</option>
+                            <option value="Düşük">Düşük</option>
+                            <option value="Orta">Orta</option>
+                            <option value="Yüksek">Yüksek</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">Likidite</label>
+                        <select id="assetFilterLiquidity" class="w-full p-2.5 border border-slate-200 rounded-xl text-[10px] font-bold bg-white outline-none">
+                            <option value="">Tümü</option>
+                            <option value="Likit">Likit</option>
+                            <option value="Yarı-Likit">Yarı-Likit</option>
+                            <option value="İlik">İlik</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table id="assetTable" class="w-full text-left text-[11px] display">
+                        <thead class="text-slate-400 uppercase text-[9px] font-bold border-b border-slate-200">
+                            <tr>
+                                <th class="py-3 px-2">Tür</th>
+                                <th>Varlık</th>
+                                <th>Değer</th>
+                                <th>Maliyet</th>
+                                <th>ROI</th>
+                                <th>Risk</th>
+                                <th class="text-right px-2">İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody class="font-semibold text-slate-700">
+                            {% if assets_page %}
+                            {% for a in assets_page.items %}
+                            <tr class="asset-row border-b border-slate-100 hover:bg-slate-50/40 transition"
+                                data-type="{{ a.type }}"
+                                data-risk="{{ a.risk_level }}"
+                                data-liquidity="{{ a.liquidity }}"
+                                data-search="{{ ((a.name or '') ~ ' ' ~ (a.symbol or '') ~ ' ' ~ (a.description or ''))|lower }}"
+                                data-asset='{{ {
+                                    "id": a.id,
+                                    "type": a.type,
+                                    "name": a.name,
+                                    "symbol": a.symbol or "",
+                                    "currency": a.currency or "TRY",
+                                    "description": a.description or "",
+                                    "quantity": a.quantity,
+                                    "unit_price": a.unit_price,
+                                    "value": a.value,
+                                    "purchase_date": a.purchase_date|format_date if a.purchase_date else "",
+                                    "purchase_cost": a.purchase_cost or 0,
+                                    "risk_level": a.risk_level,
+                                    "liquidity": a.liquidity,
+                                    "sector_id": a.sector_id,
+                                    "notes": a.notes or ""
+                                }|tojson }}'>
+                                <td class="py-2 px-2 text-[9px] font-bold text-slate-500 uppercase">{{ a.type }}</td>
+                                <td class="py-2">
+                                    <span class="font-black text-slate-800 text-[10px]">{{ a.name }}</span>
+                                    <span class="block text-[9px] text-slate-400">{{ a.symbol or '—' }}</span>
+                                </td>
+                                <td class="py-2 font-black text-emerald-600 text-[11px]" data-order="{{ a.value }}">{{ a.value|format_money }} ₺</td>
+                                <td class="py-2 text-slate-500 text-[11px]" data-order="{{ a.purchase_cost or 0 }}">{{ (a.purchase_cost or 0)|format_money }} ₺</td>
+                                <td class="py-2 font-black {% if a.roi >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %} text-[11px]" data-order="{{ a.roi }}">%{{ a.roi|round(1) }}</td>
+                                <td class="py-2">
+                                    <span class="px-2 py-0.5 rounded-lg font-bold text-[9px] {% if a.risk_level == 'Düşük' %}bg-emerald-100 text-emerald-700{% elif a.risk_level == 'Yüksek' %}bg-rose-100 text-rose-700{% else %}bg-amber-100 text-amber-700{% endif %}">{{ a.risk_level }}</span>
+                                </td>
+                                <td class="text-right py-2 px-2 whitespace-nowrap">
+                                    <button type="button" onclick="openSellAssetModal(this)"
+                                            data-id="{{ a.id }}"
+                                            data-type="{{ a.type }}"
+                                            data-name="{{ a.name }}"
+                                            data-symbol="{{ a.symbol or '' }}"
+                                            data-quantity="{{ a.quantity }}"
+                                            data-unit-price="{{ a.unit_price }}"
+                                            data-value="{{ a.value }}"
+                                            data-purchase-cost="{{ a.purchase_cost or 0 }}"
+                                            class="text-emerald-500 font-bold text-[9px] hover:underline mr-2 bg-transparent border-none cursor-pointer">SAT</button>
+                                    <button type="button" onclick="openEditAssetModal(this)"
+                                            data-id="{{ a.id }}"
+                                            data-type="{{ a.type }}"
+                                            data-name="{{ a.name }}"
+                                            data-symbol="{{ a.symbol or '' }}"
+                                            data-currency="{{ a.currency or 'TRY' }}"
+                                            data-description="{{ a.description or '' }}"
+                                            data-quantity="{{ a.quantity }}"
+                                            data-unit-price="{{ a.unit_price }}"
+                                            data-value="{{ a.value }}"
+                                            data-purchase-date="{{ a.purchase_date|format_date if a.purchase_date else '' }}"
+                                            data-purchase-cost="{{ a.purchase_cost or 0 }}"
+                                            data-risk-level="{{ a.risk_level }}"
+                                            data-liquidity="{{ a.liquidity }}"
+                                            data-sector-id="{{ a.sector_id }}"
+                                            data-monthly-rent="{{ a.monthly_rent or '' }}"
+                                            data-notes="{{ a.notes or '' }}"
+                                            class="text-indigo-500 font-bold text-[9px] hover:underline mr-2 bg-transparent border-none cursor-pointer">DÜZENLE</button>
+                                    <button type="button" onclick="confirmDeleteAsset('{{ a.id }}', '{{ a.name|e }}')" class="text-rose-500 font-bold text-[9px] hover:underline">SİL</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Asset Modal -->
+<div id="editAssetModal" class="edit-modal asset-modal hidden">
+    <div class="edit-modal-backdrop" onclick="closeAssetModal()"></div>
+    <div class="edit-modal-content">
+        <div class="edit-modal-card">
+            <div class="edit-modal-header">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center;">
+                        <div style="background: #d1fae5; padding: 0.5rem; border-radius: 0.75rem; margin-right: 0.75rem;">
+                            <svg style="width: 1.25rem; height: 1.25rem; color: #059669;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 1.125rem; font-weight: 900; color: #1e293b; text-transform: uppercase; letter-spacing: -0.025em;">Varlığı Düzenle</h3>
+                            <p style="font-size: 0.625rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Varlık detaylarını güncelle</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="closeAssetModal()" style="color: #94a3b8; background: none; border: none; cursor: pointer; transition: color 0.2s;">
+                        <svg style="width: 1.5rem; height: 1.5rem;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <form id="editAssetModalForm" class="edit-modal-body">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="asset_id" id="modalAssetId">
+                <input type="hidden" name="preserve_purchase_cost" value="true">
+
+                <div class="full-width">
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Varlık Türü</label>
+                    <select name="type" id="modalType" class="edit-modal-input">
+                        {% for t in asset_types %}<option value="{{ t.name }}">{{ t.name }}</option>{% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Varlık Adı</label>
+                    <input type="text" name="name" id="modalName" class="edit-modal-input">
+                </div>
+
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Sembol</label>
+                    <input type="text" name="symbol" id="modalSymbol" class="edit-modal-input">
+                </div>
+
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Para Birimi</label>
+                    <select name="currency" id="modalCurrency" class="edit-modal-input">
+                        <option value="TRY">TRY</option>
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="GBP">GBP</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Miktar</label>
+                    <input type="number" step="0.01" name="quantity" id="modalQuantity" class="edit-modal-input" oninput="calculateModalValue()">
+                </div>
+
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Birim Fiyat (₺)</label>
+                    <input type="number" step="0.01" name="unit_price" id="modalUnitPrice" class="edit-modal-input" oninput="calculateModalValue()">
+                </div>
+
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Güncel Değer</label>
+                    <input type="number" step="0.01" name="value" id="modalValue" class="edit-modal-input" readonly>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Alış Tarihi</label>
+                    <input type="text" name="purchase_date" id="modalPurchaseDate" class="edit-modal-input">
+                </div>
+
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Alış Maliyeti (₺)</label>
+                    <input type="number" step="0.01" name="purchase_cost" id="modalPurchaseCost" class="edit-modal-input" readonly>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Risk</label>
+                    <select name="risk_level" id="modalRiskLevel" class="edit-modal-input">
+                        <option value="Düşük">Düşük</option>
+                        <option value="Orta">Orta</option>
+                        <option value="Yüksek">Yüksek</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Likidite</label>
+                    <select name="liquidity" id="modalLiquidity" class="edit-modal-input">
+                        <option value="Likit">Likit</option>
+                        <option value="Yarı-Likit">Yarı-Likit</option>
+                        <option value="İ-Likit">İ-Likit</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Sektör</label>
+                    <select name="sector_id" id="modalSectorId" class="edit-modal-input">
+                        {% for s in asset_sectors %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Aylık Kira (₺)</label>
+                    <input type="number" step="0.01" name="monthly_rent" id="modalMonthlyRent" class="edit-modal-input">
+                </div>
+
+                <div class="full-width">
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Açıklama</label>
+                    <input type="text" name="description" id="modalDescription" class="edit-modal-input">
+                </div>
+
+                <div class="full-width">
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Not</label>
+                    <input type="text" name="notes" id="modalNotes" class="edit-modal-input">
+                </div>
+
+                <div class="full-width" style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+                    <button type="submit" style="flex: 1; background: linear-gradient(to right, #10b981, #059669); color: white; font-weight: 900; padding: 1rem; border-radius: 0.75rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; border: none; cursor: pointer; transition: all 0.2s;">
+                        VARLIĞI GÜNCELLE
+                    </button>
+                    <button type="button" onclick="closeAssetModal()" style="flex: 0 0 auto; padding: 1rem 2rem; background: #e2e8f0; color: #334155; border-radius: 0.75rem; font-weight: 900; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border: none; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); transition: all 0.2s;">
+                        İPTAL
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Sell Asset Modal -->
+<div id="sellAssetModal" class="edit-modal asset-modal hidden">
+    <div class="edit-modal-backdrop" onclick="closeSellAssetModal()"></div>
+    <div class="edit-modal-content">
+        <div class="edit-modal-card">
+            <div class="edit-modal-header">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center;">
+                        <div style="background: #fef3c7; padding: 0.5rem; border-radius: 0.75rem; margin-right: 0.75rem;">
+                            <svg style="width: 1.25rem; height: 1.25rem; color: #d97706;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 1.125rem; font-weight: 900; color: #1e293b; text-transform: uppercase; letter-spacing: -0.025em;">Varlık Sat</h3>
+                            <p style="font-size: 0.625rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Varlık satışı işlemi</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="closeSellAssetModal()" style="color: #94a3b8; background: none; border: none; cursor: pointer; transition: color 0.2s;">
+                        <svg style="width: 1.5rem; height: 1.5rem;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <form id="sellAssetModalForm" class="edit-modal-body">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="asset_id" id="sellAssetId">
+
+                <div class="full-width">
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Varlık Bilgisi</label>
+                    <input type="text" id="sellAssetInfo" class="edit-modal-input" readonly>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Mevcut Miktar</label>
+                    <input type="number" step="0.01" id="sellCurrentQuantity" class="edit-modal-input" readonly>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Satılacak Miktar</label>
+                    <input type="number" step="0.01" name="quantity" id="sellQuantity" class="edit-modal-input" required>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Birim Satış Fiyatı (₺)</label>
+                    <input type="number" step="0.01" name="sale_unit_price" id="sellPrice" class="edit-modal-input" required oninput="calculateSellTotal()">
+                </div>
+
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Toplam Satış Tutarı (₺)</label>
+                    <input type="number" step="0.01" id="sellTotal" class="edit-modal-input" readonly>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Alış Maliyeti (₺)</label>
+                    <input type="number" step="0.01" id="sellPurchaseCost" class="edit-modal-input" readonly>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Tahmini Kar/Zarar (₺)</label>
+                    <input type="number" step="0.01" id="sellProfit" class="edit-modal-input" readonly>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Satış Tarihi</label>
+                    <input type="text" name="sale_date" id="sellDate" class="edit-modal-input" required>
+                </div>
+
+                <div class="full-width">
+                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Not</label>
+                    <input type="text" name="note" id="sellNotes" class="edit-modal-input">
+                </div>
+
+                <div class="full-width" style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+                    <button type="submit" style="flex: 1; background: linear-gradient(to right, #f59e0b, #d97706); color: white; font-weight: 900; padding: 1rem; border-radius: 0.75rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; border: none; cursor: pointer; transition: all 0.2s;">
+                        VARLIĞI SAT
+                    </button>
+                    <button type="button" onclick="closeSellAssetModal()" style="flex: 0 0 auto; padding: 1rem 2rem; background: #e2e8f0; color: #334155; border-radius: 0.75rem; font-weight: 900; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border: none; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); transition: all 0.2s;">
+                        İPTAL
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Asset Modal -->
+<div id="deleteAssetModal" class="edit-modal asset-modal hidden">
+    <div class="edit-modal-backdrop" onclick="closeDeleteAssetModal()"></div>
+    <div class="edit-modal-content">
+        <div class="edit-modal-card">
+            <div class="edit-modal-header">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center;">
+                        <div style="background: #ffe4e6; padding: 0.5rem; border-radius: 0.75rem; margin-right: 0.75rem;">
+                            <svg style="width: 1.25rem; height: 1.25rem; color: #e11d48;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 1.125rem; font-weight: 900; color: #1e293b; text-transform: uppercase; letter-spacing: -0.025em;">Varlığı Sil</h3>
+                            <p style="font-size: 0.625rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Bu işlem geri alınamaz</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="closeDeleteAssetModal()" style="color: #94a3b8; background: none; border: none; cursor: pointer; transition: color 0.2s;">
+                        <svg style="width: 1.5rem; height: 1.5rem;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="edit-modal-body">
+                <p style="font-size: 0.875rem; color: #475569; font-weight: 600; margin-bottom: 0.75rem;">Aşağıdaki varlığı silmek istediğinize emin misiniz?</p>
+                <div style="background: #fff1f2; border: 1px solid #fecdd3; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1.5rem;">
+                    <p id="deleteAssetName" style="font-weight: 900; color: #be123c; font-size: 0.875rem;">—</p>
+                    <p style="font-size: 0.625rem; color: #f43f5e; margin-top: 0.25rem; font-weight: 600;">Bağlı alım kaydı (Fon Alımı) ve değerleme geçmişi de silinecektir.</p>
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                    <button type="button" onclick="closeDeleteAssetModal()" style="flex: 1; padding: 0.875rem; background: #e2e8f0; color: #334155; border-radius: 0.75rem; font-weight: 900; font-size: 0.75rem; text-transform: uppercase; border: none; cursor: pointer;">
+                        İptal
+                    </button>
+                    <button type="button" id="deleteAssetConfirmBtn" style="flex: 1; padding: 0.875rem; background: linear-gradient(to right, #e11d48, #be123c); color: white; border-radius: 0.75rem; font-weight: 900; font-size: 0.75rem; text-transform: uppercase; border: none; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(225, 29, 72, 0.3);">
+                        Evet, Sil
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function(){
+    const table = $('#assetTable').DataTable({
+        order: [[2, 'desc']],
+        pageLength: 50,
+        lengthMenu: [[25, 50, 100, -1], [25, 50, 100, 'Tümü']],
+        dom: '<"flex flex-wrap justify-between items-center gap-2 mb-3"lip>rtip',
+        columnDefs: [
+            { orderable: false, targets: [6] }
+        ],
+        language: {
+            emptyTable: 'Kayıt bulunamadı',
+            info: '_TOTAL_ kayıttan _START_ - _END_ arası gösteriliyor',
+            infoEmpty: 'Kayıt yok',
+            lengthMenu: 'Sayfada _MENU_ kayıt göster',
+            paginate: { next: 'Sonraki', previous: 'Önceki' }
+        }
+    });
+
+    const filterFn = function(settings, data, dataIndex) {
+        if (settings.nTable.id !== 'assetTable') return true;
+        const row = table.row(dataIndex).node();
+        const $row = $(row);
+        const type = $('#assetFilterType').val();
+        const risk = $('#assetFilterRisk').val();
+        const liquidity = $('#assetFilterLiquidity').val();
+        const q = $('#assetSearch').val().toLowerCase().trim();
+        if (type && $row.data('type') !== type) return false;
+        if (risk && $row.data('risk') !== risk) return false;
+        if (liquidity && $row.data('liquidity') !== liquidity) return false;
+        if (q && ($row.data('search') || '').indexOf(q) === -1) return false;
+        return true;
+    };
+
+    $.fn.dataTable.ext.search.push(filterFn);
+
+    $('#assetSearch, #assetFilterType, #assetFilterRisk, #assetFilterLiquidity').on('keyup change', function() {
+        table.draw();
+    });
+});
+
+// Asset Modal Functions
+function openEditAssetModal(btn) {
+    const form = document.getElementById('editAssetModalForm');
+
+    const id = btn.dataset.id;
+    const type = btn.dataset.type;
+    const name = btn.dataset.name;
+    const symbol = btn.dataset.symbol;
+    const currency = btn.dataset.currency;
+    const description = btn.dataset.description;
+    const quantity = btn.dataset.quantity;
+    const unit_price = btn.dataset.unitPrice;
+    const value = btn.dataset.value;
+    const purchase_date = btn.dataset.purchaseDate;
+    const purchase_cost = btn.dataset.purchaseCost;
+    const risk_level = btn.dataset.riskLevel;
+    const liquidity = btn.dataset.liquidity;
+    const sector_id = btn.dataset.sectorId;
+    const monthly_rent = btn.dataset.monthlyRent;
+    const notes = btn.dataset.notes;
+
+    document.getElementById('modalAssetId').value = id;
+    document.getElementById('modalType').value = type;
+    document.getElementById('modalName').value = name;
+    document.getElementById('modalSymbol').value = symbol;
+    document.getElementById('modalCurrency').value = currency;
+    document.getElementById('modalDescription').value = description;
+    document.getElementById('modalQuantity').value = quantity;
+    document.getElementById('modalUnitPrice').value = unit_price;
+    document.getElementById('modalValue').value = value;
+    document.getElementById('modalPurchaseDate').value = purchase_date;
+    document.getElementById('modalPurchaseCost').value = purchase_cost;
+    document.getElementById('modalRiskLevel').value = risk_level;
+    document.getElementById('modalLiquidity').value = liquidity;
+    document.getElementById('modalSectorId').value = sector_id;
+    document.getElementById('modalMonthlyRent').value = monthly_rent;
+    document.getElementById('modalNotes').value = notes;
+
+    window.openModal('editAssetModal');
+}
+
+function closeAssetModal() {
+    window.closeModal('editAssetModal');
+    document.getElementById('editAssetModalForm').reset();
+}
+
+function openSellAssetModal(btn) {
+    const id = btn.dataset.id;
+    const type = btn.dataset.type;
+    const name = btn.dataset.name;
+    const symbol = btn.dataset.symbol;
+    const quantity = btn.dataset.quantity;
+    const unit_price = btn.dataset.unitPrice;
+    const value = btn.dataset.value;
+    const purchase_cost = btn.dataset.purchaseCost;
+
+    document.getElementById('sellAssetId').value = id;
+    document.getElementById('sellAssetInfo').value = `${type} - ${name} (${symbol})`;
+    document.getElementById('sellCurrentQuantity').value = quantity;
+    document.getElementById('sellQuantity').value = quantity;
+    document.getElementById('sellPrice').value = unit_price;
+    document.getElementById('sellPurchaseCost').value = purchase_cost;
+    document.getElementById('sellDate').value = '{{ today_display }}';
+
+    calculateSellTotal();
+    window.openModal('sellAssetModal');
+}
+
+function closeSellAssetModal() {
+    window.closeModal('sellAssetModal');
+    document.getElementById('sellAssetModalForm').reset();
+}
+
+let currentDeleteAssetId = null;
+
+function confirmDeleteAsset(assetId, assetName) {
+    currentDeleteAssetId = assetId;
+    document.getElementById('deleteAssetName').textContent = assetName || '—';
+    window.openModal('deleteAssetModal');
+}
+
+function closeDeleteAssetModal() {
+    window.closeModal('deleteAssetModal');
+    currentDeleteAssetId = null;
+}
+
+document.getElementById('deleteAssetConfirmBtn')?.addEventListener('click', function() {
+    if (!currentDeleteAssetId) return;
+
+    const formData = new FormData();
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
+        || document.querySelector('input[name="csrf_token"]')?.value;
+    if (csrfToken) {
+        formData.append('csrf_token', csrfToken);
+    }
+
+    fetch('/del_asset/' + currentDeleteAssetId, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+        },
+        body: formData,
+    })
+    .then(async response => {
+        const data = await response.json().catch(() => null);
+        if (!data) {
+            throw new Error('Sunucu yanıtı okunamadı');
+        }
+        return data;
+    })
+    .then(data => {
+        if (data.success) {
+            showToast(data.message || 'Varlık silindi', 'success');
+            closeDeleteAssetModal();
+            window.location.reload();
+        } else {
+            showToast(data.message || 'Silme başarısız', 'error');
+            closeDeleteAssetModal();
+        }
+    })
+    .catch(error => {
+        console.error('Delete asset error:', error);
+        showToast('Silme sırasında bir hata oluştu.', 'error');
+        closeDeleteAssetModal();
+    });
+});
+
+function calculateSellTotal() {
+    const quantity = parseFloat(document.getElementById('sellQuantity').value) || 0;
+    const price = parseFloat(document.getElementById('sellPrice').value) || 0;
+    const total = quantity * price;
+    const purchase_cost = parseFloat(document.getElementById('sellPurchaseCost').value) || 0;
+    const profit = total - purchase_cost;
+
+    document.getElementById('sellTotal').value = total.toFixed(2);
+    document.getElementById('sellProfit').value = profit.toFixed(2);
+}
+
+// Sell Asset Form AJAX
+document.getElementById('sellAssetModalForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const form = this;
+    const assetId = document.getElementById('sellAssetId').value;
+    const formData = new FormData(form);
+    
+    // Send AJAX request
+    fetch('/sell_asset/' + assetId, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message || 'Varlık satıldı', 'success');
+            setTimeout(() => {
+                closeSellAssetModal();
+                window.location.reload();
+            }, 1500);
+        } else {
+            showToast(data.message || 'Bir hata oluştu', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+    });
+});
+
+function calculateModalValue() {
+    const q = parseFloat(document.getElementById('modalQuantity').value) || 0;
+    const p = parseFloat(document.getElementById('modalUnitPrice').value) || 0;
+    const v = q * p;
+    document.getElementById('modalValue').value = v.toFixed(2);
+}
+
+// AJAX Form Submission
+document.getElementById('editAssetModalForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const form = this;
+    const formData = new FormData(form);
+    const assetId = document.getElementById('modalAssetId').value;
+
+    fetch('/edit_asset/' + assetId, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeAssetModal();
+            window.location.reload();
+        } else {
+            showToast(data.message || 'Bir hata oluştu', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+    });
+});
+
+let currentEditingRow = null;
+
+function calculateValue() {
+    const q = parseFloat(document.getElementById('quantity').value) || 0;
+    const p = parseFloat(document.getElementById('unit_price').value) || 0;
+    const v = q * p;
+    document.getElementById('value').value = v.toFixed(2);
+    const costInput = document.getElementById('purchase_cost');
+    if (!document.getElementById('asset_form').classList.contains('edit-mode') && costInput && !costInput.dataset.userEdited) {
+        costInput.value = v > 0 ? v.toFixed(2) : '';
+    }
+}
+
+document.getElementById('purchase_cost')?.addEventListener('input', function() {
+    this.dataset.userEdited = '1';
+});
+
+function editAsset(btn) {
+    if (currentEditingRow) {
+        currentEditingRow.classList.remove('bg-emerald-100');
+        currentEditingRow.classList.add('hover:bg-slate-50/30');
+    }
+    const row = btn.closest('tr');
+    row.classList.remove('hover:bg-slate-50/30');
+    row.classList.add('bg-emerald-100');
+    currentEditingRow = row;
+
+    try {
+        const data = JSON.parse(row.dataset.asset);
+        const form = document.getElementById('asset_form');
+
+    form.querySelector('[name="type"]').value = data.type;
+    form.querySelector('[name="name"]').value = data.name;
+    form.querySelector('[name="symbol"]').value = data.symbol;
+    form.querySelector('[name="currency"]').value = data.currency;
+    form.querySelector('[name="description"]').value = data.description;
+    form.querySelector('[name="quantity"]').value = data.quantity;
+    form.querySelector('[name="unit_price"]').value = data.unit_price;
+    form.querySelector('[name="value"]').value = data.value;
+    form.querySelector('[name="risk_level"]').value = data.risk_level;
+    form.querySelector('[name="liquidity"]').value = data.liquidity;
+    form.querySelector('[name="sector_id"]').value = data.sector_id;
+    form.querySelector('[name="notes"]').value = data.notes;
+
+    const dateInput = form.querySelector('[name="purchase_date"]');
+    dateInput.value = data.purchase_date;
+    if (dateInput._flatpickr) {
+        dateInput._flatpickr.setDate(data.purchase_date, false, 'd/m/Y');
+    }
+
+    const costInput = document.getElementById('purchase_cost');
+    costInput.value = data.purchase_cost;
+    costInput.readOnly = true;
+    costInput.classList.add('readonly-field');
+    costInput.dataset.userEdited = '1';
+
+    form.action = '/edit_asset/' + data.id;
+    form.classList.add('edit-mode');
+    
+    const submitBtn = document.getElementById('asset_submit_btn');
+    const hint = document.getElementById('edit_hint');
+    
+    if (data.is_closed) {
+        document.getElementById('form_title').textContent = 'Varlık Kapatılmış (Salt Okunur)';
+        document.getElementById('form_subtitle').textContent = 'Satılmış varlıklar düzenlenemez';
+        hint.textContent = 'Bu varlık tamamen satılmış/kapatılmış. Düzenleme yapılamaz.';
+        hint.className = 'text-[9px] font-bold text-rose-600 uppercase tracking-wide bg-rose-50 p-2 rounded-lg border border-rose-100 md:col-span-2 lg:col-span-3';
+        
+        // Disable all form inputs
+        const inputs = form.querySelectorAll('input, select, textarea');
+        inputs.forEach(inp => inp.disabled = true);
+        
+        submitBtn.style.display = 'none';
+    } else {
+        document.getElementById('form_title').textContent = 'Varlığı Düzenle';
+        document.getElementById('form_subtitle').textContent = 'Değerleme güncellemesi';
+        hint.textContent = 'Düzenleme modu: alış maliyeti korunur, değer değişikliği deftere işlenir.';
+        hint.className = 'text-[9px] font-bold text-amber-600 uppercase tracking-wide bg-amber-50 p-2 rounded-lg border border-amber-100 md:col-span-2 lg:col-span-3';
+        hint.classList.remove('hidden');
+        
+        // Ensure inputs are enabled (except readOnly ones)
+        const inputs = form.querySelectorAll('input, select, textarea');
+        inputs.forEach(inp => { if(inp.id !== 'value' && inp.id !== 'purchase_cost') inp.disabled = false; });
+        
+        submitBtn.textContent = 'VARLIĞI GÜNCELLE';
+        submitBtn.classList.add('ring-4', 'ring-emerald-300');
+        submitBtn.style.display = 'block';
+    }
+
+    document.getElementById('asset_cancel_btn').classList.remove('hidden');
+
+    // Sticky form olduğundan scrollIntoView gerekmiyor
+    } catch(e) {
+        console.error('Error parsing asset data:', e);
+    }
+}
+
+function cancelEdit() {
+    if (currentEditingRow) {
+        currentEditingRow.classList.remove('bg-emerald-100');
+        currentEditingRow.classList.add('hover:bg-slate-50/30');
+        currentEditingRow = null;
+    }
+
+    const form = document.getElementById('asset_form');
+    form.reset();
+    form.action = '/new_asset';
+    form.classList.remove('edit-mode');
+    document.getElementById('quantity').value = '1';
+
+    const costInput = document.getElementById('purchase_cost');
+    costInput.readOnly = false;
+    costInput.classList.remove('readonly-field');
+    delete costInput.dataset.userEdited;
+
+    document.getElementById('form_title').textContent = 'Yeni Varlık';
+    document.getElementById('form_subtitle').textContent = 'Tek pozisyon, 1 kayıt';
+    
+    const hint = document.getElementById('edit_hint');
+    hint.classList.add('hidden');
+    hint.className = 'hidden text-[9px] font-bold text-amber-600 uppercase tracking-wide bg-amber-50 p-2 rounded-lg border border-amber-100 md:col-span-2 lg:col-span-3';
+
+    // Enable all inputs again
+    const inputs = form.querySelectorAll('input, select, textarea');
+    inputs.forEach(inp => { if(inp.id !== 'value') inp.disabled = false; });
+
+    const submitBtn = document.getElementById('asset_submit_btn');
+    submitBtn.textContent = 'VARLIĞI KAYDET';
+    submitBtn.classList.remove('ring-4', 'ring-emerald-300');
+    submitBtn.style.display = 'block';
+    document.getElementById('asset_cancel_btn').classList.add('hidden');
+
+    calculateValue();
+}
+
+document.addEventListener('DOMContentLoaded', calculateValue);
+
+// ─── Sunucu Tarafı Edit_id ile Otomatik Düzenleme ─────────────────────────
+(function() {
+    const pageData = document.getElementById('assets-management-page');
+    if (!pageData) return;
+    
+    try {
+        const editId = pageData.getAttribute('data-edit-id');
+        const editAssetData = JSON.parse(pageData.getAttribute('data-edit-asset-data') || '{}');
+        
+        if (!editId || !editAssetData || Object.keys(editAssetData).length === 0) return;
+
+    function openEditFromServer() {
+        // Önce DOM'daki satırlarda ara
+        const allRows = document.querySelectorAll('tr[data-asset]');
+        let found = false;
+        allRows.forEach(function(r) {
+            try {
+                const data = JSON.parse(r.dataset.asset);
+                if (data.id === editId) {
+                    found = true;
+                    const fakeBtn = r.querySelector('button[onclick="editAsset(this)"]');
+                    if (fakeBtn) {
+                        editAsset(fakeBtn);
+                        r.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }
+            } catch(e) {}
+        });
+
+        if (!found) {
+            // DOM'da bulunamadı — sunucudan gelen datayı doğrudan kullan
+            fillEditFormDirect(editAssetData);
+        }
+    }
+
+
+    // Formu direkt data objesiyle doldur (satır bulunamasa bile çalışır)
+    function fillEditFormDirect(data) {
+        const form = document.getElementById('asset_form');
+        if (!form) return;
+
+        form.querySelector('[name="type"]').value = data.type || '';
+        form.querySelector('[name="name"]').value = data.name || '';
+        form.querySelector('[name="symbol"]').value = data.symbol || '';
+        form.querySelector('[name="currency"]').value = data.currency || 'TRY';
+        form.querySelector('[name="description"]').value = data.description || '';
+        form.querySelector('[name="quantity"]').value = data.quantity || 1;
+        form.querySelector('[name="unit_price"]').value = data.unit_price || 0;
+        form.querySelector('[name="value"]').value = data.value || 0;
+        form.querySelector('[name="risk_level"]').value = data.risk_level || 'Orta';
+        form.querySelector('[name="liquidity"]').value = data.liquidity || 'Likit';
+        form.querySelector('[name="sector_id"]').value = data.sector_id || '';
+        form.querySelector('[name="monthly_rent"]').value = data.monthly_rent || '';
+        form.querySelector('[name="notes"]').value = data.notes || '';
+
+        const dateInput = form.querySelector('[name="purchase_date"]');
+        dateInput.value = data.purchase_date || '';
+        if (dateInput._flatpickr) {
+            dateInput._flatpickr.setDate(data.purchase_date, false, 'd/m/Y');
+        }
+
+        const costInput = document.getElementById('purchase_cost');
+        costInput.value = data.purchase_cost || 0;
+        costInput.readOnly = true;
+        costInput.classList.add('readonly-field');
+        costInput.dataset.userEdited = '1';
+
+        form.action = '/edit_asset/' + data.id;
+        form.classList.add('edit-mode');
+        
+        const submitBtn = document.getElementById('asset_submit_btn');
+        const hint = document.getElementById('edit_hint');
+
+        if (data.is_closed) {
+            document.getElementById('form_title').textContent = 'Varlık Kapatılmış (Salt Okunur)';
+            document.getElementById('form_subtitle').textContent = 'Satılmış varlıklar düzenlenemez';
+            hint.textContent = 'Bu varlık tamamen satılmış/kapatılmış. Düzenleme yapılamaz.';
+            hint.className = 'text-[9px] font-bold text-rose-600 uppercase tracking-wide bg-rose-50 p-2 rounded-lg border border-rose-100 md:col-span-2 lg:col-span-3';
+            
+            const inputs = form.querySelectorAll('input, select, textarea');
+            inputs.forEach(inp => inp.disabled = true);
+            
+            submitBtn.style.display = 'none';
+        } else {
+            document.getElementById('form_title').textContent = 'Varlığı Düzenle';
+            document.getElementById('form_subtitle').textContent = 'Değerleme güncellemesi';
+            hint.textContent = 'Düzenleme modu: alış maliyeti korunur, değer değişikliği deftere işlenir.';
+            hint.className = 'text-[9px] font-bold text-amber-600 uppercase tracking-wide bg-amber-50 p-2 rounded-lg border border-amber-100 md:col-span-2 lg:col-span-3';
+            hint.classList.remove('hidden');
+            
+            const inputs = form.querySelectorAll('input, select, textarea');
+            inputs.forEach(inp => { if(inp.id !== 'value' && inp.id !== 'purchase_cost') inp.disabled = false; });
+            
+            submitBtn.textContent = 'VARLIĞI GÜNCELLE';
+            submitBtn.classList.add('ring-4', 'ring-emerald-300');
+            submitBtn.style.display = 'block';
+        }
+
+        document.getElementById('asset_cancel_btn').classList.remove('hidden');
+
+        // Forma scroll et (sticky form üstte olduğundan sadece highlight yeter)
+        form.closest('.asset-card').classList.add('ring-2', 'ring-emerald-400');
+        setTimeout(() => form.closest('.asset-card').classList.remove('ring-2', 'ring-emerald-400'), 2000);
+    }
+
+    // DOM + DataTables yüklendikten sonra çalıştır
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(openEditFromServer, 350);
+    });
+
+    // Eğer DOMContentLoaded zaten geçtiyse
+    if (document.readyState !== 'loading') {
+        setTimeout(openEditFromServer, 350);
+    }
+    } catch(e) {
+        console.error('Error parsing edit asset data:', e);
+    }
+})();
+
+
+</script>
+</div>
+{% endblock %}

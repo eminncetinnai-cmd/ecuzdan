@@ -1,0 +1,842 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+    /* Transaction Explorer - Modern Layout */
+    .explorer-container {
+        display: flex;
+        height: calc(100vh - 120px);
+        gap: 1.5rem;
+    }
+
+    /* Left Filter Panel - Sticky */
+    .filter-panel {
+        width: 280px;
+        flex-shrink: 0;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        height: fit-content;
+        max-height: 100%;
+        overflow-y: auto;
+        position: sticky;
+        top: 1rem;
+    }
+
+    .filter-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .filter-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .filter-title {
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #64748b;
+        margin-bottom: 0.75rem;
+    }
+
+    .filter-input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 0.75rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.8);
+        transition: all 0.2s;
+    }
+
+    .filter-input:focus {
+        outline: none;
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+
+    .filter-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0;
+        cursor: pointer;
+    }
+
+    .filter-checkbox input[type="checkbox"] {
+        width: 1rem;
+        height: 1rem;
+        accent-color: #f59e0b;
+    }
+
+    .filter-checkbox label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #334155;
+        cursor: pointer;
+    }
+
+    /* Main Content Area */
+    .content-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        min-width: 0;
+    }
+
+    /* Dashboard Summary */
+    .dashboard-summary {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%);
+        border: 1px solid rgba(245, 158, 11, 0.2);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+
+    .summary-card {
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 0.75rem;
+        padding: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+
+    .summary-label {
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #64748b;
+        margin-bottom: 0.25rem;
+    }
+
+    .summary-value {
+        font-size: 1.25rem;
+        font-weight: 900;
+        color: #0f172a;
+    }
+
+    .summary-value.income {
+        color: #059669;
+    }
+
+    .summary-value.expense {
+        color: #dc2626;
+    }
+
+    /* Quick Filter Chips */
+    .quick-filters {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        padding: 0.5rem 0;
+    }
+
+    .filter-chip {
+        padding: 0.5rem 1rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        background: rgba(255, 255, 255, 0.8);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .filter-chip:hover {
+        background: rgba(245, 158, 11, 0.1);
+        border-color: #f59e0b;
+    }
+
+    .filter-chip.active {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+        border-color: #f59e0b;
+    }
+
+    /* Global Search */
+    .global-search {
+        position: relative;
+        margin-bottom: 1rem;
+    }
+
+    .global-search input {
+        width: 100%;
+        padding: 1rem 1rem 1rem 3rem;
+        border: 2px solid rgba(0, 0, 0, 0.1);
+        border-radius: 1rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.95);
+        transition: all 0.2s;
+    }
+
+    .global-search input:focus {
+        outline: none;
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1);
+    }
+
+    .global-search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+    }
+
+    /* Transaction Cards */
+    .transaction-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        overflow-y: auto;
+        max-height: calc(100vh - 350px);
+        padding-right: 0.5rem;
+    }
+
+    .transaction-card {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 1rem;
+        padding: 1.25rem;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .transaction-card::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: var(--card-color, #64748b);
+    }
+
+    .transaction-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 40px -15px rgba(0, 0, 0, 0.15);
+        border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    .transaction-card.income::before {
+        --card-color: #059669;
+    }
+
+    .transaction-card.expense::before {
+        --card-color: #dc2626;
+    }
+
+    .transaction-card.investment::before {
+        --card-color: #3b82f6;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.75rem;
+    }
+
+    .card-category {
+        font-size: 0.85rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #4f46e5;
+    }
+
+    .card-date {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #64748b;
+    }
+
+    .card-description {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #334155;
+        margin-bottom: 0.5rem;
+    }
+
+    .card-amount {
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: #0f172a;
+    }
+
+    .card-amount.income {
+        color: #059669;
+    }
+
+    .card-amount.expense {
+        color: #dc2626;
+    }
+
+    .card-amount.investment {
+        color: #3b82f6;
+    }
+
+    .card-meta {
+        display: flex;
+        gap: 1rem;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .card-meta-item {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* Side Drawer */
+    .side-drawer {
+        position: fixed;
+        right: -500px;
+        top: 0;
+        width: 500px;
+        height: 100vh;
+        background: rgba(255, 255, 255, 0.98);
+        box-shadow: -10px 0 40px rgba(0, 0, 0, 0.2);
+        transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1000;
+        overflow-y: auto;
+    }
+
+    .side-drawer.open {
+        right: 0;
+    }
+
+    .drawer-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s;
+        z-index: 999;
+    }
+
+    .drawer-backdrop.open {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .drawer-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .drawer-content {
+        padding: 1.5rem;
+    }
+
+    .drawer-close {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+        transition: background 0.2s;
+    }
+
+    .drawer-close:hover {
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+    /* Loading Indicator */
+    .loading-indicator {
+        display: flex;
+        justify-content: center;
+        padding: 2rem;
+        color: #64748b;
+        font-weight: 600;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .explorer-container {
+            flex-direction: column;
+            height: auto;
+        }
+
+        .filter-panel {
+            width: 100%;
+            position: relative;
+            max-height: 300px;
+        }
+
+        .side-drawer {
+            width: 100%;
+            right: -100%;
+        }
+    }
+</style>
+
+<div class="explorer-container">
+    <!-- Left Filter Panel -->
+    <div class="filter-panel">
+        <div class="filter-section">
+            <div class="filter-title">Tarih Aralığı</div>
+            <input type="date" class="filter-input" id="filterDateFrom" placeholder="Başlangıç">
+            <input type="date" class="filter-input" id="filterDateTo" placeholder="Bitiş" style="margin-top: 0.5rem;">
+        </div>
+
+        <div class="filter-section">
+            <div class="filter-title">İşlem Türü</div>
+            <div class="filter-checkbox">
+                <input type="checkbox" id="filterTypeIncome" value="Gelir">
+                <label for="filterTypeIncome">Gelir</label>
+            </div>
+            <div class="filter-checkbox">
+                <input type="checkbox" id="filterTypeExpense" value="Gider">
+                <label for="filterTypeExpense">Gider</label>
+            </div>
+            <div class="filter-checkbox">
+                <input type="checkbox" id="filterTypeInvestment" value="Yatırım">
+                <label for="filterTypeInvestment">Yatırım</label>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <div class="filter-title">Kategori</div>
+            <select class="filter-input" id="filterCategory">
+                <option value="">Tümü</option>
+                {% for c in cats %}
+                <option value="{{ c.name }}">{{ c.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-section">
+            <div class="filter-title">Durum</div>
+            <div class="filter-checkbox">
+                <input type="checkbox" id="filterStatusPaid" value="Ödendi">
+                <label for="filterStatusPaid">Ödendi</label>
+            </div>
+            <div class="filter-checkbox">
+                <input type="checkbox" id="filterStatusPending" value="Bekliyor">
+                <label for="filterStatusPending">Bekliyor</label>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <div class="filter-title">Tutar Aralığı</div>
+            <input type="number" class="filter-input" id="filterMinAmount" placeholder="Min Tutar" style="margin-bottom: 0.5rem;">
+            <input type="number" class="filter-input" id="filterMaxAmount" placeholder="Max Tutar">
+        </div>
+
+        <div class="filter-section">
+            <button type="button" onclick="clearFilters()" style="width: 100%; padding: 0.75rem; background: rgba(100, 116, 116, 0.1); border: 1px solid rgba(100, 116, 116, 0.2); border-radius: 0.75rem; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; cursor: pointer; transition: all 0.2s;">
+                Filtreleri Temizle
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="content-area">
+        <!-- Dashboard Summary -->
+        <div class="dashboard-summary">
+            <div class="summary-card">
+                <div class="summary-label">Toplam İşlem</div>
+                <div class="summary-value" id="summaryTotalTx">0</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Toplam Tutar</div>
+                <div class="summary-value" id="summaryTotalAmount">₺0</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Gelir</div>
+                <div class="summary-value income" id="summaryIncome">₺0</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Gider</div>
+                <div class="summary-value expense" id="summaryExpense">₺0</div>
+            </div>
+        </div>
+
+        <!-- Global Search -->
+        <div class="global-search">
+            <svg class="global-search-icon" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input type="text" id="globalSearch" placeholder="Ara... (varlık, kategori, açıklama, not)">
+        </div>
+
+        <!-- Quick Filter Chips -->
+        <div class="quick-filters">
+            <button type="button" class="filter-chip active" data-filter="all">Tümü</button>
+            <button type="button" class="filter-chip" data-filter="today">Bugün</button>
+            <button type="button" class="filter-chip" data-filter="week">Bu Hafta</button>
+            <button type="button" class="filter-chip" data-filter="month">Bu Ay</button>
+            <button type="button" class="filter-chip" data-filter="income">Gelir</button>
+            <button type="button" class="filter-chip" data-filter="expense">Gider</button>
+            <button type="button" class="filter-chip" data-filter="investment">Yatırım</button>
+        </div>
+
+        <!-- Transaction List -->
+        <div class="transaction-list" id="transactionList">
+            <!-- Transaction cards will be loaded here -->
+        </div>
+
+        <!-- Loading Indicator -->
+        <div class="loading-indicator" id="loadingIndicator" style="display: none;">
+            Yükleniyor...
+        </div>
+    </div>
+</div>
+
+<!-- Side Drawer for Transaction Details -->
+<div class="drawer-backdrop" id="drawerBackdrop" onclick="closeDrawer()"></div>
+<div class="side-drawer" id="sideDrawer">
+    <div class="drawer-header">
+        <div>
+            <h3 style="font-size: 1.25rem; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: -0.025em;">İşlem Detayları</h3>
+            <p style="font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">İşlem bilgileri ve geçmişi</p>
+        </div>
+        <button type="button" onclick="closeDrawer()">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+    </div>
+    <div class="drawer-content" id="drawerContent">
+        <!-- Transaction details will be loaded here -->
+    </div>
+</div>
+
+<script>
+    // State management
+    let currentPage = 1;
+    let isLoading = false;
+    let hasMore = true;
+    let currentFilters = {};
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        loadTransactions();
+        setupEventListeners();
+        setupInfiniteScroll();
+    });
+
+    function setupEventListeners() {
+        // Global search
+        document.getElementById('globalSearch').addEventListener('input', debounce(function() {
+            resetAndLoad();
+        }, 300));
+
+        // Filter inputs
+        const filterInputs = document.querySelectorAll('.filter-input, .filter-checkbox input');
+        filterInputs.forEach(input => {
+            input.addEventListener('change', resetAndLoad);
+        });
+
+        // Quick filter chips
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.addEventListener('click', function() {
+                document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                applyQuickFilter(this.dataset.filter);
+            });
+        });
+    }
+
+    function setupInfiniteScroll() {
+        const transactionList = document.getElementById('transactionList');
+        transactionList.addEventListener('scroll', function() {
+            if (isLoading || !hasMore) return;
+
+            const scrollTop = this.scrollTop;
+            const scrollHeight = this.scrollHeight;
+            const clientHeight = this.clientHeight;
+
+            if (scrollTop + clientHeight >= scrollHeight - 100) {
+                loadMoreTransactions();
+            }
+        });
+    }
+
+    function resetAndLoad() {
+        currentPage = 1;
+        hasMore = true;
+        document.getElementById('transactionList').innerHTML = '';
+        loadTransactions();
+    }
+
+    function loadTransactions() {
+        if (isLoading) return;
+        isLoading = true;
+        document.getElementById('loadingIndicator').style.display = 'flex';
+
+        const filters = getFilters();
+        
+        fetch(`/api/transactions?page=${currentPage}&filters=${encodeURIComponent(JSON.stringify(filters))}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.transactions.length === 0) {
+                    hasMore = false;
+                } else {
+                    renderTransactions(data.transactions);
+                    updateDashboard(data.summary);
+                    currentPage++;
+                }
+            })
+            .catch(error => console.error('Error loading transactions:', error))
+            .finally(() => {
+                isLoading = false;
+                document.getElementById('loadingIndicator').style.display = 'none';
+            });
+    }
+
+    function loadMoreTransactions() {
+        loadTransactions();
+    }
+
+    function getFilters() {
+        return {
+            search: document.getElementById('globalSearch').value,
+            dateFrom: document.getElementById('filterDateFrom').value,
+            dateTo: document.getElementById('filterDateTo').value,
+            types: getCheckedValues(['filterTypeIncome', 'filterTypeExpense', 'filterTypeInvestment']),
+            category: document.getElementById('filterCategory').value,
+            statuses: getCheckedValues(['filterStatusPaid', 'filterStatusPending']),
+            minAmount: document.getElementById('filterMinAmount').value,
+            maxAmount: document.getElementById('filterMaxAmount').value
+        };
+    }
+
+    function getCheckedValues(ids) {
+        return ids.filter(id => document.getElementById(id).checked)
+                   .map(id => document.getElementById(id).value);
+    }
+
+    function renderTransactions(transactions) {
+        const list = document.getElementById('transactionList');
+        
+        transactions.forEach(tx => {
+            const card = createTransactionCard(tx);
+            list.appendChild(card);
+        });
+    }
+
+    function createTransactionCard(tx) {
+        const card = document.createElement('div');
+        card.className = `transaction-card ${tx.type.toLowerCase()}`;
+        card.onclick = () => openDrawer(tx.id);
+        
+        const typeClass = tx.type === 'Gelir' ? 'income' : tx.type === 'Gider' ? 'expense' : 'investment';
+        
+        card.innerHTML = `
+            <div class="card-header">
+                <div class="card-category">${tx.category}</div>
+                <div class="card-date">${formatDate(tx.date)}</div>
+            </div>
+            <div class="card-description">${tx.description || '—'}</div>
+            <div class="card-amount ${typeClass}">${formatMoney(tx.amount)} ₺</div>
+            <div class="card-meta">
+                <div class="card-meta-item">${tx.status}</div>
+                ${tx.note ? `<div class="card-meta-item">Not: ${tx.note}</div>` : ''}
+            </div>
+        `;
+        
+        return card;
+    }
+
+    function updateDashboard(summary) {
+        document.getElementById('summaryTotalTx').textContent = summary.total_count || 0;
+        document.getElementById('summaryTotalAmount').textContent = formatMoney(summary.total_amount || 0) + ' ₺';
+        document.getElementById('summaryIncome').textContent = formatMoney(summary.total_income || 0) + ' ₺';
+        document.getElementById('summaryExpense').textContent = formatMoney(summary.total_expense || 0) + ' ₺';
+    }
+
+    function applyQuickFilter(filter) {
+        clearFilters();
+        
+        const today = new Date().toISOString().split('T')[0];
+        
+        switch(filter) {
+            case 'today':
+                document.getElementById('filterDateFrom').value = today;
+                document.getElementById('filterDateTo').value = today;
+                break;
+            case 'week':
+                const weekAgo = new Date();
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                document.getElementById('filterDateFrom').value = weekAgo.toISOString().split('T')[0];
+                document.getElementById('filterDateTo').value = today;
+                break;
+            case 'month':
+                const monthAgo = new Date();
+                monthAgo.setMonth(monthAgo.getMonth() - 1);
+                document.getElementById('filterDateFrom').value = monthAgo.toISOString().split('T')[0];
+                document.getElementById('filterDateTo').value = today;
+                break;
+            case 'income':
+                document.getElementById('filterTypeIncome').checked = true;
+                break;
+            case 'expense':
+                document.getElementById('filterTypeExpense').checked = true;
+                break;
+            case 'investment':
+                document.getElementById('filterTypeInvestment').checked = true;
+                break;
+            case 'all':
+            default:
+                // No filters
+                break;
+        }
+        
+        resetAndLoad();
+    }
+
+    function clearFilters() {
+        document.getElementById('globalSearch').value = '';
+        document.getElementById('filterDateFrom').value = '';
+        document.getElementById('filterDateTo').value = '';
+        document.getElementById('filterCategory').value = '';
+        document.getElementById('filterMinAmount').value = '';
+        document.getElementById('filterMaxAmount').value = '';
+        
+        document.querySelectorAll('.filter-checkbox input').forEach(input => {
+            input.checked = false;
+        });
+        
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.classList.remove('active');
+        });
+        
+        document.querySelector('.filter-chip[data-filter="all"]').classList.add('active');
+    }
+
+    function openDrawer(transactionId) {
+        fetch(`/api/transactions/${transactionId}`)
+            .then(response => response.json())
+            .then(data => {
+                renderDrawerContent(data);
+                document.getElementById('sideDrawer').classList.add('open');
+                document.getElementById('drawerBackdrop').classList.add('open');
+            })
+            .catch(error => console.error('Error loading transaction details:', error));
+    }
+
+    function closeDrawer() {
+        document.getElementById('sideDrawer').classList.remove('open');
+        document.getElementById('drawerBackdrop').classList.remove('open');
+    }
+
+    function renderDrawerContent(tx) {
+        const content = document.getElementById('drawerContent');
+        const typeClass = tx.type === 'Gelir' ? 'income' : tx.type === 'Gider' ? 'expense' : 'investment';
+        
+        content.innerHTML = `
+            <div style="margin-bottom: 1.5rem;">
+                <div style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin-bottom: 0.5rem;">Kategori</div>
+                <div style="font-size: 1rem; font-weight: 700; color: #4f46e5;">${tx.category}</div>
+            </div>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <div style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin-bottom: 0.5rem;">Tutar</div>
+                <div style="font-size: 2rem; font-weight: 900; color: ${typeClass === 'income' ? '#059669' : typeClass === 'expense' ? '#dc2626' : '#3b82f6'};">${formatMoney(tx.amount)} ₺</div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                <div>
+                    <div style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin-bottom: 0.5rem;">Tarih</div>
+                    <div style="font-size: 0.9rem; font-weight: 600; color: #334155;">${formatDate(tx.date)}</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin-bottom: 0.5rem;">Durum</div>
+                    <div style="font-size: 0.9rem; font-weight: 600; color: #334155;">${tx.status}</div>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <div style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin-bottom: 0.5rem;">Açıklama</div>
+                <div style="font-size: 0.9rem; font-weight: 500; color: #334155;">${tx.description || '—'}</div>
+            </div>
+            
+            ${tx.note ? `
+            <div style="margin-bottom: 1.5rem;">
+                <div style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin-bottom: 0.5rem;">Not</div>
+                <div style="font-size: 0.9rem; font-weight: 500; color: #334155; font-style: italic;">${tx.note}</div>
+            </div>
+            ` : ''}
+            
+            <div style="display: flex; gap: 0.75rem; margin-top: 2rem;">
+                <button type="button" onclick="editTransaction(${tx.id})" style="flex: 1; padding: 0.75rem; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; border-radius: 0.75rem; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer;">
+                    Düzenle
+                </button>
+                <button type="button" onclick="deleteTransaction(${tx.id})" style="flex: 1; padding: 0.75rem; background: rgba(220, 38, 38, 0.1); color: #dc2626; border: 1px solid rgba(220, 38, 38, 0.2); border-radius: 0.75rem; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer;">
+                    Sil
+                </button>
+            </div>
+        `;
+    }
+
+    function editTransaction(id) {
+        // Redirect to edit page or open edit modal
+        window.location.href = `/transactions?edit=${id}`;
+    }
+
+    function deleteTransaction(id) {
+        if (confirm('Bu işlemi silmek istediğinize emin misiniz?')) {
+            fetch(`/delete_t/${id}`, {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeDrawer();
+                    resetAndLoad();
+                }
+            })
+            .catch(error => console.error('Error deleting transaction:', error));
+        }
+    }
+
+    // Utility functions
+    function formatDate(dateStr) {
+        if (!dateStr) return '—';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function formatMoney(amount) {
+        var val = amount;
+        if (typeof amount === 'string') {
+            val = parseFloat(amount);
+            if (isNaN(val)) val = 0;
+        }
+        return Number(val || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+</script>
+{% endblock %}

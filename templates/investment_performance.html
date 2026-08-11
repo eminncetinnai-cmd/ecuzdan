@@ -1,0 +1,300 @@
+{% extends "layout.html" %}
+{% block content %}
+<div id="investment-performance-page" 
+     data-yearly-data="{{ performance.yearly_data | tojson if performance.yearly_data else '{}' }}"
+     data-inflation-adjusted="{{ performance.inflation_adjusted | tojson if performance.inflation_adjusted else '{}' }}">
+<style>
+    .premium-card {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 1.5rem;
+        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .premium-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.08);
+        border-color: rgba(255, 255, 255, 0.6);
+    }
+    .chart-container {
+        position: relative;
+        width: 100%;
+        height: 300px;
+    }
+    .chart-container canvas {
+        max-height: 300px !important;
+    }
+</style>
+
+<!-- Header -->
+<div class="mb-10 flex flex-wrap justify-between items-end gap-4">
+    <div>
+        <h2 class="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none bg-gradient-to-r from-slate-900 to-indigo-900 bg-clip-text text-transparent">Yatırım Performans Analizi</h2>
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Yıllık Getiri, Enflasyon Ayarlı Analiz ve Portföy Değerlendirmesi</p>
+    </div>
+    <a href="/assets_view" class="bg-gradient-to-tr from-slate-900 to-indigo-950 text-white px-6 py-3 rounded-3xl shadow-xl text-xs font-black uppercase tracking-wider hover:shadow-2xl transition">
+        ← Varlık Portföyüne Dön
+    </a>
+</div>
+
+{% if performance.yearly_data %}
+<!-- Summary Cards -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
+    <div class="premium-card p-6 border-b-4 border-emerald-500 bg-white/60">
+        <h3 class="text-slate-400 text-[10px] font-black uppercase mb-1.5 tracking-wider">Analiz Edilen Yıl</h3>
+        <p class="text-2xl font-black text-slate-800">{{ performance.summary.total_years }} Yıl</p>
+    </div>
+    <div class="premium-card p-6 border-b-4 border-blue-500 bg-white/60">
+        <h3 class="text-slate-400 text-[10px] font-black uppercase mb-1.5 tracking-wider">Ortalama Nominal Getiri</h3>
+        <p class="text-2xl font-black {% if performance.summary.avg_nominal_roi >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">{{ performance.summary.avg_nominal_roi|round(2) }}%</p>
+    </div>
+    <div class="premium-card p-6 border-b-4 border-purple-500 bg-white/60">
+        <h3 class="text-slate-400 text-[10px] font-black uppercase mb-1.5 tracking-wider">Ortalama Gerçek Getiri</h3>
+        <p class="text-2xl font-black {% if performance.summary.avg_real_roi >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">{{ performance.summary.avg_real_roi|round(2) }}%</p>
+    </div>
+    <div class="premium-card p-6 border-b-4 border-amber-500 bg-white/60">
+        <h3 class="text-slate-400 text-[10px] font-black uppercase mb-1.5 tracking-wider">Enflasyon Etkisi</h3>
+        <p class="text-2xl font-black {% if performance.summary.total_inflation_impact < 0 %}text-rose-600{% else %}text-emerald-600{% endif %}">{{ performance.summary.total_inflation_impact|round(2) }}%</p>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+    <div class="premium-card p-8 bg-white/80">
+        <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-6">Yıllık Nominal vs Gerçek Getiri</h4>
+        <div class="chart-container">
+            <canvas id="performanceChart"></canvas>
+        </div>
+    </div>
+    <div class="premium-card p-8 bg-white/80">
+        <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-6">Portföy Değeri Gelişimi</h4>
+        <div class="chart-container">
+            <canvas id="valueChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Yearly Performance Table -->
+<div class="premium-card p-8 bg-white/80 mb-10">
+    <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-6">Yıllık Performans Detayları</h4>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+            <thead class="text-slate-400 uppercase text-[10px] font-bold border-b border-slate-200">
+                <tr>
+                    <th class="py-3 px-2">Yıl</th>
+                    <th class="py-3 px-2">Portföy Değeri</th>
+                    <th class="py-3 px-2">Toplam Maliyet</th>
+                    <th class="py-3 px-2">Getiri/Kayıp</th>
+                    <th class="py-3 px-2">Nominal Getiri %</th>
+                    <th class="py-3 px-2">Enflasyon %</th>
+                    <th class="py-3 px-2">Gerçek Getiri %</th>
+                </tr>
+            </thead>
+            <tbody class="font-semibold text-slate-700">
+                {% for year in performance.yearly_data.keys()|sort %}
+                <tr class="border-b border-slate-100 hover:bg-slate-50/40 transition">
+                    <td class="py-3 px-2 font-black">{{ year }}</td>
+                    <td class="py-3 px-2">{{ performance.yearly_data[year].total_value|format_money }} ₺</td>
+                    <td class="py-3 px-2">{{ performance.yearly_data[year].total_cost|format_money }} ₺</td>
+                    <td class="py-3 px-2 {% if performance.yearly_data[year].gain_loss >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %} font-black">
+                        {{ performance.yearly_data[year].gain_loss|format_money }} ₺
+                    </td>
+                    <td class="py-3 px-2 {% if performance.yearly_data[year].roi >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %} font-black">
+                        {{ performance.yearly_data[year].roi|round(2) }}%
+                    </td>
+                    <td class="py-3 px-2 text-amber-600">{{ performance.inflation_adjusted[year].inflation_rate }}%</td>
+                    <td class="py-3 px-2 {% if performance.inflation_adjusted[year].real_roi >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %} font-black">
+                        {{ performance.inflation_adjusted[year].real_roi|round(2) }}%
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Best and Worst Performance -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+    <div class="premium-card p-8 bg-white/80 border-t-8 {% if performance.summary.best_year_roi >= 0 %}border-emerald-500{% else %}border-rose-500{% endif %}">
+        <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-4">En İyi Yıl</h4>
+        <div class="flex items-center gap-4">
+            <div class="text-4xl font-black {% if performance.summary.best_year_roi >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">
+                {{ performance.summary.best_year_roi|round(2) }}%
+            </div>
+            <div>
+                <p class="text-2xl font-black text-slate-800">{{ performance.summary.best_year }}</p>
+                <p class="text-[10px] text-slate-400 font-semibold uppercase">Nominal Getiri</p>
+            </div>
+        </div>
+    </div>
+    <div class="premium-card p-8 bg-white/80 border-t-8 {% if performance.summary.worst_year_roi >= 0 %}border-emerald-500{% else %}border-rose-500{% endif %}">
+        <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-4">En Kötü Yıl</h4>
+        <div class="flex items-center gap-4">
+            <div class="text-4xl font-black {% if performance.summary.worst_year_roi >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">
+                {{ performance.summary.worst_year_roi|round(2) }}%
+            </div>
+            <div>
+                <p class="text-2xl font-black text-slate-800">{{ performance.summary.worst_year }}</p>
+                <p class="text-[10px] text-slate-400 font-semibold uppercase">Nominal Getiri</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Inflation Reference -->
+<div class="premium-card p-8 bg-white/80">
+    <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-6">Referans Enflasyon Verileri (TÜİK)</h4>
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        {% for year, rate in performance.inflation_rates.items() %}
+        <div class="bg-slate-50 rounded-xl p-4 text-center">
+            <p class="text-lg font-black text-slate-800">{{ year }}</p>
+            <p class="text-sm font-bold text-amber-600">{{ rate }}%</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% else %}
+<!-- No Data Message -->
+<div class="premium-card p-12 bg-white/80 text-center">
+    <div class="text-6xl mb-4">📊</div>
+    <h3 class="text-xl font-black text-slate-800 mb-2">Henüz Yatırım Verisi Yok</h3>
+    <p class="text-sm text-slate-500 mb-6">Yatırım performans analizi için varlık verilerine ihtiyaç vardır.</p>
+    <a href="/assets_management" class="inline-block bg-gradient-to-r from-indigo-500 to-indigo-600 text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-wider hover:shadow-xl transition">
+        Varlık Ekle
+    </a>
+</div>
+{% endif %}
+
+<script>
+(function() {
+    const pageData = document.getElementById('investment-performance-page');
+    if (!pageData) return;
+    
+    try {
+        const yearlyDataRaw = JSON.parse(pageData.getAttribute('data-yearly-data') || '{}');
+        const inflationAdjRaw = JSON.parse(pageData.getAttribute('data-inflation-adjusted') || '{}');
+        
+        if (!yearlyDataRaw || Object.keys(yearlyDataRaw).length === 0) return;
+
+// Yılları sıralı liste olarak al
+const years = Object.keys(yearlyDataRaw).map(Number).sort((a,b) => a-b);
+
+// Nominal ve gerçek getiri dizileri
+const nominalReturns = years.map(y => {
+    const d = yearlyDataRaw[y];
+    return d ? Math.round((d.roi || 0) * 100) / 100 : 0;
+});
+const realReturns = years.map(y => {
+    const d = inflationAdjRaw[y];
+    return d ? Math.round((d.real_roi || 0) * 100) / 100 : 0;
+});
+const portfolioValues = years.map(y => {
+    const d = yearlyDataRaw[y];
+    return d ? (d.total_value || 0) : 0;
+});
+
+// ── Grafik 1: Yıllık Nominal vs Gerçek Getiri ────────────────────────────
+new Chart(document.getElementById('performanceChart'), {
+    type: 'bar',
+    data: {
+        labels: years,
+        datasets: [
+            {
+                label: 'Nominal Getiri %',
+                data: nominalReturns,
+                backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 2,
+                borderRadius: 6
+            },
+            {
+                label: 'Gerçek Getiri %',
+                data: realReturns,
+                backgroundColor: 'rgba(168, 85, 247, 0.7)',
+                borderColor: 'rgba(168, 85, 247, 1)',
+                borderWidth: 2,
+                borderRadius: 6
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+                labels: { font: { size: 10, weight: 'bold' } }
+            },
+            tooltip: {
+                callbacks: {
+                    label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(2) + '%'
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: false,
+                ticks: {
+                    font: { size: 9, weight: '600' },
+                    callback: v => v + '%'
+                },
+                grid: { color: 'rgba(0,0,0,0.06)' }
+            },
+            x: { ticks: { font: { size: 9, weight: '600' } } }
+        }
+    }
+});
+
+// ── Grafik 2: Portföy Değeri Gelişimi ────────────────────────────────────
+new Chart(document.getElementById('valueChart'), {
+    type: 'line',
+    data: {
+        labels: years,
+        datasets: [{
+            label: 'Portföy Değeri (₺)',
+            data: portfolioValues,
+            borderColor: 'rgba(16, 185, 129, 1)',
+            backgroundColor: 'rgba(16, 185, 129, 0.08)',
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+            pointRadius: 5
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+                labels: { font: { size: 10, weight: 'bold' } }
+            },
+            tooltip: {
+                callbacks: {
+                    label: ctx => 'Değer: ' + new Intl.NumberFormat('tr-TR').format(ctx.parsed.y) + ' ₺'
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    font: { size: 9, weight: '600' },
+                    callback: v => new Intl.NumberFormat('tr-TR', {notation:'compact'}).format(v) + ' ₺'
+                },
+                grid: { color: 'rgba(0,0,0,0.06)' }
+            },
+            x: { ticks: { font: { size: 9, weight: '600' } } }
+        }
+    }
+});
+    } catch(e) {
+        console.error('Error parsing investment performance data:', e);
+    }
+})();
+</script>
+</div>
+{% endblock %}

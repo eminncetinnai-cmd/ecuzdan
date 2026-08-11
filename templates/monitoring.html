@@ -1,0 +1,116 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ _('Monitoring Dashboard') }} - {{ brand }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/monitoring.css') }}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/monitoring.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="monitoring-container">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-800 mb-2">📊 Sistem Monitoring</h1>
+            <p class="text-slate-500">Sistem durumu ve log görüntüleyici</p>
+        </div>
+        <div class="text-sm text-slate-500">
+            Son güncelleme: <span id="last-updated" class="font-medium">-</span>
+        </div>
+    </div>
+
+    <!-- Health Status -->
+    <div class="mb-6">
+        <div id="health-status" class="health-status">
+            <span class="status-indicator"></span>
+            <span class="font-semibold">Yükleniyor...</span>
+        </div>
+        <div id="health-components" class="component-status"></div>
+        <div id="disk-usage-info" class="mt-3"></div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Toplam Log</div>
+            <div class="stat-value" id="total-logs">-</div>
+            <div class="text-sm text-slate-500">Tüm log kayıtları</div>
+        </div>
+        
+        <div class="stat-card error">
+            <div class="stat-label">Hatalar</div>
+            <div class="stat-value" id="error-count">-</div>
+            <div class="text-sm text-slate-500">Error seviyesi loglar</div>
+        </div>
+        
+        <div class="stat-card warning">
+            <div class="stat-label">Uyarılar</div>
+            <div class="stat-value" id="warning-count">-</div>
+            <div class="text-sm text-slate-500">Warning seviyesi loglar</div>
+        </div>
+        
+        <div class="stat-card critical">
+            <div class="stat-label">Kritik</div>
+            <div class="stat-value" id="critical-count">-</div>
+            <div class="text-sm text-slate-500">Critical seviyesi loglar</div>
+        </div>
+        
+        <div class="stat-card security">
+            <div class="stat-label">Güvenlik</div>
+            <div class="stat-value" id="security-count">-</div>
+            <div class="text-sm text-slate-500">Security logları</div>
+        </div>
+    </div>
+
+    <!-- Log File Info -->
+    <div class="mb-6">
+        <h3 class="text-lg font-semibold text-slate-700 mb-3">Log Dosyaları</h3>
+        <div id="log-files-info"></div>
+    </div>
+
+    <!-- Log Viewer -->
+    <div class="log-viewer">
+        <h3 class="text-lg font-semibold text-slate-700 mb-4">Log Görüntüleyici</h3>
+        
+        <div class="log-controls">
+            <select id="log-file-select">
+                <option value="e_cuzdan">Ana Log (e_cuzdan.log)</option>
+                <option value="e_cuzdan_errors">Hata Logları (e_cuzdan_errors.log)</option>
+                <option value="e_cuzdan_security">Güvenlik Logları (e_cuzdan_security.log)</option>
+            </select>
+            
+            <select id="log-level-select">
+                <option value="">Tüm Seviyeler</option>
+                <option value="ERROR">Sadece Hatalar</option>
+                <option value="WARNING">Sadece Uyarılar</option>
+                <option value="CRITICAL">Sadece Kritik</option>
+                <option value="INFO">Sadece Bilgi</option>
+            </select>
+            
+            <input type="text" id="log-search-input" placeholder="Ara...">
+            
+            <input type="number" id="log-lines-input" value="100" min="10" max="1000" placeholder="Satır">
+            
+            <button id="load-logs-btn">Log Yükle</button>
+            <button id="clear-logs-btn">Temizle</button>
+            <button id="download-logs-btn">İndir</button>
+            <button id="auto-refresh-btn">Otomatik Yenileme: KAPALI</button>
+        </div>
+        
+        <div id="log-container" class="log-container">
+            <div class="text-center text-slate-400 py-8">Log yüklemek için "Log Yükle" butonuna tıklayın</div>
+        </div>
+    </div>
+
+    <!-- Refresh Button -->
+    <button class="refresh-button" id="refresh-btn" title="Tümünü Yenile">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+    </button>
+</div>
+{% endblock %}

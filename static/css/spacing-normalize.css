@@ -1,0 +1,91 @@
+/* E-Cüzdan v15 — Spacing Normalization */
+
+/* 1. Ana Container */
+.container {
+    max-width: var(--container-lg) !important;
+    margin: 0 auto !important;
+    padding-left: var(--page-padding-x) !important;
+    padding-right: var(--page-padding-x) !important;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding-left: var(--page-padding-x-mobile) !important;
+        padding-right: var(--page-padding-x-mobile) !important;
+    }
+}
+
+/* 2. Sidebar İç Padding */
+.sidebar-premium .sidebar-content {
+    padding: var(--space-5) !important;
+}
+.sidebar-premium .sidebar-middle,
+.sidebar-premium .sidebar-top,
+.sidebar-premium .sidebar-bottom {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+/* 3. Sayfa İçeriği Üst Boşluk */
+main .page-content,
+main .content-wrapper,
+.main-content {
+    padding-top: var(--page-padding-top) !important;
+}
+
+/* 4. Kart ve Panel Boşlukları */
+.card,
+.dashboard-card,
+.premium-card,
+.glass-panel {
+    padding: var(--card-padding-y) var(--card-padding-x) !important;
+}
+
+@media (max-width: 768px) {
+    .card,
+    .dashboard-card,
+    .premium-card,
+    .glass-panel {
+        padding: var(--card-padding-sm) !important;
+    }
+}
+
+/* 5. Grid Gaps (Kartlar Arası) */
+.grid,
+.row,
+.card-grid,
+.dashboard-grid {
+    gap: var(--card-gap) !important;
+}
+
+/* 6. Form Elemanları */
+.form-group {
+    margin-bottom: var(--input-gap) !important;
+}
+
+.form-group label,
+.form-label {
+    margin-bottom: var(--label-gap) !important;
+}
+
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea,
+.form-control {
+    padding: var(--input-padding-y) var(--input-padding-x) !important;
+}
+
+/* 7. Tablo Hücre Padding */
+table td,
+table th,
+.table td,
+.table th {
+    padding: var(--space-3) var(--space-4) !important;
+}
+
+/* 8. Bölümler Arası Ayırıcı */
+section,
+.section,
+.content-section {
+    margin-bottom: var(--section-gap) !important;
+}

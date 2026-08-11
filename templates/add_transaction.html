@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+{% from 'macros/forms.html' import date_field %}
+{% block content %}
+<div class="max-w-2xl mx-auto premium-card p-8 bg-white border-t-8 border-amber-400 shadow-xl mb-10">
+    <h2 class="font-black text-2xl mb-6 uppercase text-slate-800 tracking-tighter italic">{{ _('tx_new_record_title') }}</h2>
+    <form action="/new_transaction" method="POST" class="space-y-5">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div>
+            <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{{ _('tx_date_label') }}</label>
+            {{ date_field('date', today_display, '', 'w-full p-3.5 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-amber-400 outline-none text-xs font-bold text-slate-800') }}
+        </div>
+        <div>
+            <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{{ _('tx_category_label') }}</label>
+            <select name="category" class="w-full p-3.5 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-amber-400 outline-none text-xs font-black text-indigo-600">
+                {% for c in cats %}<option value="{{ c.name }}">{{ c.name }} ({{ c.type }})</option>{% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{{ _('tx_amount_label') }}</label>
+            <input type="number" step="0.01" name="amount" placeholder="0.00" class="w-full p-3.5 border border-slate-200 rounded-xl bg-slate-50 font-black text-xl text-slate-800 focus:ring-2 focus:ring-amber-400 outline-none" required>
+        </div>
+        <div>
+            <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{{ _('tx_description_label') }}</label>
+            <input type="text" name="description" placeholder="Örn: X Market Haftalık Alışveriş" class="w-full p-3.5 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-amber-400 outline-none text-xs text-slate-700">
+        </div>
+        <div>
+            <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{{ _('tx_status_label') }}</label>
+            <select name="status" class="w-full p-3.5 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-amber-400 outline-none text-xs font-bold text-slate-700">
+                <option value="Bekliyor">{{ _('tx_status_pending_planned') }}</option>
+                <option value="Ödendi">{{ _('tx_status_paid_completed') }}</option>
+            </select>
+        </div>
+        <button type="submit" class="w-full bg-amber-400 text-slate-900 font-black p-4 rounded-xl shadow-lg uppercase text-xs tracking-wider hover:bg-amber-500 transition transform hover:scale-[1.01] mt-8">
+            {{ _('tx_save_btn') }}
+        </button>
+    </form>
+</div>
+{% endblock %}

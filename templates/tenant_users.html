@@ -1,0 +1,440 @@
+{% extends "layout.html" %}
+{% block title %}Kullanıcı Yönetimi — E-Cüzdan{% endblock %}
+
+{% block content %}
+<style>
+/* ── Tenant Users Page ───────────────────────────────────────────── */
+.tu-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 999px;
+  font-size: 10px; font-weight: 800; letter-spacing: .04em;
+}
+.tu-badge-superadmin { background:rgba(245,158,11,.15); color:#fbbf24; border:1px solid rgba(245,158,11,.25); }
+.tu-badge-admin      { background:rgba(124,58,237,.14); color:#a78bfa; border:1px solid rgba(124,58,237,.22); }
+.tu-badge-member     { background:rgba(99,102,241,.12); color:#818cf8; border:1px solid rgba(99,102,241,.20); }
+.tu-badge-you        { background:rgba(16,185,129,.12); color:#34d399; border:1px solid rgba(16,185,129,.20); }
+
+.stat-card {
+  background:rgba(255,255,255,.025);
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:16px; padding:1.25rem 1.5rem;
+  display:flex; flex-direction:column; gap:.25rem;
+}
+.stat-label { font-size:9px; font-weight:800; color:rgba(255,255,255,.3); text-transform:uppercase; letter-spacing:.14em; }
+.stat-value { font-size:28px; font-weight:900; color:#fff; letter-spacing:-.04em; line-height:1; }
+.stat-sub   { font-size:10px; color:rgba(255,255,255,.3); margin-top:.15rem; }
+
+.user-row {
+  display:grid;
+  grid-template-columns: 42px 1fr auto auto;
+  align-items:center; gap:1rem;
+  padding:.9rem 1.1rem; border-radius:14px;
+  background:rgba(255,255,255,.018);
+  border:1px solid rgba(255,255,255,.055);
+  margin-bottom:.5rem;
+  transition:background .18s, border-color .18s, transform .18s;
+}
+.user-row:hover {
+  background:rgba(124,58,237,.07);
+  border-color:rgba(124,58,237,.2);
+  transform:translateY(-1px);
+}
+
+.user-avatar {
+  width:42px; height:42px; border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; font-weight:900; color:#fff;
+  flex-shrink:0; position:relative;
+}
+.user-avatar-online::after {
+  content:''; position:absolute; bottom:2px; right:2px;
+  width:8px; height:8px; border-radius:50%;
+  background:#10b981; border:2px solid #0d1129;
+}
+
+.user-name  { font-size:14px; font-weight:800; color:#e2e8f0; }
+.user-meta  { font-size:10px; color:rgba(255,255,255,.32); margin-top:2px; display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; }
+
+.btn-sm {
+  padding:6px 11px; border-radius:9px;
+  border:1px solid rgba(255,255,255,.09);
+  background:rgba(255,255,255,.04); color:rgba(255,255,255,.58);
+  cursor:pointer; font-size:11px; font-weight:700;
+  transition:all .18s; display:inline-flex; align-items:center; gap:5px;
+  white-space:nowrap;
+}
+.btn-sm:hover       { background:rgba(124,58,237,.18); border-color:rgba(124,58,237,.35); color:#c4b5fd; }
+.btn-sm-danger:hover{ background:rgba(239,68,68,.15);  border-color:rgba(239,68,68,.30);  color:#fca5a5; }
+.btn-sm-invite {
+  background:linear-gradient(135deg,#10b981,#059669);
+  border:none; color:#fff; font-weight:800;
+  box-shadow:0 4px 14px rgba(16,185,129,.28);
+}
+.btn-sm-invite:hover { opacity:.9; transform:translateY(-1px); color:#fff; }
+
+.invite-card {
+  background:rgba(16,185,129,.05);
+  border:1px solid rgba(16,185,129,.18);
+  border-radius:16px; padding:1.25rem 1.5rem;
+}
+.invite-link-box {
+  background:rgba(0,0,0,.3); border:1px solid rgba(255,255,255,.08);
+  border-radius:10px; padding:10px 14px;
+  font-size:11px; color:#6ee7b7; font-family:monospace;
+  word-break:break-all; margin-top:.65rem; user-select:all;
+}
+
+/* Search */
+.search-input {
+  background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.09);
+  border-radius:10px; padding:8px 14px; font-size:12px; color:#cbd5e1;
+  outline:none; width:220px; transition:border-color .18s;
+}
+.search-input:focus { border-color:rgba(124,58,237,.45); }
+.search-input::placeholder { color:rgba(255,255,255,.2); }
+
+/* Delete confirm modal */
+#deleteModal .modal-box {
+  background:#0d1129; border:1px solid rgba(239,68,68,.25);
+  border-radius:20px; padding:1.75rem;
+  box-shadow:0 30px 60px rgba(0,0,0,.6);
+}
+</style>
+
+<div class="max-w-4xl mx-auto space-y-5 mb-12">
+
+  <!-- ── Başlık ── -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div>
+      <h2 class="text-2xl font-black text-slate-100 tracking-tight">Kullanıcı Yönetimi</h2>
+      <p class="text-sm text-slate-400 mt-1">Tenant üyelerini yönet, rollerini değiştir, yeni üye davet et.</p>
+    </div>
+    <a href="{{ url_for('tenant.invite') }}" class="btn-sm btn-sm-invite">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      Kullanıcı Davet Et
+    </a>
+  </div>
+
+  <!-- ── İstatistik Kartları ── -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div class="stat-card" style="border-top:2px solid #7c3aed;">
+      <div class="stat-label">Toplam Üye</div>
+      <div class="stat-value">{{ users|length }}</div>
+      <div class="stat-sub">Bu workspace'de</div>
+    </div>
+    <div class="stat-card" style="border-top:2px solid #f59e0b;">
+      <div class="stat-label">Yönetici</div>
+      <div class="stat-value">{{ users|selectattr('role','in',['tenant_admin','sistem_yoneticisi','yonetici'])|list|length }}</div>
+      <div class="stat-sub">Admin yetkili</div>
+    </div>
+    <div class="stat-card" style="border-top:2px solid #6366f1;">
+      <div class="stat-label">Standart</div>
+      <div class="stat-value">{{ users|selectattr('role','equalto','kullanici')|list|length }}</div>
+      <div class="stat-sub">Normal üye</div>
+    </div>
+    <div class="stat-card" style="border-top:2px solid #10b981;">
+      <div class="stat-label">OAuth</div>
+      <div class="stat-value">{{ users|selectattr('auth_provider','ne','LOCAL')|list|length }}</div>
+      <div class="stat-sub">Sosyal giriş</div>
+    </div>
+  </div>
+
+  <!-- ── Davet Linki (varsa) ── -->
+  {% if invite_link %}
+  <div class="invite-card">
+    <div class="flex items-center gap-2 mb-1">
+      <span style="font-size:18px;">🔗</span>
+      <span class="text-sm font-bold text-emerald-300">Davet Linki Oluşturuldu</span>
+    </div>
+    <p class="text-xs text-slate-400">Bu linki davet etmek istediğin kişiyle paylaş. <strong>24 saat geçerlidir.</strong></p>
+    <div class="invite-link-box" id="inviteLinkBox">{{ invite_link }}</div>
+    <button type="button" onclick="copyInviteLink()" class="btn-sm mt-2" style="font-size:10px;">
+      📋 Kopyala
+    </button>
+  </div>
+  {% endif %}
+
+  <!-- ── Kullanıcı Listesi ── -->
+  <div class="rounded-2xl border border-white/[.055] overflow-hidden" style="background:rgba(255,255,255,.018);">
+
+    <!-- Liste başlığı + arama -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-white/[.055]">
+      <h3 class="text-xs font-black text-slate-300 uppercase tracking-widest">
+        Üye Listesi <span class="text-slate-500 font-medium normal-case ml-1">({{ users|length }} kullanıcı)</span>
+      </h3>
+      <input
+        type="text"
+        id="userSearch"
+        class="search-input"
+        placeholder="🔍  kullanıcı ara…"
+        oninput="filterUsers(this.value)"
+      >
+    </div>
+
+    <!-- Kullanıcı satırları -->
+    <div class="p-4 space-y-1" id="userList">
+      {% if not users %}
+      <div class="text-center py-10 text-slate-500 text-sm">Henüz üye yok.</div>
+      {% endif %}
+
+      {% for user in users %}
+      <div class="user-row" data-username="{{ user.username|lower }}">
+
+        <!-- Avatar -->
+        <div class="user-avatar {% if user.id == current_user.id %}user-avatar-online{% endif %}"
+             style="background:linear-gradient(135deg,
+               {% if user.is_super_admin %}#f59e0b,#d97706
+               {% elif user.role in ['tenant_admin','yonetici'] %}#7c3aed,#6366f1
+               {% else %}#475569,#334155{% endif %});">
+          {{ user.username[0]|upper }}
+        </div>
+
+        <!-- Bilgi -->
+        <div>
+          <div class="user-name" style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;">
+            {{ user.username }}
+            {% if user.id == current_user.id %}
+              <span class="tu-badge tu-badge-you">Sen</span>
+            {% endif %}
+            {% if user.is_super_admin %}
+              <span class="tu-badge tu-badge-superadmin">Platform Sahibi</span>
+            {% elif user.role in ['yonetici','tenant_admin'] %}
+              <span class="tu-badge tu-badge-admin">Tenant Admin</span>
+            {% else %}
+              <span class="tu-badge tu-badge-member">Üye</span>
+            {% endif %}
+            {% if user.auth_provider != 'LOCAL' %}
+              <span style="font-size:9px;color:rgba(255,255,255,.3);font-weight:700;">{{ user.auth_provider }}</span>
+            {% endif %}
+          </div>
+          <div class="user-meta">
+            <span>🌐 {{ user.language|upper }}</span>
+            {% if user.last_login_at %}
+              <span title="{{ user.last_login_at }}">
+                🕐 Son giriş: {{ user.last_login_at.strftime('%d.%m.%Y %H:%M') }}
+              </span>
+            {% else %}
+              <span>🕐 Hiç giriş yapmadı</span>
+            {% endif %}
+            <span>🆔 #{{ user.id }}</span>
+          </div>
+        </div>
+
+        <!-- Dil (masaüstü) -->
+        <div class="hidden sm:block text-xs text-slate-500">
+          {{ user.language|upper }}
+        </div>
+
+        <!-- Eylemler -->
+        <div style="display:flex;gap:.4rem;align-items:center;flex-shrink:0;">
+          {% if user.id != current_user.id and not user.is_super_admin %}
+            <!-- Rol değiştir -->
+            <button type="button" onclick="openRoleModal({{ user.id }}, '{{ user.role }}')"
+              class="btn-sm" title="Rol değiştir">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+              </svg>
+              <span class="hidden sm:inline">Rol</span>
+            </button>
+
+            <!-- Kullanıcı sil -->
+            <button type="button" onclick="openDeleteModal({{ user.id }}, '{{ user.username }}')"
+              class="btn-sm btn-sm-danger" title="Kullanıcıyı sil">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path d="M3 6h18m-2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+              </svg>
+              <span class="hidden sm:inline">Sil</span>
+            </button>
+          {% else %}
+            <span class="text-xs text-slate-600 px-2">—</span>
+          {% endif %}
+        </div>
+
+      </div>
+      {% endfor %}
+
+      <!-- Arama sonucu yok mesajı -->
+      <div id="noResults" class="hidden text-center py-8 text-slate-500 text-sm">
+        Arama kriterine uygun kullanıcı bulunamadı.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Hızlı Navigasyon ── -->
+  <div class="flex flex-wrap gap-2">
+    <a href="{{ url_for('tenant.invite') }}"
+       class="btn-sm" style="border-color:rgba(16,185,129,.3);color:#34d399;">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      Yeni Davet
+    </a>
+    <a href="{{ url_for('tenant.invites') }}"
+       class="btn-sm" style="border-color:rgba(245,158,11,.25);color:#fbbf24;">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      Davet Listesi
+    </a>
+    <a href="{{ url_for('settings.settings') }}"
+       class="btn-sm">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      Ayarlar
+    </a>
+  </div>
+
+</div><!-- /max-w-4xl -->
+
+
+<!-- ════════════════════════════════════════════════════════════════════
+     ROL DEĞİŞTİR MODAL
+═════════════════════════════════════════════════════════════════════ -->
+<div id="roleModal"
+     class="fixed inset-0 z-50 hidden items-center justify-center"
+     style="background:rgba(0,0,0,.65);backdrop-filter:blur(5px);"
+     role="dialog" aria-modal="true" aria-labelledby="roleModalTitle">
+  <div class="w-full max-w-sm mx-4 rounded-2xl border border-white/10 p-6"
+       style="background:#0d1129;box-shadow:0 30px 60px rgba(0,0,0,.55);">
+    <div class="flex items-center justify-between mb-4">
+      <h3 id="roleModalTitle" class="text-base font-black text-white">Rol Değiştir</h3>
+      <button type="button" onclick="closeRoleModal()" class="text-slate-500 hover:text-white transition-colors text-xl leading-none" aria-label="Kapat">✕</button>
+    </div>
+    <p class="text-xs text-slate-400 mb-4">Kullanıcının tenant içindeki rolünü güncelle.</p>
+    <form method="POST" id="roleForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="mb-4">
+        <label class="block text-xs font-800 text-slate-300 mb-2 uppercase tracking-wide" for="roleSelect">Yeni Rol</label>
+        <select id="roleSelect" name="role"
+                class="w-full rounded-xl border border-white/10 px-4 py-3 text-sm font-600 text-white focus:outline-none focus:border-violet-500"
+                style="background:#182142;">
+          <option value="kullanici">👤 Standart Üye — kendi verilerini yönetir</option>
+          <option value="tenant_admin">🛡 Tenant Admin — üye yönetimi ve davet yetkisi</option>
+        </select>
+      </div>
+      <div class="flex gap-3 justify-end">
+        <button type="button" onclick="closeRoleModal()"
+                class="px-4 py-2 rounded-xl text-sm font-600 text-slate-400 border border-white/10 hover:border-white/20 transition-colors">
+          İptal
+        </button>
+        <button type="submit"
+                class="px-5 py-2 rounded-xl text-sm font-800 text-white transition-all hover:-translate-y-px"
+                style="background:linear-gradient(135deg,#7c3aed,#6366f1);box-shadow:0 4px 14px rgba(124,58,237,.35);">
+          Kaydet
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════
+     KULLANICI SİL MODAL (CSRF-KORUMAL I)
+═════════════════════════════════════════════════════════════════════ -->
+<div id="deleteModal"
+     class="fixed inset-0 z-50 hidden items-center justify-center"
+     style="background:rgba(0,0,0,.65);backdrop-filter:blur(5px);"
+     role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+  <div class="modal-box w-full max-w-sm mx-4">
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:rgba(239,68,68,.15);">
+          <svg width="18" height="18" fill="none" stroke="#f87171" stroke-width="2.5" viewBox="0 0 24 24">
+            <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+          </svg>
+        </div>
+        <h3 id="deleteModalTitle" class="text-base font-black text-white">Kullanıcıyı Sil</h3>
+      </div>
+      <button type="button" onclick="closeDeleteModal()" class="text-slate-500 hover:text-white transition-colors text-xl leading-none" aria-label="Kapat">✕</button>
+    </div>
+
+    <p class="text-sm text-slate-300 mb-1">
+      <strong id="deleteTargetName" class="text-rose-300"></strong> adlı kullanıcı tenant'tan çıkarılacak.
+    </p>
+    <p class="text-xs text-slate-500 mb-5">Bu işlem geri alınamaz. Kullanıcının tüm oturum bilgileri silinir.</p>
+
+    <form method="POST" id="deleteForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="flex gap-3 justify-end">
+        <button type="button" onclick="closeDeleteModal()"
+                class="px-4 py-2 rounded-xl text-sm font-600 text-slate-400 border border-white/10 hover:border-white/20 transition-colors">
+          Vazgeç
+        </button>
+        <button type="submit"
+                class="px-5 py-2 rounded-xl text-sm font-800 text-white"
+                style="background:linear-gradient(135deg,#ef4444,#dc2626);box-shadow:0 4px 14px rgba(239,68,68,.35);">
+          Evet, Sil
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<script>
+/* ── Rol Modal ─────────────────────────────── */
+function openRoleModal(userId, currentRole) {
+  document.getElementById('roleSelect').value =
+    (['tenant_admin','yonetici'].includes(currentRole)) ? 'tenant_admin' : 'kullanici';
+  document.getElementById('roleForm').action = '/tenant/users/' + userId + '/change_role';
+  _openModal('roleModal');
+}
+function closeRoleModal() { _closeModal('roleModal'); }
+
+/* ── Sil Modal ─────────────────────────────── */
+function openDeleteModal(userId, username) {
+  document.getElementById('deleteTargetName').textContent = username;
+  document.getElementById('deleteForm').action = '/tenant/users/' + userId + '/remove';
+  _openModal('deleteModal');
+}
+function closeDeleteModal() { _closeModal('deleteModal'); }
+
+/* ── Generic modal helpers ─────────────────── */
+function _openModal(id) {
+  const m = document.getElementById(id);
+  m.classList.remove('hidden');
+  m.classList.add('flex');
+  document.body.style.overflow = 'hidden';
+}
+function _closeModal(id) {
+  const m = document.getElementById(id);
+  m.classList.add('hidden');
+  m.classList.remove('flex');
+  document.body.style.overflow = '';
+}
+
+/* Overlay tıklaması ile kapat */
+['roleModal', 'deleteModal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) {
+    if (e.target === this) {
+      if (id === 'roleModal') closeRoleModal();
+      else closeDeleteModal();
+    }
+  });
+});
+
+/* Escape ile kapat */
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') { closeRoleModal(); closeDeleteModal(); }
+});
+
+/* ── Arama ─────────────────────────────────── */
+function filterUsers(query) {
+  const q = query.toLowerCase().trim();
+  const rows = document.querySelectorAll('#userList .user-row');
+  let visible = 0;
+  rows.forEach(row => {
+    const name = row.dataset.username || '';
+    const show = !q || name.includes(q);
+    row.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+  document.getElementById('noResults').classList.toggle('hidden', visible > 0);
+}
+
+{% if invite_link %}
+/* ── Davet linki kopyala ───────────────────── */
+function copyInviteLink() {
+  const txt = document.getElementById('inviteLinkBox').textContent.trim();
+  navigator.clipboard.writeText(txt)
+    .then(() => { if (window.showToast) window.showToast('Davet linki panoya kopyalandı!', 'success'); })
+    .catch(() => { if (window.showToast) window.showToast('Kopyalama başarısız.', 'error'); });
+}
+{% endif %}
+</script>
+{% endblock %}

@@ -1,0 +1,340 @@
+/* E-Cüzdan v15 — Koyu Tema Katmanı
+ *
+ * Neden override katmanı?
+ * Şablonlar Tailwind CDN build'i ile yazılmış ve 1200'den fazla sabit açık-tema
+ * utility'si içeriyor (bg-white, text-slate-*, bg-slate-*). CDN build'de
+ * `dark:` varyantı üretmek için her şablonu tek tek düzenlemek gerekirdi.
+ * Bunun yerine kullanılan dar palet (12 baskın ton) html.dark altında yeniden
+ * eşlenir — şablonlarda tek bir satır değişmeden koyu tema elde edilir.
+ *
+ * Bu dosya en SON yüklenmelidir (layout.html) ki Tailwind CDN'in enjekte
+ * ettiği kuralları geçebilsin.
+ */
+
+/* ─── 1. Tasarım token'ları (custom CSS bu değişkenleri kullanır) ─────────── */
+html.dark {
+    --slate-50:  #0f172a;
+    --slate-100: #1e293b;
+    --slate-200: #273449;
+    --slate-300: #334155;
+    --slate-400: #64748b;
+    --slate-500: #94a3b8;
+    --slate-600: #cbd5e1;
+    --slate-700: #e2e8f0;
+    --slate-800: #f1f5f9;
+    --slate-900: #f8fafc;
+
+    /* Semantik alias'lar — custom CSS'in büyük kısmı bunları kullanır
+       (--color-surface tek başına 40'tan fazla kuralda geçiyor). */
+    --color-bg:          #0b1220;
+    --color-surface:     #131c2e;
+    --color-border:      #273449;
+    --color-text:        #e2e8f0;
+    --color-text-muted:  #a3b1c6;
+    --color-text-subtle: #94a3b8;
+    --color-text-strong: #f8fafc;
+
+    --glass-bg:     rgba(19, 28, 46, 0.97);
+    --glass-border: rgba(51, 65, 85, 0.85);
+
+    --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.40);
+    --shadow-md:  0 4px 20px rgba(0, 0, 0, 0.45);
+    --shadow-lg:  0 8px 32px rgba(0, 0, 0, 0.50);
+    --shadow-xl:  0 20px 60px rgba(0, 0, 0, 0.55);
+    --shadow-2xl: 0 24px 80px rgba(0, 0, 0, 0.60);
+
+    color-scheme: dark;
+}
+
+html.dark body {
+    background: #0b1220;
+    color: #e2e8f0;
+}
+
+/* ─── 2. Kart / konteyner yüzeyleri ──────────────────────────────────────── */
+/* Ortak .premium-card ailesinin yanı sıra sayfa-özel kart sınıfları da
+   kapsanır; bunlar kendi <style> bloklarında beyaz zemin tanımlıyor ve
+   kapsanmazlarsa koyu temada beyaz-üstü-beyaz metin oluşuyor. */
+html.dark .premium-card,
+html.dark .diamond-card,
+html.dark .guide-card,
+html.dark .plan-card,
+html.dark .cat-card,
+html.dark .transaction-card,
+html.dark .settings-section,
+html.dark .strat-card,
+html.dark .action-card,
+html.dark .anomaly-card,
+html.dark .asset-card,
+html.dark .dashboard-card,
+html.dark .feature-card,
+html.dark .ff-card,
+html.dark .health-card,
+html.dark .insight-card,
+html.dark .invite-card,
+html.dark .logbook-card,
+html.dark .metric-card,
+html.dark .monthly-card,
+html.dark .quant-card,
+html.dark .question-card,
+html.dark .stat-card,
+html.dark .summary-card,
+html.dark .user-info-card,
+html.dark .edit-modal-card,
+html.dark .delete-modal-panel,
+html.dark .filter-panel,
+html.dark .glass-panel,
+html.dark .pay-tab-panel,
+html.dark .left-panel,
+html.dark .right-panel,
+html.dark .calc-box,
+html.dark .info-box,
+html.dark .tip-box,
+html.dark .invite-link-box {
+    background: #131c2e !important;
+    border-color: rgba(51, 65, 85, 0.85);
+    box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(148, 163, 184, 0.06);
+}
+
+/* Kartların üzerinden geçen parlama efekti koyu temada beyaz kalmamalı */
+html.dark .premium-card::before,
+html.dark .diamond-card::before,
+html.dark .guide-card::before,
+html.dark .plan-card::before,
+html.dark .cat-card::before,
+html.dark .transaction-card::before,
+html.dark .settings-section::before,
+html.dark .strat-card::before {
+    background: linear-gradient(to right, transparent, rgba(148, 163, 184, 0.10), transparent);
+}
+
+/* ─── 3. Tailwind zemin utility'leri ─────────────────────────────────────── */
+html.dark .bg-white          { background-color: #131c2e !important; }
+html.dark .bg-white\/95      { background-color: rgba(19, 28, 46, 0.95) !important; }
+html.dark .bg-white\/90      { background-color: rgba(19, 28, 46, 0.90) !important; }
+html.dark .bg-white\/85      { background-color: rgba(19, 28, 46, 0.85) !important; }
+html.dark .bg-white\/80      { background-color: rgba(19, 28, 46, 0.80) !important; }
+html.dark .bg-white\/70      { background-color: rgba(19, 28, 46, 0.70) !important; }
+html.dark .bg-white\/60      { background-color: rgba(19, 28, 46, 0.60) !important; }
+html.dark .bg-white\/50      { background-color: rgba(19, 28, 46, 0.50) !important; }
+html.dark .bg-white\/5       { background-color: rgba(148, 163, 184, 0.05) !important; }
+
+html.dark .bg-slate-50       { background-color: #172033 !important; }
+html.dark .bg-slate-50\/80   { background-color: rgba(23, 32, 51, 0.80) !important; }
+html.dark .bg-slate-50\/50   { background-color: rgba(23, 32, 51, 0.50) !important; }
+html.dark .bg-slate-50\/40   { background-color: rgba(23, 32, 51, 0.40) !important; }
+html.dark .bg-slate-50\/30   { background-color: rgba(23, 32, 51, 0.30) !important; }
+html.dark .bg-slate-100      { background-color: #1e293b !important; }
+html.dark .bg-slate-200      { background-color: #273449 !important; }
+html.dark .bg-slate-300      { background-color: #334155 !important; }
+html.dark .bg-slate-400      { background-color: #475569 !important; }
+html.dark .bg-slate-500      { background-color: #64748b !important; }
+/* Açık temada koyu vurgu olan zeminler koyu temada kaybolmamalı: bir ton açılır */
+html.dark .bg-slate-800      { background-color: #334155 !important; }
+html.dark .bg-slate-800\/50  { background-color: rgba(51, 65, 85, 0.50) !important; }
+html.dark .bg-slate-900      { background-color: #1e293b !important; }
+html.dark .bg-slate-900\/95  { background-color: rgba(30, 41, 59, 0.95) !important; }
+html.dark .bg-slate-900\/60  { background-color: rgba(30, 41, 59, 0.60) !important; }
+
+/* ─── 4. Metin utility'leri ──────────────────────────────────────────────── */
+html.dark .text-slate-900 { color: #f8fafc !important; }
+html.dark .text-slate-800 { color: #f1f5f9 !important; }
+html.dark .text-slate-700 { color: #e2e8f0 !important; }
+html.dark .text-slate-600 { color: #cbd5e1 !important; }
+html.dark .text-slate-500 { color: #a3b1c6 !important; }
+html.dark .text-slate-400 { color: #94a3b8 !important; }
+html.dark .text-slate-300 { color: #7c8ba1 !important; }
+/* Koyu zemin üzerine yazılmış açık metinler ters çevrilmemeli */
+html.dark .text-white     { color: #f8fafc !important; }
+
+/* ─── 5. Kenarlıklar ─────────────────────────────────────────────────────── */
+html.dark .border-slate-50,
+html.dark .border-slate-100,
+html.dark .border-slate-200 { border-color: #273449 !important; }
+html.dark .border-slate-300,
+html.dark .border-slate-400 { border-color: #334155 !important; }
+html.dark .border-slate-700,
+html.dark .border-slate-800 { border-color: #475569 !important; }
+
+/* ─── 6. Renkli vurgu zeminleri (rozet, uyarı kutuları) ──────────────────── */
+/* Açık tonlu pastel zeminler koyu temada okunmaz olur; şeffaf tonlara çevrilir.
+   Metin renkleri (text-emerald-700 vb.) olduğu gibi bırakılırsa kontrast düşer,
+   bu yüzden onlar da bir-iki ton açılır. */
+html.dark .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.12) !important; }
+html.dark .bg-green-50   { background-color: rgba(34, 197, 94, 0.12) !important; }
+html.dark .bg-indigo-50  { background-color: rgba(99, 102, 241, 0.14) !important; }
+html.dark .bg-blue-50    { background-color: rgba(59, 130, 246, 0.14) !important; }
+html.dark .bg-cyan-50    { background-color: rgba(6, 182, 212, 0.14) !important; }
+html.dark .bg-amber-50   { background-color: rgba(245, 158, 11, 0.14) !important; }
+html.dark .bg-yellow-50  { background-color: rgba(234, 179, 8, 0.14) !important; }
+html.dark .bg-rose-50    { background-color: rgba(244, 63, 94, 0.14) !important; }
+html.dark .bg-red-50     { background-color: rgba(239, 68, 68, 0.14) !important; }
+html.dark .bg-purple-50  { background-color: rgba(168, 85, 247, 0.14) !important; }
+html.dark .bg-violet-50  { background-color: rgba(139, 92, 246, 0.14) !important; }
+html.dark .bg-slate-50\/50 { background-color: rgba(23, 32, 51, 0.50) !important; }
+
+html.dark .bg-emerald-100 { background-color: rgba(16, 185, 129, 0.18) !important; }
+html.dark .bg-green-100   { background-color: rgba(34, 197, 94, 0.18) !important; }
+html.dark .bg-indigo-100  { background-color: rgba(99, 102, 241, 0.20) !important; }
+html.dark .bg-blue-100    { background-color: rgba(59, 130, 246, 0.20) !important; }
+html.dark .bg-amber-100   { background-color: rgba(245, 158, 11, 0.20) !important; }
+html.dark .bg-rose-100    { background-color: rgba(244, 63, 94, 0.20) !important; }
+html.dark .bg-red-100     { background-color: rgba(239, 68, 68, 0.20) !important; }
+html.dark .bg-purple-100  { background-color: rgba(168, 85, 247, 0.20) !important; }
+html.dark .bg-violet-100  { background-color: rgba(139, 92, 246, 0.20) !important; }
+html.dark .bg-slate-100\/50 { background-color: rgba(30, 41, 59, 0.50) !important; }
+
+/* -600 ve -900 tonları koyu zeminde yeterince parlak değil; hepsi açılır. */
+html.dark .text-emerald-600 { color: #34d399 !important; }
+html.dark .text-emerald-900 { color: #a7f3d0 !important; }
+html.dark .text-green-600   { color: #4ade80 !important; }
+html.dark .text-indigo-600  { color: #a5b4fc !important; }
+html.dark .text-indigo-900  { color: #ddd6fe !important; }
+html.dark .text-blue-600    { color: #93c5fd !important; }
+html.dark .text-blue-800    { color: #bfdbfe !important; }
+html.dark .text-cyan-600,
+html.dark .text-cyan-700    { color: #67e8f9 !important; }
+html.dark .text-amber-600   { color: #fcd34d !important; }
+html.dark .text-amber-900   { color: #fef3c7 !important; }
+html.dark .text-yellow-700,
+html.dark .text-yellow-800  { color: #fde047 !important; }
+html.dark .text-rose-800,
+html.dark .text-rose-900    { color: #fecdd3 !important; }
+html.dark .text-red-600     { color: #fca5a5 !important; }
+html.dark .text-red-800,
+html.dark .text-red-900     { color: #fecaca !important; }
+html.dark .text-purple-600  { color: #d8b4fe !important; }
+html.dark .text-purple-800  { color: #e9d5ff !important; }
+html.dark .text-violet-600  { color: #c4b5fd !important; }
+html.dark .text-violet-800  { color: #ddd6fe !important; }
+
+html.dark .text-emerald-700 { color: #34d399 !important; }
+html.dark .text-emerald-800 { color: #6ee7b7 !important; }
+html.dark .text-green-700   { color: #4ade80 !important; }
+html.dark .text-green-800   { color: #86efac !important; }
+html.dark .text-indigo-700  { color: #a5b4fc !important; }
+html.dark .text-indigo-800  { color: #c7d2fe !important; }
+html.dark .text-blue-700    { color: #93c5fd !important; }
+html.dark .text-amber-700   { color: #fcd34d !important; }
+html.dark .text-amber-800   { color: #fde68a !important; }
+html.dark .text-rose-600    { color: #fb7185 !important; }
+html.dark .text-rose-700    { color: #fda4af !important; }
+html.dark .text-red-700     { color: #fca5a5 !important; }
+html.dark .text-purple-700  { color: #d8b4fe !important; }
+html.dark .text-violet-700  { color: #c4b5fd !important; }
+
+/* ─── 7. Form elemanları ─────────────────────────────────────────────────── */
+html.dark input,
+html.dark select,
+html.dark textarea {
+    background-color: #172033;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+    color: #64748b;
+}
+
+/* ─── 8. Tablolar ────────────────────────────────────────────────────────── */
+html.dark table    { color: #e2e8f0; }
+html.dark thead th { color: #cbd5e1; border-color: #334155; }
+html.dark td,
+html.dark th       { border-color: #273449; }
+
+/* ─── 9. Uygulama kabuğu: kenar çubuğu ve üst bar ────────────────────────── */
+/* layout.css bu yüzeyleri token yerine sabit renklerle kuruyor; token
+   çevirisi onlara ulaşmıyor. Kontrast denetimi 17 düşük-kontrastlı öğe
+   yakaladı, hepsi bu iki bileşendeydi. */
+html.dark .sidebar-premium {
+    background: rgba(19, 28, 46, 0.92) !important;
+    border-right-color: #273449;
+}
+
+/* Marka alanı açık bir gradyan taşıyor; koyu temada başlık beyaz-üstü-beyaz kalıyordu. */
+html.dark .brand-area {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.85), rgba(23, 32, 51, 0.65));
+    border-color: rgba(51, 65, 85, 0.7);
+}
+
+html.dark .brand-title      { color: #f8fafc; }
+html.dark .brand-kicker     { color: #94a3b8; }
+html.dark .nav-link         { color: #cbd5e1; }
+html.dark .nav-link:hover   { background: #1e293b; color: #f8fafc; }
+/* Aktif bağlantı açık zemin + koyu metin olarak kalır — kasıtlı vurgu. */
+html.dark .nav-link.active  { background: #e2e8f0; color: #0f172a; }
+
+/* Üst bar açık temada da koyu bir gradyan; metinleri AÇIK kalmalı.
+   Token çevirisi (--slate-50 → koyu) burada ters etki yaratıyordu. */
+html.dark .header-bar          { background: linear-gradient(135deg, #0a101d 0%, #16203a 100%); }
+html.dark .time-text,
+html.dark .user-name-header,
+html.dark .user-avatar-header  { color: #f1f5f9; }
+html.dark .user-role-header    { color: #a3b1c6; }
+
+/* ─── 10. Bileşen istisnaları ────────────────────────────────────────────── */
+/* Renkli/gradyan zemine oturan metinler bu katmanın utility override'larından
+   muaf tutulmalı. Yukarıdaki `.text-slate-*` kuralları !important taşıdığı ve
+   `html.dark .text-slate-500` (0,2,1) özgüllüğü bileşen kuralını (0,2,0)
+   geçtiği için, istisnalar burada daha yüksek özgüllükle yeniden kurulur. */
+html.dark .settings-tab[aria-selected="true"],
+html.dark .settings-tab[aria-selected="true"] * {
+    color: #fff !important;
+}
+
+/* DataTables CDN'den sabit renklerle geliyor (#333 / #666); koyu zeminde
+   sayfalama düğmeleri okunmuyordu. */
+html.dark .dataTables_wrapper,
+html.dark .dataTables_wrapper .dataTables_info,
+html.dark .dataTables_wrapper .dataTables_length,
+html.dark .dataTables_wrapper .dataTables_filter { color: #cbd5e1 !important; }
+
+html.dark .dataTables_wrapper .dataTables_paginate .paginate_button {
+    color: #e2e8f0 !important;
+    border-color: #334155;
+}
+
+html.dark .dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+html.dark .dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+    color: #94a3b8 !important;
+    background: transparent;
+}
+
+html.dark .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+html.dark .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    color: #0f172a !important;
+    background: #cbd5e1;
+    border-color: #cbd5e1;
+}
+
+/* Strateji sayfası bileşenleri (templates/strategy.html içi <style>) */
+html.dark .scenario-btn {
+    background: #172033 !important;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+html.dark .scenario-btn:hover { background: #1e293b !important; border-color: #6366f1; }
+html.dark .scenario-btn.active { background: #4f46e5 !important; border-color: #6366f1; color: #fff; }
+
+html.dark .anomaly-card.high   { background: rgba(220, 38, 38, 0.18) !important; }
+html.dark .anomaly-card.medium { background: rgba(245, 158, 11, 0.18) !important; }
+html.dark .anomaly-card.low    { background: rgba(59, 130, 246, 0.18) !important; }
+html.dark .bucket-bar          { background: #334155; }
+/* .success-badge zaten yeşil gradyan üstünde beyaz metin — dokunulmaz. */
+
+/* Bilgi kutuları metin rengini kendi <style> bloklarında sabitliyor
+   (ör. .info-box color:#3730a3). Zemin koyulaşınca okunmaz kalıyorlar. */
+html.dark .info-box,
+html.dark .info-box *,
+html.dark .calc-box,
+html.dark .calc-box *,
+html.dark .tip-box,
+html.dark .tip-box * {
+    color: #c7d2fe;
+}
+
+/* ─── 11. Gradient metin (bg-clip-text) koyu temada okunur kalmalı ────────── */
+html.dark .bg-clip-text.text-transparent {
+    background-image: linear-gradient(to right, #f8fafc, #a5b4fc, #f8fafc) !important;
+}

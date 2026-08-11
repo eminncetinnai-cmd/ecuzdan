@@ -1,0 +1,220 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+    .pay-tab-btn { transition: all 0.25s ease; }
+    .pay-tab-btn.active {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(30, 41, 59, 0.25);
+    }
+    .pay-tab-panel { display: none; animation: payFade 0.3s ease; }
+    .pay-tab-panel.active { display: block; }
+    @keyframes payFade {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .cal-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 6px;
+    }
+    .cal-day {
+        min-height: 88px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        background: rgba(255, 255, 255, 0.6);
+        padding: 8px;
+        cursor: default;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+    .cal-day--empty { background: transparent; border-color: transparent; min-height: 0; }
+    .cal-day--has-data:hover,
+    .cal-day--today:hover,
+    .cal-day:focus {
+        border-color: #f59e0b;
+        box-shadow: 0 8px 24px -8px rgba(245, 158, 11, 0.35);
+        transform: translateY(-1px);
+        z-index: 2;
+        outline: none;
+    }
+    .cal-day--today {
+        border-color: #6366f1;
+        background: linear-gradient(160deg, rgba(99, 102, 241, 0.08), rgba(255, 255, 255, 0.9));
+    }
+    .cal-day--has-data { background: rgba(255, 255, 255, 0.85); }
+    .cal-day-num {
+        font-size: 13px;
+        font-weight: 800;
+        color: #334155;
+    }
+    .cal-dots {
+        display: flex;
+        gap: 4px;
+        margin-top: 6px;
+        flex-wrap: wrap;
+    }
+    .cal-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+    }
+    .cal-dot--income { background: #10b981; }
+    .cal-dot--expense { background: #f43f5e; }
+    .cal-dot--inv { background: #3b82f6; }
+    .cal-mini {
+        margin-top: 6px;
+        font-size: 8px;
+        font-weight: 700;
+        line-height: 1.3;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    #cal-popover {
+        position: fixed;
+        z-index: 100;
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(16px);
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        box-shadow: 0 20px 50px -20px rgba(15, 23, 42, 0.35);
+    }
+    .chart-container {
+        position: relative;
+        width: 100%;
+        height: 300px;
+    }
+    .chart-container canvas {
+        max-height: 300px !important;
+    }
+</style>
+
+<div class="mb-8 flex flex-wrap justify-between items-end gap-4">
+    <div>
+        <h2 class="text-3xl font-black text-slate-900 tracking-tighter uppercase">{{ _('payment_calendar_title') }}</h2>
+        <p class="text-sm font-bold text-slate-400 uppercase tracking-widest mt-1">{{ _('payment_calendar_subtitle') }}</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+        <a href="/export_pdf/week" class="bg-rose-500 text-white px-5 py-2.5 rounded-xl font-black text-[10px] shadow-md hover:bg-rose-600 transition uppercase">{{ _('calendar_btn_week_pdf') }}</a>
+        <a href="/export_pdf/month" class="bg-amber-500 text-white px-5 py-2.5 rounded-xl font-black text-[10px] shadow-md hover:bg-amber-600 transition uppercase">{{ _('calendar_btn_month_pdf') }}</a>
+    </div>
+</div>
+
+<div class="flex space-x-2 mb-6 bg-slate-100/60 p-2 rounded-2xl max-w-xl">
+    <button type="button" data-tab="list" class="pay-tab-btn active flex-1 py-3 px-4 rounded-xl font-black text-[10px] uppercase tracking-wider">{{ _('calendar_tab_list') }}</button>
+    <button type="button" data-tab="calendar" class="pay-tab-btn flex-1 py-3 px-4 rounded-xl font-black text-[10px] uppercase tracking-wider text-slate-600">{{ _('calendar_tab_monthly') }}</button>
+    <button type="button" data-tab="balance" class="pay-tab-btn flex-1 py-3 px-4 rounded-xl font-black text-[10px] uppercase tracking-wider text-slate-600">Gelir Gider Dengesi</button>
+</div>
+
+<!-- Mevcut liste yapısı -->
+<div id="pay-tab-list" class="pay-tab-panel active">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <div class="diamond-card p-8 border-t-8 border-rose-500">
+            <h3 class="font-black text-xs uppercase text-rose-600 mb-6 flex items-center">
+                <span class="w-3 h-3 bg-rose-500 rounded-full mr-2"></span> {{ _('calendar_list_critical') }}
+            </h3>
+            <table class="w-full text-xs text-left">
+                <thead class="text-slate-400 text-[9px] uppercase border-b border-slate-100">
+                    <tr><th class="py-3">{{ _('table_date') }}</th><th>{{ _('table_category') }}</th><th>{{ _('table_description') }}</th><th class="text-right">{{ _('table_amount') }}</th></tr>
+                </thead>
+                <tbody>
+                    {% for p in week_p %}
+                    <tr class="border-b border-slate-50 hover:bg-slate-50/50">
+                        <td class="py-4 font-bold">{{ p.date|format_date }}</td>
+                        <td>{{ p.category }}</td>
+                        <td class="italic text-slate-500">{{ p.description }}{% if p.note %} <span class="text-slate-400">({{ p.note }})</span>{% endif %}</td>
+                        <td class="text-right font-black text-rose-600">{{ p.amount|format_money }} ₺</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="py-6 text-center text-slate-400 italic">{{ _('calendar_list_empty_week') }}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="diamond-card p-8 border-t-8 border-amber-400">
+            <h3 class="font-black text-xs uppercase text-amber-600 mb-6 flex items-center">
+                <span class="w-3 h-3 bg-amber-400 rounded-full mr-2"></span> {{ _('calendar_list_pending') }}
+            </h3>
+            <table class="w-full text-xs text-left">
+                <thead class="text-slate-400 text-[9px] uppercase border-b border-slate-100">
+                    <tr><th class="py-3">{{ _('table_date') }}</th><th>{{ _('table_category') }}</th><th>{{ _('table_description') }}</th><th class="text-right">{{ _('table_amount') }}</th></tr>
+                </thead>
+                <tbody>
+                    {% for p in month_p %}
+                    <tr class="border-b border-slate-50 hover:bg-slate-50/50">
+                        <td class="py-4 font-bold">{{ p.date|format_date }}</td>
+                        <td>{{ p.category }}</td>
+                        <td class="italic text-slate-500">{{ p.description }}{% if p.note %} <span class="text-slate-400">({{ p.note }})</span>{% endif %}</td>
+                        <td class="text-right font-black text-amber-600">{{ p.amount|format_money }} ₺</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="py-6 text-center text-slate-400 italic">{{ _('calendar_list_empty_month') }}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Aylık takvim -->
+<div id="pay-tab-calendar" class="pay-tab-panel">
+    <div id="cal-root" class="premium-card p-6 lg:p-8 bg-white/80"
+         data-year="{{ cal_year }}" data-month="{{ cal_month }}" data-today="{{ today_iso }}">
+        <div class="flex flex-wrap justify-between items-center gap-4 mb-6 border-b border-slate-200/60 pb-4">
+            <div>
+                <h3 id="cal-month-title" class="text-xl font-black text-slate-800 uppercase tracking-tight">{{ cal_month_name }} {{ cal_year }}</h3>
+                <p class="text-[9px] text-slate-400 font-bold uppercase mt-1">{{ _('calendar_grid_hint') }}</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" id="cal-prev" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 font-black text-slate-700 transition" aria-label="{{ _('calendar_btn_prev') }}">‹</button>
+                <button type="button" id="cal-today" class="px-4 py-2.5 rounded-xl bg-indigo-600 text-white font-black text-[10px] uppercase hover:bg-indigo-700 transition">{{ _('calendar_btn_today') }}</button>
+                <button type="button" id="cal-next" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 font-black text-slate-700 transition" aria-label="{{ _('calendar_btn_next') }}">›</button>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap gap-4 mb-5 text-[9px] font-bold uppercase">
+            <span class="flex items-center gap-1.5"><span class="cal-dot cal-dot--income"></span> {{ _('type_income') }}</span>
+            <span class="flex items-center gap-1.5"><span class="cal-dot cal-dot--expense"></span> {{ _('type_expense') }}</span>
+            <span class="flex items-center gap-1.5"><span class="cal-dot cal-dot--inv"></span> {{ _('type_investment') }}</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded border-2 border-indigo-400"></span> {{ _('calendar_btn_today') }}</span>
+        </div>
+
+        <div id="cal-loading" class="hidden text-center py-8 text-slate-400 text-xs font-bold uppercase">{{ _('loading') }}</div>
+        <div id="cal-grid" class="cal-grid"></div>
+    </div>
+</div>
+
+<!-- Gelir Gider Dengesi -->
+<div id="pay-tab-balance" class="pay-tab-panel">
+    <div class="premium-card p-6 lg:p-8 bg-white/80">
+        <div class="flex flex-wrap justify-between items-center gap-4 mb-6 border-b border-slate-200/60 pb-4">
+            <div>
+                <h3 class="text-xl font-black text-slate-800 uppercase tracking-tight">Gelir Gider Dengesi</h3>
+                <p class="text-[9px] text-slate-400 font-bold uppercase mt-1">Aylık günlük kasa seyri</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" id="balance-prev" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 font-black text-slate-700 transition" aria-label="Önceki Ay">‹</button>
+                <div id="balance-period" class="px-4 py-2.5 rounded-xl bg-indigo-600 text-white font-black text-[10px] uppercase min-w-[120px] text-center">
+                    <!-- Period will be populated by JS -->
+                </div>
+                <button type="button" id="balance-next" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 font-black text-slate-700 transition" aria-label="Sonraki Ay">›</button>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap gap-4 mb-5 text-[9px] font-bold uppercase">
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500"></span> Artı (Pozitif)</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-rose-500"></span> Eksi (Negatif)</span>
+        </div>
+
+        <div id="balance-loading" class="hidden text-center py-8 text-slate-400 text-xs font-bold uppercase">{{ _('loading') }}</div>
+        <div class="chart-container" style="height: 300px;">
+            <canvas id="balanceChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div id="cal-popover" class="hidden" role="dialog" aria-live="polite"></div>
+
+<script src="{{ url_for('static', filename='js/payment-calendar.js') }}"></script>
+{% endblock %}
