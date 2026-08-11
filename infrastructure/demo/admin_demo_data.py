@@ -168,17 +168,17 @@ def _seed_assets(year):
     }
 
     samples = [
-        ('Hisse Senedi', 'Türk Hava Yolları', 'THYAO', 'Teknoloji', f'{year}-01-10', 100, 285, 'TRY', 'Orta', 'Likit', True),
-        ('Hisse Senedi', 'Garanti BBVA', 'GARAN', 'Bankacılık', f'{year}-02-15', 500, 95, 'TRY', 'Orta', 'Likit', True),
-        ('Altın', 'Gram Altın', 'XAU', 'Emtia & Hammadde', f'{year}-03-01', 50, 2450, 'TRY', 'Düşük', 'Likit', True),
-        ('Kripto', 'Bitcoin', 'BTC', 'Finansal Sistem', f'{year}-04-20', 0.15, 2800000, 'TRY', 'Yüksek', 'Likit', False),
-        ('Fon', 'BIST 100 Fonu', 'BIST100', 'Finansal Sistem', f'{year}-05-05', 1000, 12.5, 'TRY', 'Orta', 'Yarı-Likit', True),
-        ('BES', 'Emeklilik Fonu', 'BES01', 'Finansal Sistem', f'{year}-06-01', 1, 85000, 'TRY', 'Düşük', 'İlik', False),
-        ('Gayrimenkul', 'Arsa Payı', 'ARSA1', 'Gayrimenkul & Fiziksel Varlıklar', f'{year}-07-01', 1, 450000, 'TRY', 'Orta', 'İlik', False),
-        ('Nakit', 'Döviz Rezervi', 'USD', 'Finansal Sistem', f'{year}-08-15', 2000, 34.5, 'TRY', 'Düşük', 'Likit', False),
+        ('Hisse Senedi', 'Türk Hava Yolları', 'THYAO', 'Teknoloji', f'{year}-01-10', 100, 285, 'TRY', 'Orta', 'Likit'),
+        ('Hisse Senedi', 'Garanti BBVA', 'GARAN', 'Bankacılık', f'{year}-02-15', 500, 95, 'TRY', 'Orta', 'Likit'),
+        ('Altın', 'Gram Altın', 'XAU', 'Emtia & Hammadde', f'{year}-03-01', 50, 2450, 'TRY', 'Düşük', 'Likit'),
+        ('Kripto', 'Bitcoin', 'BTC', 'Finansal Sistem', f'{year}-04-20', 0.15, 2800000, 'TRY', 'Yüksek', 'Likit'),
+        ('Fon', 'BIST 100 Fonu', 'BIST100', 'Finansal Sistem', f'{year}-05-05', 1000, 12.5, 'TRY', 'Orta', 'Yarı-Likit'),
+        ('BES', 'Emeklilik Fonu', 'BES01', 'Finansal Sistem', f'{year}-06-01', 1, 85000, 'TRY', 'Düşük', 'İlik'),
+        ('Gayrimenkul', 'Arsa Payı', 'ARSA1', 'Gayrimenkul & Fiziksel Varlıklar', f'{year}-07-01', 1, 450000, 'TRY', 'Orta', 'İlik'),
+        ('Nakit', 'Döviz Rezervi', 'USD', 'Finansal Sistem', f'{year}-08-15', 2000, 34.5, 'TRY', 'Düşük', 'Likit'),
     ]
 
-    for atype, aname, sym, sec_name, pdate, qty, price, cur, risk, liq, sync_cash in samples:
+    for atype, aname, sym, sec_name, pdate, qty, price, cur, risk, liq in samples:
         if Asset.query.filter_by(name=aname).first():
             continue
         sector = sectors[sec_name]
@@ -190,7 +190,7 @@ def _seed_assets(year):
             quantity=qty, unit_price=price, currency=cur,
             symbol=sym, risk_level=risk, liquidity=liq,
             sector_id=sector.id, notes=ADMIN_NOTE,
-            sync_cash=sync_cash, is_admin_generated=True,
+            is_admin_generated=True,
             tenant_id='default'
         )
         created += 1

@@ -41,7 +41,6 @@ class AssetFactory:
         sector_id: Optional[int],
         description: Optional[str] = None,
         notes: Optional[str] = None,
-        sync_cash: bool = False,
         is_admin_generated: bool = False
     ) -> Optional[Asset]:
         """
@@ -62,7 +61,6 @@ class AssetFactory:
             sector_id: Sector ID (optional)
             description: Description (optional)
             notes: Notes (optional)
-            sync_cash: Whether to sync with cash
             is_admin_generated: Whether this is admin-generated data
         
         Returns:
@@ -88,7 +86,6 @@ class AssetFactory:
             sector_id=sector_id,
             description=description,
             notes=notes,
-            sync_cash=sync_cash,
             is_admin_generated=is_admin_generated,
             tenant_id=self.tenant_id
         )
@@ -155,7 +152,6 @@ class AssetFactory:
             sector_id=None,  # Sector will be set by caller
             description=f"[Demo] {name}",
             notes="Demo data",
-            sync_cash=template.get('sync_cash', False),
             is_admin_generated=is_admin_generated
         )
 
