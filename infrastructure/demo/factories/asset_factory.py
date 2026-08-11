@@ -38,7 +38,7 @@ class AssetFactory:
         currency: str,
         risk_level: str,
         liquidity: str,
-        sector_id: Optional[int],
+        sector_id: Optional[int] = None,
         description: Optional[str] = None,
         notes: Optional[str] = None,
         is_admin_generated: bool = False
@@ -58,7 +58,7 @@ class AssetFactory:
             currency: Currency code
             risk_level: Risk level
             liquidity: Liquidity
-            sector_id: Sector ID (optional)
+            sector_id: Sector ID (optional, will create default if None)
             description: Description (optional)
             notes: Notes (optional)
             is_admin_generated: Whether this is admin-generated data
@@ -69,6 +69,11 @@ class AssetFactory:
         # Validate asset category exists
         if not self.category_service.is_valid_category(asset_type, self.tenant_id):
             return None
+        
+        # Create default sector if not provided (sector_id is required in Asset model)
+        if sector_id is None:
+            sector = self.get_or_create_sector('Genel')
+            sector_id = sector.id
         
         # Create asset
         asset = Asset(
