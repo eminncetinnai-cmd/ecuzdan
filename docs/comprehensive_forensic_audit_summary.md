@@ -553,8 +553,8 @@ This comprehensive forensic audit report summarizes the findings from 17 module 
 ## 7. MEDIUM PRIORITY ISSUES
 
 ### 7.1 Assets Module
-- Duplicate routes
-- HTTP method inconsistencies
+- ~~Duplicate routes~~ (RESOLVED - removed duplicate /del_asset route)
+- ~~HTTP method inconsistencies~~ (RESOLVED - standardized delete_asset to POST only)
 
 ### 7.2 Analysis Module
 - ~~No dedicated routes~~ (RESOLVED - dedicated analysis routes implemented)
@@ -681,8 +681,8 @@ This comprehensive forensic audit report summarizes the findings from 17 module 
 **Medium Priority:**
 1. Add unit tests for analysis module
 2. Add unit tests for profile module (service layer, scoring engine)
-3. Consolidate duplicate routes in assets module
-4. Standardize HTTP methods in assets module
+3. ~~Consolidate duplicate routes in assets module~~ (RESOLVED - removed duplicate route)
+4. ~~Standardize HTTP methods in assets module~~ (RESOLVED - standardized to POST)
 5. Implement alert configuration persistence in monitoring module
 6. Add integration tests for strategy module
 7. Add login_required decorator to profile routes
