@@ -10,55 +10,15 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app import app, db
 from models import Category
-
-# Standart kategoriler (GL kodlarına göre)
-# Bu kategoriler seed_standard_categories.py ile veritabanına seed edilir
-STANDARD_CATEGORIES = {
-    'Gelir': {
-        'GLR-6001': 'Maaş / Ücret Geliri',
-        'GLR-6002': 'Avans',
-        'GLR-6003': 'Kira Geliri',
-        'GLR-6004': 'Temettü Geliri',
-        'GLR-6005': 'Faiz Geliri',
-        'GLR-6006': 'Yatırım / Sermaye Kazancı',
-        'GLR-6007': 'Ek Gelir / Yan İş',
-        'GLR-6008': 'Prim & İkramiye',
-    },
-    'Gider': {
-        'GDR-7001': 'Konut & Kira',
-        'GDR-7002': 'Faturalar (Elektrik/Su/Gaz)',
-        'GDR-7003': 'Market & Gıda',
-        'GDR-7004': 'Ulaşım & Yakıt',
-        'GDR-7005': 'Sağlık & Eczane',
-        'GDR-7006': 'Eğitim & Kurslar',
-        'GDR-7007': 'Giyim & Aksesuar',
-        'GDR-7008': 'Eğlence & Restoran',
-        'GDR-7009': 'Sigorta Primleri',
-    },
-    'Yatırım': {
-        'YTR-1001': 'Yatırıma Aktarılan',
-        'YTR-1002': 'Hisse Senedi Alımı',
-        'YTR-1003': 'Fon & BES Alımı',
-        'YTR-1004': 'Altın Alımı',
-        'YTR-1005': 'Kripto Para Alımı',
-        'YTR-1006': 'Gayrimenkul Alımı',
-        'YTR-1007': 'Nakit & Mevduat',
-    },
-    'Transfer': {
-        'TRF-2001': 'Hesap Arası Transfer',
-        'TRF-2002': 'Nakit Çekme',
-        'TRF-2003': 'Nakit Yatırma',
-        'TRF-2004': 'Diğer Transferler',
-    }
-}
+from scripts.seed_standard_categories import STANDARD_CATEGORIES
 
 def cleanup_non_standard_categories():
     """Standart olmayan kategorileri temizler"""
     with app.app_context():
-        # Standart kategori kodlarını topla
+        # Standart kategori kodlarını topla (list format)
         standard_codes = set()
-        for type_categories in STANDARD_CATEGORIES.values():
-            standard_codes.update(type_categories.keys())
+        for code, name, type_, sort_order, budget_limit in STANDARD_CATEGORIES:
+            standard_codes.add(code)
         
         # Tüm kategorileri bul
         all_categories = Category.query.all()
