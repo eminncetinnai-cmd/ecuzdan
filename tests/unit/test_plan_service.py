@@ -165,13 +165,12 @@ def test_plan_service_add_payment_dca_plan():
     mock_dto.notes = 'Test'
     
     with patch('domain.transactions.services.financial_ledger.transfer_cash_to_asset') as mock_transfer:
-        with patch('domain.planning.services.plan_service.create_payment') as mock_create:
-            mock_create.return_value = None
-            
-            service.add_payment(mock_dto, 'tenant_123')
-            
-            mock_transfer.assert_called_once()
-            mock_create.assert_called_once()
+        mock_financial_repo.create_payment.return_value = None
+        
+        service.add_payment(mock_dto, 'tenant_123')
+        
+        mock_transfer.assert_called_once()
+        mock_financial_repo.create_payment.assert_called_once()
 
 
 @pytest.mark.unit

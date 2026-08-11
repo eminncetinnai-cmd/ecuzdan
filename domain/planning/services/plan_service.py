@@ -4,14 +4,10 @@ import calendar
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
-from database import create_payment, get_calendar_month_data
+from database import get_calendar_month_data
 from domain.transactions.services.financial_ledger import create_recurring_plan, update_recurring_plan_entry
 from engines.financial_engine import calculate_monthly_daily_balance, format_date
-
-MONTH_NAMES_TR = [
-    "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
-    "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık",
-]
+from shared.constants import MONTH_NAMES_TR
 
 
 if TYPE_CHECKING:
@@ -148,6 +144,20 @@ class PlanService:
             'data': data,
         }
 
+    def _handle_dca_payment(self, plan, amount, payment_date, tenant_id):
+        """
+        Handle DCA plan payment with asset transfer.
+        
+        Args:
+            plan: Recurring plan instance
+            amount: Payment amount
+            payment_date: Payment date string (YYYY-MM-DD)
+            tenant_id: Tenant ID
+        """
+        if getattr(plan, 'plan_type', None) == 'DCA' and getattr(plan, 'target_asset_id', None):
+            from domain.transactions.services.financial_ledger import transfer_cash_to_asset
+            transfer_cash_to_asset(plan.target_asset_id, amount, payment_date, tenant_id, skip_cash_tx=True)
+
     def add_payment(self, dto, tenant_id):
         plan = self.financial_repository.get_recurring_plan_for_tenant(dto.plan_id, tenant_id)
         if not plan:
@@ -156,18 +166,15 @@ class PlanService:
             raise ValueError(f"Taksit numarası 1 ile {plan.installments} arasında olmalıdır.")
         payment_date = datetime.strptime(dto.payment_date, '%Y-%m-%d').strftime('%Y-%m-%d')
         
-        # Faz 2: DCA Planı için Nakit -> Varlık transferini tetikle
-        if getattr(plan, 'plan_type', None) == 'DCA' and getattr(plan, 'target_asset_id', None):
-            from domain.transactions.services.financial_ledger import transfer_cash_to_asset
-            transfer_cash_to_asset(plan.target_asset_id, dto.amount, payment_date, tenant_id, skip_cash_tx=True)
-            # Yatırım transferi yapıldıktan sonra, create_payment ile Plan Taksiti 'Ödendi' olarak işaretlenir.
-            # create_payment kendi nakit düşüşünü yönettiğinden çifte işlem engellendi.
-        return create_payment(
+        # Handle DCA plan payment with asset transfer
+        self._handle_dca_payment(plan, dto.amount, payment_date, tenant_id)
+        
+        return self.financial_repository.create_payment(
             dto.plan_id,
             dto.amount,
             payment_date,
             dto.installment_number,
-            dto.notes,
-            tenant_id,
+            notes=dto.notes,
+            tenant_id=tenant_id,
         )
 

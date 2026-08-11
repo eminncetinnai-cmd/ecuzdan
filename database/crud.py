@@ -137,54 +137,6 @@ def delete_asset(asset_id):
     return PortfolioRepository().delete_asset(asset_id)
 
 
-# --- Recurring Plan CRUD ---
-
-def add_recurring_plan(name, category, amount, installments, payment_day, note=None, start_date=None, tenant_id=None):
-    """Düzenli gelir veya gider planı ekler"""
-    from repositories.financial_repository import FinancialRepository
-
-    return FinancialRepository().add_recurring_plan(
-        name,
-        category,
-        amount,
-        installments,
-        payment_day,
-        note=note,
-        start_date=start_date,
-        tenant_id=tenant_id,
-    )
-
-
-def create_payment(plan_id, amount, payment_date, installment_number, notes=None, tenant_id=None):
-    """Taksit ödemesi kaydeder ve varsa planlı işlemi kapatır."""
-    from repositories.financial_repository import FinancialRepository
-
-    return FinancialRepository().create_payment(
-        plan_id,
-        amount,
-        payment_date,
-        installment_number,
-        notes=notes,
-        tenant_id=tenant_id,
-    )
-
-
-def update_recurring_plan(plan_id, name, category, amount, installments, payment_day, note=None, start_date=None):
-    """Düzenli gelir veya gider planını günceller"""
-    from repositories.financial_repository import FinancialRepository
-
-    return FinancialRepository().update_recurring_plan(
-        plan_id,
-        name,
-        category,
-        amount,
-        installments,
-        payment_day,
-        note=note,
-        start_date=start_date,
-    )
-
-
 def delete_with_transactions(model_class, item_id, source_type):
     """Kaydı ve bağlı işlemleri siler"""
     from models import Transaction, db
@@ -193,18 +145,6 @@ def delete_with_transactions(model_class, item_id, source_type):
     Transaction.query.filter_by(source_id=item_id, source_type=source_type).delete()
     db.session.delete(item)
     db.session.commit()
-
-
-def delete_plan(plan_id, tenant_id=None):
-    """
-    Düzenli planı siler: bekleyen işlemleri siler, ödenmişleri bağımsızlaştırır.
-
-    tenant_id açıkça geçilmelidir; geçilmezse repository Flask `g` üzerinden
-    çözer ve request context dışında (test, background job, CLI) hata verir.
-    """
-    from repositories.financial_repository import FinancialRepository
-
-    return FinancialRepository().delete_plan(plan_id, tenant_id)
 
 
 # --- Asset Update Logging ---

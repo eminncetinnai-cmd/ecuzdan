@@ -7,7 +7,7 @@ import calendar
 import random
 from datetime import datetime
 
-from database import delete_plan
+from repositories.financial_repository import FinancialRepository
 from domain.transactions.services.financial_ledger import create_asset_position, create_recurring_plan
 from models import Asset, AssetSector, AssetUpdate, Category, RecurringPlan, Transaction, db
 from shared.decimal_precision import to_decimal
@@ -45,14 +45,15 @@ def clear_admin_demo_data():
         Asset.query.filter(Asset.id.in_(admin_asset_ids)).delete(synchronize_session=False)
 
     # tenant_id açıkça geçilir: bu fonksiyon request context dışında da çalışır.
+    repo = FinancialRepository()
     for plan in RecurringPlan.query.filter(RecurringPlan.note.ilike('%Admin%')).all():
-        delete_plan(plan.id, tenant_id=plan.tenant_id)
+        repo.delete_plan(plan.id, tenant_id=plan.tenant_id)
 
     legacy_plan_names = ['Maaş Planı', 'Konut Kirası', 'Konut Kredisi', 'Kredi Kartı Limit', 'Kira Geliri Planı']
     for name in legacy_plan_names:
         plan = RecurringPlan.query.filter_by(name=name).first()
         if plan:
-            delete_plan(plan.id, tenant_id=plan.tenant_id)
+            repo.delete_plan(plan.id, tenant_id=plan.tenant_id)
 
     deleted_tx = Transaction.query.filter(
         db.or_(

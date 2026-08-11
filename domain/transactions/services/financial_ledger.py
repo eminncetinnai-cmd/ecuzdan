@@ -478,32 +478,33 @@ def create_one_time_transaction(date, category_name, description, amount, status
 def create_recurring_plan(name, category, amount, installments, payment_day, note=None, start_date=None, tenant_id=None):
     """Planlı gelir/gider şablonu oluşturur ve işlemleri üretir."""
     from flask import g
+    from repositories.financial_repository import FinancialRepository
 
-    from database import add_recurring_plan
     tenant_id = tenant_id or g.get('tenant_id')
 
     if amount <= 0 or installments <= 0 or payment_day < 1 or payment_day > 31:
         raise LedgerError("Tutar, taksit sayısı ve ödeme günü geçerli olmalıdır.")
-    return add_recurring_plan(name, category, amount, installments, payment_day, note, start_date, tenant_id)
+    
+    repo = FinancialRepository()
+    return repo.add_recurring_plan(name, category, amount, installments, payment_day, note, start_date, tenant_id)
 
 
 def update_recurring_plan_entry(plan_id, name, category, amount, installments, payment_day, note=None, start_date=None, tenant_id=None):
     """Planı günceller ve bağlı işlemleri yeniden üretir."""
     from flask import g
+    from repositories.financial_repository import FinancialRepository
 
-    from database import update_recurring_plan
     tenant_id = tenant_id or g.get('tenant_id')
 
-    # database.crud.update_recurring_plan tenant_id parametresi almaz;
-    # tenant filtrelemesi plan_id üzerinden zaten yapılıyor.
-    return update_recurring_plan(plan_id, name, category, amount, installments, payment_day, note, start_date)
+    repo = FinancialRepository()
+    return repo.update_recurring_plan(plan_id, name, category, amount, installments, payment_day, note=note, start_date=start_date, tenant_id=tenant_id)
 
 
 def delete_recurring_plan(plan_id, tenant_id=None):
     """Planı siler: bekleyen işlemleri siler, ödenmişleri bağımsızlaştırır."""
     from flask import g
+    from repositories.financial_repository import FinancialRepository
 
-    from database import delete_plan
     tenant_id = tenant_id or g.get('tenant_id')
 
     query = RecurringPlan.query
@@ -513,7 +514,8 @@ def delete_recurring_plan(plan_id, tenant_id=None):
     if not plan:
         return {'success': False, 'message': 'Plan bulunamadı.'}
 
-    result = delete_plan(plan_id, tenant_id=tenant_id)
+    repo = FinancialRepository()
+    result = repo.delete_plan(plan_id, tenant_id=tenant_id)
     if not result:
         return {'success': False, 'message': 'Plan silinirken hata oluştu.'}
 
@@ -531,7 +533,7 @@ def _check_and_cleanup_plan_after_transaction_deletion(plan_id):
     Eğer planın tüm işlemleri silindiyse planı da siler.
     Ödenmiş işlemleri bağımsızlaştırır, bekleyenleri siler.
     """
-    from database import delete_plan
+    from repositories.financial_repository import FinancialRepository
 
     plan = db.session.get(RecurringPlan, plan_id)
     if not plan:
@@ -542,7 +544,8 @@ def _check_and_cleanup_plan_after_transaction_deletion(plan_id):
 
     if not remaining_txs:
         # Tüm işlemler silindi, planı da sil
-        delete_plan(plan_id, tenant_id=plan.tenant_id)
+        repo = FinancialRepository()
+        repo.delete_plan(plan_id, tenant_id=plan.tenant_id)
         return {
             'action': 'plan_deleted',
             'message': f'"{plan.name}" planının tüm işlemleri silindiği için plan da silindi.',

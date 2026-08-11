@@ -5,7 +5,7 @@ Birleşik defter mimarisi testleri
 
 import pytest
 
-from database import create_payment
+from repositories.financial_repository import FinancialRepository
 from domain.transactions.services.financial_ledger import (
     LedgerError,
     create_asset_position,
@@ -243,7 +243,8 @@ def test_create_recurring_plan_generates_transactions(app):
 
 def test_create_payment_links_to_plan_transaction(app):
     plan = create_recurring_plan('Kredi Planı', 'Kredi', 5000, 4, 15, 'aylık kredi', tenant_id='default')
-    payment = create_payment(plan.id, 5000, '2025-07-15', 1, 'ilk taksit', tenant_id='default')
+    repo = FinancialRepository()
+    payment = repo.create_payment(plan.id, 5000, '2025-07-15', 1, 'ilk taksit', tenant_id='default')
 
     assert payment.id is not None
     assert payment.transaction_id is not None
