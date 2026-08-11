@@ -48,7 +48,7 @@ def clear_admin_demo_data():
     for plan in RecurringPlan.query.filter(RecurringPlan.note.ilike('%Admin%')).all():
         delete_plan(plan.id, tenant_id=plan.tenant_id)
 
-    legacy_plan_names = ['Maaş Planı', 'Konut Kirası', 'Konut Kredisi', 'Kredi Kartı Limit', 'İnternet Aboneliği', 'Kira Geliri Planı']
+    legacy_plan_names = ['Maaş Planı', 'Konut Kirası', 'Konut Kredisi', 'Kredi Kartı Limit', 'Kira Geliri Planı']
     for name in legacy_plan_names:
         plan = RecurringPlan.query.filter_by(name=name).first()
         if plan:
@@ -97,23 +97,23 @@ def _seed_one_time_transactions(year):
     created = 0
     income_rows = [
         (5, 'Maaş / Ücret Geliri', 'Gelir', 'Aylık maaş ödemesi', 28500, None),
-        (15, 'Ek Gelir / Yan İş', 'Gelir', 'Ek proje geliri', 3500, None),
+        (15, 'Ek Gelir / Diğer Gelirler', 'Gelir', 'Ek proje geliri', 3500, None),
         (1, 'Kira Geliri', 'Gelir', 'Kira geliri', 7500, None),
     ]
     expense_rows = [
-        (3, 'Konut & Kira', 'Gider', 'Konut kirası', 8500, None),
-        (10, 'Market & Gıda', 'Gider', 'Market alışverişi', 4200, None),
-        (12, 'Kredi Kartı', 'Gider', 'Kredi kartı ödemesi', 2800, None),
-        (18, 'Vergi', 'Gider', 'Vergi / SGK kesintisi', 1500, None),
-        (22, 'Kredi', 'Gider', 'Banka kredisi taksiti', 5500, None),
+        (3, 'Kira', 'Gider', 'Konut kirası', 8500, None),
+        (10, 'Diğer Giderler', 'Gider', 'Market alışverişi', 4200, None),
+        (12, 'Kredi Kartı Ödemesi', 'Gider', 'Kredi kartı ödemesi', 2800, None),
+        (18, 'Diğer Giderler', 'Gider', 'Vergi / SGK kesintisi', 1500, None),
+        (22, 'Kredi Ödemeleri', 'Gider', 'Banka kredisi taksiti', 5500, None),
     ]
     investment_rows = [
-        (8, 'Hisse Senedi Alımı', 'Yatırım', 'Aylık portföy aktarımı', 4000, None),
+        (8, 'Nakit & Mevduat', 'Yatırım', 'Aylık portföy aktarımı', 4000, None),
     ]
 
     for month in range(1, 13):
         for day, cat, typ, desc, base, forced_status in income_rows:
-            if cat == 'Ek Gelir / Yan İş' and month % 2 != 0:
+            if cat == 'Ek Gelir / Diğer Gelirler' and month % 2 != 0:
                 continue
             amt = base + random.randint(-400, 400)
             if _add_one_time_tx(year, month, day, cat, typ, f'{ADMIN_DESC_PREFIX} {desc}', amt, forced_status):
@@ -136,10 +136,9 @@ def _seed_recurring_plans(year):
     templates = [
         ('Maaş Planı', 'Maaş / Ücret Geliri', 30000, 12, 1, f'{year} Admin — düzenli maaş'),
         ('Kira Geliri Planı', 'Kira Geliri', 8000, 12, 1, f'{year} Admin — kira geliri'),
-        ('Konut Kirası', 'Konut & Kira', 8500, 12, 3, f'{year} Admin — konut kirası'),
-        ('Konut Kredisi', 'Kredi', 5500, 12, 10, f'{year} Admin — konut kredisi'),
-        ('Kredi Kartı Limit', 'Kredi Kartı', 2500, 12, 15, f'{year} Admin — kart ödemesi'),
-        ('İnternet Aboneliği', 'Market & Gıda', 450, 12, 5, f'{year} Admin — internet'),
+        ('Konut Kirası', 'Kira', 8500, 12, 3, f'{year} Admin — konut kirası'),
+        ('Konut Kredisi', 'Kredi Ödemeleri', 5500, 12, 10, f'{year} Admin — konut kredisi'),
+        ('Kredi Kartı Limit', 'Kredi Kartı Ödemesi', 2500, 12, 15, f'{year} Admin — kart ödemesi'),
     ]
     for name, cat, amount, inst, pay_day, note in templates:
         if not RecurringPlan.query.filter_by(name=name).first():
