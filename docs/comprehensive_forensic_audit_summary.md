@@ -559,17 +559,17 @@ This comprehensive forensic audit report summarizes the findings from 17 module 
 ### 7.2 Analysis Module
 - ~~No dedicated routes~~ (RESOLVED - dedicated analysis routes implemented)
 - ~~Skeleton application service~~ (RESOLVED - proper application service implemented)
-- Limited test coverage
+- ~~Limited test coverage~~ (RESOLVED - added 25+ unit tests for InflationAnalyzer and RiskAnalyzer)
 
 ### 7.3 Monitoring Module
 - ~~Alert configuration placeholder~~ (RESOLVED - implemented database persistence with MonitoringAlertConfig model)
 
 ### 7.4 Profile Module
-- Limited test coverage
+- ~~Limited test coverage~~ (RESOLVED - added 30+ unit tests for ProfileService and ProfileScoringEngine)
 - ~~No login_required decorator~~ (RESOLVED - added @login_required to all profile routes)
 
 ### 7.5 Strategy Module
-- Limited test coverage (some skipped tests)
+- ~~Limited test coverage (some skipped tests)~~ (RESOLVED - added 20+ integration tests for strategy module)
 - Partial tenant isolation (intended for global calculations)
 
 ---
@@ -679,12 +679,12 @@ This comprehensive forensic audit report summarizes the findings from 17 module 
 3. ~~Implement proper application service for analysis module~~ (RESOLVED - proper application service implemented)
 
 **Medium Priority:**
-1. Add unit tests for analysis module
-2. Add unit tests for profile module (service layer, scoring engine)
+1. ~~Add unit tests for analysis module~~ (RESOLVED - added 25+ unit tests)
+2. ~~Add unit tests for profile module (service layer, scoring engine)~~ (RESOLVED - added 30+ unit tests)
 3. ~~Consolidate duplicate routes in assets module~~ (RESOLVED - removed duplicate route)
 4. ~~Standardize HTTP methods in assets module~~ (RESOLVED - standardized to POST)
 5. ~~Implement alert configuration persistence in monitoring module~~ (RESOLVED - added MonitoringAlertConfig model)
-6. Add integration tests for strategy module
+6. ~~Add integration tests for strategy module~~ (RESOLVED - added 20+ integration tests)
 7. ~~Add login_required decorator to profile routes~~ (RESOLVED - added to all profile routes)
 
 **Low Priority:**
