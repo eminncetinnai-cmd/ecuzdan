@@ -61,21 +61,11 @@ def register_category_routes(bp):
     def update_category_route(id):
         catalog_service = _get_catalog_service()
         try:
-            user_id = getattr(g, 'current_user', None) and g.current_user.id
-            version = request.form.get('version')
-            version = int(version) if version else None
-            budget_limit = request.form.get('budget_limit')
-            budget_limit = float(budget_limit) if budget_limit else None
-            
             catalog_service.update_category(
                 id,
                 request.form.get('name', '').strip(),
                 request.form.get('type', ''),
                 tenant_id=get_tenant_id(),
-                code=request.form.get('code', '').strip() or None,
-                budget_limit=budget_limit,
-                version=version,
-                user_id=user_id,
             )
             flash('Kategori başarıyla güncellendi.', 'success')
         except Exception as e:

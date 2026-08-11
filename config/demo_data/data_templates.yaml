@@ -136,7 +136,6 @@ asset_templates:
     currency: "TRY"
     risk_level: "Orta"
     liquidity: "Likit"
-    sync_cash: true
   
   gold:
     type: "Altın"
@@ -152,7 +151,6 @@ asset_templates:
     currency: "TRY"
     risk_level: "Düşük"
     liquidity: "Likit"
-    sync_cash: true
   
   crypto:
     type: "Kripto"
@@ -168,7 +166,6 @@ asset_templates:
     currency: "TRY"
     risk_level: "Yüksek"
     liquidity: "Likit"
-    sync_cash: false
   
   fund:
     type: "Fon"
@@ -184,7 +181,6 @@ asset_templates:
     currency: "TRY"
     risk_level: "Orta"
     liquidity: "Yarı-Likit"
-    sync_cash: true
   
   bes:
     type: "BES"
@@ -200,7 +196,6 @@ asset_templates:
     currency: "TRY"
     risk_level: "Düşük"
     liquidity: "İlik"
-    sync_cash: false
   
   real_estate:
     type: "Gayrimenkul"
@@ -216,4 +211,3 @@ asset_templates:
     currency: "TRY"
     risk_level: "Orta"
     liquidity: "İlik"
-    sync_cash: false
