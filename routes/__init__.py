@@ -43,6 +43,7 @@ logbook_bp = Blueprint('logbook', __name__, url_prefix='/logbook')
 profile_bp = Blueprint('profile', __name__, url_prefix='/profile')
 monitoring_bp = Blueprint('monitoring', __name__, url_prefix='/monitoring')
 notifications_bp = Blueprint('notifications', __name__, url_prefix='/notifications')
+analysis_bp = Blueprint('analysis', __name__, url_prefix='/analysis')
 
 def register_blueprints(app):
     """
@@ -67,6 +68,7 @@ def register_blueprints(app):
     from .tenant import register_tenant_routes
     from .transactions import register_transaction_routes
     from .monitoring import register_monitoring_routes
+    from .analysis import register_analysis_routes
 
     register_auth_routes(auth_bp)
     register_settings_routes(settings_bp)
@@ -84,6 +86,7 @@ def register_blueprints(app):
     register_logbook_routes(logbook_bp)
     register_profile_routes(profile_bp)
     register_monitoring_routes(monitoring_bp)
+    register_analysis_routes(analysis_bp)
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(settings_bp)
@@ -101,6 +104,7 @@ def register_blueprints(app):
     app.register_blueprint(profile_bp)
     app.register_blueprint(monitoring_bp)
     app.register_blueprint(notifications_bp)
+    app.register_blueprint(analysis_bp)
 
 # --- Template Filters ---
 

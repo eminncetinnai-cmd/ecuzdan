@@ -264,11 +264,6 @@ class ApplicationProvider:
         if 'catalog_app' in self._instances:
             del self._instances['catalog_app']
 
-    def reset_planning(self):
-        """Reset planning application service cache."""
-        if 'planning_app' in self._instances:
-            del self._instances['planning_app']
-
     def notifications(self):
         """Return NotificationApplicationService built with NotificationService."""
         from application.notifications import NotificationApplicationService
@@ -277,15 +272,6 @@ class ApplicationProvider:
             return NotificationApplicationService(notification_service=self.domains.notification())
 
         return self._get_or_create('notification_app', _factory)
-
-    def planning(self):
-        """Return PlanningApplicationService built with PlanService."""
-        from application.planning.planning_application import PlanningApplicationService
-
-        def _factory():
-            return PlanningApplicationService(plan_service=self.domains.plan())
-
-        return self._get_or_create('planning_app', _factory)
 
     def transaction_queries(self):
         from application.transactions.queries import GetTransactionPageQuery
@@ -410,6 +396,17 @@ class ApplicationProvider:
         def _factory():
             return LogbookApplicationService(logbook_service=self.domains.logbook_svc())
         return self._get_or_create('logbook_app', _factory)
+
+    def analysis(self):
+        from application.analysis.analysis_application import AnalysisApplicationService
+        from domain.analysis.services.inflation_analysis import InflationAnalyzer
+        from domain.analysis.services.risk_analysis import RiskAnalyzer
+        def _factory():
+            return AnalysisApplicationService(
+                inflation_analyzer=InflationAnalyzer(),
+                risk_analyzer=RiskAnalyzer()
+            )
+        return self._get_or_create('analysis_app', _factory)
 
     def strategy(self):
         from application.analysis.strategy_application import StrategyApplicationService
