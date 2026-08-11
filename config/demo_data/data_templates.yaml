@@ -48,59 +48,23 @@ transaction_templates:
     day: 3
     type: "Gider"
   
-  weekly_food:
-    name: "Haftalık Gıda"
-    category_mapping: "food"
-    description_template: "Hafta {week} gıda alışverişi"
-    amount_rule: "food"
-    frequency: "weekly"
-    weeks_per_month: 4
-    type: "Gider"
-  
   credit_card_payment:
     name: "Kredi Kartı Ödemesi"
-    category_mapping: "credit_card"
+    category_mapping: "credit_card_payment"
     description_template: "Kredi kartı ödemesi"
-    amount_rule: "credit_card"
+    amount_rule: "credit_card_payment"
     frequency: "monthly"
     day: 12
     type: "Gider"
   
-  tax_payment:
-    name: "Vergi Ödemesi"
-    category_mapping: "tax"
-    description_template: "Vergi / SGK kesintisi"
-    amount_rule: "tax"
-    frequency: "monthly"
-    day: 18
-    type: "Gider"
-  
   credit_payment:
     name: "Kredi Taksidi"
-    category_mapping: "credit"
+    category_mapping: "credit_payment"
     description_template: "Banka kredisi taksiti"
-    amount_rule: "credit"
+    amount_rule: "credit_payment"
     frequency: "monthly"
     day: 22
     type: "Gider"
-  
-  transport_expense:
-    name: "Ulaşım Harcaması"
-    category_mapping: "transport"
-    description_template: "Ulaşım harcaması"
-    amount_rule: "transport"
-    frequency: "monthly"
-    day: 20
-    type: "Gider"
-  
-  monthly_investment:
-    name: "Aylık Yatırım {year}"
-    category_mapping: "monthly_investment"
-    description_template: "Aylık portföy aktarımı"
-    amount_rule: "monthly_investment"
-    frequency: "monthly"
-    day: 10
-    type: "Yatırım"
 
 recurring_plan_templates:
   salary_plan:
@@ -132,8 +96,8 @@ recurring_plan_templates:
   
   credit_plan:
     name: "Konut Kredisi"
-    category_mapping: "credit"
-    amount_rule: "credit"
+    category_mapping: "credit_payment"
+    amount_rule: "credit_payment"
     installments: 12
     payment_day: 10
     note_template: "{year} Admin — konut kredisi"
@@ -141,31 +105,17 @@ recurring_plan_templates:
   
   credit_card_plan:
     name: "Kredi Kartı Limit"
-    category_mapping: "credit_card"
-    amount_rule: "credit_card"
+    category_mapping: "credit_card_payment"
+    amount_rule: "credit_card_payment"
     installments: 12
     payment_day: 15
     note_template: "{year} Admin — kart ödemesi"
     type: "Gider"
   
-  internet_plan:
-    name: "İnternet Aboneliği"
-    category_mapping: "food"
-    amount_rule:
-      base_amount: 450
-      amount_range:
-        min: 400
-        max: 500
-      variation_percent: 0.05
-    installments: 12
-    payment_day: 5
-    note_template: "{year} Admin — internet"
-    type: "Gider"
-  
   investment_plan:
     name: "Aylık Yatırım"
-    category_mapping: "monthly_investment"
-    amount_rule: "monthly_investment"
+    category_mapping: "cash_deposit"
+    amount_rule: "cash_deposit"
     installments: 12
     payment_day: 10
     note_template: "Aylık yatırım {year}"
@@ -190,7 +140,7 @@ asset_templates:
   
   gold:
     type: "Altın"
-    category_mapping: "gold_bullion"
+    category_mapping: "gold"
     base_quantity: 50
     quantity_range:
       min: 10
@@ -204,25 +154,9 @@ asset_templates:
     liquidity: "Likit"
     sync_cash: true
   
-  forex:
-    type: "Döviz"
-    category_mapping: "forex"
-    base_quantity: 2000
-    quantity_range:
-      min: 1000
-      max: 5000
-    base_price: 34.5
-    price_range:
-      min: 30
-      max: 40
-    currency: "TRY"
-    risk_level: "Düşük"
-    liquidity: "Likit"
-    sync_cash: false
-  
   crypto:
     type: "Kripto"
-    category_mapping: "other_investment"
+    category_mapping: "crypto"
     base_quantity: 0.15
     quantity_range:
       min: 0.1
@@ -238,7 +172,7 @@ asset_templates:
   
   fund:
     type: "Fon"
-    category_mapping: "other_investment"
+    category_mapping: "fund"
     base_quantity: 1000
     quantity_range:
       min: 500
@@ -254,7 +188,7 @@ asset_templates:
   
   bes:
     type: "BES"
-    category_mapping: "other_investment"
+    category_mapping: "fund"
     base_quantity: 1
     quantity_range:
       min: 1
@@ -270,7 +204,7 @@ asset_templates:
   
   real_estate:
     type: "Gayrimenkul"
-    category_mapping: "other_investment"
+    category_mapping: "real_estate"
     base_quantity: 1
     quantity_range:
       min: 1

@@ -65,22 +65,7 @@ expense_rules:
       Ödendi: 0.95
       Gecikti: 0.05
   
-  food:
-    base_amount: 4000
-    amount_range:
-      min: 3000
-      max: 5000
-    variation_percent: 0.40  # ±40% variation
-    frequency: "weekly"
-    payment_day_range:
-      min: 1
-      max: 28
-    status_distribution:
-      Ödendi: 0.70
-      Bekliyor: 0.20
-      Gecikti: 0.10
-  
-  credit_card:
+  credit_card_payment:
     base_amount: 2800
     amount_range:
       min: 2500
@@ -92,19 +77,7 @@ expense_rules:
       Ödendi: 0.85
       Gecikti: 0.15
   
-  tax:
-    base_amount: 1500
-    amount_range:
-      min: 1400
-      max: 1600
-    variation_percent: 0.05  # ±5% variation
-    frequency: "monthly"
-    payment_day: 18
-    status_distribution:
-      Ödendi: 0.95
-      Gecikti: 0.05
-  
-  credit:
+  credit_payment:
     base_amount: 5500
     amount_range:
       min: 5000
@@ -115,20 +88,9 @@ expense_rules:
     status_distribution:
       Ödendi: 0.90
       Gecikti: 0.10
-  
-  transport:
-    base_amount: 500
-    amount_range:
-      min: 400
-      max: 700
-    variation_percent: 0.30  # ±30% variation
-    frequency: "monthly"
-    payment_day: 20
-    status_distribution:
-      Ödendi: 1.0
 
 investment_rules:
-  monthly_investment:
+  cash_deposit:
     base_amount: 15000
     amount_range:
       min: 12000

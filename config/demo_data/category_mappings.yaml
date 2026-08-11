@@ -14,7 +14,7 @@ income:
     category_type: "Gelir"
   
   extra_income:
-    standard_name: "Ek Gelir / Yan İş"
+    standard_name: "Ek Gelir / Diğer Gelirler"
     description: "Additional/freelance income"
     category_type: "Gelir"
   
@@ -28,105 +28,99 @@ income:
     description: "Interest/dividend income"
     category_type: "Gelir"
   
-  commission:
-    standard_name: "Serbest Meslek / Danışmanlık"
-    description: "Commission income"
-    category_type: "Gelir"
-  
   bonus:
     standard_name: "Prim & İkramiye"
     description: "Bonus income"
     category_type: "Gelir"
   
-  other_income:
-    standard_name: "Yatırım / Sermaye Kazancı"
-    description: "Other miscellaneous income"
+  help_support:
+    standard_name: "Yardım & Destek"
+    description: "Help and support income"
+    category_type: "Gelir"
+  
+  investment_gain:
+    standard_name: "Yatırım Kazancı"
+    description: "Investment capital gains"
     category_type: "Gelir"
 
 expense:
-  tax:
-    standard_name: "Vergi"
-    description: "Tax payments"
-    category_type: "Gider"
-  
-  credit:
-    standard_name: "Kredi"
-    description: "Credit/loan payments"
-    category_type: "Gider"
-  
-  credit_card:
-    standard_name: "Kredi Kartı"
+  credit_card_payment:
+    standard_name: "Kredi Kartı Ödemesi"
     description: "Credit card payments"
     category_type: "Gider"
   
+  credit_payment:
+    standard_name: "Kredi Ödemeleri"
+    description: "Credit/loan payments"
+    category_type: "Gider"
+  
   monthly_fixed:
-    standard_name: "Konut & Kira"
+    standard_name: "Aylık Sabit Gider"
     description: "Monthly fixed expenses"
     category_type: "Gider"
   
-  food:
-    standard_name: "Market & Gıda"
-    description: "Food and grocery expenses"
+  donation:
+    standard_name: "Bağış & Yardım"
+    description: "Donation and charity"
     category_type: "Gider"
   
-  transport:
-    standard_name: "Ulaşım & Yakıt"
-    description: "Transportation expenses"
+  education:
+    standard_name: "Eğitim & Kurslar"
+    description: "Education and courses"
     category_type: "Gider"
   
-  entertainment:
-    standard_name: "Eğlence & Restoran"
-    description: "Entertainment expenses"
+  rent:
+    standard_name: "Kira"
+    description: "Rent payments"
+    category_type: "Gider"
+  
+  personal_care:
+    standard_name: "Kişisel Bakım"
+    description: "Personal care expenses"
+    category_type: "Gider"
+  
+  alimony:
+    standard_name: "Nafaka"
+    description: "Alimony payments"
     category_type: "Gider"
   
   other_expense:
-    standard_name: "Faturalar (Elektrik/Su/Gaz)"
+    standard_name: "Diğer Giderler"
     description: "Other miscellaneous expenses"
     category_type: "Gider"
 
 investment:
-  monthly_investment:
-    standard_name: "Yatırıma Aktarılan"
-    description: "Monthly investment transfer"
-    category_type: "Yatırım"
-  
-  stocks:
-    standard_name: "Hisse Senedi Alımı"
-    description: "Stock investments"
-    category_type: "Yatırım"
-  
-  gold_bullion:
+  gold:
     standard_name: "Altın Alımı"
     description: "Gold investments"
     category_type: "Yatırım"
   
-  forex:
-    standard_name: "Kripto Para Alımı"
-    description: "Foreign exchange investments"
-    category_type: "Yatırım"
-  
   other_investment:
-    standard_name: "Yatırıma Aktarılan"
+    standard_name: "Diğer Yatırımlar"
     description: "Other investments"
     category_type: "Yatırım"
-
-transfer:
-  account_transfer:
-    standard_name: "Hesap Arası Transfer"
-    description: "Transfer between accounts"
-    category_type: "Transfer"
   
-  cash_withdrawal:
-    standard_name: "Nakit Çekme"
-    description: "Cash withdrawal"
-    category_type: "Transfer"
+  fund:
+    standard_name: "Fon"
+    description: "Fund investments"
+    category_type: "Yatırım"
+  
+  real_estate:
+    standard_name: "Gayrimenkul"
+    description: "Real estate investments"
+    category_type: "Yatırım"
+  
+  stocks:
+    standard_name: "Hisse Senedi"
+    description: "Stock investments"
+    category_type: "Yatırım"
+  
+  crypto:
+    standard_name: "Kripto"
+    description: "Cryptocurrency investments"
+    category_type: "Yatırım"
   
   cash_deposit:
-    standard_name: "Nakit Yatırma"
-    description: "Cash deposit"
-    category_type: "Transfer"
-  
-  other_transfer:
-    standard_name: "Diğer Transferler"
-    description: "Other transfers"
-    category_type: "Transfer"
+    standard_name: "Nakit & Mevduat"
+    description: "Cash and deposit investments"
+    category_type: "Yatırım"
