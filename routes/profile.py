@@ -7,6 +7,7 @@ from flask import g, jsonify, redirect, render_template, request, session, url_f
 from bootstrap.container import get_container
 from domain.tenant.accessor import get_tenant as get_tenant_id
 from utils.ajax_helpers import handle_ajax_or_flash, is_ajax_request
+from utils.auth_helpers import login_required
 from utils.notification_helpers import flash_error
 
 logger = logging.getLogger(__name__)
@@ -21,6 +22,7 @@ def register_profile_routes(bp):
     profile_service = _get_profile_service()
 
     @bp.route('/')
+    @login_required
     def index():
         try:
             return render_template(
@@ -33,6 +35,7 @@ def register_profile_routes(bp):
             return render_template('profile.html', active_profile=None, profile_history=[])
 
     @bp.route('/start')
+    @login_required
     def start():
         try:
             return render_template('profile_wizard.html', **profile_service.wizard_context())
@@ -42,6 +45,7 @@ def register_profile_routes(bp):
             return redirect(url_for('profile.index'))
 
     @bp.route('/submit', methods=['POST'])
+    @login_required
     def submit():
         is_ajax = is_ajax_request()
         try:
@@ -71,6 +75,7 @@ def register_profile_routes(bp):
         return redirect(url_for('profile.index'))
 
     @bp.route('/result/<int:id>')
+    @login_required
     def result(id):
         try:
             context = profile_service.result_context(id, get_tenant_id())
@@ -84,6 +89,7 @@ def register_profile_routes(bp):
             return redirect(url_for('profile.index'))
 
     @bp.route('/api/questions')
+    @login_required
     def api_questions():
         try:
             return jsonify(profile_service.questions_payload())
@@ -92,6 +98,7 @@ def register_profile_routes(bp):
             return jsonify({'success': False, 'message': str(e)}), 500
 
     @bp.route('/api/submit', methods=['POST'])
+    @login_required
     def api_submit():
         try:
             profile, profile_result = profile_service.submit_answers(
@@ -110,6 +117,7 @@ def register_profile_routes(bp):
             return jsonify({'success': False, 'message': str(e)}), 500
 
     @bp.route('/api/profile/<int:id>')
+    @login_required
     def api_profile(id):
         try:
             profile_data = profile_service.profile_payload(id, get_tenant_id())
@@ -121,6 +129,7 @@ def register_profile_routes(bp):
             return jsonify({'success': False, 'message': str(e)}), 500
 
     @bp.route('/api/history')
+    @login_required
     def api_history():
         try:
             return jsonify({
