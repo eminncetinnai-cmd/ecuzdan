@@ -110,6 +110,92 @@ def evaluate_payment_alerts(tenant_id, reminder_days=3, today=None):
     return drafts
 
 
+def evaluate_asset_alerts(tenant_id, today=None):
+    """Varlık fiyat değişiklikleri ve önemli hareketler için uyarılar."""
+    from domain.portfolio.models.portfolio_models import Asset
+    
+    today = today or datetime.now()
+    period_start = (today - timedelta(days=7)).strftime('%Y-%m-%d')
+    
+    assets = Asset.query.filter(
+        Asset.tenant_id == tenant_id,
+        Asset.is_active == True,
+    ).all()
+    
+    drafts = []
+    for asset in assets:
+        if not asset.current_price or not asset.purchase_price:
+            continue
+        
+        # Calculate price change percentage
+        price_change_pct = ((asset.current_price - asset.purchase_price) / asset.purchase_price) * 100
+        
+        # Significant price change alerts
+        if abs(price_change_pct) >= 20:  # 20% or more change
+            severity = 'danger' if price_change_pct < -20 else 'success'
+            direction = 'düşüş' if price_change_pct < 0 else 'artış'
+            drafts.append({
+                'category': 'asset',
+                'severity': severity,
+                'title': f'Significant price change: {asset.name}',
+                'body': f'{asset.name} fiyatında %{abs(price_change_pct):.1f} {direction} (Satış: {format_money(asset.current_price)} ₺)',
+                'link': '/assets',
+                'dedupe_key': f'asset_price:{asset.id}:{today.strftime("%Y-%m-%d")}',
+            })
+    
+    return drafts
+
+
+def evaluate_portfolio_alerts(tenant_id, today=None):
+    """Portföy genel performans ve risk uyarıları."""
+    from domain.portfolio.models.portfolio_models import Asset
+    from shared.decimal_precision import to_decimal
+    
+    today = today or datetime.now()
+    
+    assets = Asset.query.filter(
+        Asset.tenant_id == tenant_id,
+        Asset.is_active == True,
+    ).all()
+    
+    if not assets:
+        return []
+    
+    # Calculate portfolio concentration
+    total_value = sum(asset.current_price * asset.quantity if asset.current_price else 0 for asset in assets)
+    
+    if total_value <= 0:
+        return []
+    
+    drafts = []
+    
+    # Check for concentration risk (single asset > 40% of portfolio)
+    for asset in assets:
+        if not asset.current_price:
+            continue
+        asset_value = asset.current_price * asset.quantity
+        concentration = (asset_value / total_value) * 100
+        
+        if concentration >= 40:
+            drafts.append({
+                'category': 'portfolio',
+                'severity': 'warning',
+                'title': f'Concentration risk: {asset.name}',
+                'body': f'{asset.name} portföyün %{concentration:.1f}\'ini oluşturuyor. Diversifikasyon önerilir.',
+                'link': '/assets',
+                'dedupe_key': f'concentration:{asset.id}:{today.strftime("%Y-%m")}',
+            })
+    
+    return drafts
+
+
+def evaluate_goal_alerts(tenant_id, today=None):
+    """Yatırım hedefleri ve ilerleme uyarıları."""
+    # Placeholder for goal tracking alerts
+    # This would require a goals table/model
+    return []
+
+
 def evaluate_all(tenant_id, preferences=None, today=None):
     """
     Tüm kuralları kullanıcı tercihlerine göre çalıştırır.
@@ -118,10 +204,14 @@ def evaluate_all(tenant_id, preferences=None, today=None):
     """
     notify_budget = True
     notify_payments = True
+    notify_assets = True
+    notify_portfolio = True
     reminder_days = 3
     if preferences is not None:
         notify_budget = bool(preferences.notify_budget)
         notify_payments = bool(preferences.notify_payments)
+        notify_assets = bool(getattr(preferences, 'notify_assets', True))
+        notify_portfolio = bool(getattr(preferences, 'notify_portfolio', True))
         reminder_days = preferences.payment_reminder_days or 3
 
     drafts = []
@@ -129,4 +219,8 @@ def evaluate_all(tenant_id, preferences=None, today=None):
         drafts.extend(evaluate_budget_alerts(tenant_id, today=today))
     if notify_payments:
         drafts.extend(evaluate_payment_alerts(tenant_id, reminder_days=reminder_days, today=today))
+    if notify_assets:
+        drafts.extend(evaluate_asset_alerts(tenant_id, today=today))
+    if notify_portfolio:
+        drafts.extend(evaluate_portfolio_alerts(tenant_id, today=today))
     return drafts

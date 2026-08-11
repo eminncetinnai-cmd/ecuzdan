@@ -708,8 +708,136 @@ class ProfileScoringEngine:
             }
         ]
 
+        # Senaryo Bazlı Sorular (5 yeni soru - yeni soru türü)
+        scenario_questions = [
+            {
+                'id': 'SCN001',
+                'dimension': 'tolerance',
+                'type': 'scenario',
+                'question': 'Senaryo: Piyasa %30 düşerse, 100.000 TL\'lik yatırımınız 70.000 TL\'ye düşer. Ne yaparsınız?',
+                'options': [
+                    {'value': 0, 'text': 'Hemen satıp nakite çevirim'},
+                    {'value': 3, 'text': 'Kısa vadede beklerim'},
+                    {'value': 6, 'text': 'Uzun vadede beklerim'},
+                    {'value': 10, 'text': 'Düşüşte alım yaparım'}
+                ],
+                'scoring_weights': {'min': 0, 'max': 10},
+                'explanation': 'Senaryo bazlı sorular gerçek piyasa davranışını tahmin eder.',
+                'difficulty': 'hard'
+            },
+            {
+                'id': 'SCN002',
+                'dimension': 'capacity',
+                'type': 'scenario',
+                'question': 'Senaryo: İşinizi kaybedersiniz ve 6 ay iş bulamazsınız. Ne kadar tasarrufunuz var?',
+                'options': [
+                    {'value': 0, 'text': '1 hafta yetecek'},
+                    {'value': 3, 'text': '1 ay yetecek'},
+                    {'value': 6, 'text': '3 ay yetecek'},
+                    {'value': 10, 'text': '6+ ay yetecek'}
+                ],
+                'scoring_weights': {'min': 0, 'max': 10},
+                'explanation': 'Acil durum senaryosu risk kapasitesini gösterir.',
+                'difficulty': 'medium'
+            },
+            {
+                'id': 'SCN003',
+                'dimension': 'behavioral',
+                'type': 'scenario',
+                'question': 'Senaryo: Arkadaşınız kripto para ile %100 kazandığını söylüyor. Ne yaparsınız?',
+                'options': [
+                    {'value': 0, 'text': 'Hemen yatırım yaparım'},
+                    {'value': 3, 'text': 'Araştırıp yatırım yaparım'},
+                    {'value': 6, 'text': 'Küçük miktar denerim'},
+                    {'value': 10, 'text': 'Risk almadan beklerim'}
+                ],
+                'scoring_weights': {'min': 0, 'max': 10},
+                'explanation': 'Sosyal etki ve FOMO davranışını ölçer.',
+                'difficulty': 'medium'
+            },
+            {
+                'id': 'SCN004',
+                'dimension': 'literacy',
+                'type': 'scenario',
+                'question': 'Senaryo: Banka %20 faiz sunuyor, enflasyon %40. Bu yatırım size ne kazandırır?',
+                'options': [
+                    {'value': 0, 'text': '%20 kazandırır'},
+                    {'value': 5, 'text': 'Kayıp veririm'},
+                    {'value': 10, 'text': '%20 reel kayıp veririm'}
+                ],
+                'scoring_weights': {'min': 0, 'max': 10},
+                'explanation': 'Reel getiri kavramını senaryo ile test eder.',
+                'difficulty': 'medium'
+            },
+            {
+                'id': 'SCN005',
+                'dimension': 'experience',
+                'type': 'scenario',
+                'question': 'Senaryo: Hisse senediniz %10 düşükken şirket iyi haberler açıkladı. Ne yaparsınız?',
+                'options': [
+                    {'value': 0, 'text': 'Hemen satıyorum'},
+                    {'value': 3, 'text': 'Bekliyorum'},
+                    {'value': 6, 'text': 'Düşüşte alım yaparım'},
+                    {'value': 10, 'text': 'Analiz edip karar veririm'}
+                ],
+                'scoring_weights': {'min': 0, 'max': 10},
+                'explanation': 'Piyasa analizi ve karar verme deneyimini gösterir.',
+                'difficulty': 'hard'
+            }
+        ]
+
+        # Sıralama Soruları (3 yeni soru - yeni soru türü)
+        ranking_questions = [
+            {
+                'id': 'RNK001',
+                'dimension': 'literacy',
+                'type': 'ranking',
+                'question': 'Aşağıdaki yatırım araçlarını risk seviyesine göre sıralayın (Düşük riskten Yüksek riske):',
+                'options': [
+                    {'value': 0, 'text': 'Hisse senedi'},
+                    {'value': 1, 'text': 'Devlet tahvili'},
+                    {'value': 2, 'text': 'Kripto para'},
+                    {'value': 3, 'text': 'Mevduat'}
+                ],
+                'correct_order': ['Mevduat', 'Devlet tahvili', 'Hisse senedi', 'Kripto para'],
+                'scoring_weights': {'min': 0, 'max': 10},
+                'explanation': 'Risk sıralaması finansal okuryazarlığı gösterir.',
+                'difficulty': 'medium'
+            },
+            {
+                'id': 'RNK002',
+                'dimension': 'tolerance',
+                'type': 'ranking',
+                'question': 'Aşağıdaki hedefleri önem sırasına göre sıralayın:',
+                'options': [
+                    {'value': 0, 'text': 'Yüksek getiri'},
+                    {'value': 1, 'text': 'Sermayeyi koruma'},
+                    {'value': 2, 'text': 'Düzenli gelir'},
+                    {'value': 3, 'text': 'Likidite'}
+                ],
+                'scoring_weights': {'min': 0, 'max': 10},
+                'explanation': 'Hedef sıralaması risk toleransını gösterir.',
+                'difficulty': 'medium'
+            },
+            {
+                'id': 'RNK003',
+                'dimension': 'behavioral',
+                'type': 'ranking',
+                'question': 'Piyasa haberlerini takip önceliğinizi sıralayın:',
+                'options': [
+                    {'value': 0, 'text': 'Kısa vadeli haberler'},
+                    {'value': 1, 'text': 'Uzun vadeli trendler'},
+                    {'value': 2, 'text': 'Şirket haberleri'},
+                    {'value': 3, 'text': 'Global ekonomi'}
+                ],
+                'scoring_weights': {'min': 0, 'max': 10},
+                'explanation': 'Haber takip davranışını gösterir.',
+                'difficulty': 'easy'
+            }
+        ]
+
         # Tüm soruları birleştir
-        questions = literacy_questions + capacity_questions + tolerance_questions + behavioral_questions + experience_questions
+        questions = literacy_questions + capacity_questions + tolerance_questions + behavioral_questions + experience_questions + scenario_questions + ranking_questions
 
         # Dictionary formatına çevir
         question_dict = {}
