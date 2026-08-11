@@ -566,7 +566,7 @@ This comprehensive forensic audit report summarizes the findings from 17 module 
 
 ### 7.4 Profile Module
 - Limited test coverage
-- No login_required decorator
+- ~~No login_required decorator~~ (RESOLVED - added @login_required to all profile routes)
 
 ### 7.5 Strategy Module
 - Limited test coverage (some skipped tests)
@@ -685,7 +685,7 @@ This comprehensive forensic audit report summarizes the findings from 17 module 
 4. ~~Standardize HTTP methods in assets module~~ (RESOLVED - standardized to POST)
 5. Implement alert configuration persistence in monitoring module
 6. Add integration tests for strategy module
-7. Add login_required decorator to profile routes
+7. ~~Add login_required decorator to profile routes~~ (RESOLVED - added to all profile routes)
 
 **Low Priority:**
 1. Add more question types to profile module
