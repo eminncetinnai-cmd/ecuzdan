@@ -190,6 +190,7 @@ def _seed_assets(year):
             quantity=qty, unit_price=price, currency=cur,
             symbol=sym, risk_level=risk, liquidity=liq,
             sector_id=sector.id, notes=ADMIN_NOTE,
+            sync_cash=False,
             is_admin_generated=True,
             tenant_id='default'
         )
