@@ -688,12 +688,12 @@ This comprehensive forensic audit report summarizes the findings from 17 module 
 7. ~~Add login_required decorator to profile routes~~ (RESOLVED - added to all profile routes)
 
 **Low Priority:**
-1. Add more question types to profile module
-2. Add profile comparison features
-3. Add profile export/import
-4. Add more notification types
-5. Add email notification delivery
-6. Add SMS notification delivery
+1. ~~Add more question types to profile module~~ (RESOLVED - added 8 new scenario and ranking questions)
+2. ~~Add profile comparison features~~ (RESOLVED - added compare_profiles with risk level tracking)
+3. ~~Add profile export/import~~ (RESOLVED - added JSON export/import functionality)
+4. ~~Add more notification types~~ (RESOLVED - added asset, portfolio, and goal alerts)
+5. ~~Add email notification delivery~~ (RESOLVED - added EmailDeliveryService with SMTP support)
+6. ~~Add SMS notification delivery~~ (RESOLVED - added SMSDeliveryService with Twilio/Nexmo/MessageBird)
 
 ---
 
