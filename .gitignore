@@ -71,3 +71,6 @@ _backup/
 
 # Empty agent directories
 .agents/
+
+# Archive folder (dead code)
+archive/
