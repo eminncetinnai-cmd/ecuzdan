@@ -340,29 +340,91 @@ def register_monitoring_routes(bp):
             if 'user_id' not in session:
                 return jsonify(_standard_response(False, error='Unauthorized')), 401
             
+            from models import MonitoringAlertConfig, db
+            
+            user_id = session.get('user_id')
+            tenant_id = session.get('tenant_id')
+            
             if request.method == 'GET':
-                # Mevcut konfigürasyonu getir (placeholder)
-                config = {
-                    'email_alerts_enabled': False,
-                    'smtp_server': None,
-                    'from_email': None,
-                    'to_emails': [],
-                    'alert_thresholds': {
-                        'error_rate': 10,  # errors per minute
-                        'critical_rate': 1,  # critical per minute
+                # Mevcut konfigürasyonu getir
+                config = MonitoringAlertConfig.query.filter_by(user_id=user_id).first()
+                
+                if not config:
+                    # Varsayılan konfigürasyon döndür
+                    default_config = {
+                        'email_alerts_enabled': False,
+                        'smtp_server': None,
+                        'smtp_port': None,
+                        'smtp_username': None,
+                        'from_email': None,
+                        'to_emails': [],
+                        'alert_thresholds': {
+                            'error_rate': 10,  # errors per minute
+                            'critical_rate': 1,  # critical per minute
+                            'disk_space_percent': 10
+                        }
+                    }
+                    return jsonify(_standard_response(True, data=default_config))
+                
+                # Mevcut konfigürasyonu döndür
+                config_data = {
+                    'email_alerts_enabled': config.email_alerts_enabled,
+                    'smtp_server': config.smtp_server,
+                    'smtp_port': config.smtp_port,
+                    'smtp_username': config.smtp_username,
+                    'from_email': config.from_email,
+                    'to_emails': config.to_emails or [],
+                    'alert_thresholds': config.alert_thresholds or {
+                        'error_rate': 10,
+                        'critical_rate': 1,
                         'disk_space_percent': 10
                     }
                 }
-                return jsonify(_standard_response(True, data=config))
+                return jsonify(_standard_response(True, data=config_data))
             
             elif request.method == 'POST':
-                # Konfigürasyonu güncelle (placeholder)
+                # Konfigürasyonu güncelle
                 data = request.get_json()
-                # TODO: Konfigürasyon kaydetme
+                
+                config = MonitoringAlertConfig.query.filter_by(user_id=user_id).first()
+                
+                if not config:
+                    # Yeni konfigürasyon oluştur
+                    config = MonitoringAlertConfig(
+                        user_id=user_id,
+                        tenant_id=tenant_id,
+                        email_alerts_enabled=data.get('email_alerts_enabled', False),
+                        smtp_server=data.get('smtp_server'),
+                        smtp_port=data.get('smtp_port'),
+                        smtp_username=data.get('smtp_username'),
+                        smtp_password=data.get('smtp_password'),
+                        from_email=data.get('from_email'),
+                        to_emails=data.get('to_emails', []),
+                        alert_thresholds=data.get('alert_thresholds', {
+                            'error_rate': 10,
+                            'critical_rate': 1,
+                            'disk_space_percent': 10
+                        })
+                    )
+                    db.session.add(config)
+                else:
+                    # Mevcut konfigürasyonu güncelle
+                    config.email_alerts_enabled = data.get('email_alerts_enabled', config.email_alerts_enabled)
+                    config.smtp_server = data.get('smtp_server', config.smtp_server)
+                    config.smtp_port = data.get('smtp_port', config.smtp_port)
+                    config.smtp_username = data.get('smtp_username', config.smtp_username)
+                    if data.get('smtp_password'):
+                        config.smtp_password = data.get('smtp_password')
+                    config.from_email = data.get('from_email', config.from_email)
+                    config.to_emails = data.get('to_emails', config.to_emails)
+                    config.alert_thresholds = data.get('alert_thresholds', config.alert_thresholds)
+                
+                db.session.commit()
                 return jsonify(_standard_response(True, data={'message': 'Configuration updated'}))
             
         except Exception as e:
             logger.error(f"Monitoring alerts config error: {e}")
+            db.session.rollback()
             return jsonify(_standard_response(False, error=str(e))), 500
 
 

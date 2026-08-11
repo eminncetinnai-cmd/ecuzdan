@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timezone
 
 from shared.db import db
-from sqlalchemy import Numeric
+from sqlalchemy import Numeric, JSON
 
 
 def utcnow_naive():
@@ -818,6 +818,40 @@ class AuditLog(db.Model):
         return f'<AuditLog {self.action} by {self.username} @ {self.timestamp}>'
 
 
+class MonitoringAlertConfig(db.Model):
+    """Monitoring alert configuration model"""
+    __tablename__ = 'monitoring_alert_config'
+    __table_args__ = (
+        db.Index('idx_alert_config_user', 'user_id'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.String(50), db.ForeignKey('tenant.id'), nullable=True, index=True)
+    
+    # Email alert settings
+    email_alerts_enabled = db.Column(db.Boolean, default=False, nullable=False)
+    smtp_server = db.Column(db.String(255), nullable=True)
+    smtp_port = db.Column(db.Integer, nullable=True)
+    smtp_username = db.Column(db.String(255), nullable=True)
+    smtp_password = db.Column(db.String(255), nullable=True)
+    from_email = db.Column(db.String(255), nullable=True)
+    to_emails = db.Column(JSON, nullable=True)  # List of email addresses
+    
+    # Alert thresholds
+    alert_thresholds = db.Column(JSON, nullable=True)  # JSON object with thresholds
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=utcnow_naive, nullable=False)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive, nullable=False)
+
+    user = db.relationship('User', backref='alert_configs')
+    tenant = db.relationship('Tenant', backref='alert_configs')
+
+    def __repr__(self):
+        return f'<MonitoringAlertConfig user_id={self.user_id} email_enabled={self.email_alerts_enabled}>'
+
+
 # Re-exports from domain models
 from domain.catalog.models.catalog_models import Category, AssetType, AssetSector
 from domain.portfolio.models.portfolio_models import Asset, AssetTransaction, AssetUpdate
@@ -827,3 +861,4 @@ __all__ = ['Category', 'AssetType', 'AssetSector', 'Asset', 'AssetTransaction', 
 from infrastructure.database.models.outbox_model import OutboxMessageModel
 __all__.append('OutboxMessageModel')
 __all__.append('AuditLog')
+__all__.append('MonitoringAlertConfig')
