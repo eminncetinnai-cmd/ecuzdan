@@ -216,7 +216,7 @@ def register_asset_routes(bp):
             return jsonify({'success': False, 'message': 'Bilinmeyen bir hata oluştu.'})
         return redirect(url_for('assets.assets_management'))
 
-    @bp.route('/delete_asset/<int:id>', methods=['GET', 'POST'])
+    @bp.route('/delete_asset/<int:id>', methods=['POST'])
     def delete_asset_route(id):
         try:
             if delete_asset_position(id, tenant_id=g.get('tenant_id')):
@@ -246,10 +246,6 @@ def register_asset_routes(bp):
                 return jsonify({'success': False, 'message': message})
             flash(message, 'error')
         return redirect(url_for('assets.assets'))
-
-    @bp.route('/del_asset/<int:id>', methods=['GET', 'POST'])
-    def delete_asset_route_old(id):
-        return delete_asset_route(id)
 
     @bp.route('/sell_asset/<int:id>', methods=['POST'])
     def sell_asset(id):
