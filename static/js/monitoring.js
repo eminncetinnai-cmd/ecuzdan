@@ -514,6 +514,17 @@ function stopAutoRefresh() {
 }
 
 /**
+ * Toggle collapsible section
+ */
+function toggleSection(sectionName) {
+    const section = document.querySelector(`[data-section="${sectionName}"]`);
+    if (section) {
+        section.classList.toggle('collapsed');
+        console.log('[Monitoring] Section toggled:', sectionName, section.classList.contains('collapsed') ? 'collapsed' : 'expanded');
+    }
+}
+
+/**
  * Initialize monitoring dashboard
  */
 function initMonitoring() {
