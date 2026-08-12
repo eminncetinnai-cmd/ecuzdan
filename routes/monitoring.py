@@ -327,6 +327,61 @@ def register_monitoring_routes(bp):
             logger.error(f"Monitoring health error: {e}")
             return jsonify(_standard_response(False, error=str(e))), 500
     
+    @bp.route('/api/summary', methods=['GET'])
+    @login_required
+    def monitoring_summary():
+        """
+        Konsolide monitoring özet bilgileri
+        
+        Tek endpoint ile tüm özet bilgileri getir:
+        - Health status
+        - Log statistics
+        - Recent errors
+        - System metrics
+        
+        Returns:
+            JSON response with consolidated monitoring summary
+        """
+        try:
+            logger.info("Monitoring summary API called")
+            # Check cache
+            cache_key = f"summary_{session.get('user_id')}"
+            cached_data = _get_cache_key(cache_key)
+            if cached_data:
+                return jsonify(_standard_response(True, data=cached_data))
+            
+            # Get health status
+            health_response = monitoring_health()
+            health_data = health_response.get_json()
+            
+            # Get stats
+            stats_response = monitoring_stats()
+            stats_data = stats_response.get_json()
+            
+            # Build consolidated summary
+            summary = {
+                'health': health_data.get('data') if health_data.get('success') else None,
+                'stats': stats_data.get('data') if stats_data.get('success') else None,
+                'timestamp': datetime.now().isoformat(),
+                'quick_metrics': {
+                    'system_status': health_data.get('data', {}).get('status', 'unknown') if health_data.get('success') else 'unknown',
+                    'error_count_24h': stats_data.get('data', {}).get('error_count', 0) if stats_data.get('success') else 0,
+                    'warning_count_24h': stats_data.get('data', {}).get('warning_count', 0) if stats_data.get('success') else 0,
+                    'disk_free_percent': health_data.get('data', {}).get('disk_usage', {}).get('free_percent', 0) if health_data.get('success') else 0,
+                    'uptime_hours': 24  # Placeholder - could be calculated from app start time
+                }
+            }
+            
+            # Cache the result (shorter TTL for summary)
+            _cache_ttl['summary'] = 15  # 15 seconds
+            _set_cache(cache_key, summary)
+            
+            return jsonify(_standard_response(True, data=summary))
+            
+        except Exception as e:
+            logger.error(f"Monitoring summary error: {e}")
+            return jsonify(_standard_response(False, error=str(e))), 500
+
     @bp.route('/api/alerts/config', methods=['GET', 'POST'])
     @login_required
     def monitoring_alerts_config():

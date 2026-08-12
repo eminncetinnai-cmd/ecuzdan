@@ -36,31 +36,31 @@
     <!-- Stats Grid -->
     <div class="stats-grid">
         <div class="stat-card">
-            <div class="stat-label">Toplam Log</div>
+            <div class="stat-label">📊 Toplam Log</div>
             <div class="stat-value" id="total-logs">-</div>
             <div class="text-sm text-slate-500">Tüm log kayıtları</div>
         </div>
         
         <div class="stat-card error">
-            <div class="stat-label">Hatalar</div>
+            <div class="stat-label">⚠️ Hatalar</div>
             <div class="stat-value" id="error-count">-</div>
             <div class="text-sm text-slate-500">Error seviyesi loglar</div>
         </div>
         
         <div class="stat-card warning">
-            <div class="stat-label">Uyarılar</div>
+            <div class="stat-label">🔔 Uyarılar</div>
             <div class="stat-value" id="warning-count">-</div>
             <div class="text-sm text-slate-500">Warning seviyesi loglar</div>
         </div>
         
         <div class="stat-card critical">
-            <div class="stat-label">Kritik</div>
+            <div class="stat-label">🚨 Kritik</div>
             <div class="stat-value" id="critical-count">-</div>
             <div class="text-sm text-slate-500">Critical seviyesi loglar</div>
         </div>
         
         <div class="stat-card security">
-            <div class="stat-label">Güvenlik</div>
+            <div class="stat-label">🔒 Güvenlik</div>
             <div class="stat-value" id="security-count">-</div>
             <div class="text-sm text-slate-500">Security logları</div>
         </div>
@@ -91,14 +91,22 @@
                 <option value="INFO">Sadece Bilgi</option>
             </select>
             
+            <select id="log-preset-select">
+                <option value="">Özel Filtre</option>
+                <option value="last_hour">Son 1 Saat</option>
+                <option value="last_24h">Son 24 Saat</option>
+                <option value="errors_only">Sadece Hatalar</option>
+                <option value="critical_only">Sadece Kritik</option>
+            </select>
+            
             <input type="text" id="log-search-input" placeholder="Ara...">
             
             <input type="number" id="log-lines-input" value="100" min="10" max="1000" placeholder="Satır">
             
-            <button id="load-logs-btn">Log Yükle</button>
-            <button id="clear-logs-btn">Temizle</button>
-            <button id="download-logs-btn">İndir</button>
-            <button id="auto-refresh-btn">Otomatik Yenileme: KAPALI</button>
+            <button id="load-logs-btn">📥 Log Yükle</button>
+            <button id="clear-logs-btn">🗑️ Temizle</button>
+            <button id="download-logs-btn">💾 İndir</button>
+            <button id="auto-refresh-btn">🔄 Otomatik Yenile</button>
         </div>
         
         <div id="log-container" class="log-container">

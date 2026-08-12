@@ -29,10 +29,15 @@ function updateLastUpdated() {
 async function loadHealthStatus() {
     try {
         console.log('[Monitoring] Fetching health status from /monitoring/api/health');
-        const response = await fetch('/monitoring/api/health');
+        console.log('[Monitoring] Document cookie:', document.cookie);
+        const response = await fetch('/monitoring/api/health', {
+            credentials: 'same-origin'
+        });
         console.log('[Monitoring] Health status response:', response.status, response.statusText);
+        console.log('[Monitoring] Response headers:', response.headers);
         if (!response.ok) {
             console.error('Health status API error:', response.status, response.statusText);
+            console.error('Response text:', await response.text());
             return;
         }
         const result = await response.json();
@@ -115,7 +120,9 @@ function renderHealthStatus(health) {
 async function loadStats() {
     try {
         console.log('[Monitoring] Fetching stats from /monitoring/api/stats');
-        const response = await fetch('/monitoring/api/stats');
+        const response = await fetch('/monitoring/api/stats', {
+            credentials: 'same-origin'
+        });
         console.log('[Monitoring] Stats response:', response.status, response.statusText);
         if (!response.ok) {
             console.error('Stats API error:', response.status, response.statusText);
@@ -174,36 +181,57 @@ function renderStats(stats) {
  * Load logs from API
  */
 async function loadLogs() {
-    const fileSelect = document.getElementById('log-file-select');
-    const levelSelect = document.getElementById('log-level-select');
-    const searchInput = document.getElementById('log-search-input');
-    const linesInput = document.getElementById('log-lines-input');
-    
-    if (!fileSelect) return;
-    
-    const file = fileSelect.value;
-    const level = levelSelect ? levelSelect.value : '';
-    const search = searchInput ? searchInput.value : '';
-    const lines = linesInput ? parseInt(linesInput.value) : 100;
-    
     try {
+        console.log('[Monitoring] Loading logs');
+        
+        const fileSelect = document.getElementById('log-file-select');
+        const levelSelect = document.getElementById('log-level-select');
+        const presetSelect = document.getElementById('log-preset-select');
+        const searchInput = document.getElementById('log-search-input');
+        const linesInput = document.getElementById('log-lines-input');
+        
+        const file_type = fileSelect.value;
+        let level_filter = levelSelect.value;
+        const search_term = searchInput.value;
+        const line_count = parseInt(linesInput.value) || 100;
+        
+        // Handle preset filters
+        const preset = presetSelect.value;
+        if (preset === 'errors_only') {
+            level_filter = 'ERROR';
+        } else if (preset === 'critical_only') {
+            level_filter = 'CRITICAL';
+        }
+        
+        // Build params
         const params = new URLSearchParams({
-            file: file,
-            lines: lines.toString()
+            file: file_type,
+            lines: line_count
         });
         
-        if (level) params.append('level', level);
-        if (search) params.append('search', search);
+        if (level_filter) params.append('level', level_filter);
+        if (search_term) params.append('search', search_term);
         
-        const response = await fetch(`/monitoring/api/logs?${params}`);
+        const response = await fetch(`/monitoring/api/logs?${params}`, {
+            credentials: 'same-origin'
+        });
+        
+        if (!response.ok) {
+            console.error('Logs API error:', response.status, response.statusText);
+            return;
+        }
+        
         const result = await response.json();
+        console.log('[Monitoring] Logs data:', result);
         
         if (result.success && result.data) {
-            loadedLogs = result.data.logs || [];
-            renderLogs(loadedLogs);
+            renderLogs(result.data.logs);
+            loadedLogs = result.data.logs;
+        } else {
+            console.error('Logs response error:', result.error);
         }
     } catch (error) {
-        console.error('Log yüklenemedi:', error);
+        console.error('Logs yüklenemedi:', error);
     }
 }
 
@@ -371,7 +399,11 @@ function stopAutoRefresh() {
 function initMonitoring() {
     console.log('[Monitoring] Initializing dashboard...');
     
-    // Load initial data
+    // Load initial data immediately
+    console.log('[Monitoring] Loading initial data...');
+    refreshAll();
+    
+    // Start auto-refresh
     console.log('[Monitoring] Starting auto-refresh...');
     startAutoRefresh();
     
@@ -416,9 +448,18 @@ function initMonitoring() {
         console.error('[Monitoring] Auto refresh button not found');
     }
     
-    // Cleanup on page unload
-    window.addEventListener('beforeunload', stopAutoRefresh);
-    console.log('[Monitoring] Dashboard initialization complete');
+    const presetSelect = document.getElementById('log-preset-select');
+    if (presetSelect) {
+        presetSelect.addEventListener('change', () => {
+            console.log('[Monitoring] Preset changed:', presetSelect.value);
+            loadLogs();
+        });
+        console.log('[Monitoring] Preset select listener attached');
+    } else {
+        console.error('[Monitoring] Preset select not found');
+    }
+    
+    console.log('[Monitoring] Dashboard initialized successfully');
 }
 
 // Initialize when DOM is ready
