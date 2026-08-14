@@ -135,7 +135,7 @@ class TestRiskAnalyzer:
 
     def test_calculate_volatility_annualized(self):
         """Test annualized volatility calculation"""
-        returns = [0.01] * 252  # Daily returns for a year
+        returns = [0.01, 0.02, -0.01, 0.03, 0.01] * 50  # Varying returns
         
         volatility = RiskAnalyzer.calculate_volatility(returns, annualize=True)
         

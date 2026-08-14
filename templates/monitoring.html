@@ -41,6 +41,19 @@
         </div>
     </div>
 
+    <!-- Alert Status -->
+    <div class="mb-6">
+        <div class="collapsible-section" data-section="alerts">
+            <div class="collapsible-header" onclick="toggleSection('alerts')">
+                <h3 class="text-lg font-semibold text-slate-700">🚨 Log Uyarıları</h3>
+                <span class="collapsible-icon">▼</span>
+            </div>
+            <div class="collapsible-content" id="alerts-section">
+                <div id="alert-status" class="text-sm text-slate-600">Yükleniyor...</div>
+            </div>
+        </div>
+    </div>
+
     <!-- Stats Grid -->
     <div class="collapsible-section" data-section="stats">
         <div class="collapsible-header" onclick="toggleSection('stats')">
@@ -82,6 +95,19 @@
         </div>
     </div>
 
+    <!-- Error Timeline -->
+    <div class="mb-6">
+        <div class="collapsible-section" data-section="timeline">
+            <div class="collapsible-header" onclick="toggleSection('timeline')">
+                <h3 class="text-lg font-semibold text-slate-700">📈 Hata Trendi (24s)</h3>
+                <span class="collapsible-icon">▼</span>
+            </div>
+            <div class="collapsible-content" id="timeline-section">
+                <div id="log-timeline" class="log-timeline text-sm text-slate-600">Yükleniyor...</div>
+            </div>
+        </div>
+    </div>
+
     <!-- Log File Info -->
     <div class="mb-6">
         <div class="collapsible-section" data-section="logfiles">
@@ -106,9 +132,11 @@
         
         <div class="log-controls">
             <select id="log-file-select">
-                <option value="e_cuzdan">Ana Log (e_cuzdan.log)</option>
-                <option value="e_cuzdan_errors">Hata Logları (e_cuzdan_errors.log)</option>
-                <option value="e_cuzdan_security">Güvenlik Logları (e_cuzdan_security.log)</option>
+                <option value="main">Ana Log (e_cuzdan.log)</option>
+                <option value="structured">JSON Log (e_cuzdan_structured.log)</option>
+                <option value="errors">Hata Logları (e_cuzdan_errors.log)</option>
+                <option value="errors_structured">JSON Hata Logları</option>
+                <option value="security">Güvenlik Logları (e_cuzdan_security.log)</option>
             </select>
             
             <select id="log-level-select">
@@ -128,6 +156,8 @@
             </select>
             
             <input type="text" id="log-search-input" placeholder="Ara...">
+            <input type="text" id="log-request-id-input" placeholder="Request ID...">
+            <input type="text" id="log-trace-id-input" placeholder="Trace ID...">
             
             <input type="number" id="log-lines-input" value="100" min="10" max="1000" placeholder="Satır">
             

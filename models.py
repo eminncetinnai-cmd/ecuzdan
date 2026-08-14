@@ -41,8 +41,9 @@ class User(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
+    email = db.Column(db.String(100), unique=True, nullable=True, index=True)  # Separate email field for OAuth users
     password = db.Column(db.String(200), nullable=True)  # Nullable for OAuth users
-    
+
     # OAuth / Provider fields
     auth_provider = db.Column(db.String(20), default='LOCAL', nullable=False)
     oauth_id = db.Column(db.String(100), nullable=True, unique=True)
@@ -58,6 +59,17 @@ class User(db.Model):
     language = db.Column(db.String(5), default='tr', nullable=False)
     base_currency = db.Column(db.String(3), nullable=True)  # Phase 5: User-specific base currency override
     tenant_id = db.Column(db.String(50), db.ForeignKey('tenant.id'), nullable=False, index=True)
+
+    # Personal information fields
+    gender = db.Column(db.String(10), nullable=True)  # 'male', 'female', 'other', 'prefer_not_to_say'
+    birthdate = db.Column(db.Date, nullable=True)
+    country = db.Column(db.String(50), nullable=True)
+    city = db.Column(db.String(50), nullable=True)
+    phone = db.Column(db.String(20), nullable=True)
+
+    # Special code for role upgrades
+    special_code = db.Column(db.String(50), nullable=True)  # Code used to upgrade role
+    special_code_used_at = db.Column(db.DateTime, nullable=True)  # When the code was used
     tenant = db.relationship('Tenant', backref='users')
 
     @property

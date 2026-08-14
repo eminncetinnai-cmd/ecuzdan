@@ -4,6 +4,7 @@ Monitoring API Routes - Log monitoring ve dashboard endpoint'leri
 
 from flask import Blueprint, jsonify, request, session, render_template
 from utils.decorators import login_required
+from utils.log_viewer import is_structured_log_file, read_log_entries
 import logging
 import os
 from datetime import datetime, timedelta
@@ -69,6 +70,30 @@ def _standard_response(success: bool, data=None, error=None):
     }
 
 
+def _tail_lines(file_path: str, max_lines: int, *, max_bytes: int = 2 * 1024 * 1024) -> List[str]:
+    """Read last N lines of a file safely (bounded memory)."""
+    if max_lines <= 0:
+        return []
+    try:
+        with open(file_path, 'rb') as handle:
+            handle.seek(0, os.SEEK_END)
+            pos = handle.tell()
+            if pos <= 0:
+                return []
+
+            chunk_size = 8192
+            buf = b''
+            while pos > 0 and buf.count(b'\n') <= max_lines and len(buf) < max_bytes:
+                read_size = min(chunk_size, pos)
+                pos -= read_size
+                handle.seek(pos)
+                buf = handle.read(read_size) + buf
+
+        return buf.decode('utf-8', errors='replace').splitlines()[-max_lines:]
+    except OSError:
+        return []
+
+
 def register_monitoring_routes(bp):
     """
     Monitoring route'larını kaydeder
@@ -106,6 +131,8 @@ def register_monitoring_routes(bp):
             log_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs')
             
             stats = {
+                # NOTE: We only scan a bounded tail of each file to prevent memory spikes.
+                # This field is therefore "total scanned lines", not absolute total lines.
                 'total_logs': 0,
                 'error_count': 0,
                 'warning_count': 0,
@@ -118,7 +145,9 @@ def register_monitoring_routes(bp):
             # Log dosyalarını analiz et
             log_files = {
                 'e_cuzdan.log': 'main',
+                'e_cuzdan_structured.log': 'structured',
                 'e_cuzdan_errors.log': 'errors',
+                'e_cuzdan_errors_structured.log': 'errors_structured',
                 'e_cuzdan_security.log': 'security'
             }
             
@@ -134,28 +163,28 @@ def register_monitoring_routes(bp):
                     
                     # Log satırlarını say
                     try:
-                        with open(file_path, 'r', encoding='utf-8') as f:
-                            lines = f.readlines()
-                            stats['total_logs'] += len(lines)
-                            
-                            # Son 10 hata toplama
-                            if file_type == 'errors':
-                                for line in lines[-10:]:
-                                    if 'ERROR' in line or 'CRITICAL' in line:
-                                        stats['recent_errors'].append(line.strip())
-                                        if len(stats['recent_errors']) >= 5:
-                                            break
-                            
-                            # Log seviyelerini say
-                            for line in lines:
-                                if 'CRITICAL' in line:
-                                    stats['critical_count'] += 1
-                                elif 'ERROR' in line:
-                                    stats['error_count'] += 1
-                                elif 'WARNING' in line:
-                                    stats['warning_count'] += 1
-                                elif file_type == 'security':
-                                    stats['security_count'] += 1
+                        # Keep bounded: last 20k lines is enough for UI "recent stats"
+                        lines = _tail_lines(file_path, 20000)
+                        stats['total_logs'] += len(lines)
+
+                        # Son 10 hata toplama
+                        if file_type == 'errors':
+                            for line in lines[-10:]:
+                                if 'ERROR' in line or 'CRITICAL' in line:
+                                    stats['recent_errors'].append(line.strip())
+                                    if len(stats['recent_errors']) >= 5:
+                                        break
+
+                        # Log seviyelerini say
+                        for line in lines:
+                            if 'CRITICAL' in line:
+                                stats['critical_count'] += 1
+                            elif 'ERROR' in line:
+                                stats['error_count'] += 1
+                            elif 'WARNING' in line:
+                                stats['warning_count'] += 1
+                            elif file_type == 'security':
+                                stats['security_count'] += 1
                     except Exception as e:
                         logger.error(f"Error reading log file {log_file}: {e}")
                 else:
@@ -185,18 +214,32 @@ def register_monitoring_routes(bp):
             - lines: kaç satır (default: 100)
             - level: log seviyesi filtresi (ERROR, WARNING, INFO)
             - search: arama terimi
+            - request_id: correlation ID filtresi
+            - trace_id: OpenTelemetry trace ID filtresi
         """
         try:
             logger.info("Monitoring logs API called")
             file_type = request.args.get('file', 'main')
-            line_count = int(request.args.get('lines', 100))
-            level_filter = request.args.get('level')
-            search_term = request.args.get('search')
+            try:
+                line_count = int(request.args.get('lines', 100))
+            except ValueError:
+                line_count = 100
+            line_count = max(1, min(line_count, 1000))
+            level_filter = request.args.get('level') or None
+            search_term = request.args.get('search') or None
+            request_id = request.args.get('request_id') or None
+            trace_id = request.args.get('trace_id') or None
             
             log_file_map = {
                 'main': 'e_cuzdan.log',
+                'structured': 'e_cuzdan_structured.log',
                 'errors': 'e_cuzdan_errors.log',
-                'security': 'e_cuzdan_security.log'
+                'errors_structured': 'e_cuzdan_errors_structured.log',
+                'security': 'e_cuzdan_security.log',
+                # Backward compatibility (legacy UI/tests)
+                'e_cuzdan': 'e_cuzdan.log',
+                'e_cuzdan_errors': 'e_cuzdan_errors.log',
+                'e_cuzdan_security': 'e_cuzdan_security.log',
             }
             
             log_file = log_file_map.get(file_type, 'e_cuzdan.log')
@@ -205,37 +248,70 @@ def register_monitoring_routes(bp):
             
             if not os.path.exists(file_path):
                 return jsonify({'success': False, 'error': 'Log file not found'}), 404
-            
-            logs = []
+
+            structured = is_structured_log_file(log_file)
             try:
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    lines = f.readlines()
-                    
-                    # Filtreleme
-                    filtered_lines = lines
-                    if level_filter:
-                        filtered_lines = [line for line in lines if level_filter in line]
-                    if search_term:
-                        filtered_lines = [line for line in filtered_lines if search_term.lower() in line.lower()]
-                    
-                    # Son satırları al
-                    logs = filtered_lines[-line_count:]
-                    
+                entries = read_log_entries(
+                    file_path,
+                    structured=structured,
+                    line_count=line_count,
+                    level=level_filter,
+                    search=search_term,
+                    request_id=request_id,
+                    trace_id=trace_id,
+                )
             except Exception as e:
                 logger.error(f"Error reading log file: {e}")
                 return jsonify(_standard_response(False, error=str(e))), 500
-            
+
+            entry_dicts = [entry.to_dict() for entry in entries]
+            raw_logs = [entry.raw for entry in entries]
+
             return jsonify({
                 'success': True,
                 'data': {
-                    'logs': logs,
-                    'count': len(logs),
-                    'file': file_type
+                    'logs': raw_logs,
+                    'entries': entry_dicts,
+                    'format': 'json' if structured else 'text',
+                    'count': len(entries),
+                    'file': file_type,
                 }
             })
             
         except Exception as e:
             logger.error(f"Monitoring logs error: {e}")
+            return jsonify(_standard_response(False, error=str(e))), 500
+
+    @bp.route('/api/logs/timeline', methods=['GET'])
+    @login_required
+    def monitoring_logs_timeline():
+        """Hourly ERROR/WARNING counts from structured logs (last 24h)."""
+        try:
+            from utils.log_viewer import parse_log_line
+            from collections import defaultdict
+
+            log_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs')
+            file_path = os.path.join(log_dir, 'e_cuzdan_structured.log')
+            if not os.path.exists(file_path):
+                return jsonify(_standard_response(True, data={'points': [], 'message': 'No structured log file'}))
+
+            buckets = defaultdict(lambda: {'ERROR': 0, 'WARNING': 0, 'CRITICAL': 0})
+            with open(file_path, 'r', encoding='utf-8', errors='replace') as handle:
+                for line in handle.readlines()[-5000:]:
+                    entry = parse_log_line(line, structured=True)
+                    if not entry or entry.level not in ('ERROR', 'WARNING', 'CRITICAL'):
+                        continue
+                    hour_key = entry.timestamp[:13] if entry.timestamp else 'unknown'
+                    buckets[hour_key][entry.level] += 1
+
+            points = [
+                {'hour': hour, **counts}
+                for hour, counts in sorted(buckets.items())
+            ][-24:]
+
+            return jsonify(_standard_response(True, data={'points': points}))
+        except Exception as e:
+            logger.error(f"Monitoring timeline error: {e}")
             return jsonify(_standard_response(False, error=str(e))), 500
     
     @bp.route('/api/health', methods=['GET'])
@@ -480,6 +556,19 @@ def register_monitoring_routes(bp):
         except Exception as e:
             logger.error(f"Monitoring alerts config error: {e}")
             db.session.rollback()
+            return jsonify(_standard_response(False, error=str(e))), 500
+
+    @bp.route('/api/alerts/status', methods=['GET'])
+    @login_required
+    def monitoring_alerts_status():
+        """Return current log alert evaluation status."""
+        try:
+            from utils.log_alert_monitor import get_log_alert_monitor
+
+            status = get_log_alert_monitor().evaluate()
+            return jsonify(_standard_response(True, data=status))
+        except Exception as e:
+            logger.error(f"Monitoring alerts status error: {e}")
             return jsonify(_standard_response(False, error=str(e))), 500
 
 

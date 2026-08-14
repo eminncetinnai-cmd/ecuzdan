@@ -216,7 +216,7 @@ class ProfileService:
     def export_profile(self, profile_id, tenant_id):
         """Export profile data as JSON"""
         import json
-        from datetime import datetime
+        from datetime import datetime, timezone
         
         profile = self.repository.get_profile(profile_id, tenant_id)
         if not profile:

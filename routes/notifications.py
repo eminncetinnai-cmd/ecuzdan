@@ -58,6 +58,9 @@ def register_notification_routes(bp):
             preferences = settings_app.get_preferences(user_id)
             notification_app.refresh(user, preferences)
             items = notification_app.list_for_user(user_id)
+            
+            logger.info(f"Notifications loaded for user {user_id}: {len(items)} items")
+            
             return jsonify({
                 'success': True,
                 'unread': notification_app.unread_count(user_id),

@@ -6,7 +6,7 @@ Yıllık getiri analizi, enflasyon ayarlaması ve performans metrikleri
 import logging
 from datetime import datetime
 
-from flask import g, has_request_context
+from flask import g, has_app_context, has_request_context
 
 from models import Asset, AssetUpdate
 from shared.decimal_precision import to_decimal
@@ -76,10 +76,18 @@ def get_yearly_performance(tenant_id=None):
     """
     Yıllık yatırım performans analizi
 
+    Args:
+        tenant_id: Tenant ID (opsiyonel - request context'ten alınır)
+
     Returns:
         dict: Yıllık getiri verileri, enflasyon ayarlı getiriler ve özet metrikler
     """
     try:
+        # Application context kontrolü
+        if not has_app_context():
+            logger.warning("get_yearly_performance called outside application context, returning empty data")
+            return _empty_performance_data()
+
         tenant_id = _resolve_tenant_id(tenant_id)
         query = Asset.query
         if tenant_id:
@@ -93,24 +101,24 @@ def get_yearly_performance(tenant_id=None):
 
         for asset in assets:
             asset_years = _get_asset_yearly_performance(asset)
-        for year, data in asset_years.items():
-            if year not in yearly_data:
-                yearly_data[year] = {
-                    'total_value': to_decimal(0),
-                    'total_cost': to_decimal(0),
-                    'gain_loss': to_decimal(0),
-                    'roi': to_decimal(0),
-                    'assets': []
-                }
+            for year, data in asset_years.items():
+                if year not in yearly_data:
+                    yearly_data[year] = {
+                        'total_value': to_decimal(0),
+                        'total_cost': to_decimal(0),
+                        'gain_loss': to_decimal(0),
+                        'roi': to_decimal(0),
+                        'assets': []
+                    }
 
-            yearly_data[year]['total_value'] += to_decimal(str(data['value']))
-            yearly_data[year]['total_cost'] += to_decimal(str(data['cost']))
-            yearly_data[year]['assets'].append({
-                'name': asset.name,
-                'type': asset.type,
-                'roi': to_decimal(str(data['roi'])),
-                'gain_loss': to_decimal(str(data['gain_loss']))
-            })
+                yearly_data[year]['total_value'] += to_decimal(str(data['value']))
+                yearly_data[year]['total_cost'] += to_decimal(str(data['cost']))
+                yearly_data[year]['assets'].append({
+                    'name': asset.name,
+                    'type': asset.type,
+                    'roi': to_decimal(str(data['roi'])),
+                    'gain_loss': to_decimal(str(data['gain_loss']))
+                })
 
         # Yıllık özetleri hesapla
         for year in yearly_data:

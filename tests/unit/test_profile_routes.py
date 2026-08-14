@@ -315,3 +315,85 @@ def test_profile_flash_messaging():
     
     source = inspect.getsource(profile_module)
     assert 'flash_error' in source
+
+
+@pytest.mark.unit
+def test_profile_api_questions_response_format():
+    """Test API questions endpoint returns correct format"""
+    import routes.profile as profile_module
+    import inspect
+    
+    source = inspect.getsource(profile_module)
+    # Check for questions_payload call
+    assert 'questions_payload' in source
+
+
+@pytest.mark.unit
+def test_profile_api_submit_error_handling():
+    """Test API submit endpoint has error handling"""
+    import routes.profile as profile_module
+    import inspect
+    
+    source = inspect.getsource(profile_module)
+    # Check for ValueError and general Exception handling
+    assert 'ValueError' in source and 'Exception' in source
+
+
+@pytest.mark.unit
+def test_profile_login_required_decorator():
+    """Test profile routes use login_required decorator"""
+    import routes.profile as profile_module
+    import inspect
+    
+    source = inspect.getsource(profile_module)
+    assert 'login_required' in source
+
+
+@pytest.mark.unit
+def test_profile_wizard_context():
+    """Test profile wizard context is used"""
+    import routes.profile as profile_module
+    import inspect
+    
+    source = inspect.getsource(profile_module)
+    assert 'wizard_context' in source
+
+
+@pytest.mark.unit
+def test_profile_index_context():
+    """Test profile index context is used"""
+    import routes.profile as profile_module
+    import inspect
+    
+    source = inspect.getsource(profile_module)
+    assert 'index_context' in source
+
+
+@pytest.mark.unit
+def test_profile_result_context():
+    """Test profile result context is used"""
+    import routes.profile as profile_module
+    import inspect
+    
+    source = inspect.getsource(profile_module)
+    assert 'result_context' in source
+
+
+@pytest.mark.unit
+def test_profile_history_payload():
+    """Test profile history payload is used"""
+    import routes.profile as profile_module
+    import inspect
+    
+    source = inspect.getsource(profile_module)
+    assert 'history_payload' in source
+
+
+@pytest.mark.unit
+def test_profile_profile_payload():
+    """Test profile payload is used"""
+    import routes.profile as profile_module
+    import inspect
+    
+    source = inspect.getsource(profile_module)
+    assert 'profile_payload' in source

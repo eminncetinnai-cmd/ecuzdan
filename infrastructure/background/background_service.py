@@ -76,14 +76,29 @@ class BackgroundService:
         # Döngü - Her saat başı güncelle (veya stop_event tetiklenirse çık)
         # Saniyeler halinde uyuyarak stop_event kontrolünü sıklaştırıyoruz
         check_interval = 3600  # 1 saat (3600 saniye)
+        alert_check_interval = 60  # log alert taraması (60 saniye)
         elapsed = 0
+        alert_elapsed = 0
 
         while not self._stop_event.is_set():
             time.sleep(1)
             elapsed += 1
+            alert_elapsed += 1
             if elapsed >= check_interval:
                 self._update_all()
                 elapsed = 0
+            if alert_elapsed >= alert_check_interval:
+                self._check_log_alerts()
+                alert_elapsed = 0
+
+    def _check_log_alerts(self):
+        """Optional log threshold monitoring — disabled unless LOG_ALERTS_ENABLED=true."""
+        try:
+            from utils.log_alert_monitor import get_log_alert_monitor
+
+            get_log_alert_monitor().check()
+        except Exception as exc:
+            logger.debug('Log alert check skipped: %s', exc)
 
     def _update_all(self):
         """Tüm verileri güncelle ve kaydet"""

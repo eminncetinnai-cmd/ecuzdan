@@ -8,11 +8,11 @@ import os
 from dotenv import load_dotenv
 from shared.decimal_precision import to_decimal
 
-# Load environment variables
-load_dotenv()
-
 # Project root directory
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+# Load environment variables from .env file in project root
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 
 class Config:
@@ -53,7 +53,9 @@ class Config:
     # Session Configuration
     SESSION_TIMEOUT_HOURS = int(os.getenv('SESSION_TIMEOUT_HOURS', '2'))
     SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SAMESITE = 'Lax'
+    # For development: use 'Lax' for OAuth compatibility without HTTPS
+    # For production with HTTPS: use 'None' with SESSION_COOKIE_SECURE=True
+    SESSION_COOKIE_SAMESITE = 'Lax' if os.getenv('HTTPS_ENABLED', 'false').lower() == 'false' else 'None'
     SESSION_COOKIE_SECURE = os.getenv('HTTPS_ENABLED', 'false').lower() == 'true'  # Auto-detect from environment
     SESSION_REFRESH_EACH_REQUEST = True
 
@@ -76,6 +78,11 @@ class Config:
     LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
     LOG_DIR = os.path.join(BASE_DIR, 'logs')
     LOG_FILE = os.path.join(LOG_DIR, 'e_cuzdan.log')
+
+    # Observability (opt-in)
+    OTEL_ENABLED = os.getenv('OTEL_ENABLED', 'false').lower() in ('1', 'true', 'yes')
+    OTEL_EXPORTER_OTLP_ENDPOINT = os.getenv('OTEL_EXPORTER_OTLP_ENDPOINT')
+    LOG_ALERTS_ENABLED = os.getenv('LOG_ALERTS_ENABLED', 'false').lower() in ('1', 'true', 'yes')
 
     # User Configuration
     # Platform sahibinin kullanıcı adı. Ortam değişkeniyle değiştirilebilir;

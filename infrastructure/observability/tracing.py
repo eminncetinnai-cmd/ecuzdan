@@ -14,17 +14,49 @@ If OTLP_ENDPOINT env var is set, traces are exported to the given gRPC endpoint
 and a no-op tracer in test mode.
 """
 
+from __future__ import annotations
+
 import logging
 import os
+from typing import Any
 
-from opentelemetry import trace
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter, SimpleSpanProcessor
+try:
+    from opentelemetry import trace
+    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import (
+        BatchSpanProcessor,
+        ConsoleSpanExporter,
+        SimpleSpanProcessor,
+    )
+
+    _OTEL_AVAILABLE = True
+except ImportError:  # pragma: no cover (environment-dependent)
+    trace = None  # type: ignore[assignment]
+    Resource = None  # type: ignore[assignment]
+    TracerProvider = object  # type: ignore[assignment]
+    BatchSpanProcessor = ConsoleSpanExporter = SimpleSpanProcessor = None  # type: ignore[assignment]
+    _OTEL_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
 _TRACER_PROVIDER: TracerProvider | None = None
+
+
+class _NoopSpan:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
+    def set_attribute(self, *_args, **_kwargs):
+        return None
+
+
+class _NoopTracer:
+    def start_as_current_span(self, *_args, **_kwargs):
+        return _NoopSpan()
 
 
 def setup_tracing(
@@ -47,6 +79,15 @@ def setup_tracing(
     """
     global _TRACER_PROVIDER
     if _TRACER_PROVIDER is not None:
+        return _TRACER_PROVIDER
+
+    # Import-safe no-op fallback: allows app and tests to run without OTel deps.
+    if not _OTEL_AVAILABLE:  # pragma: no cover (depends on installed packages)
+        logger.info(
+            "OpenTelemetry packages not installed — tracing is disabled (no-op). "
+            "Install requirements-observability.txt to enable."
+        )
+        _TRACER_PROVIDER = TracerProvider()  # type: ignore[call-arg]
         return _TRACER_PROVIDER
 
     resource = Resource.create({"service.name": service_name, "service.version": "15.0"})
@@ -79,6 +120,8 @@ def setup_tracing(
     return provider
 
 
-def get_tracer(name: str) -> trace.Tracer:
+def get_tracer(name: str) -> Any:
     """Return a named tracer from the global provider (or no-op if not set up)."""
+    if not _OTEL_AVAILABLE:  # pragma: no cover
+        return _NoopTracer()  # type: ignore[return-value]
     return trace.get_tracer(name)

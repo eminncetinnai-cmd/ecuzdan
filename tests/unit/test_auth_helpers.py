@@ -278,6 +278,109 @@ def test_set_tenant_context_user_deleted():
 
 
 @pytest.mark.unit
+def test_set_tenant_context_tenant_context_clear_exception():
+    """Test set_tenant_context when TenantContext.clear raises exception"""
+    app = Flask(__name__)
+    app.config['SECRET_KEY'] = 'test'
+    
+    with app.test_request_context():
+        session['user_id'] = '123'
+        with patch('utils.auth_helpers.TenantContext.set', side_effect=RuntimeError("Test error")):
+            with patch('utils.auth_helpers.db.session.get') as mock_get:
+                mock_user = Mock()
+                mock_user.tenant_id = 'tenant_123'
+                mock_get.return_value = mock_user
+                result = set_tenant_context()
+                # Should not raise, exception is caught
+                assert result is None
+
+
+@pytest.mark.unit
+def test_set_tenant_context_tenant_context_set_exception():
+    """Test set_tenant_context when TenantContext.set raises exception after user set"""
+    app = Flask(__name__)
+    app.config['SECRET_KEY'] = 'test'
+    
+    with app.test_request_context():
+        session['user_id'] = '123'
+        with patch('utils.auth_helpers.db.session.get') as mock_get:
+            mock_user = Mock()
+            mock_user.tenant_id = 'tenant_123'
+            mock_get.return_value = mock_user
+            # First call to set (clear) succeeds, second call (set tenant) fails
+            with patch('utils.auth_helpers.TenantContext.set') as mock_set:
+                mock_set.side_effect = [None, RuntimeError("Test error")]
+                result = set_tenant_context()
+                # Should not raise, exception is caught
+                assert result is None
+
+
+@pytest.mark.unit
+def test_set_tenant_context_tenant_context_set_attribute_error():
+    """Test set_tenant_context when TenantContext.set raises AttributeError after user set"""
+    app = Flask(__name__)
+    app.config['SECRET_KEY'] = 'test'
+    
+    with app.test_request_context():
+        session['user_id'] = '123'
+        with patch('utils.auth_helpers.db.session.get') as mock_get:
+            mock_user = Mock()
+            mock_user.tenant_id = 'tenant_123'
+            mock_get.return_value = mock_user
+            # First call to set (clear) succeeds, second call (set tenant) fails with AttributeError
+            with patch('utils.auth_helpers.TenantContext.set') as mock_set:
+                mock_set.side_effect = [None, AttributeError("Test error")]
+                result = set_tenant_context()
+                # Should not raise, exception is caught
+                assert result is None
+
+
+@pytest.mark.unit
+def test_set_tenant_context_resolve_from_request_exception():
+    """Test set_tenant_context when resolve_from_request raises exception"""
+    app = Flask(__name__)
+    app.config['SECRET_KEY'] = 'test'
+    
+    with app.test_request_context():
+        with patch('utils.auth_helpers.resolve_from_request', side_effect=KeyError("Test error")):
+            result = set_tenant_context()
+            # Should not raise, exception is caught
+            assert result is None
+
+
+@pytest.mark.unit
+def test_set_tenant_context_resolve_from_request_no_tenant():
+    """Test set_tenant_context when resolve_from_request returns None"""
+    app = Flask(__name__)
+    app.config['SECRET_KEY'] = 'test'
+    
+    with app.test_request_context():
+        with patch('utils.auth_helpers.resolve_from_request', return_value=None):
+            with patch('utils.auth_helpers.TenantContext.set') as mock_set:
+                result = set_tenant_context()
+                assert result is None
+                # TenantContext.set is called with None when resolve returns None
+                mock_set.assert_called_once_with(None)
+
+
+@pytest.mark.unit
+def test_set_tenant_context_resolve_from_request_success():
+    """Test set_tenant_context when resolve_from_request returns tenant ID"""
+    app = Flask(__name__)
+    app.config['SECRET_KEY'] = 'test'
+    
+    with app.test_request_context():
+        with patch('utils.auth_helpers.resolve_from_request', return_value='resolved_tenant'):
+            with patch('utils.auth_helpers.TenantContext.set') as mock_set:
+                result = set_tenant_context()
+                assert result is None
+                # TenantContext.set is called twice: once with None (clear), once with resolved tenant
+                assert mock_set.call_count == 2
+                mock_set.assert_any_call(None)
+                mock_set.assert_any_call('resolved_tenant')
+
+
+@pytest.mark.unit
 def test_auth_helpers_imports():
     """Test that all auth helper functions can be imported"""
     from utils.auth_helpers import (

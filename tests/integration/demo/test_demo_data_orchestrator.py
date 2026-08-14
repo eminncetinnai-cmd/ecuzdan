@@ -155,8 +155,8 @@ class TestDemoDataOrchestrator:
             
             # Verify specific categories exist (using new database names)
             assert category_service.is_valid_category('Maaş / Ücret Geliri', None)
-            assert category_service.is_valid_category('Market & Gıda', None)
-            assert category_service.is_valid_category('Hisse Senedi Alımı', None)
+            assert category_service.is_valid_category('Aylık Sabit Gider', None)
+            assert category_service.is_valid_category('Hisse Senedi', None)
             
             # Verify invalid category is rejected
             assert not category_service.is_valid_category('Invalid Category', None)

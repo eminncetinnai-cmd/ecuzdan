@@ -219,13 +219,15 @@ class SettingsService:
         if not current_user:
             raise PermissionError("Yetkilendirme Başarısız!")
         
-        logger.info(f"Reset data attempt for user {current_user.username}, has password: {bool(current_user.password)}")
+        logger.info(
+            "Reset data attempt for user %s, has_password_set=%s",
+            current_user.username,
+            bool(current_user.password),
+        )
         
         if not current_user.password:
             # OAuth hesaplarında lokal parola yoktur; şifreyle onay alınamaz.
             raise PermissionError("Bu işlem şifre onayı gerektirir; OAuth hesapları için kullanılamaz.")
-        
-        logger.info(f"Password check: provided password length={len(password)}, stored password hash exists={bool(current_user.password)}")
         
         if not check_password_hash(current_user.password, password):
             logger.warning(f"Password mismatch for user {current_user.username}")

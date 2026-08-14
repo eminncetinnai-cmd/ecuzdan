@@ -260,7 +260,10 @@ def register_csrf_protection(app):
                 return render_template("error.html", code=400, message="Güvenlik uyarısı: Session süresi doldu. Lütfen tekrar giriş yapın."), 400
                 
             if token != session_token:
-                logger.warning(f"CSRF verification failed: token mismatch for request to {request.path}. Request token: {token}, Session token: {session_token}")
+                logger.warning(
+                    "CSRF verification failed: token mismatch for request to %s",
+                    request.path,
+                )
                 return render_template("error.html", code=400, message="Güvenlik uyarısı: CSRF doğrulaması başarısız. Lütfen formu yeniden gönderip tekrar deneyin."), 400
 
 
@@ -358,7 +361,7 @@ def register_session_check(app):
     @app.before_request
     def check_session():
         # Login, logout, register, OAuth, healthcheck ve Transaction Explorer sayfaları hariç
-        if not request.endpoint or request.endpoint in ['auth.login', 'auth.logout', 'auth.register', 'auth.register_with_invite', 'auth.oauth_login', 'auth.oauth_callback', 'transactions.transactions_explorer', 'static', 'healthz']:
+        if not request.endpoint or request.endpoint in ['auth.login', 'auth.logout', 'auth.register', 'auth.register_with_invite', 'auth.oauth_login', 'auth.oauth_callback', 'auth.oauth_signup', 'transactions.transactions_explorer', 'static', 'healthz']:
             return
 
         from flask import redirect, url_for
@@ -435,6 +438,10 @@ def register_routes(app):
     Args:
         app: Flask uygulaması
     """
+    from utils.request_context import register_request_context
+
+    register_request_context(app)
+
     # Ortak bileşenleri kaydet
     register_security_headers(app)
     register_template_filters(app)

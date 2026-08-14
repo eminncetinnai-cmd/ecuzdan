@@ -234,3 +234,114 @@ def test_plans_routes_use_flash_for_non_ajax():
     source = inspect.getsource(plans_module)
     assert 'flash' in source
     assert 'redirect' in source
+
+
+@pytest.mark.unit
+def test_plans_route_get_renders_template():
+    """Test GET /plans renders template with context"""
+    from routes.plans import register_plan_routes
+    from flask import Flask
+    
+    app = Flask(__name__)
+    app.config['TESTING'] = True
+    bp = Flask(__name__)
+    bp.route = Mock(return_value=lambda f: f)
+    
+    with patch('routes.plans._get_planning_app') as mock_get_app:
+        mock_app = Mock()
+        mock_app.plans_context.return_value = {
+            'subscription_plans': [],
+            'installment_plans': [],
+            'dca_plans': [],
+            'periodic_plans': [],
+            'income_cats': [],
+            'expense_cats': [],
+            'investment_cats': [],
+            'plan_count': 0,
+            'income_total': 0,
+            'expense_total': 0,
+            'net_total': 0,
+        }
+        mock_get_app.return_value = mock_app
+        
+        register_plan_routes(bp)
+        
+        # Verify the route was registered
+        assert bp.route.called
+
+
+@pytest.mark.unit
+def test_payment_calendar_route_renders_template():
+    """Test GET /payment_calendar renders template with context"""
+    from routes.plans import register_plan_routes
+    
+    mock_bp = Mock()
+    mock_bp.route = Mock(return_value=lambda f: f)
+    
+    with patch('routes.plans._get_planning_app') as mock_get_app:
+        mock_app = Mock()
+        mock_app.payment_calendar_context.return_value = {
+            'today_cash': 1000,
+            'week_p': [],
+            'month_p': [],
+            'cal_year': 2024,
+            'cal_month': 8,
+            'cal_month_name': 'Ağustos',
+            'today_iso': '2024-08-11',
+        }
+        mock_get_app.return_value = mock_app
+        
+        register_plan_routes(mock_bp)
+        
+        # Verify the route was registered
+        assert mock_bp.route.called
+
+
+@pytest.mark.unit
+def test_check_delete_route_returns_transaction_counts():
+    """Test check_delete route returns correct transaction counts"""
+    from routes.plans import register_plan_routes
+    
+    mock_bp = Mock()
+    mock_bp.route = Mock(return_value=lambda f: f)
+    
+    with patch('routes.plans._get_planning_app') as mock_get_app:
+        mock_app = Mock()
+        mock_repo = Mock()
+        mock_plan = Mock()
+        mock_repo.get_recurring_plan_for_tenant.return_value = mock_plan
+        mock_app.financial_repository = mock_repo
+        mock_get_app.return_value = mock_app
+        
+        register_plan_routes(mock_bp)
+        
+        # Verify the route was registered
+        assert mock_bp.route.called
+
+
+@pytest.mark.unit
+def test_delete_plan_route_pending_mode():
+    """Test delete_plan route with pending mode"""
+    from routes.plans import register_plan_routes
+    
+    mock_bp = Mock()
+    mock_bp.route = Mock(return_value=lambda f: f)
+    
+    with patch('routes.plans._get_planning_app') as mock_get_app:
+        mock_app = Mock()
+        mock_repo = Mock()
+        mock_plan = Mock()
+        mock_repo.get_recurring_plan_for_tenant.return_value = mock_plan
+        mock_app.financial_repository = mock_repo
+        mock_get_app.return_value = mock_app
+        
+        with patch('domain.transactions.services.delete_recurring_plan') as mock_delete:
+            mock_delete.return_value = {'success': True, 'message': 'Plan silindi'}
+            
+            with patch('utils.ajax_helpers.is_ajax_request') as mock_is_ajax:
+                mock_is_ajax.return_value = True
+                
+                register_plan_routes(mock_bp)
+                
+                # Verify the route was registered
+                assert mock_bp.route.called

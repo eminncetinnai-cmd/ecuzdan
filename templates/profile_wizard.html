@@ -17,7 +17,7 @@
                     <p class="mb-0">Adım {{ current_step }} / {{ total_steps }}</p>
                 </div>
                 <div class="progress" style="width: 300px;">
-                    <div class="progress-bar" role="progressbar" style="width: {{ (current_step / total_steps) * 100 }}%;" aria-valuenow="{{ current_step }}" aria-valuemin="0" aria-valuemax="{{ total_steps }}">
+                    <div class="progress-bar" role="progressbar" data-width="{{ (current_step / total_steps) * 100 }}" aria-valuenow="{{ current_step }}" aria-valuemin="0" aria-valuemax="{{ total_steps }}">
                         {{ (current_step / total_steps) * 100 }}%
                     </div>
                 </div>
@@ -38,66 +38,414 @@
         
         <div class="card-footer">
             <div class="d-flex justify-content-between">
-                <button type="button" onclick="goBack()" disabled>Geri</button>
-                <button type="button" onclick="goNext()" disabled>İleri</button>
-                <button type="button" onclick="submitTest()" style="display: none;">Testi Tamamla</button>
+                <button type="button" id="btn-back" onclick="goBack()" disabled>Geri</button>
+                <button type="button" id="btn-next" onclick="goNext()" disabled>İleri</button>
+                <button type="button" id="btn-submit" onclick="submitTest()" style="display: none;">Testi Tamamla</button>
             </div>
         </div>
     </div>
 </div>
 
 <style>
+/* Premium Progress Bar */
 .progress {
-    height: 25px;
-    background-color: #e9ecef;
-    border-radius: 5px;
+    height: 8px;
+    background-color: #e2e8f0;
+    border-radius: 9999px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .progress-bar {
-    background-color: #0f172a;
-    transition: width 0.3s ease;
+    background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
 }
 
+/* Premium Step Header */
+.step-header {
+    margin-bottom: 24px;
+    animation: fadeInDown 0.5s ease-out;
+}
+
+.step-header h4 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+}
+
+.step-header p {
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.6;
+}
+
+/* Premium Question Card */
 .question-card {
-    background: #f8fafc;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     padding: 20px;
-    border-radius: 8px;
+    border-radius: 16px;
     margin-bottom: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+    animation: fadeInUp 0.5s ease-out;
 }
 
+.question-card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+}
+
+.question-card h5 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+/* Premium Option Buttons */
 .option-btn {
-    display: block;
+    display: flex;
+    align-items: center;
     width: 100%;
-    padding: 15px;
+    padding: 12px 16px;
     margin-bottom: 10px;
     border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    background: white;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     text-align: left;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 14px;
+    font-weight: 500;
+    color: #475569;
+    position: relative;
+    overflow: hidden;
+}
+
+.option-btn::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    background: #3b82f6;
+    border-radius: 12px 0 0 12px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 .option-btn:hover {
     border-color: #3b82f6;
-    background: #eff6ff;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    color: #1e40af;
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.option-btn:hover::before {
+    opacity: 1;
 }
 
 .option-btn.selected {
     border-color: #3b82f6;
-    background: #dbeafe;
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1e40af;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
 }
 
+.option-btn.selected::before {
+    opacity: 1;
+}
+
+.option-btn.selected::after {
+    content: '✓';
+    position: absolute;
+    right: 20px;
+    color: #3b82f6;
+    font-weight: 700;
+    font-size: 18px;
+}
+
+/* Premium Buttons */
+#btn-back, #btn-next, #btn-submit {
+    padding: 12px 28px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    cursor: pointer;
+    text-transform: uppercase;
+    position: relative;
+    overflow: hidden;
+}
+
+#btn-back {
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    color: #475569;
+    border: 1px solid #cbd5e1;
+}
+
+#btn-back:hover:not(:disabled) {
+    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+    color: #1e293b;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+#btn-back:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#btn-next {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+#btn-next:hover:not(:disabled) {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+#btn-next:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#btn-submit {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+#btn-submit:hover:not(:disabled) {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
+#btn-submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Premium Explanation */
 .explanation {
-    background: #fef3c7;
-    padding: 15px;
-    border-radius: 8px;
-    margin-top: 15px;
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 16px;
     display: none;
+    border-left: 4px solid #f59e0b;
+    animation: fadeIn 0.3s ease-out;
 }
 
 .explanation.show {
     display: block;
+}
+
+.explanation-toggle {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border: 1px solid #f59e0b;
+    color: #92400e;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.explanation-toggle:hover {
+    background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%);
+    transform: translateY(-1px);
+}
+
+/* Premium Summary */
+.summary {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    padding: 32px;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+}
+
+.summary h5 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 24px;
+    letter-spacing: -0.5px;
+}
+
+.dimension-summary {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    border: 1px solid #e2e8f0;
+}
+
+.dimension-summary h6 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #3b82f6;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+}
+
+.dimension-summary h6::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #3b82f6;
+    border-radius: 50%;
+    margin-right: 12px;
+}
+
+.dimension-summary p {
+    font-size: 14px;
+    color: #475569;
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+/* Premium Welcome Screen */
+.welcome-screen {
+    text-align: center;
+    padding: 48px 32px;
+    animation: fadeIn 0.6s ease-out;
+}
+
+.welcome-emoji {
+    font-size: 80px;
+    margin-bottom: 24px;
+    animation: bounce 2s infinite;
+}
+
+.welcome-screen h5 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 16px;
+    letter-spacing: -0.5px;
+}
+
+.welcome-screen p {
+    font-size: 16px;
+    color: #64748b;
+    line-height: 1.8;
+    margin-bottom: 12px;
+}
+
+/* Premium Alert */
+.alert {
+    border-radius: 12px;
+    border: none;
+    padding: 16px 20px;
+    font-weight: 500;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1e40af;
+    border-left: 4px solid #3b82f6;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    border-left: 4px solid #f59e0b;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* Loading State */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+}
+
+.spinner-border {
+    width: 48px;
+    height: 48px;
+    border-width: 3px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .step-header h4 {
+        font-size: 22px;
+    }
+    
+    .question-card {
+        padding: 20px;
+    }
+    
+    .option-btn {
+        padding: 14px 16px;
+        font-size: 14px;
+    }
+    
+    #btn-back, #btn-next, #btn-submit {
+        padding: 12px 24px;
+        font-size: 14px;
+    }
+    
+    .welcome-emoji {
+        font-size: 64px;
+    }
+    
+    .welcome-screen h5 {
+        font-size: 22px;
+    }
 }
 </style>
 
@@ -108,13 +456,43 @@ let answers = {};
 let questions = {};
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Set initial progress bar width from data-width attribute
+    const progressBar = document.querySelector('.progress-bar[data-width]');
+    if (progressBar) {
+        const width = progressBar.getAttribute('data-width');
+        if (width) {
+            progressBar.style.width = width + '%';
+        }
+    }
+    
+    // Add keyboard navigation support
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            const focusedBtn = document.activeElement;
+            if (focusedBtn && focusedBtn.classList.contains('option-btn')) {
+                e.preventDefault();
+                focusedBtn.click();
+            }
+        }
+    });
+    
     loadQuestions();
 });
 
 async function loadQuestions() {
     try {
+        console.log('Loading questions from /profile/api/questions...');
         const response = await fetch('/profile/api/questions');
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
+        
+        if (!response.ok) {
+            console.error('Response not OK:', response.status, response.statusText);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
+        console.log('Response data:', data);
         
         if (data.success) {
             // Soruları boyut bazlı grupla
@@ -126,15 +504,18 @@ async function loadQuestions() {
                 questions[q.dimension].push(q);
             });
             
+            console.log('Questions loaded successfully:', Object.keys(questions));
             renderStep(currentStep);
         } else {
-            if(typeof window.showToast === 'function') window.showToast('Sorular yüklenirken hata oluştu.', 'error');
-            else alert('Sorular yüklenirken hata oluştu.');
+            console.error('API returned success=false:', data);
+            if(typeof window.showToast === 'function') window.showToast('Sorular yüklenirken hata oluştu: ' + (data.message || 'Bilinmeyen hata'), 'error');
+            else alert('Sorular yüklenirken hata oluştu: ' + (data.message || 'Bilinmeyen hata'));
         }
     } catch (error) {
         console.error('Error loading questions:', error);
-        if(typeof window.showToast === 'function') window.showToast('Sorular yüklenirken hata oluştu.', 'error');
-        else alert('Sorular yüklenirken hata oluştu.');
+        console.error('Error details:', error.message, error.stack);
+        if(typeof window.showToast === 'function') window.showToast('Sorular yüklenirken hata oluştu: ' + error.message, 'error');
+        else alert('Sorular yüklenirken hata oluştu: ' + error.message);
     }
 }
 
@@ -169,9 +550,9 @@ function renderStep(step) {
     
     if (step === 1) {
         html += `
-            <div class="text-center py-5">
-                <div style="font-size: 64px; margin-bottom: 20px;">📊</div>
-                <h5>Yatırımcı Profil Analizi</h5>
+            <div class="welcome-screen">
+                <div class="welcome-emoji">📊</div>
+                <h5>Yatırımcı Profili</h5>
                 <p>Bu test yaklaşık 5-10 dakika sürecektir.</p>
                 <p>Tüm cevaplarınız gizli tutulacak ve sadece profil oluşturma için kullanılacaktır.</p>
                 <div class="alert alert-info mt-4">
@@ -196,25 +577,32 @@ function renderStep(step) {
     container.innerHTML = html;
     
     // Buton durumlarını güncelle
-    document.getElementById('btn-back').disabled = step === 1;
+    const backBtn = document.getElementById('btn-back');
+    if (backBtn) backBtn.disabled = step === 1;
     
     // "İleri" butonunu enable et (step 1'den sonra ve step 7 hariç)
     const nextBtn = document.getElementById('btn-next');
-    if (step === 1) {
-        nextBtn.disabled = false; // İlk adımda da enable et
-    } else if (step === 7) {
-        nextBtn.style.display = 'none';
-        document.getElementById('btn-submit').style.display = 'inline-block';
-    } else {
-        nextBtn.disabled = false;
-        nextBtn.style.display = 'inline-block';
-        document.getElementById('btn-submit').style.display = 'none';
+    const submitBtn = document.getElementById('btn-submit');
+    
+    if (nextBtn && submitBtn) {
+        if (step === 1) {
+            nextBtn.disabled = false; // İlk adımda da enable et
+        } else if (step === 7) {
+            nextBtn.style.display = 'none';
+            submitBtn.style.display = 'inline-block';
+        } else {
+            nextBtn.disabled = false;
+            nextBtn.style.display = 'inline-block';
+            submitBtn.style.display = 'none';
+        }
     }
     
     // Progress bar güncelle
     const progressBar = document.querySelector('.progress-bar');
-    progressBar.style.width = `${(step / totalSteps) * 100}%`;
-    progressBar.setAttribute('aria-valuenow', step);
+    if (progressBar) {
+        progressBar.style.width = `${(step / totalSteps) * 100}%`;
+        progressBar.setAttribute('aria-valuenow', step);
+    }
 }
 
 function renderQuestion(question, index) {
@@ -222,26 +610,18 @@ function renderQuestion(question, index) {
     question.options.forEach(option => {
         const isSelected = answers[question.id] === option.value ? 'selected' : '';
         optionsHtml += `
-            <button type="button" onclick="selectOption('${question.id}', ${option.value}, this)">
+            <button type="button" class="option-btn ${isSelected}" onclick="selectOption('${question.id}', ${option.value}, this)" role="option" aria-selected="${isSelected === 'selected'}">
                 ${option.text}
             </button>
         `;
     });
     
     return `
-        <div class="question-card" id="question-${question.id}">
-            <h5>${index + 1}. ${question.question}</h5>
-            <div class="options">
+        <div class="question-card" id="question-${question.id}" role="group" aria-labelledby="question-label-${question.id}">
+            <h5 id="question-label-${question.id}">${index + 1}. ${question.question}</h5>
+            <div class="options" role="radiogroup">
                 ${optionsHtml}
             </div>
-            ${question.explanation ? `
-                <button type="button" onclick="toggleExplanation('${question.id}')">
-                    💡 Açıklama
-                </button>
-                <div class="explanation" id="explanation-${question.id}">
-                    ${question.explanation}
-                </div>
-            ` : ''}
         </div>
     `;
 }
@@ -301,13 +681,24 @@ function selectOption(questionId, value, buttonElement) {
     // Seçimi görsel olarak güncelle
     const container = document.getElementById(`question-${questionId}`);
     const buttons = container.querySelectorAll('.option-btn');
-    buttons.forEach(btn => btn.classList.remove('selected'));
+    buttons.forEach(btn => {
+        btn.classList.remove('selected');
+        btn.setAttribute('aria-selected', 'false');
+    });
     buttonElement.classList.add('selected');
+    buttonElement.setAttribute('aria-selected', 'true');
 }
 
 function toggleExplanation(questionId) {
     const explanation = document.getElementById(`explanation-${questionId}`);
+    const toggleBtn = document.querySelector(`button[aria-controls="explanation-${questionId}"]`);
+    
     explanation.classList.toggle('show');
+    
+    const isExpanded = explanation.classList.contains('show');
+    if (toggleBtn) {
+        toggleBtn.setAttribute('aria-expanded', isExpanded);
+    }
 }
 
 function goBack() {
@@ -319,6 +710,29 @@ function goBack() {
 
 function goNext() {
     if (currentStep < totalSteps) {
+        // Check if all questions in current step are answered
+        if (currentStep > 1 && currentStep < 7) {
+            const dimensionKeys = Object.keys(questions);
+            const dimension = dimensionKeys[currentStep - 2];
+            const dimensionQuestions = questions[dimension];
+            
+            let unansweredQuestions = [];
+            dimensionQuestions.forEach(q => {
+                if (answers[q.id] === undefined) {
+                    unansweredQuestions.push(q.question);
+                }
+            });
+            
+            if (unansweredQuestions.length > 0) {
+                if(typeof window.showToast === 'function') {
+                    window.showToast('Lütfen bu adımdaki tüm soruları cevaplayın.', 'error');
+                } else {
+                    alert('Lütfen bu adımdaki tüm soruları cevaplayın.');
+                }
+                return;
+            }
+        }
+        
         currentStep++;
         renderStep(currentStep);
     }
@@ -349,7 +763,8 @@ async function submitTest() {
         const response = await fetch('/profile/api/submit', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
             },
             body: JSON.stringify({ answers: answersData })
         });

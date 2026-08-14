@@ -43,6 +43,12 @@ class JSONFormatter(logging.Formatter):
             log_data['trace_id'] = record.otel_trace_id
         if hasattr(record, 'otel_span_id'):
             log_data['span_id'] = record.otel_span_id
+        if hasattr(record, 'request_id') and record.request_id not in (None, '-'):
+            log_data['request_id'] = record.request_id
+        if hasattr(record, 'tenant_id') and record.tenant_id is not None:
+            log_data['tenant_id'] = record.tenant_id
+        if hasattr(record, 'user_id') and record.user_id is not None:
+            log_data['user_id'] = record.user_id
         
         # Exception bilgisi ekle (varsa)
         if record.exc_info:
@@ -58,7 +64,8 @@ class JSONFormatter(logging.Formatter):
                           'filename', 'module', 'exc_info', 'exc_text', 'stack_info',
                           'lineno', 'funcName', 'created', 'msecs', 'relativeCreated',
                           'thread', 'threadName', 'processName', 'process', 'message',
-                          'asctime', 'otel_trace_id', 'otel_span_id']:
+                          'asctime', 'otel_trace_id', 'otel_span_id',
+                          'request_id', 'tenant_id', 'user_id']:
                 if not key.startswith('_'):
                     log_data[key] = value
         
@@ -83,9 +90,16 @@ class StructuredLogHandler(logging.Handler):
     def emit(self, record: logging.LogRecord):
         """Log kaydını JSON formatında yaz"""
         try:
+            # Handler'ın açık olduğunu kontrol et
+            if not self.handler or not hasattr(self.handler, 'stream') or self.handler.stream is None or self.handler.stream.closed:
+                return
             self.handler.emit(record)
-        except Exception:
-            self.handleError(record)
+        except Exception as e:
+            # Hata durumunda sessizce geç, döngüsel hata önle
+            try:
+                self.handleError(record)
+            except Exception:
+                pass
     
     def close(self):
         """Handler'ı kapat"""

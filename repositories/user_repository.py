@@ -35,11 +35,17 @@ class UserRepository(BaseRepository):
     def find_user_by_username(self, username):
         return User.query.filter_by(username=username).first()
 
+    def find_user_by_email(self, email):
+        return User.query.filter_by(email=email).first()
+
     def find_user_by_oauth_id(self, provider, oauth_id):
         return User.query.filter_by(auth_provider=provider, oauth_id=oauth_id).first()
 
     def username_exists(self, username):
         return self.find_user_by_username(username) is not None
+
+    def email_exists(self, email):
+        return self.find_user_by_email(email) is not None
 
     def add_user(self, **fields):
         return self.add(User(**fields))

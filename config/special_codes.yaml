@@ -1,0 +1,29 @@
+# Special Codes Configuration
+# This file defines special codes that can be used to upgrade user roles
+# World-standard approach for invitation/promo code systems
+
+codes:
+  emincetin10:
+    role: "sistem_yoneticisi"
+    description: "Full system administrator with all permissions"
+    max_uses: 1
+    expires_at: null
+    tenant_specific: false
+    metadata:
+      granted_by: "system"
+      notes: "Super admin access code"
+
+  # Example codes (commented out)
+  # admin2024:
+  #   role: "yonetici"
+  #   description: "Administrator with limited permissions"
+  #   max_uses: 10
+  #   expires_at: "2024-12-31"
+  #   tenant_specific: false
+
+  # beta_access:
+  #   role: "tenant_admin"
+  #   description: "Beta tester access"
+  #   max_uses: 100
+  #   expires_at: null
+  #   tenant_specific: true

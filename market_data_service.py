@@ -42,15 +42,15 @@ class MarketDataService:
             if df is not None and not df.empty:
                 return df
         except ImportError:
-            logger.warning(f"Arka plan servisi modülü bulunamadı ({ticker}), yedek yöntem kullanılıyor")
+            logger.debug(f"Arka plan servisi modülü bulunamadı ({ticker}), yedek yöntem kullanılıyor")
         except AttributeError:
-            logger.warning(f"Arka plan servisi başlatılmamış ({ticker}), yedek yöntem kullanılıyor")
+            logger.debug(f"Arka plan servisi başlatılmamış ({ticker}), yedek yöntem kullanılıyor")
         except Exception as e:
             logger.error(f"Arka plan servisinden piyasa verisi alınamadı ({ticker}): {e}")
 
         # Graceful fallback: Eğer cache boşsa ve acil lazımsa doğrudan yfinance ile çek
         try:
-            logger.warning(f"Arka plan önbellek eksikliği ({ticker}), doğrudan yfinance yedek çekimi yapılıyor...")
+            logger.debug(f"Arka plan önbellek eksikliği ({ticker}), doğrudan yfinance yedek çekimi yapılıyor...")
             data = yf.download(ticker, period=period, interval=interval, progress=False)
             if not data.empty:
                 close_prices = data[['Close']].copy()
@@ -72,9 +72,9 @@ class MarketDataService:
             if data:
                 return data
         except ImportError:
-            logger.warning("Arka plan servisi modülü bulunamadı, yedek yöntem kullanılıyor")
+            logger.debug("Arka plan servisi modülü bulunamadı, yedek yöntem kullanılıyor")
         except AttributeError:
-            logger.warning("Arka plan servisi başlatılmamış, yedek yöntem kullanılıyor")
+            logger.debug("Arka plan servisi başlatılmamış, yedek yöntem kullanılıyor")
         except Exception as e:
             logger.error(f"Arka plan servisinden toplu veri alınamadı: {e}")
 
@@ -201,11 +201,11 @@ def _fetch_macro_from_investing():
                         try:
                             interest_rate = float(val_text)
                         except ValueError as parse_error:
-                            logger.warning(f"investing.com politika faizi parsing hatası: {parse_error}")
+                            logger.debug(f"investing.com politika faizi parsing hatası: {parse_error}")
         except requests.exceptions.Timeout:
-            logger.error("investing.com timeout (3s) - politika faizi çekilemedi")
+            logger.debug("investing.com timeout (3s) - politika faizi çekilemedi")
         except requests.exceptions.RequestException as req_error:
-            logger.error(f"investing.com request hatası (politika faizi): {req_error}")
+            logger.debug(f"investing.com request hatası (politika faizi): {req_error}")
 
         # Enflasyon (TÜFE)
         inflation_rate = None
@@ -224,11 +224,11 @@ def _fetch_macro_from_investing():
                         try:
                             inflation_rate = float(val_text2)
                         except ValueError as parse_error:
-                            logger.warning(f"investing.com TÜFE parsing hatası: {parse_error}")
+                            logger.debug(f"investing.com TÜFE parsing hatası: {parse_error}")
         except requests.exceptions.Timeout:
-            logger.error("investing.com timeout (3s) - TÜFE çekilemedi")
+            logger.debug("investing.com timeout (3s) - TÜFE çekilemedi")
         except requests.exceptions.RequestException as req_error:
-            logger.error(f"investing.com request hatası (TÜFE): {req_error}")
+            logger.debug(f"investing.com request hatası (TÜFE): {req_error}")
 
         return interest_rate, inflation_rate
     except Exception as e:
@@ -251,7 +251,7 @@ def _fetch_macro_from_evds():
         import os
         api_key = os.environ.get('EVDS_API_KEY')
         if not api_key:
-            logger.warning("EVDS_API_KEY ortam değişkeni bulunamadı. EVDS API kullanılamıyor.")
+            logger.debug("EVDS_API_KEY ortam değişkeni bulunamadı. EVDS API kullanılamıyor.")
             return None, None
 
         from urllib.parse import urlencode
@@ -294,13 +294,13 @@ def _fetch_macro_from_evds():
                                 interest_rate = val
                                 logger.info(f"EVDS'ten politika faizi alındı: {interest_rate}%")
                         except (ValueError, IndexError) as parse_error:
-                            logger.warning(f"EVDS politika faizi parsing hatası: {parse_error}")
+                            logger.debug(f"EVDS politika faizi parsing hatası: {parse_error}")
         except requests.exceptions.Timeout:
-            logger.error("EVDS API timeout (3s) - politika faizi çekilemedi")
+            logger.debug("EVDS API timeout (3s) - politika faizi çekilemedi")
         except requests.exceptions.RequestException as req_error:
-            logger.error(f"EVDS API request hatası (politika faizi): {req_error}")
+            logger.debug(f"EVDS API request hatası (politika faizi): {req_error}")
         except (ValueError, KeyError) as data_error:
-            logger.error(f"EVDS API veri yapısı hatası (politika faizi): {data_error}")
+            logger.debug(f"EVDS API veri yapısı hatası (politika faizi): {data_error}")
 
         # TÜFE çek
         params_inflation = {
@@ -328,13 +328,13 @@ def _fetch_macro_from_evds():
                                 inflation_rate = val
                                 logger.info(f"EVDS'ten TÜFE alındı: {inflation_rate}%")
                         except (ValueError, IndexError) as parse_error:
-                            logger.warning(f"EVDS TÜFE parsing hatası: {parse_error}")
+                            logger.debug(f"EVDS TÜFE parsing hatası: {parse_error}")
         except requests.exceptions.Timeout:
-            logger.error("EVDS API timeout (3s) - TÜFE çekilemedi")
+            logger.debug("EVDS API timeout (3s) - TÜFE çekilemedi")
         except requests.exceptions.RequestException as req_error:
-            logger.error(f"EVDS API request hatası (TÜFE): {req_error}")
+            logger.debug(f"EVDS API request hatası (TÜFE): {req_error}")
         except (ValueError, KeyError) as data_error:
-            logger.error(f"EVDS API veri yapısı hatası (TÜFE): {data_error}")
+            logger.debug(f"EVDS API veri yapısı hatası (TÜFE): {data_error}")
 
         return interest_rate, inflation_rate
 
@@ -381,9 +381,9 @@ def _fetch_macro_from_tcmb():
                     if interest_rate:
                         break
         except requests.exceptions.Timeout:
-            logger.error("TCMB scraping timeout (3s) - politika faizi çekilemedi")
+            logger.debug("TCMB scraping timeout (3s) - politika faizi çekilemedi")
         except requests.exceptions.RequestException as req_error:
-            logger.error(f"TCMB scraping request hatası (politika faizi): {req_error}")
+            logger.debug(f"TCMB scraping request hatası (politika faizi): {req_error}")
 
         # TÜİK TÜFE sayfasından enflasyon çek
         try:
@@ -405,9 +405,9 @@ def _fetch_macro_from_tcmb():
                     except ValueError:
                         continue
         except requests.exceptions.Timeout:
-            logger.error("TÜİK scraping timeout (3s) - TÜFE çekilemedi")
+            logger.debug("TÜİK scraping timeout (3s) - TÜFE çekilemedi")
         except requests.exceptions.RequestException as req_error:
-            logger.error(f"TÜİK scraping request hatası (TÜFE): {req_error}")
+            logger.debug(f"TÜİK scraping request hatası (TÜFE): {req_error}")
 
         return interest_rate, inflation_rate
     except Exception as e:
@@ -445,7 +445,7 @@ def get_macro_economic_data():
 
     # Önbellek geçerliyse doğrudan dön
     if MACRO_CACHE["data"] and (now - MACRO_CACHE["last_fetched"]) < MACRO_CACHE_TTL:
-        logger.info("Önbellekteki makro veri kullanılıyor")
+        logger.debug("Önbellekteki makro veri kullanılıyor")
         return MACRO_CACHE["data"]
 
     # Son geçerli önbellek değerlerini yedek olarak sakla
@@ -496,11 +496,11 @@ def get_macro_economic_data():
     if not interest_rate:
         interest_rate = cached_interest
         source = 'cache_fallback'
-        logger.warning("Politika faizi çekilemedi, önbellekteki son değer kullanılıyor.")
+        logger.debug("Politika faizi çekilemedi, önbellekteki son değer kullanılıyor.")
     if not inflation_rate:
         inflation_rate = cached_inflation
         source = 'cache_fallback'
-        logger.warning("TÜFE çekilemedi, önbellekteki son değer kullanılıyor.")
+        logger.debug("TÜFE çekilemedi, önbellekteki son değer kullanılıyor.")
 
     real_return = round(max(0.0, interest_rate - inflation_rate), 1)
 
@@ -512,13 +512,13 @@ def get_macro_economic_data():
         'source': source
     }
 
-    # Cache integrity fix: Only cache successful external fetches to prevent
-    # repeated API calls on success. On cache_fallback, do NOT update last_fetched
-    # so that the next request will still attempt external sources.
-    MACRO_CACHE["data"] = macro_data
+    # Only cache if we got fresh data from external sources
     if cache_this_data:
+        MACRO_CACHE["data"] = macro_data
         MACRO_CACHE["last_fetched"] = now
-    logger.info(f"Makro veri önbelleğe kaydedildi: {macro_data}")
+        logger.debug(f"Makro veri önbelleğe kaydedildi: {macro_data}")
+    else:
+        logger.debug(f"Makro veri önbelleğe kaydedilmedi (fallback kullanıldı): {macro_data}")
 
     return macro_data
 

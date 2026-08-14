@@ -50,14 +50,14 @@ def _cleanup_non_standard_categories(user_id):
         
         tenant_id = session.get('tenant_id')
         if not tenant_id:
-            logger.warning("Tenant ID bulunamadı, kategori temizleme atlanıyor")
+            logger.debug("Tenant ID bulunamadı, kategori temizleme atlanıyor")
             return 0
         
         # Standart kategori kodlarını veritabanından çek
         standard_codes = set(_get_standard_category_codes().keys())
         
         if not standard_codes:
-            logger.warning("Standart kategori bulunamadı, temizleme atlanıyor")
+            logger.debug("Standart kategori bulunamadı, temizleme atlanıyor")
             return 0
         
         # Kullanıcının tenant'ına ait (tenant_id != None) kategorileri bul
@@ -71,9 +71,9 @@ def _cleanup_non_standard_categories(user_id):
                     db.session.delete(category)
                     deleted_count += 1
                 except Exception as e:
-                    logger.warning(f"Kategori silinemedi (ID: {category.id}): {e}")
+                    logger.debug(f"Kategori silinemedi (ID: {category.id}): {e}")
         
-        logger.info(f"{deleted_count} standart olmayan kategori silindi (tenant: {tenant_id}) - commit bekliyor")
+        logger.debug(f"{deleted_count} standart olmayan kategori silindi (tenant: {tenant_id}) - commit bekliyor")
         return deleted_count
             
     except Exception as e:
@@ -397,6 +397,50 @@ def _handle_settings_action(current_user, settings_service):
             current_user.id, request.form.get('privacy_mode') == 'on'
         )
         flash('Gizlilik modu tercihiniz güncellendi.', 'success')
+        return
+
+    if action == 'apply_special_code':
+        from domain.users.services.special_code_service import get_special_code_service
+        from models import User, db
+        from datetime import datetime
+
+        special_code = request.form.get('special_code', '').strip()
+
+        if not special_code:
+            flash('Özel kod gereklidir.', 'error')
+            return
+
+        # Check if user already used a special code
+        if current_user.special_code_used_at:
+            flash('Zaten bir özel kod kullandınız.', 'error')
+            logger.warning(f"User {current_user.username} attempted to use another special code")
+            return
+
+        # Validate the special code
+        special_code_service = get_special_code_service()
+        validation_result = special_code_service.validate_code(
+            special_code,
+            current_user.id,
+            current_user.tenant_id
+        )
+
+        if not validation_result['valid']:
+            flash(validation_result['error'], 'error')
+            logger.warning(f"User {current_user.username} attempted invalid special code: {special_code}")
+            return
+
+        # Upgrade user role
+        new_role = validation_result['role']
+        old_role = current_user.role
+
+        current_user.role = new_role
+        current_user.special_code = special_code
+        current_user.special_code_used_at = datetime.now()
+
+        db.session.commit()
+
+        logger.info(f"User {current_user.username} upgraded role from {old_role} to {new_role} using special code {special_code}")
+        flash(f'Rolünüz "{new_role}" olarak yükseltildi! {validation_result.get("description", "")}', 'success')
         return
 
     if action == 'change_language':

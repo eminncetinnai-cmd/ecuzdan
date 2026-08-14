@@ -77,6 +77,8 @@
                 .then(function (data) {
                     if (data && data.success) {
                         document.documentElement.classList.toggle('privacy', data.privacy_mode);
+                        // Persist privacy mode to localStorage
+                        localStorage.setItem('privacyMode', data.privacy_mode);
                         if (data.privacy_mode) apply();
                     } else if (window.showToast) {
                         window.showToast((data && data.message) || 'Gizlilik modu değiştirilemedi.', 'error');
@@ -90,8 +92,17 @@
         mark: apply
     };
 
-    // Sayfa açılışında yalnızca gizlilik açıksa DOM'a dokun.
-    if (document.documentElement.classList.contains('privacy')) {
+    // Sayfa açılışında localStorage'dan gizlilik modunu kontrol et
+    var savedPrivacyMode = localStorage.getItem('privacyMode');
+    if (savedPrivacyMode === 'true') {
+        document.documentElement.classList.add('privacy');
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', apply);
+        } else {
+            apply();
+        }
+    } else if (document.documentElement.classList.contains('privacy')) {
+        // Sunucu tarafında gizlilik modu açıksa
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', apply);
         } else {

@@ -67,8 +67,10 @@ class LogRetentionManager:
         
         log_types = {
             'e_cuzdan.log': 'detailed',
+            'e_cuzdan_structured.log': 'detailed',
             'e_cuzdan_errors.log': 'error',
-            'e_cuzdan_security.log': 'security'
+            'e_cuzdan_errors_structured.log': 'error',
+            'e_cuzdan_security.log': 'security',
         }
         
         for filename, log_type in log_types.items():

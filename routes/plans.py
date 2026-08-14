@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 def _get_planning_app():
     from bootstrap.container import get_container
-    return get_container().applications.planning()
+    return get_container().domain.plan()
 
 
 def register_plan_routes(bp):

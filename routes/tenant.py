@@ -6,6 +6,7 @@ from flask import redirect, render_template, request, session, url_for
 
 from bootstrap.container import get_container
 from utils.auth_helpers import tenant_admin_required
+from utils.log_redaction import mask_email
 from utils.notification_helpers import flash_error, flash_info, flash_success, flash_warning
 
 logger = logging.getLogger(__name__)
@@ -73,7 +74,9 @@ def register_tenant_routes(bp):
                     request.form.get('role', 'kullanici'),
                 )
                 invite_link = url_for('auth.register_with_invite', token=invite_obj.token, _external=True)
-                logger.info(f"Invite created: {invite_obj.email} by {session.get('username')}")
+                logger.info(
+                    f"Invite created: {mask_email(invite_obj.email)} by {session.get('username')}"
+                )
                 flash_success(f'Davet oluşturuldu! Davet linki: {invite_link}')
                 return render_template('invite_user.html', invite_link=invite_link)
             return render_template('invite_user.html')

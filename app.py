@@ -20,16 +20,16 @@ from utils.auth_helpers import set_tenant_context
 # Centralized logging configuration
 from utils.logging_config import get_logger, setup_logging
 
-setup_logging(level=logging.DEBUG)
+_log_level_name = os.getenv('LOG_LEVEL', Config.LOG_LEVEL).upper()
+_log_level = getattr(logging, _log_level_name, None)
+if not isinstance(_log_level, int):
+    _log_level = logging.INFO
+setup_logging(level=_log_level)
 
-# OpenTelemetry Setup
-try:
-    from bootstrap import get_container
-    # Initialize the global TracerProvider via container
-    get_container().infrastructure.tracer(service_name="e_cuzdan")
-except Exception as e:
-    # Safe fallback if OTel is not installed/configured properly
-    pass
+# OpenTelemetry Setup (opt-in: OTEL_ENABLED=true)
+from utils.otel_setup import instrument_flask_app, setup_tracing
+
+setup_tracing(service_name="e_cuzdan")
 
 logger = get_logger(__name__)
 
@@ -38,13 +38,8 @@ app = Flask(__name__)
 app.config.setdefault('DB_BOOTSTRAP_READY', False)
 app.config.setdefault('DB_BOOTSTRAP_ERROR', None)
 
-# Instrument Flask with OpenTelemetry
-try:
-    from opentelemetry.instrumentation.flask import FlaskInstrumentor
-    FlaskInstrumentor().instrument_app(app)
-    logger.info("OpenTelemetry Flask instrumentation applied.")
-except ImportError:
-    logger.info("opentelemetry-instrumentation-flask not installed. Skipping web instrumentation.")
+# Instrument Flask with OpenTelemetry (opt-in)
+instrument_flask_app(app)
 
 config = Config.from_env()
 app.config['TESTING'] = os.getenv('FLASK_ENV', '').lower() == 'testing' or os.getenv('TESTING', 'false').lower() == 'true'
@@ -65,6 +60,8 @@ else:
 app.config['SQLALCHEMY_DATABASE_URI'] = config.DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = config.SQLALCHEMY_TRACK_MODIFICATIONS
 app.config['APP_BOOT_ID'] = secrets.token_hex(32) if not config.APP_BOOT_ID else config.APP_BOOT_ID
+app.config['GOOGLE_CLIENT_ID'] = config.GOOGLE_CLIENT_ID
+app.config['GOOGLE_CLIENT_SECRET'] = config.GOOGLE_CLIENT_SECRET
 
 # Jinja2'ye min ve max fonksiyonlarını ekle
 app.jinja_env.globals.update(min=min, max=max)

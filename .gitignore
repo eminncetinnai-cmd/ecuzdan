@@ -74,3 +74,13 @@ _backup/
 
 # Archive folder (dead code)
 archive/
+
+# Runtime and test artifacts
+*,cover
+_git_*.txt
+_full_nonslow_v4.log
+logs/*
+!logs/.gitkeep
+static/uploads/profiles/*
+!static/uploads/profiles/.gitkeep
+client_secret_*.json

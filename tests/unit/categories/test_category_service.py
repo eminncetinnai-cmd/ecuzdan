@@ -25,7 +25,7 @@ class TestCategoryService:
             Category(id=1, name='Maaş / Ücret Geliri', type='Gelir', code='GLR-6001', tenant_id=None),
             Category(id=2, name='Kira Geliri', type='Gelir', code='GLR-6003', tenant_id=None),
             Category(id=3, name='Konut & Kira', type='Gider', code='GDR-7001', tenant_id=None),
-            Category(id=4, name='Kredi', type='Gider', code='GDR-7011', tenant_id=None),
+            Category(id=4, name='Kredi Kartı Ödemesi', type='Gider', code='GDR-7011', tenant_id=None),
             Category(id=5, name='Yatırıma Aktarılan', type='Yatırım', code='YTR-1001', tenant_id=None),
         ]
 
@@ -42,10 +42,10 @@ class TestCategoryService:
         """Test getting category by name from standard categories."""
         category_service.repository.find_category_by_name.return_value = mock_standard_categories[0]
         
-        result = category_service.get_category_by_name('Maaş')
+        result = category_service.get_category_by_name('Maaş / Ücret Geliri')
         
-        assert result.name == 'Maaş'
-        category_service.repository.find_category_by_name.assert_called_once_with('Maaş', None)
+        assert result.name == 'Maaş / Ücret Geliri'
+        category_service.repository.find_category_by_name.assert_called_once_with('Maaş / Ücret Geliri', None)
 
     def test_get_category_by_name_tenant(self, category_service):
         """Test getting category by name for tenant."""
@@ -152,11 +152,11 @@ class TestCategoryService:
         
         result = category_service.get_category_mapping()
         
-        assert result['Maaş'] == 'Gelir'
-        assert result['Kira'] == 'Gelir'
-        assert result['Vergi'] == 'Gider'
-        assert result['Kredi'] == 'Gider'
-        assert result['Hisse Senedi'] == 'Yatırım'
+        assert result['Maaş / Ücret Geliri'] == 'Gelir'
+        assert result['Kira Geliri'] == 'Gelir'
+        assert result['Konut & Kira'] == 'Gider'
+        assert result['Kredi Kartı Ödemesi'] == 'Gider'
+        assert result['Yatırıma Aktarılan'] == 'Yatırım'
 
     def test_get_standard_category_codes(self, category_service, mock_standard_categories):
         """Test getting standard category codes."""

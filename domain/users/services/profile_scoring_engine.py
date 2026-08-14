@@ -61,7 +61,34 @@ class ProfileScoringEngine:
                 logger.warning("No active questions found in DB, using default question bank")
                 self._questions = self._get_default_questions()
             else:
-                self._questions = questions
+                # Veritabanından gelen soruları doğru formata çevir
+                formatted_questions = {}
+                for q in questions:
+                    try:
+                        import json
+                        options = json.loads(q.options) if q.options else []
+                        scoring_weights = json.loads(q.scoring_weights) if q.scoring_weights else {}
+                        
+                        formatted_questions[q.id] = {
+                            'id': q.id,
+                            'dimension': q.dimension,
+                            'type': q.question_type,
+                            'question': q.question_text,
+                            'options': options,
+                            'correct_answer': q.correct_answer,
+                            'scoring_weights': scoring_weights,
+                            'explanation': q.explanation,
+                            'difficulty': q.difficulty
+                        }
+                    except Exception as e:
+                        logger.error(f"Error formatting question {q.id}: {e}")
+                        continue
+                
+                if formatted_questions:
+                    self._questions = formatted_questions
+                else:
+                    logger.warning("No valid questions after formatting, using default question bank")
+                    self._questions = self._get_default_questions()
         except Exception as e:
             logger.error(f"Error loading questions from DB: {e}")
             # db bağlantı hatası geçici olabilir, bu yüzden _questions'a yazmayalım ki bir dahaki sefere tekrar denesin.
@@ -960,11 +987,11 @@ class ProfileScoringEngine:
     def calculate_validity_date(self, confidence_score):
         """Profil geçerlilik süresi hesaplama"""
         if confidence_score > 80:
-            return datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=365)
+            return datetime.now(timezone.utc) + timedelta(days=365)
         elif confidence_score > 50:
-            return datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=180)
+            return datetime.now(timezone.utc) + timedelta(days=180)
         else:
-            return datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=90)
+            return datetime.now(timezone.utc) + timedelta(days=90)
 
     def get_portfolio_allocation(self, risk_level):
         """Portföy dağılım önerisi"""
@@ -978,13 +1005,23 @@ class ProfileScoringEngine:
             for answer in answers_data:
                 question = self.questions.get(answer['question_id'])
                 if not question:
+                    logger.warning(f"Question not found: {answer['question_id']}")
                     continue
+
+                # Soru tipine göre doğru cevap kontrolü
+                is_correct = False
+                if question['type'] == 'multiple_choice':
+                    is_correct = answer['value'] == question.get('correct_answer', 0)
+                else:
+                    # Diğer soru tiplerinde (scale, yes_no, scenario, ranking)
+                    # Doğru cevap kavramı yok, sadece skor kullanılır
+                    is_correct = None
 
                 processed_answer = {
                     'question_id': answer['question_id'],
                     'dimension': question['dimension'],
                     'score': answer['value'],
-                    'is_correct': answer['value'] == question.get('correct_answer', 0)
+                    'is_correct': is_correct
                 }
                 processed_answers.append(processed_answer)
 

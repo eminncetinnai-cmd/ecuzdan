@@ -7,9 +7,10 @@ exclude = ['venv', '__pycache__', '.pytest_cache']
 select = ['E', 'F', 'W', 'C90', 'I']
 ignore = ['E501', 'C901']
 
-[tool.pytest.ini_options]
-addopts = '--cov=. --cov-report=term-missing --cov-report=html'
-testpaths = ['tests']
+# Pytest configuration moved to pytest.ini to avoid conflicts
+# [tool.pytest.ini_options]
+# addopts = '--cov=. --cov-report=term-missing --cov-report=html'
+# testpaths = ['tests']
 
 [tool.coverage.run]
 omit = ['venv/*', 'tests/*', '*__init__.py', 'app.py']

@@ -271,7 +271,7 @@ def test_asset_crud_flow(authenticated_client, app):
     assert response.status_code == 200
     assert db.session.get(Asset, asset_id).value == 1200
 
-    response = authenticated_client.get(f'/del_asset/{asset_id}', follow_redirects=True)
+    response = authenticated_client.post(f'/delete_asset/{asset_id}', follow_redirects=True)
     assert response.status_code == 200
     assert db.session.get(Asset, asset_id) is None
     assert AssetTransaction.query.filter_by(asset_id=asset_id).count() == 0

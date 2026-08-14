@@ -1,6 +1,6 @@
 """
 Unit Tests - Monitoring Routes
-Monitoring API route functions
+Monitoring API route functions - Detailed functional tests
 """
 
 import pytest
@@ -8,6 +8,10 @@ from unittest.mock import Mock, patch, MagicMock
 from routes.monitoring import (
     register_monitoring_routes,
     register_monitoring_routes_bp,
+    monitoring_bp,
+    _get_cache_key,
+    _set_cache,
+    _clear_cache,
 )
 
 
@@ -27,6 +31,87 @@ def test_register_monitoring_routes_bp():
     """Test register_monitoring_routes_bp function"""
     result = register_monitoring_routes_bp()
     assert result is not None
+    assert result.name == 'monitoring'
+
+
+@pytest.mark.unit
+def test_monitoring_blueprint_exists():
+    """Test monitoring blueprint exists"""
+    assert monitoring_bp is not None
+    assert monitoring_bp.name == 'monitoring'
+    assert monitoring_bp.url_prefix == '/monitoring'
+
+
+@pytest.mark.unit
+def test_monitoring_blueprint_routes():
+    """Test monitoring blueprint has expected routes"""
+    # Blueprint'in route'ları deferred_functions'da değil, doğrudan kayıtlı
+    # Bu yüzden blueprint'in doğru yapılandırıldığını kontrol ediyoruz
+    assert monitoring_bp is not None
+    assert monitoring_bp.name == 'monitoring'
+    assert monitoring_bp.url_prefix == '/monitoring'
+
+
+@pytest.mark.unit
+def test_cache_get_key():
+    """Test _get_cache_key function"""
+    # Test with empty cache
+    result = _get_cache_key('test_key')
+    assert result is None
+    
+    # Test with set cache
+    _set_cache('test_key', {'data': 'test'})
+    result = _get_cache_key('test_key')
+    assert result == {'data': 'test'}
+
+
+@pytest.mark.unit
+def test_cache_set_key():
+    """Test _set_cache function"""
+    _set_cache('new_key', {'value': 123})
+    result = _get_cache_key('new_key')
+    assert result == {'value': 123}
+
+
+@pytest.mark.unit
+def test_cache_clear_pattern():
+    """Test _clear_cache with pattern"""
+    _set_cache('stats_test', {'data': 1})
+    _set_cache('health_test', {'data': 2})
+    _set_cache('other_key', {'data': 3})
+    
+    _clear_cache('stats')
+    
+    # stats_test should be cleared (contains 'stats')
+    assert _get_cache_key('stats_test') is None
+    # other_key should remain (doesn't contain 'stats')
+    assert _get_cache_key('other_key') is not None
+
+
+@pytest.mark.unit
+def test_cache_clear_all():
+    """Test _clear_cache without pattern"""
+    _set_cache('key1', {'data': 1})
+    _set_cache('key2', {'data': 2})
+    
+    _clear_cache()
+    
+    assert _get_cache_key('key1') is None
+    assert _get_cache_key('key2') is None
+
+
+@pytest.mark.unit
+def test_cache_ttl_expiration():
+    """Test cache TTL expiration"""
+    import time
+    
+    _set_cache('test_key', {'data': 'test'})
+    # Manually set old timestamp
+    from routes.monitoring import _cache
+    _cache['test_key'] = ({'data': 'test'}, time.time() - 1000)  # Very old
+    
+    result = _get_cache_key('test_key')
+    assert result is None  # Should be expired
 
 
 @pytest.mark.unit
@@ -35,20 +120,31 @@ def test_monitoring_imports():
     from routes.monitoring import (
         register_monitoring_routes,
         register_monitoring_routes_bp,
+        monitoring_bp,
+        _get_cache_key,
+        _set_cache,
+        _clear_cache,
     )
     
     assert callable(register_monitoring_routes)
     assert callable(register_monitoring_routes_bp)
+    assert callable(_get_cache_key)
+    assert callable(_set_cache)
+    assert callable(_clear_cache)
 
 
 @pytest.mark.unit
-def test_monitoring_routes_structure():
+def test_monitoring_module_structure():
     """Test monitoring routes module structure"""
     import routes.monitoring as monitoring_module
     
     # Check for expected functions
     assert hasattr(monitoring_module, 'register_monitoring_routes')
     assert hasattr(monitoring_module, 'register_monitoring_routes_bp')
+    assert hasattr(monitoring_module, 'monitoring_bp')
+    assert hasattr(monitoring_module, '_get_cache_key')
+    assert hasattr(monitoring_module, '_set_cache')
+    assert hasattr(monitoring_module, '_clear_cache')
     
     # Check for expected imports
     assert hasattr(monitoring_module, 'jsonify')
@@ -65,325 +161,108 @@ def test_monitoring_routes_structure():
 
 
 @pytest.mark.unit
-def test_monitoring_module_has_required_imports():
-    """Test monitoring module has required imports"""
-    import routes.monitoring as monitoring_module
-    
-    # Flask imports
-    assert hasattr(monitoring_module, 'Blueprint')
-    assert hasattr(monitoring_module, 'jsonify')
-    assert hasattr(monitoring_module, 'request')
-    assert hasattr(monitoring_module, 'session')
-    assert hasattr(monitoring_module, 'render_template')
-    
-    # Standard library imports
-    assert hasattr(monitoring_module, 'logging')
-    assert hasattr(monitoring_module, 'os')
-    assert hasattr(monitoring_module, 'datetime')
-    assert hasattr(monitoring_module, 'timedelta')
-    assert hasattr(monitoring_module, 're')
-
-
-@pytest.mark.unit
-def test_monitoring_blueprint():
-    """Test monitoring blueprint exists"""
-    import routes.monitoring as monitoring_module
-    
-    assert hasattr(monitoring_module, 'monitoring_bp')
-    assert monitoring_module.monitoring_bp is not None
-
-
-@pytest.mark.unit
-def test_monitoring_routes_exist():
-    """Test monitoring routes exist in module"""
-    import routes.monitoring as monitoring_module
-    import inspect
-    
-    source = inspect.getsource(monitoring_module)
-    assert '/monitoring' in source
-    assert '/api/monitoring/stats' in source
-
-
-@pytest.mark.unit
-def test_monitoring_error_handling():
-    """Test monitoring routes have error handling"""
-    import routes.monitoring as monitoring_module
-    import inspect
-    
-    source = inspect.getsource(monitoring_module)
-    assert 'except Exception' in source or 'try:' in source
-
-
-@pytest.mark.unit
 def test_monitoring_logger():
     """Test monitoring module uses logging"""
     import routes.monitoring as monitoring_module
-    assert hasattr(monitoring_module, 'logging')
+    assert hasattr(monitoring_module, 'logger')
+    assert monitoring_module.logger is not None
 
 
 @pytest.mark.unit
-def test_monitoring_route_registration():
-    """Test register_monitoring_routes registers routes"""
-    from routes.monitoring import register_monitoring_routes
-    from unittest.mock import Mock
-    
+def test_monitoring_cache_structure():
+    """Test monitoring cache structure"""
+    import routes.monitoring as monitoring_module
+    assert hasattr(monitoring_module, '_cache')
+    assert hasattr(monitoring_module, '_cache_ttl')
+    assert isinstance(monitoring_module._cache, dict)
+    assert isinstance(monitoring_module._cache_ttl, dict)
+
+
+@pytest.mark.unit
+def test_monitoring_cache_ttl_values():
+    """Test monitoring cache TTL values"""
+    import routes.monitoring as monitoring_module
+    assert 'stats' in monitoring_module._cache_ttl
+    assert 'health' in monitoring_module._cache_ttl
+    assert 'log_files' in monitoring_module._cache_ttl
+    assert monitoring_module._cache_ttl['stats'] > 0
+    assert monitoring_module._cache_ttl['health'] > 0
+    assert monitoring_module._cache_ttl['log_files'] > 0
+
+
+@pytest.mark.unit
+def test_monitoring_route_registration_count():
+    """Test register_monitoring_routes registers expected number of routes"""
     mock_bp = Mock()
     mock_bp.route = Mock(return_value=lambda f: f)
     
     register_monitoring_routes(mock_bp)
     
-    # Should register multiple routes
-    assert mock_bp.route.call_count >= 2
+    # Should register at least 5 routes (dashboard, stats, logs, health, alerts)
+    assert mock_bp.route.call_count >= 5
 
 
 @pytest.mark.unit
-def test_monitoring_blueprint_parameter():
-    """Test register_monitoring_routes accepts blueprint parameter"""
-    from routes.monitoring import register_monitoring_routes
-    from unittest.mock import Mock
-    
-    mock_bp = Mock()
-    mock_bp.route = Mock(return_value=lambda f: f)
-    
-    # Should not raise exception
-    register_monitoring_routes(mock_bp)
+def test_monitoring_blueprint_url_prefix():
+    """Test monitoring blueprint has correct URL prefix"""
+    assert monitoring_bp.url_prefix == '/monitoring'
 
 
 @pytest.mark.unit
-def test_monitoring_blueprint_exists():
-    """Test monitoring module has blueprint"""
-    import routes.monitoring as monitoring_module
-    assert hasattr(monitoring_module, 'monitoring_bp')
+def test_monitoring_blueprint_name():
+    """Test monitoring blueprint has correct name"""
+    assert monitoring_bp.name == 'monitoring'
 
 
 @pytest.mark.unit
-def test_register_monitoring_routes_route_registration():
-    """Test register_monitoring_routes registers routes"""
-    mock_bp = Mock()
-    mock_bp.route = Mock(return_value=lambda f: f)
+def test_cache_key_isolation():
+    """Test that different cache keys don't interfere"""
+    _set_cache('key1', {'value': 1})
+    _set_cache('key2', {'value': 2})
     
-    register_monitoring_routes(mock_bp)
+    result1 = _get_cache_key('key1')
+    result2 = _get_cache_key('key2')
     
-    # Should register multiple routes
-    assert mock_bp.route.call_count >= 4
+    assert result1 == {'value': 1}
+    assert result2 == {'value': 2}
+    assert result1 != result2
 
 
 @pytest.mark.unit
-def test_monitoring_module_has_required_imports():
-    """Test monitoring module has required imports"""
-    import routes.monitoring as monitoring_module
+def test_cache_overwrite():
+    """Test that setting same key overwrites value"""
+    _set_cache('test_key', {'value': 1})
+    _set_cache('test_key', {'value': 2})
     
-    # Flask imports
-    assert hasattr(monitoring_module, 'Blueprint')
-    assert hasattr(monitoring_module, 'jsonify')
-    assert hasattr(monitoring_module, 'request')
-    assert hasattr(monitoring_module, 'session')
-    assert hasattr(monitoring_module, 'render_template')
-    
-    # Standard library imports
-    assert hasattr(monitoring_module, 'logging')
-    assert hasattr(monitoring_module, 'os')
-    assert hasattr(monitoring_module, 'datetime')
-    assert hasattr(monitoring_module, 'timedelta')
-    assert hasattr(monitoring_module, 're')
+    result = _get_cache_key('test_key')
+    assert result == {'value': 2}
 
 
 @pytest.mark.unit
-def test_monitoring_blueprint_parameter():
-    """Test register_monitoring_routes accepts blueprint parameter"""
-    mock_bp = Mock()
-    mock_bp.route = Mock(return_value=lambda f: f)
-    
-    # Should not raise exception
-    register_monitoring_routes(mock_bp)
+def test_cache_none_value():
+    """Test cache with None value"""
+    _set_cache('test_key', None)
+    result = _get_cache_key('test_key')
+    assert result is None
 
 
 @pytest.mark.unit
-def test_monitoring_dashboard_route_exists():
-    """Test monitoring dashboard route exists"""
-    import routes.monitoring as monitoring_module
-    import inspect
-    
-    source = inspect.getsource(monitoring_module)
-    assert '/monitoring' in source
+def test_cache_empty_dict():
+    """Test cache with empty dict"""
+    _set_cache('test_key', {})
+    result = _get_cache_key('test_key')
+    assert result == {}
 
 
 @pytest.mark.unit
-def test_monitoring_stats_route_exists():
-    """Test monitoring stats route exists"""
-    import routes.monitoring as monitoring_module
-    import inspect
-    
-    source = inspect.getsource(monitoring_module)
-    assert '/api/monitoring/stats' in source
-
-
-@pytest.mark.unit
-def test_monitoring_logs_route_exists():
-    """Test monitoring logs route exists"""
-    import routes.monitoring as monitoring_module
-    import inspect
-    
-    source = inspect.getsource(monitoring_module)
-    assert '/api/monitoring/logs' in source
-
-
-@pytest.mark.unit
-def test_monitoring_health_route_exists():
-    """Test monitoring health route exists"""
-    import routes.monitoring as monitoring_module
-    import inspect
-    
-    source = inspect.getsource(monitoring_module)
-    assert '/api/monitoring/health' in source
-
-
-@pytest.mark.unit
-def test_monitoring_alerts_config_route_exists():
-    """Test monitoring alerts config route exists"""
-    import routes.monitoring as monitoring_module
-    import inspect
-    
-    source = inspect.getsource(monitoring_module)
-    assert '/api/monitoring/alerts/config' in source
-
-
-@pytest.mark.unit
-def test_monitoring_error_handling_structure():
-    """Test monitoring routes have error handling"""
-    import routes.monitoring as monitoring_module
-    import inspect
-    
-    # Check that the module has error handling patterns
-    source = inspect.getsource(monitoring_module)
-    assert 'except Exception' in source or 'try:' in source
-
-
-@pytest.mark.unit
-def test_monitoring_session_usage():
-    """Test monitoring routes use session"""
-    import routes.monitoring as monitoring_module
-    import inspect
-    
-    source = inspect.getsource(monitoring_module)
-    assert 'session' in source
-
-
-@pytest.mark.unit
-def test_monitoring_json_responses():
-    """Test monitoring routes use jsonify"""
-    import routes.monitoring as monitoring_module
-    import inspect
-    
-    source = inspect.getsource(monitoring_module)
-    assert 'jsonify' in source
-
-
-@pytest.mark.unit
-def test_monitoring_file_operations():
-    """Test monitoring routes use file operations"""
-    import routes.monitoring as monitoring_module
-    import inspect
-    
-    source = inspect.getsource(monitoring_module)
-    assert 'open' in source or 'os.path' in source
-
-
-@pytest.mark.unit
-def test_monitoring_log_analysis():
-    """Test monitoring routes analyze logs"""
-    import routes.monitoring as monitoring_module
-    import inspect
-    
-    source = inspect.getsource(monitoring_module)
-    assert 'ERROR' in source or 'WARNING' in source or 'CRITICAL' in source
-
-
-@pytest.mark.unit
-def test_monitoring_health_check():
-    """Test monitoring routes have health check"""
-    import routes.monitoring as monitoring_module
-    import inspect
-    
-    source = inspect.getsource(monitoring_module)
-    assert 'health' in source.lower()
-
-
-@pytest.mark.unit
-def test_monitoring_disk_usage():
-    """Test monitoring routes check disk usage"""
-    import routes.monitoring as monitoring_module
-    import inspect
-    
-    source = inspect.getsource(monitoring_module)
-    assert 'disk' in source.lower() or 'shutil' in source
-
-
-@pytest.mark.unit
-def test_monitoring_database_check():
-    """Test monitoring routes check database"""
-    import routes.monitoring as monitoring_module
-    import inspect
-    
-    source = inspect.getsource(monitoring_module)
-    assert 'database' in source.lower() or 'db' in source
-
-
-@pytest.mark.unit
-def test_monitoring_pagination():
-    """Test monitoring routes use pagination"""
-    import routes.monitoring as monitoring_module
-    import inspect
-    
-    source = inspect.getsource(monitoring_module)
-    assert 'lines' in source or 'page' in source
-
-
-@pytest.mark.unit
-def test_monitoring_filtering():
-    """Test monitoring routes use filtering"""
-    import routes.monitoring as monitoring_module
-    import inspect
-    
-    source = inspect.getsource(monitoring_module)
-    assert 'filter' in source.lower() or 'search' in source.lower()
-
-
-@pytest.mark.unit
-def test_monitoring_alerts():
-    """Test monitoring routes have alerts"""
-    import routes.monitoring as monitoring_module
-    import inspect
-    
-    source = inspect.getsource(monitoring_module)
-    assert 'alert' in source.lower()
-
-
-@pytest.mark.unit
-def test_monitoring_timestamp():
-    """Test monitoring routes use timestamp"""
-    import routes.monitoring as monitoring_module
-    import inspect
-    
-    source = inspect.getsource(monitoring_module)
-    assert 'timestamp' in source.lower() or 'datetime' in source
-
-
-@pytest.mark.unit
-def test_monitoring_components():
-    """Test monitoring routes check components"""
-    import routes.monitoring as monitoring_module
-    import inspect
-    
-    source = inspect.getsource(monitoring_module)
-    assert 'component' in source.lower()
-
-
-@pytest.mark.unit
-def test_monitoring_issues():
-    """Test monitoring routes track issues"""
-    import routes.monitoring as monitoring_module
-    import inspect
-    
-    source = inspect.getsource(monitoring_module)
-    assert 'issue' in source.lower()
+def test_cache_complex_value():
+    """Test cache with complex nested structure"""
+    complex_value = {
+        'nested': {
+            'list': [1, 2, 3],
+            'dict': {'a': 'b'}
+        }
+    }
+    _set_cache('test_key', complex_value)
+    result = _get_cache_key('test_key')
+    assert result == complex_value

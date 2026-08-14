@@ -47,9 +47,18 @@ def setup_logging(app=None, level=logging.INFO):
                 return True
         otel_filter = DummyTraceFilter()
 
-    # Create a formatter with OTel trace/span IDs
+    from utils.log_filters import PIIRedactionFilter, RequestContextFilter
+    request_context_filter = RequestContextFilter()
+    pii_filter = PIIRedactionFilter()
+
+    def _attach_common_filters(handler):
+        handler.addFilter(request_context_filter)
+        handler.addFilter(otel_filter)
+        handler.addFilter(pii_filter)
+
+    # Create a formatter with OTel trace/span IDs and request correlation
     formatter = logging.Formatter(
-        '%(asctime)s [%(otel_trace_id)s] %(levelname)s [%(name)s] %(message)s',
+        '%(asctime)s [%(otel_trace_id)s] [%(request_id)s] %(levelname)s [%(name)s] %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
 
@@ -62,7 +71,7 @@ def setup_logging(app=None, level=logging.INFO):
     )
     file_handler.setFormatter(formatter)
     file_handler.setLevel(level)
-    file_handler.addFilter(otel_filter)
+    _attach_common_filters(file_handler)
 
     # ERROR and CRITICAL log file handler (separate file)
     error_handler = RotatingFileHandler(
@@ -73,7 +82,7 @@ def setup_logging(app=None, level=logging.INFO):
     )
     error_handler.setFormatter(formatter)
     error_handler.setLevel(logging.ERROR)
-    error_handler.addFilter(otel_filter)
+    _attach_common_filters(error_handler)
 
     # SECURITY log file handler (separate file)
     security_handler = RotatingFileHandler(
@@ -93,11 +102,11 @@ def setup_logging(app=None, level=logging.INFO):
             return any(keyword in message for keyword in security_keywords)
     
     security_handler.addFilter(SecurityFilter())
-    security_handler.addFilter(otel_filter)
+    _attach_common_filters(security_handler)
 
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
-    console_handler.addFilter(otel_filter)
+    _attach_common_filters(console_handler)
 
     root_logger = logging.getLogger()
     root_logger.setLevel(level)
@@ -108,6 +117,8 @@ def setup_logging(app=None, level=logging.INFO):
     if STRUCTURED_LOGGING_AVAILABLE:
         try:
             json_main_handler, json_error_handler = setup_structured_logging(log_dir, level)
+            _attach_common_filters(json_main_handler)
+            _attach_common_filters(json_error_handler)
             root_logger.addHandler(json_main_handler)
             root_logger.addHandler(json_error_handler)
         except Exception as e:

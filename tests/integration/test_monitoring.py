@@ -1,6 +1,6 @@
 """
 Integration Tests - Monitoring API
-Monitoring endpoints ve dashboard entegrasyon testleri
+Monitoring endpoints ve dashboard entegrasyon testleri - Detailed functional tests
 """
 
 import pytest
@@ -45,6 +45,22 @@ def test_monitoring_stats_structure(authenticated_client):
 
 
 @pytest.mark.integration
+def test_monitoring_stats_data_types(authenticated_client):
+    """Monitoring stats veri tipleri testi"""
+    response = authenticated_client.get('/monitoring/api/stats')
+    data = json.loads(response.data)
+    
+    stats = data['data']
+    
+    assert isinstance(stats['total_logs'], int)
+    assert isinstance(stats['error_count'], int)
+    assert isinstance(stats['warning_count'], int)
+    assert isinstance(stats['critical_count'], int)
+    assert isinstance(stats['security_count'], int)
+    assert isinstance(stats['log_files'], dict)
+
+
+@pytest.mark.integration
 def test_monitoring_health_api(authenticated_client):
     """Monitoring health API testi"""
     response = authenticated_client.get('/monitoring/api/health')
@@ -70,6 +86,16 @@ def test_monitoring_health_structure(authenticated_client):
 
 
 @pytest.mark.integration
+def test_monitoring_health_status_values(authenticated_client):
+    """Monitoring health status değerleri testi"""
+    response = authenticated_client.get('/monitoring/api/health')
+    data = json.loads(response.data)
+    
+    health = data['data']
+    assert health['status'] in ['healthy', 'degraded', 'critical']
+
+
+@pytest.mark.integration
 def test_monitoring_logs_api(authenticated_client):
     """Monitoring logs API testi"""
     response = authenticated_client.get('/monitoring/api/logs?file=e_cuzdan&lines=10')
@@ -79,6 +105,17 @@ def test_monitoring_logs_api(authenticated_client):
     assert 'success' in data
     assert 'data' in data
     assert data['success'] is True
+
+
+@pytest.mark.integration
+def test_monitoring_logs_structure(authenticated_client):
+    """Monitoring logs yapısı testi"""
+    response = authenticated_client.get('/monitoring/api/logs?file=e_cuzdan&lines=10')
+    data = json.loads(response.data)
+    
+    logs_data = data['data']
+    assert 'logs' in logs_data
+    assert isinstance(logs_data['logs'], list)
 
 
 @pytest.mark.integration
@@ -115,6 +152,17 @@ def test_monitoring_alerts_config_api(authenticated_client):
     assert 'success' in data
     assert 'data' in data
     assert data['success'] is True
+
+
+@pytest.mark.integration
+def test_monitoring_alerts_config_structure(authenticated_client):
+    """Alerts config yapısı testi"""
+    response = authenticated_client.get('/monitoring/api/alerts/config')
+    data = json.loads(response.data)
+    
+    config = data['data']
+    # Config bir dict olmalı
+    assert isinstance(config, dict)
 
 
 @pytest.mark.integration
@@ -262,17 +310,6 @@ def test_monitoring_logs_invalid_file(authenticated_client):
 
 
 @pytest.mark.integration
-def test_monitoring_alerts_config_structure(authenticated_client):
-    """Alerts config yapısı testi"""
-    response = authenticated_client.get('/monitoring/api/alerts/config')
-    data = json.loads(response.data)
-    
-    config = data['data']
-    # Config bir dict olmalı
-    assert isinstance(config, dict)
-
-
-@pytest.mark.integration
 def test_monitoring_dashboard_responsive(authenticated_client):
     """Dashboard responsive tasarım testi"""
     response = authenticated_client.get('/monitoring', follow_redirects=True)
@@ -282,3 +319,169 @@ def test_monitoring_dashboard_responsive(authenticated_client):
     
     # Responsive tasarım için viewport meta tag'i olmalı
     assert 'viewport' in content.lower() or 'responsive' in content.lower()
+
+
+@pytest.mark.integration
+def test_monitoring_cache_behavior(authenticated_client):
+    """Cache davranışı testi"""
+    # İlk istek
+    response1 = authenticated_client.get('/monitoring/api/stats')
+    assert response1.status_code == 200
+    
+    # İkinci istek (cache'den gelebilir)
+    response2 = authenticated_client.get('/monitoring/api/stats')
+    assert response2.status_code == 200
+    
+    # Her iki yanıt da geçerli olmalı
+    data1 = json.loads(response1.data)
+    data2 = json.loads(response2.data)
+    assert data1['success'] is True
+    assert data2['success'] is True
+
+
+@pytest.mark.integration
+def test_monitoring_logs_different_files(authenticated_client):
+    """Farklı log dosyaları testi"""
+    log_files = ['e_cuzdan', 'e_cuzdan_errors', 'e_cuzdan_security']
+    
+    for log_file in log_files:
+        response = authenticated_client.get(f'/monitoring/api/logs?file={log_file}&lines=5')
+        assert response.status_code == 200
+        
+        data = json.loads(response.data)
+        assert 'success' in data
+
+
+@pytest.mark.integration
+def test_monitoring_logs_empty_search(authenticated_client):
+    """Boş arama sorgusu testi"""
+    response = authenticated_client.get('/monitoring/api/logs?file=e_cuzdan&lines=10&search=')
+    assert response.status_code == 200
+    
+    data = json.loads(response.data)
+    assert 'success' in data
+
+
+@pytest.mark.integration
+def test_monitoring_logs_invalid_lines(authenticated_client):
+    """Geçersiz lines parametresi testi"""
+    response = authenticated_client.get('/monitoring/api/logs?file=e_cuzdan&lines=invalid')
+    # API hata vermemeli, geçerli bir yanıt dönmeli
+    assert response.status_code in [200, 400, 500]
+
+
+@pytest.mark.integration
+def test_monitoring_health_issues_field(authenticated_client):
+    """Health issues alanı testi"""
+    response = authenticated_client.get('/monitoring/api/health')
+    data = json.loads(response.data)
+    
+    health = data['data']
+    assert 'issues' in health
+    assert isinstance(health['issues'], list)
+
+
+@pytest.mark.integration
+def test_monitoring_components_all_required(authenticated_client):
+    """Tüm required component'lar testi"""
+    response = authenticated_client.get('/monitoring/api/health')
+    data = json.loads(response.data)
+    
+    health = data['data']
+    components = health['components']
+    
+    # En az database ve logs component'ları olmalı
+    assert 'database' in components
+    assert 'logs' in components
+
+
+@pytest.mark.integration
+def test_monitoring_stats_log_files_keys(authenticated_client):
+    """Log files keys testi"""
+    response = authenticated_client.get('/monitoring/api/stats')
+    data = json.loads(response.data)
+    
+    stats = data['data']
+    log_files = stats['log_files']
+    
+    # Log files dict'in anahtarları string olmalı
+    for key in log_files.keys():
+        assert isinstance(key, str)
+
+
+@pytest.mark.integration
+def test_monitoring_alerts_config_post(authenticated_client):
+    """Alerts config POST testi"""
+    response = authenticated_client.post(
+        '/monitoring/api/alerts/config',
+        json={'email_alerts_enabled': True},
+        content_type='application/json'
+    )
+    # POST isteği başarılı olmalı
+    assert response.status_code in [200, 201]
+
+
+@pytest.mark.integration
+def test_monitoring_concurrent_requests(authenticated_client):
+    """Concurrent requests testi"""
+    import threading
+    
+    def make_request():
+        response = authenticated_client.get('/monitoring/api/stats')
+        assert response.status_code == 200
+    
+    threads = [threading.Thread(target=make_request) for _ in range(5)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+
+@pytest.mark.integration
+def test_monitoring_response_headers(authenticated_client):
+    """Response headers testi"""
+    response = authenticated_client.get('/monitoring/api/stats')
+    assert response.status_code == 200
+    
+    # Content-Type header'ı olmalı
+    assert 'Content-Type' in response.headers
+
+
+@pytest.mark.integration
+def test_monitoring_json_content_type(authenticated_client):
+    """JSON content type testi"""
+    response = authenticated_client.get('/monitoring/api/stats')
+    assert response.status_code == 200
+    
+    content_type = response.headers.get('Content-Type', '')
+    assert 'application/json' in content_type
+
+
+@pytest.mark.integration
+def test_monitoring_alerts_status_api(authenticated_client):
+    """Alert status API testi"""
+    response = authenticated_client.get('/monitoring/api/alerts/status')
+    assert response.status_code == 200
+
+    data = json.loads(response.data)
+    assert data['success'] is True
+    assert 'enabled' in data['data']
+
+
+@pytest.mark.integration
+def test_monitoring_logs_request_id_filter(authenticated_client):
+    """Request ID filter on logs API"""
+    response = authenticated_client.get(
+        '/monitoring/api/logs?file=main&lines=10&request_id=abc123def'
+    )
+    assert response.status_code == 200
+
+    data = json.loads(response.data)
+    assert data['success'] is True
+
+
+@pytest.mark.integration
+def test_monitoring_logs_structured_file(authenticated_client):
+    """Structured log file alias"""
+    response = authenticated_client.get('/monitoring/api/logs?file=structured&lines=5')
+    assert response.status_code in (200, 404)

@@ -1,5 +1,6 @@
 """Factory for creating demo recurring plans."""
 
+import logging
 import random
 from decimal import Decimal
 from typing import Dict, Any, Optional
@@ -8,6 +9,8 @@ from domain.categories.services.category_service import CategoryService
 from domain.demo.config_loader import DemoDataConfigLoader
 from models import RecurringPlan
 from shared.decimal_precision import to_decimal
+
+logger = logging.getLogger(__name__)
 
 
 class RecurringPlanFactory:
@@ -125,8 +128,6 @@ class RecurringPlanFactory:
             amount = base_amount * (1 + random.uniform(-variation_percent, variation_percent))
         else:
             amount = 0
-            import logging
-            logger = logging.getLogger(__name__)
             logger.warning(f"No amount rule found for template '{template_name}'")
         
         # Format name and note

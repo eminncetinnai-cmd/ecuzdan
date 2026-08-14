@@ -17,7 +17,13 @@ Formatters should include these fields, e.g.:
 
 import logging
 
-from opentelemetry import trace
+try:
+    from opentelemetry import trace
+
+    _OTEL_AVAILABLE = True
+except ImportError:  # pragma: no cover (environment-dependent)
+    trace = None  # type: ignore[assignment]
+    _OTEL_AVAILABLE = False
 
 
 class TraceContextFilter(logging.Filter):
@@ -27,6 +33,11 @@ class TraceContextFilter(logging.Filter):
     _ZERO_SPAN = "0" * 16
 
     def filter(self, record: logging.LogRecord) -> bool:  # noqa: A003
+        if not _OTEL_AVAILABLE:  # pragma: no cover
+            record.otel_trace_id = self._ZERO_TRACE
+            record.otel_span_id = self._ZERO_SPAN
+            return True
+
         span = trace.get_current_span()
         ctx = span.get_span_context()
 

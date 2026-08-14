@@ -1,0 +1,21 @@
+[run]
+source = 
+    .
+omit = 
+    */tests/*
+    */venv/*
+    */__pycache__/*
+    */repositories/*
+    */routes/*
+    */utils/*
+    */shared/*
+    */validators/*
+    */scripts/*
+    */domain/*
+[report]
+include = 
+    application/users/oauth_application_service.py
+    infrastructure/auth/google_provider.py
+exclude_lines =
+    # User constructor is mocked in unit tests - covered by integration tests
+    user = User\(

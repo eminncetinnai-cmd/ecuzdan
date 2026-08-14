@@ -1,4 +1,4 @@
-"""
+﻿"""
 Final Integration Test - SRE & QA Verification
 Tests critical components 3 times consecutively to ensure stability
 """
@@ -13,6 +13,7 @@ from engines.analysis_engine import AnalysisEngine, get_analysis_engine
 from market_data_service import get_macro_economic_data
 
 
+@pytest.mark.slow
 class TestFinalIntegration:
     """Final integration test for production readiness verification"""
 
@@ -147,3 +148,4 @@ class TestFinalIntegration:
 
 if __name__ == '__main__':
     pytest.main([__file__, '-v', '-s'])
+

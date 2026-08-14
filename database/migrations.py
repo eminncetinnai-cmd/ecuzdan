@@ -185,6 +185,54 @@ def _ensure_schema():
                 conn.execute(text(f'ALTER TABLE "{table}" ADD COLUMN base_currency VARCHAR(3)'))
             logger.info("User tablosuna base_currency sütunu eklendi")
 
+    # User tablosu için email alanı (Faz 22 - OAuth Sign-up/Sign-in)
+    if 'user' in inspector.get_table_names():
+        cols = {c['name'] for c in inspector.get_columns('user')}
+        if 'email' not in cols:
+            table = User.__tablename__
+            with db.engine.begin() as conn:
+                conn.execute(text(f'ALTER TABLE "{table}" ADD COLUMN email VARCHAR(100) UNIQUE'))
+                # Create index for email
+                conn.execute(text(f'CREATE INDEX IF NOT EXISTS idx_user_email ON "{table}" (email)'))
+            logger.info("User tablosuna email sütunu eklendi")
+
+    # User tablosu için kişisel bilgi alanları (Faz 23 - User Profile Enhancement)
+    if 'user' in inspector.get_table_names():
+        cols = {c['name'] for c in inspector.get_columns('user')}
+        personal_info_columns = {
+            'gender': 'VARCHAR(10)',
+            'birthdate': 'DATE',
+            'country': 'VARCHAR(50)',
+            'city': 'VARCHAR(50)',
+            'phone': 'VARCHAR(20)',
+        }
+        table = User.__tablename__
+        with db.engine.begin() as conn:
+            for col_name, col_def in personal_info_columns.items():
+                if col_name not in cols:
+                    try:
+                        conn.execute(text(f'ALTER TABLE "{table}" ADD COLUMN {col_name} {col_def}'))
+                        logger.info(f"User tablosuna kişisel bilgi sütunu eklendi: {col_name}")
+                    except Exception as e:
+                        logger.warning(f"User kişisel bilgi sütunu ekleme hatası {col_name}: {e}")
+
+    # User tablosu için özel kod alanları (Faz 24 - Special Code System)
+    if 'user' in inspector.get_table_names():
+        cols = {c['name'] for c in inspector.get_columns('user')}
+        special_code_columns = {
+            'special_code': 'VARCHAR(50)',
+            'special_code_used_at': 'DATETIME',
+        }
+        table = User.__tablename__
+        with db.engine.begin() as conn:
+            for col_name, col_def in special_code_columns.items():
+                if col_name not in cols:
+                    try:
+                        conn.execute(text(f'ALTER TABLE "{table}" ADD COLUMN {col_name} {col_def}'))
+                        logger.info(f"User tablosuna özel kod sütunu eklendi: {col_name}")
+                    except Exception as e:
+                        logger.warning(f"User özel kod sütunu ekleme hatası {col_name}: {e}")
+
     # User tablosu için OAuth alanları (Faz 11 - Authentication Provider Framework)
     if 'user' in inspector.get_table_names():
         cols = {c['name'] for c in inspector.get_columns('user')}

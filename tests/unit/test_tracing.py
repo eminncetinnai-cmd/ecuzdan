@@ -7,6 +7,11 @@ import pytest
 import os
 from unittest.mock import Mock, patch, MagicMock
 
+pytestmark = pytest.mark.skipif(
+    os.getenv('OTEL_ENABLED', '').lower() not in ('1', 'true', 'yes', 'on'),
+    reason='OTEL_ENABLED is not active',
+)
+
 
 @pytest.mark.unit
 def test_tracing_module_imports():
@@ -34,6 +39,7 @@ def test_tracing_module_structure():
 
 
 @pytest.mark.unit
+@pytest.mark.skipif(os.getenv('OTEL_ENABLED', '').lower() not in ('1', 'true', 'yes', 'on'), reason='OTEL_ENABLED is not active')
 def test_setup_tracing_initial():
     """Test setup_tracing initial call"""
     try:
@@ -61,6 +67,7 @@ def test_setup_tracing_initial():
 
 
 @pytest.mark.unit
+@pytest.mark.skipif(os.getenv('OTEL_ENABLED', '').lower() not in ('1', 'true', 'yes', 'on'), reason='OTEL_ENABLED is not active')
 def test_setup_tracing_subsequent_call():
     """Test setup_tracing returns existing provider on subsequent calls"""
     try:
@@ -81,6 +88,7 @@ def test_setup_tracing_subsequent_call():
 
 
 @pytest.mark.unit
+@pytest.mark.skipif(os.getenv('OTEL_ENABLED', '').lower() not in ('1', 'true', 'yes', 'on'), reason='OTEL_ENABLED is not active')
 def test_setup_tracing_with_console():
     """Test setup_tracing with console flag"""
     try:
@@ -156,6 +164,7 @@ def test_get_tracer():
 
 
 @pytest.mark.unit
+@pytest.mark.skipif(os.getenv('OTEL_ENABLED', '').lower() not in ('1', 'true', 'yes', 'on'), reason='OTEL_ENABLED is not active')
 def test_setup_tracing_default_service_name():
     """Test setup_tracing with default service name"""
     try:
@@ -183,6 +192,7 @@ def test_setup_tracing_default_service_name():
 
 
 @pytest.mark.unit
+@pytest.mark.skipif(os.getenv('OTEL_ENABLED', '').lower() not in ('1', 'true', 'yes', 'on'), reason='OTEL_ENABLED is not active')
 def test_setup_tracing_with_otlp_endpoint():
     """Test setup_tracing with OTLP endpoint"""
     try:
@@ -252,6 +262,7 @@ def test_setup_tracing_otlp_import_error():
 
 
 @pytest.mark.unit
+@pytest.mark.skipif(os.getenv('OTEL_ENABLED', '').lower() not in ('1', 'true', 'yes', 'on'), reason='OTEL_ENABLED is not active')
 def test_setup_tracing_console_env_var():
     """Test setup_tracing with OTEL_CONSOLE_EXPORTER env var"""
     try:
@@ -278,3 +289,5 @@ def test_setup_tracing_console_env_var():
                                 assert result == mock_provider
     except ImportError:
         pytest.skip("opentelemetry not installed")
+
+

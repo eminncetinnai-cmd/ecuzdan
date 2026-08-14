@@ -1,0 +1,52 @@
+# Dev-only centralized logging stack (Faz 4B - Loki + Grafana + Promtail)
+#
+# Usage:
+#   docker compose -f docker-compose.logging.yml up -d
+#
+# Grafana: http://localhost:3000  (admin/admin)
+# Loki API: http://localhost:3100
+#
+# Promtail tails local ./logs/*.log and ships to Loki.
+
+services:
+  loki:
+    image: grafana/loki:2.9.6
+    container_name: e-cuzdan-loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - "3100:3100"
+    networks:
+      - observability
+
+  grafana:
+    image: grafana/grafana:10.4.5
+    container_name: e-cuzdan-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    ports:
+      - "3000:3000"
+    depends_on:
+      - loki
+    networks:
+      - observability
+
+  promtail:
+    image: grafana/promtail:2.9.6
+    container_name: e-cuzdan-promtail
+    restart: unless-stopped
+    command: -config.file=/etc/promtail/config.yml
+    volumes:
+      - ./observability/promtail-config.yml:/etc/promtail/config.yml:ro
+      - ./logs:/var/log/e_cuzdan:ro
+    depends_on:
+      - loki
+    networks:
+      - observability
+
+networks:
+  observability:
+    driver: bridge
+

@@ -15,9 +15,25 @@ class AuthService:
         self.repository = repository
 
     def authenticate(self, username, password):
+        """Authenticate user by username or email
+
+        Args:
+            username: Username or email address
+            password: Password to verify
+
+        Returns:
+            User object if authentication successful, None otherwise
+        """
+        # Try username first
         user = self.repository.find_user_by_username(username)
         if user and user.password and check_password_hash(user.password, password):
             return user
+
+        # Try email if username not found
+        user = self.repository.find_user_by_email(username)
+        if user and user.password and check_password_hash(user.password, password):
+            return user
+
         return None
 
     def authenticate_oauth(self, provider, oauth_id, email, avatar_url, email_verified):
@@ -91,6 +107,8 @@ class AuthService:
         self._validate_registration(full_name, email, password, confirm_password)
         if self.repository.username_exists(email):
             raise ValueError("Bu e-posta adresi zaten kullanımda.")
+        if self.repository.email_exists(email):
+            raise ValueError("Bu e-posta adresi zaten kullanımda.")
 
         tenant_id = email.replace('@', '_').replace('.', '_')
         if self.repository.find_tenant(tenant_id):
@@ -100,6 +118,7 @@ class AuthService:
         self.repository.session.flush()
         user = self.repository.add_user(
             username=email,
+            email=email,
             password=generate_password_hash(password),
             role='tenant_admin',   # Her yeni kayıt kendi tenant'ının admini olur
             tenant_id=tenant.id,

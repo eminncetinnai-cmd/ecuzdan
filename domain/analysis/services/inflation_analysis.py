@@ -89,7 +89,7 @@ class InflationAnalyzer:
         return {
             'initial_amount': initial_amount,
             'final_amount': final_amount,
-            'purchasing_power_loss': purchasing_power_loss_loss,
+            'purchasing_power_loss': purchasing_power_loss,
             'purchasing_power_loss_pct': purchasing_power_loss_pct,
             'years': years,
             'inflation_rate': inflation_rate

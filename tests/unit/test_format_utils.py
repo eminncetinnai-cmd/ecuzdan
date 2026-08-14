@@ -266,15 +266,25 @@ def test_parse_date_input_invalid_month():
 
 
 @pytest.mark.unit
+@pytest.mark.skip(reason="Date validation happens after successful parsing, edge case behavior varies by format")
 def test_parse_date_input_too_early():
-    """Test parse_date_input with date before 1990 - skipped due to format parsing priority"""
-    pytest.skip("Date validation happens after successful parsing, which may not occur for all formats")
+    """Test parse_date_input with date before 1990"""
+    try:
+        parse_date_input("01/01/1989")
+        assert False, "Should raise ValueError"
+    except ValueError as e:
+        assert "1990" in str(e)
 
 
 @pytest.mark.unit
+@pytest.mark.skip(reason="Date validation happens after successful parsing, edge case behavior varies by format")
 def test_parse_date_input_too_late():
-    """Test parse_date_input with date after 2100 - skipped due to format parsing priority"""
-    pytest.skip("Date validation happens after successful parsing, which may not occur for all formats")
+    """Test parse_date_input with date after 2100"""
+    try:
+        parse_date_input("01/01/2101")
+        assert False, "Should raise ValueError"
+    except ValueError as e:
+        assert "2100" in str(e)
 
 
 @pytest.mark.unit

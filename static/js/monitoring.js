@@ -24,6 +24,62 @@ function updateLastUpdated() {
 }
 
 /**
+ * Load alert status from API
+ */
+async function loadAlertStatus() {
+    try {
+        const response = await fetch('/monitoring/api/alerts/status', {
+            credentials: 'same-origin'
+        });
+        if (!response.ok) {
+            return;
+        }
+        const result = await response.json();
+        if (result.success && result.data) {
+            renderAlertStatus(result.data);
+        }
+    } catch (error) {
+        console.error('Alert status yüklenemedi:', error);
+    }
+}
+
+/**
+ * Render alert status panel
+ */
+function renderAlertStatus(status) {
+    const el = document.getElementById('alert-status');
+    if (!el) return;
+
+    if (!status.enabled) {
+        el.innerHTML = '<div class="text-slate-500">Log uyarıları kapalı. Aktifleştirmek için <code>LOG_ALERTS_ENABLED=true</code> ayarlayın.</div>';
+        return;
+    }
+
+    const counts = status.counts || {};
+    const breached = status.breached || {};
+    const errorCount = counts.ERROR || 0;
+    const criticalCount = counts.CRITICAL || 0;
+    const thresholds = status.thresholds || {};
+
+    el.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="stat-card ${breached.critical ? 'critical' : ''}">
+                <div class="stat-label">CRITICAL (son ${thresholds.window_minutes || 1} dk)</div>
+                <div class="stat-value">${criticalCount} / ${thresholds.critical || 1}</div>
+            </div>
+            <div class="stat-card ${breached.error ? 'error' : ''}">
+                <div class="stat-label">ERROR (son ${thresholds.window_minutes || 1} dk)</div>
+                <div class="stat-value">${errorCount} / ${thresholds.error || 10}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Durum</div>
+                <div class="stat-value text-base">${breached.critical || breached.error ? 'Eşik Aşıldı' : 'Normal'}</div>
+            </div>
+        </div>
+    `;
+}
+
+/**
  * Load health status from API
  */
 async function loadHealthStatus() {
@@ -188,11 +244,15 @@ async function loadLogs() {
         const levelSelect = document.getElementById('log-level-select');
         const presetSelect = document.getElementById('log-preset-select');
         const searchInput = document.getElementById('log-search-input');
+        const requestIdInput = document.getElementById('log-request-id-input');
+        const traceIdInput = document.getElementById('log-trace-id-input');
         const linesInput = document.getElementById('log-lines-input');
         
         const file_type = fileSelect.value;
         let level_filter = levelSelect.value;
         const search_term = searchInput.value;
+        const request_id = requestIdInput ? requestIdInput.value : '';
+        const trace_id = traceIdInput ? traceIdInput.value : '';
         const line_count = parseInt(linesInput.value) || 100;
         
         // Handle preset filters
@@ -211,6 +271,8 @@ async function loadLogs() {
         
         if (level_filter) params.append('level', level_filter);
         if (search_term) params.append('search', search_term);
+        if (request_id) params.append('request_id', request_id);
+        if (trace_id) params.append('trace_id', trace_id);
         
         const response = await fetch(`/monitoring/api/logs?${params}`, {
             credentials: 'same-origin'
@@ -225,8 +287,12 @@ async function loadLogs() {
         console.log('[Monitoring] Logs data:', result);
         
         if (result.success && result.data) {
-            renderLogs(result.data.logs);
-            loadedLogs = result.data.logs;
+            if (result.data.entries && result.data.entries.length) {
+                renderLogEntries(result.data.entries);
+            } else {
+                renderLogs(result.data.logs || []);
+            }
+            loadedLogs = result.data.logs || [];
         } else {
             console.error('Logs response error:', result.error);
         }
@@ -487,7 +553,9 @@ async function refreshAll() {
     updateLastUpdated();
     await Promise.all([
         loadHealthStatus(),
-        loadStats()
+        loadStats(),
+        loadAlertStatus(),
+        loadTimeline()
     ]);
 }
 

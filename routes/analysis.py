@@ -6,7 +6,6 @@ from flask import jsonify, render_template, request, session
 
 from bootstrap.container import get_container
 from utils.auth_helpers import login_required
-from utils.decorators import require_role
 
 logger = logging.getLogger(__name__)
 

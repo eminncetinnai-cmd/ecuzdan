@@ -1,4 +1,4 @@
-"""
+﻿"""
 Standart Kategori Seed Scripti
 Bu script standart kategorileri veritabanına ekler.
 Kategoriler tenant_id=None ile sistem genelinde oluşturulur (silinemez).
@@ -82,7 +82,7 @@ def seed_standard_categories():
         print(f"\n✅ İşlem tamamlandı!")
         print(f"   Yeni eklenen: {added_count}")
         print(f"   Güncellenen: {updated_count}")
-        print(f"   Toplam standart kategori: {len(standard_categories)}")
+        print(f"   Toplam standart kategori: {len(STANDARD_CATEGORIES)}")
     except Exception as e:
         db.session.rollback()
         print(f"\n❌ Hata oluştu: {e}")
@@ -95,3 +95,4 @@ if __name__ == '__main__':
     with app.app_context():
         print("Standart kategoriler veritabanına ekleniyor...\n")
         seed_standard_categories()
+
