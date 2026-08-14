@@ -1,6 +1,6 @@
 """Repository for in-app notifications (Faz 21)."""
 
-from models import Notification
+from models import Notification, utcnow_naive
 
 from .base import BaseRepository
 
@@ -51,12 +51,11 @@ class NotificationRepository(BaseRepository):
 
     def delete_expired(self, user_id):
         """Delete expired notifications for user."""
-        from datetime import datetime
         return (
             self.session.query(Notification)
             .filter(
                 Notification.user_id == user_id,
-                Notification.expires_at < datetime.utcnow()
+                Notification.expires_at < utcnow_naive()
             )
             .delete(synchronize_session=False)
         )

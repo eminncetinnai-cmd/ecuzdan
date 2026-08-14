@@ -1,8 +1,9 @@
 import os
 from datetime import datetime, timezone
 
+from sqlalchemy import JSON, Numeric
+
 from shared.db import db
-from sqlalchemy import Numeric, JSON
 
 
 def utcnow_naive():
@@ -551,27 +552,27 @@ class Notification(db.Model):
     severity = db.Column(db.String(10), default='info', nullable=False)
     priority = db.Column(db.String(10), default='normal', nullable=False)
     delivery_status = db.Column(db.String(10), default='pending', nullable=False)
-    
+
     title = db.Column(db.String(120), nullable=False)
     body = db.Column(db.String(400), nullable=True)
     link = db.Column(db.String(200), nullable=True)
-    
+
     # Action buttons (JSON): [{"label": "View", "action": "link", "value": "/transactions"}]
     actions = db.Column(db.JSON, nullable=True)
 
     dedupe_key = db.Column(db.String(160), nullable=False)
     is_read = db.Column(db.Boolean, default=False, nullable=False)
-    
+
     # Delivery tracking
     sent_at = db.Column(db.DateTime, nullable=True)
     delivered_at = db.Column(db.DateTime, nullable=True)
     read_at = db.Column(db.DateTime, nullable=True)
     failed_at = db.Column(db.DateTime, nullable=True)
     failure_reason = db.Column(db.String(200), nullable=True)
-    
+
     # Expiration
     expires_at = db.Column(db.DateTime, nullable=True)
-    
+
     created_at = db.Column(db.DateTime, default=utcnow_naive, nullable=False)
 
     def __repr__(self):
@@ -581,32 +582,27 @@ class Notification(db.Model):
         """Check if notification is expired."""
         if self.expires_at is None:
             return False
-        from datetime import datetime
-        return datetime.utcnow() > self.expires_at
+        return utcnow_naive() > self.expires_at
 
     def mark_sent(self):
         """Mark notification as sent."""
-        from datetime import datetime
-        self.sent_at = datetime.utcnow()
+        self.sent_at = utcnow_naive()
         self.delivery_status = 'sent'
 
     def mark_delivered(self):
         """Mark notification as delivered."""
-        from datetime import datetime
-        self.delivered_at = datetime.utcnow()
+        self.delivered_at = utcnow_naive()
         self.delivery_status = 'delivered'
 
     def mark_read(self):
         """Mark notification as read."""
-        from datetime import datetime
-        self.read_at = datetime.utcnow()
+        self.read_at = utcnow_naive()
         self.is_read = True
         self.delivery_status = 'read'
 
     def mark_failed(self, reason):
         """Mark notification as failed."""
-        from datetime import datetime
-        self.failed_at = datetime.utcnow()
+        self.failed_at = utcnow_naive()
         self.failure_reason = reason
         self.delivery_status = 'failed'
 
@@ -840,7 +836,7 @@ class MonitoringAlertConfig(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
     tenant_id = db.Column(db.String(50), db.ForeignKey('tenant.id'), nullable=True, index=True)
-    
+
     # Email alert settings
     email_alerts_enabled = db.Column(db.Boolean, default=False, nullable=False)
     smtp_server = db.Column(db.String(255), nullable=True)
@@ -849,10 +845,10 @@ class MonitoringAlertConfig(db.Model):
     smtp_password = db.Column(db.String(255), nullable=True)
     from_email = db.Column(db.String(255), nullable=True)
     to_emails = db.Column(JSON, nullable=True)  # List of email addresses
-    
+
     # Alert thresholds
     alert_thresholds = db.Column(JSON, nullable=True)  # JSON object with thresholds
-    
+
     # Timestamps
     created_at = db.Column(db.DateTime, default=utcnow_naive, nullable=False)
     updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive, nullable=False)
@@ -865,12 +861,12 @@ class MonitoringAlertConfig(db.Model):
 
 
 # Re-exports from domain models
-from domain.catalog.models.catalog_models import Category, AssetType, AssetSector
-from domain.portfolio.models.portfolio_models import Asset, AssetTransaction, AssetUpdate
+from domain.catalog.models.catalog_models import AssetSector, AssetType, Category
 from domain.ledger.models.ledger_models import Account, JournalEntry, LedgerLine
+from domain.portfolio.models.portfolio_models import Asset, AssetTransaction, AssetUpdate
+
 __all__ = ['Category', 'AssetType', 'AssetSector', 'Asset', 'AssetTransaction', 'AssetUpdate', 'Account', 'JournalEntry', 'LedgerLine']
 
-from infrastructure.database.models.outbox_model import OutboxMessageModel
 __all__.append('OutboxMessageModel')
 __all__.append('AuditLog')
 __all__.append('MonitoringAlertConfig')

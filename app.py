@@ -128,14 +128,6 @@ except ImportError:
 db.init_app(app)
 i18n.init_app(app)
 
-# Demo data configuration validation on startup
-try:
-    from domain.demo.startup_validation import validate_demo_data_config
-    with app.app_context():
-        if not validate_demo_data_config():
-            logger.warning("Demo data configuration validation failed. Demo data generation may not work correctly.")
-except Exception as e:
-    logger.warning(f"Demo data configuration validation error: {e}")
 
 @app.route('/healthz')
 def healthz():
@@ -150,6 +142,15 @@ try:
     init_database(app)
 except Exception as init_error:
     logger.exception("Database initialization did not complete successfully: %s", init_error)
+
+# Demo data configuration validation on startup
+try:
+    from domain.demo.startup_validation import validate_demo_data_config
+    with app.app_context():
+        if not validate_demo_data_config():
+            logger.warning("Demo data configuration validation failed. Demo data generation may not work correctly.")
+except Exception as e:
+    logger.warning(f"Demo data configuration validation error: {e}")
 
 register_routes(app)
 
@@ -167,7 +168,7 @@ if _limiter_instance is not None:
             )(login_view)
             app.view_functions['auth.login'] = decorated
             logger.info("Flask-Limiter: /login route'una 10/dk limit uygulandı.")
-        
+
         # Register endpoint'i için sıkı limit
         register_view = app.view_functions.get('auth.register')
         if register_view:
@@ -178,7 +179,7 @@ if _limiter_instance is not None:
             )(register_view)
             app.view_functions['auth.register'] = decorated
             logger.info("Flask-Limiter: /register route'una 5/dk limit uygulandı.")
-        
+
         # Password reset endpoint'i için sıkı limit
         reset_view = app.view_functions.get('auth.reset_password')
         if reset_view:
@@ -189,7 +190,7 @@ if _limiter_instance is not None:
             )(reset_view)
             app.view_functions['auth.reset_password'] = decorated
             logger.info("Flask-Limiter: /reset_password route'una 3/saat limit uygulandı.")
-        
+
         if app.config.get('TESTING', False):
             _limiter_instance.enabled = False
             logger.info("Flask-Limiter disabled in testing mode.")

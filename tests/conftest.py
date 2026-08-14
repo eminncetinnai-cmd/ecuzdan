@@ -42,12 +42,16 @@ def app():
     with app.app_context():
         # Manually create the in-memory engine and override the default engine bind
         import sqlalchemy as sa
-        from sqlalchemy.pool import StaticPool
+        from sqlalchemy.pool import QueuePool
 
+        worker_id = os.environ.get('PYTEST_XDIST_WORKER', 'main')
+        db_path = Path(app.instance_path) / f'e_cuzdan_test_{worker_id}.db'
+        db_path.parent.mkdir(parents=True, exist_ok=True)
+        db_path.unlink(missing_ok=True)
         engine = sa.create_engine(
-            'sqlite://',
+            f'sqlite:///{db_path.as_posix()}',
             connect_args={'check_same_thread': False},
-            poolclass=StaticPool,
+            poolclass=QueuePool,
         )
         original_engines = dict(getattr(db, 'engines', {}))
 
@@ -63,8 +67,8 @@ def app():
             yield app
         finally:
             db.session.remove()
-            db.drop_all()
             engine.dispose()
+            db_path.unlink(missing_ok=True)
             if hasattr(db, 'engines'):
                 db.engines.clear()
                 db.engines.update(original_engines)
@@ -259,7 +263,7 @@ def create_test_user(username='testuser', role='kullanici', tenant_id='default')
     """Test kullanıcısı oluşturma yardımcısı"""
     from werkzeug.security import generate_password_hash
     from models import User
-    
+
     user = User(
         username=username,
         password=generate_password_hash('testpass'),
@@ -272,7 +276,7 @@ def create_test_user(username='testuser', role='kullanici', tenant_id='default')
 def create_test_category(name='Test Kategori', type='Gelir'):
     """Test kategorisi oluşturma yardımcısı"""
     from models import Category
-    
+
     category = Category(name=name, type=type)
     return category
 
@@ -280,7 +284,7 @@ def create_test_category(name='Test Kategori', type='Gelir'):
 def create_test_transaction(**kwargs):
     """Test işlemi oluşturma yardımcısı"""
     from models import Transaction
-    
+
     defaults = {
         'date': '2025-01-01',
         'category': 'Test',
@@ -290,7 +294,7 @@ def create_test_transaction(**kwargs):
         'status': 'Ödendi'
     }
     defaults.update(kwargs)
-    
+
     return Transaction(**defaults)
 
 

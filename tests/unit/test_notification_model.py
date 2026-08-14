@@ -3,9 +3,9 @@ Unit Tests - Notification Model
 Tests for Notification model methods and properties
 """
 
+from datetime import datetime, timedelta, timezone
+
 import pytest
-from datetime import datetime, timedelta
-from unittest.mock import Mock, patch
 
 from models import Notification
 
@@ -37,7 +37,7 @@ class TestNotificationModel:
         notification = Notification(
             category='budget',
             dedupe_key='test',
-            expires_at=datetime.utcnow() + timedelta(days=1)
+            expires_at=datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=1)
         )
         assert notification.is_expired() is False
 
@@ -46,7 +46,7 @@ class TestNotificationModel:
         notification = Notification(
             category='budget',
             dedupe_key='test',
-            expires_at=datetime.utcnow() - timedelta(days=1)
+            expires_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=1)
         )
         assert notification.is_expired() is True
 
@@ -58,7 +58,7 @@ class TestNotificationModel:
             delivery_status='pending'
         )
         notification.mark_sent()
-        
+
         assert notification.sent_at is not None
         assert notification.delivery_status == 'sent'
 
@@ -70,7 +70,7 @@ class TestNotificationModel:
             delivery_status='sent'
         )
         notification.mark_delivered()
-        
+
         assert notification.delivered_at is not None
         assert notification.delivery_status == 'delivered'
 
@@ -83,7 +83,7 @@ class TestNotificationModel:
             is_read=False
         )
         notification.mark_read()
-        
+
         assert notification.read_at is not None
         assert notification.is_read is True
         assert notification.delivery_status == 'read'
@@ -96,7 +96,7 @@ class TestNotificationModel:
             delivery_status='pending'
         )
         notification.mark_failed('Connection timeout')
-        
+
         assert notification.failed_at is not None
         assert notification.failure_reason == 'Connection timeout'
         assert notification.delivery_status == 'failed'
@@ -125,7 +125,7 @@ class TestNotificationModel:
             is_read=False,
             dedupe_key='test'
         )
-        
+
         assert notification.severity == 'info'
         assert notification.priority == 'normal'
         assert notification.delivery_status == 'pending'
@@ -144,7 +144,7 @@ class TestNotificationModel:
             dedupe_key='test',
             actions=actions
         )
-        
+
         assert notification.actions == actions
 
     def test_category_values(self):

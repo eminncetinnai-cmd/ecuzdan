@@ -191,3 +191,15 @@ Seed ve regresyon doğrulaması: Seed scriptindeki NameError düzeltildi ve 24 s
 CI kalite kapıları: pytest-timeout hem CI kurulumuna hem requirements.txt dosyasına eklendi. Non-slow testler 180 saniye, slow testler 300 saniye timeout ile ayrı katmanlarda çalışır. İş seviyesi süre sınırı 30 dakikadır. OpenTelemetry kurulmadığında tracing testleri açıkça skip edilir.
 
 Operasyonel sınırlar ve kabul kararı: Rate-limit depolaması mevcut yapılandırmada bellek içidir; çoklu worker veya yatay üretimde RATELIMIT_STORAGE_URI değerinin Redis gibi paylaşımlı bir depoya alınması gerekir. EVDS ve OpenTelemetry opsiyoneldir. Kritik güvenlik, test güvenilirliği, schema sağlığı, rate limiting ve CI kalite kapıları için kabul kriterleri karşılanmıştır.
+
+## v2.2 KontrollÃ¼ Log ve Test Ä°zolasyonu GeliÅŸtirmeleri
+
+Bu sÃ¼rÃ¼mde mevcut mimari korunarak fail-open structured logging contract gÃ¼Ã§lendirildi. StructuredLogger.exception() artÄ±k gerÃ§ek exc_info bilgisini logging katmanÄ±na iletir ve sink yazma hatalarÄ±nÄ±n uygulama akÄ±ÅŸÄ±na sÄ±zmadÄ±ÄŸÄ± iki regresyon testiyle doÄŸrulanÄ±r.
+
+Demo veri Ã¼retimindeki SQLAlchemy legacy Query.get() Ã§aÄŸrÄ±larÄ± db.session.get() ile yenilendi. Yeni asset kaydÄ±ndan hemen sonra db.session.flush() uygulanarak primary key oluÅŸmadan valuation sorgulanmasÄ± engellendi. Notification repository ve model katmanÄ±ndaki deprecated datetime.utcnow() kullanÄ±mlarÄ± mevcut utcnow_naive() sÃ¶zleÅŸmesine taÅŸÄ±ndÄ±.
+
+Startup sÄ±rasÄ± dÃ¼zeltildi: init_database(app) tamamlandÄ±ktan sonra demo data validation Ã§alÄ±ÅŸÄ±yor. BÃ¶ylece schema hazÄ±r olmadan category tablosuna eriÅŸilmesi ve baÅŸlangÄ±Ã§ warningâ€™i oluÅŸmasÄ± engellendi. Test fixtureâ€™Ä± xdist/thread yarÄ±ÅŸlarÄ±nÄ± Ã¶nlemek iÃ§in worker baÅŸÄ±na dosya tabanlÄ± SQLite DB, QueuePool, check_same_thread=False ve teardownâ€™da dispose/dosya temizliÄŸi kullanÄ±yor. CI non-slow komutunda xdist benchmark warningâ€™ini Ã¶nlemek iÃ§in --benchmark-disable eklendi.
+
+Final doÄŸrulama kapÄ±larÄ±: kritik route/HTTP/CSRF/demo paketi **38 passed**, coverage **%31,32** ve minimum eÅŸik **%25**; monitoring/login yarÄ±ÅŸ kapsamÄ± **62 passed**; tam non-slow suite -W error --benchmark-disable ile **2.698 passed, 151 skipped**. pip check, syntax compilation, diff whitespace kontrolÃ¼ ve deÄŸiÅŸen dosyalardaki gÃ¼venli Ruff kontrolleri baÅŸarÄ±lÄ±dÄ±r. App/models iÃ§indeki E402/I001/F811 bulgularÄ± Ã¶nceki commitâ€™te de mevcut olan yapÄ±sal import borcudur ve bu kapsamda mimariyi bozacak ÅŸekilde yeniden dÃ¼zenlenmemiÅŸtir.
+
+AyrÄ±ntÄ±lÄ± 5N1K kÃ¶k neden kaydÄ±, final teslimat ekindeki RCA raporunda tutulmuÅŸtur. Ãœretim rate-limit storage ve veritabanÄ± davranÄ±ÅŸÄ± deÄŸiÅŸtirilmemiÅŸtir; dosya tabanlÄ± SQLite izolasyonu yalnÄ±zca test fixtureâ€™Ä±na aittir.
