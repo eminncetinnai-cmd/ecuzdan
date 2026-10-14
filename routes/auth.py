@@ -382,6 +382,44 @@ def register_auth_routes(bp):
                     flash('OAuth oturumu geçersiz. Lütfen tekrar deneyin.', 'error')
                     return redirect(url_for('auth.login'))
 
+            # If user already exists by email (e.g. preexisting user account),
+            # auto-link OAuth and log in directly instead of prompting for sign-up
+            email = oauth_info.get('email')
+            if email:
+                user_repo = UserRepository()
+                existing_user = user_repo.find_user_by_email(email)
+                if existing_user:
+                    logger.info(f"Existing user found for email {mask_email(email)} during oauth-signup. Auto-linking and logging in directly.")
+                    if not existing_user.oauth_id and oauth_info.get('provider_id'):
+                        existing_user.oauth_id = oauth_info.get('provider_id')
+                    if not existing_user.auth_provider or existing_user.auth_provider == 'LOCAL':
+                        existing_user.auth_provider = (oauth_info.get('provider') or 'GOOGLE').upper()
+                    if oauth_info.get('avatar_url') and not existing_user.profile_image:
+                        from utils.profile_image import download_profile_image
+                        profile_image_path = download_profile_image(oauth_info['avatar_url'])
+                        if profile_image_path:
+                            existing_user.profile_image = profile_image_path
+
+                    existing_user.last_login_at = datetime.now()
+                    from shared.db import db
+                    db.session.commit()
+
+                    session.clear()
+                    session.permanent = False
+                    session['user_id'] = existing_user.id
+                    session['username'] = existing_user.username
+                    session['lang'] = existing_user.language
+                    session['csrf_token'] = secrets.token_hex(16)
+                    session['app_boot_id'] = current_app.config.get('APP_BOOT_ID')
+                    session['session_created_at'] = datetime.now().isoformat()
+                    session['session_id'] = secrets.token_hex(32)
+                    session['auth_provider'] = existing_user.auth_provider
+
+                    auth_service.record_session(existing_user, session['session_id'])
+                    session.pop('oauth_signup_info', None)
+                    flash('Google ile giriş başarılı!', 'success')
+                    return redirect(url_for('dashboard.index'))
+
             if request.method == 'POST':
                 logger.info("[OAuthSignup] Form submission started")
                 username = request.form.get('username', '').strip()

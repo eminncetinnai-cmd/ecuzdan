@@ -27,8 +27,8 @@
         body {
             font-family: 'Outfit', sans-serif;
             background: var(--night);
-            color: var(--c, var(--color-white, #ffffff)f);
-            overflow: hidden;
+            color: var(--color-white);
+            overflow-y: auto;
         }
 
         #particle-canvas {
@@ -87,12 +87,12 @@
             border-radius: var(--border-radius-14, 14px);
             background: linear-gradient(135deg, var(--color-violet-600) 0%, var(--color-indigo-600) 60%, var(--color-amber-500) 160%);
             display: flex; align-items: center; justify-content: center;
-            font-size: var(--font-size-18, 18px); font-weight: 900; color: var(--c, var(--color-white, #ffffff)f);
+            font-size: var(--font-size-18, 18px); font-weight: 900; color: var(--color-white);
             box-shadow: 0 8px 24px rgba(124,58,237,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
             border: 1px solid rgba(255,255,255,0.15);
         }
         .brand-text { line-height: 1; }
-        .brand-name { font-size: var(--font-size-18, 18px); font-weight: 900; color: var(--c, var(--color-white, #ffffff)f); }
+        .brand-name { font-size: var(--font-size-18, 18px); font-weight: 900; color: var(--color-white); }
         .brand-sub  { font-size: var(--font-size-9, 9px); font-weight: 700; color: var(--color-violet-600); text-transform: uppercase; letter-spacing: 0.25em; margin-top: 2px; }
 
         .hero-section {
@@ -108,7 +108,7 @@
             font-weight: 900;
             line-height: 1.08;
             letter-spacing: -0.04em;
-            color: var(--c, var(--color-white, #ffffff)f);
+            color: var(--color-white);
         }
         .hero-headline span {
             background: linear-gradient(135deg, var(--color-violet-400) 0%, var(--color-indigo-400) 40%, var(--color-amber-500) 100%);
@@ -137,12 +137,13 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: center;
             background: var(--color-night-700);
-            padding: 2rem;
+            padding: 2.5rem 1.5rem;
             position: relative;
-            overflow: hidden;
+            overflow-y: auto;
+            max-height: 100vh;
         }
 
         .right-panel::before {
@@ -178,13 +179,13 @@
         .form-title {
             font-size: 2rem; font-weight: 900;
             letter-spacing: -0.04em;
-            color: var(--c, var(--color-white, #ffffff)f);
+            color: var(--color-white);
             line-height: 1;
             margin-bottom: 6px;
         }
         .form-subtitle {
             font-size: var(--font-size-13, 13px); font-weight: 400;
-            color: rgba(255,255,255,0.35);
+            color: rgba(255,255,255,0.6);
             margin-bottom: 2rem;
         }
 
@@ -196,8 +197,8 @@
 
         /* Flash messages */
         .flash-error {
-            background: rgba(239,68,68,0.08);
-            border: 1px solid rgba(239,68,68,0.2);
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(239,68,68,0.4);
             border-radius: var(--border-radius-14, 14px);
             padding: var(--space-pad-12, 12px) 16px;
             margin-bottom: 1.5rem;
@@ -212,17 +213,17 @@
         }
         .field input {
             width: 100%;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.12);
             border-radius: var(--border-radius-16, 16px);
             padding: var(--space-pad-16, 16px) 18px 16px 50px;
             font-family: 'Outfit', sans-serif;
             font-size: var(--font-size-14, 14px); font-weight: 500;
-            color: var(--c, var(--color-white, #ffffff)f);
+            color: var(--color-white);
             outline: none;
             transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
         }
-        .field input::placeholder { color: rgba(255,255,255,0.22); }
+        .field input::placeholder { color: rgba(255,255,255,0.3); }
         .field input:focus {
             background: rgba(124,58,237,0.08);
             border-color: rgba(124,58,237,0.5);
@@ -232,7 +233,7 @@
             position: absolute;
             left: 18px; top: 50%;
             transform: translateY(-50%);
-            color: rgba(255,255,255,0.22);
+            color: rgba(255,255,255,0.4);
             pointer-events: none;
         }
         .field-label {
@@ -240,7 +241,7 @@
             left: 50px; top: 50%;
             transform: translateY(-50%);
             font-size: var(--font-size-14, 14px); font-weight: 500;
-            color: rgba(255,255,255,0.22);
+            color: rgba(255,255,255,0.4);
             pointer-events: none;
             transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
         }
@@ -251,6 +252,96 @@
             background: var(--color-night-700);
             color: var(--color-violet-400);
             border-radius: var(--border-radius-4, 4px);
+        }
+
+        /* Form groups for select, date, phone */
+        .field-group {
+            margin-bottom: 14px;
+        }
+        .field-group-label {
+            display: block;
+            font-size: var(--font-size-11, 11px);
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 6px;
+            padding-left: 4px;
+        }
+        .field-select {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: var(--border-radius-16, 16px);
+            padding: var(--space-pad-14, 14px) 18px;
+            font-family: 'Outfit', sans-serif;
+            font-size: var(--font-size-14, 14px);
+            font-weight: 500;
+            color: var(--color-white);
+            outline: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .field-select:focus {
+            background-color: rgba(124, 58, 237, 0.08);
+            border-color: rgba(124, 58, 237, 0.5);
+            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.12);
+        }
+        .field-select option {
+            background: var(--color-slate-900);
+            color: var(--color-white);
+        }
+        .field-input-date {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: var(--border-radius-16, 16px);
+            padding: var(--space-pad-14, 14px) 18px;
+            font-family: 'Outfit', sans-serif;
+            font-size: var(--font-size-14, 14px);
+            font-weight: 500;
+            color: var(--color-white);
+            color-scheme: dark;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .field-input-date:focus {
+            background: rgba(124, 58, 237, 0.08);
+            border-color: rgba(124, 58, 237, 0.5);
+            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.12);
+        }
+        .phone-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .phone-prefix {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: var(--border-radius-16, 16px);
+            padding: var(--space-pad-14, 14px) 16px;
+            font-size: var(--font-size-14, 14px);
+            font-weight: 700;
+            color: var(--color-white);
+            white-space: nowrap;
+        }
+        .phone-control {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: var(--border-radius-16, 16px);
+            padding: var(--space-pad-14, 14px) 18px;
+            font-family: 'Outfit', sans-serif;
+            font-size: var(--font-size-14, 14px);
+            font-weight: 500;
+            color: var(--color-white);
+            outline: none;
+            transition: all 0.3s;
+        }
+        .phone-control:focus {
+            background: rgba(124, 58, 237, 0.08);
+            border-color: rgba(124, 58, 237, 0.5);
+            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.12);
         }
 
         /* Password strength */
@@ -268,7 +359,7 @@
         }
         .strength-label {
             font-size: var(--font-size-10, 10px);
-            color: rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.5);
             min-height: 14px;
         }
         .match-msg {
@@ -289,7 +380,7 @@
             font-family: 'Outfit', sans-serif;
             font-size: var(--font-size-12, 12px); font-weight: 900;
             text-transform: uppercase; letter-spacing: 0.18em;
-            color: var(--c, var(--color-white, #ffffff)f);
+            color: var(--color-white);
             background: linear-gradient(135deg, var(--color-violet-600) 0%, var(--color-indigo-500) 60%, var(--color-indigo-600) 100%);
             box-shadow: 0 8px 24px rgba(124,58,237,0.35), 0 0 0 1px rgba(255,255,255,0.08) inset;
             position: relative; overflow: hidden;
@@ -308,8 +399,8 @@
             gap: 16px;
             margin-bottom: 1.5rem;
             padding: var(--space-pad-16, 16px);
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.12);
             border-radius: var(--border-radius-16, 16px);
         }
         .profile-avatar {
@@ -317,13 +408,26 @@
             border-radius: 50%;
             object-fit: cover;
             border: 2px solid rgba(124,58,237,0.3);
+            background: rgba(255,255,255,0.05);
+        }
+        .avatar-fallback {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(124,58,237,0.3);
+            color: var(--color-white);
+            font-weight: 700;
+            font-size: var(--font-size-24, 24px);
+        }
+        .avatar-fallback-hidden {
+            display: none !important;
         }
         .profile-info h4 {
-            font-size: var(--font-size-14, 14px); font-weight: 700; color: var(--c, var(--color-white, #ffffff)f);
+            font-size: var(--font-size-14, 14px); font-weight: 700; color: var(--color-white);
             margin-bottom: 4px;
         }
         .profile-info p {
-            font-size: var(--font-size-12, 12px); color: rgba(255,255,255,0.4);
+            font-size: var(--font-size-12, 12px); color: rgba(255,255,255,0.6);
         }
 
         .copyright {
@@ -397,7 +501,12 @@
 
             <!-- Profile Preview -->
             <div class="profile-preview">
-                <img src="{{ profile_picture or static_asset_url('img/default-avatar.png') }}" alt="{{ _('ui_auto_ff4fc0276e96') }}" class="profile-avatar" id="profile-avatar">
+                {% if profile_picture %}
+                <img src="{{ profile_picture }}" alt="Profile" class="profile-avatar" id="profile-avatar" referrerpolicy="no-referrer" onerror="this.classList.add('avatar-fallback-hidden');document.getElementById('avatar-fallback').classList.remove('avatar-fallback-hidden');">
+                <div id="avatar-fallback" class="profile-avatar avatar-fallback avatar-fallback-hidden">{{ (name or 'U')[0]|upper }}</div>
+                {% else %}
+                <div class="profile-avatar avatar-fallback">{{ (name or 'U')[0]|upper }}</div>
+                {% endif %}
                 <div class="profile-info">
                     <h4>{{ name }}</h4>
                     <p>{{ email }}</p>
@@ -454,59 +563,62 @@
                 </div>
                 <div class="match-msg" id="matchMsg"></div>
 
-                <div class="field">
-                    <select id="gender" name="gender" required class="w-full bg-white/[0.04] border border-white/[0.08] rounded-2xl p-4"Outfit', sans-serif; font-size: var(--font-size-14, 14px); font-weight: 500; color: var(--c, var(--color-white, #ffffff)f); outline: none; cursor: pointer;">
-                        <option value="" class="bg-slate-900">{{ _('ui_auto_12fad598864f') }}</option>
-                        <option value="male" class="bg-slate-900">Erkek</option>
-                        <option value="female" class="bg-slate-900">Kadın</option>
-                        <option value="other" class="bg-slate-900">Diğer</option>
-                        <option value="prefer_not_to_say" class="bg-slate-900">{{ _('ui_auto_1b55e86dd260') }}</option>
+                <div class="field-group">
+                    <label class="field-group-label" for="gender">{{ _('ui_auto_12fad598864f') }}</label>
+                    <select id="gender" name="gender" required class="field-select">
+                        <option value="">Cinsiyet seçiniz</option>
+                        <option value="male">Erkek</option>
+                        <option value="female">Kadın</option>
+                        <option value="other">Diğer</option>
+                        <option value="prefer_not_to_say">{{ _('ui_auto_1b55e86dd260') }}</option>
                     </select>
                 </div>
 
-                <div class="field">
-                    <input id="birthdate" type="date" name="birthdate" placeholder=" " required>
-                    <label class="field-label" for="birthdate">{{ _('ui_auto_17c2513b42d1') }}</label>
+                <div class="field-group">
+                    <label class="field-group-label" for="birthdate">{{ _('ui_auto_17c2513b42d1') }}</label>
+                    <input id="birthdate" type="date" name="birthdate" required class="field-input-date">
                 </div>
 
-                <div class="field">
-                    <select id="country" name="country" required class="w-full bg-white/[0.04] border border-white/[0.08] rounded-2xl p-4"Outfit', sans-serif; font-size: var(--font-size-14, 14px); font-weight: 500; color: var(--c, var(--color-white, #ffffff)f); outline: none; cursor: pointer;" onchange="updateCities()">
-                        <option value="" class="bg-slate-900">{{ _('ui_auto_f2fa9e5a9d85') }}</option>
-                        <option value="TR" class="bg-slate-900">{{ _('ui_auto_88f5f1ee27ee') }}</option>
-                        <option value="US" class="bg-slate-900">{{ _('ui_auto_768685ca582a') }}</option>
-                        <option value="GB" class="bg-slate-900">{{ _('ui_auto_9769121f10f7') }}</option>
-                        <option value="DE" class="bg-slate-900">{{ _('ui_auto_17d53e0e6a68') }}</option>
-                        <option value="FR" class="bg-slate-900">{{ _('ui_auto_e3772ac4b4db') }}</option>
-                        <option value="NL" class="bg-slate-900">{{ _('ui_auto_fb61c8a8eba2') }}</option>
-                        <option value="IT" class="bg-slate-900">{{ _('ui_auto_ad79ef0f076d') }}</option>
-                        <option value="ES" class="bg-slate-900">{{ _('ui_auto_20a8df9b7603') }}</option>
-                        <option value="CA" class="bg-slate-900">{{ _('ui_auto_cd6a7b876852') }}</option>
-                        <option value="AU" class="bg-slate-900">{{ _('ui_auto_ceafb51e2b07') }}</option>
-                        <option value="JP" class="bg-slate-900">{{ _('ui_auto_fcf29f6cad32') }}</option>
-                        <option value="KR" class="bg-slate-900">{{ _('ui_auto_04653e650280') }}</option>
-                        <option value="CN" class="bg-slate-900">{{ _('ui_auto_d2eaf2aa1512') }}</option>
-                        <option value="IN" class="bg-slate-900">{{ _('ui_auto_967ce367d89d') }}</option>
-                        <option value="BR" class="bg-slate-900">{{ _('ui_auto_37497aa5a227') }}</option>
-                        <option value="RU" class="bg-slate-900">{{ _('ui_auto_6754fe3cd831') }}</option>
-                        <option value="SA" class="bg-slate-900">{{ _('ui_auto_6f49c31192f5') }}</option>
-                        <option value="AE" class="bg-slate-900">{{ _('ui_auto_d115b8d5acb8') }}</option>
-                        <option value="EG" class="bg-slate-900">{{ _('ui_auto_1c39abf68e93') }}</option>
-                        <option value="ZA" class="bg-slate-900">{{ _('ui_auto_35fda17ff05f') }}</option>
+                <div class="field-group">
+                    <label class="field-group-label" for="country">{{ _('ui_auto_f2fa9e5a9d85') }}</label>
+                    <select id="country" name="country" required class="field-select" onchange="updateCities()">
+                        <option value="">Ülke seçiniz</option>
+                        <option value="TR">{{ _('ui_auto_88f5f1ee27ee') }}</option>
+                        <option value="US">{{ _('ui_auto_768685ca582a') }}</option>
+                        <option value="GB">{{ _('ui_auto_9769121f10f7') }}</option>
+                        <option value="DE">{{ _('ui_auto_17d53e0e6a68') }}</option>
+                        <option value="FR">{{ _('ui_auto_e3772ac4b4db') }}</option>
+                        <option value="NL">{{ _('ui_auto_fb61c8a8eba2') }}</option>
+                        <option value="IT">{{ _('ui_auto_ad79ef0f076d') }}</option>
+                        <option value="ES">{{ _('ui_auto_20a8df9b7603') }}</option>
+                        <option value="CA">{{ _('ui_auto_cd6a7b876852') }}</option>
+                        <option value="AU">{{ _('ui_auto_ceafb51e2b07') }}</option>
+                        <option value="JP">{{ _('ui_auto_fcf29f6cad32') }}</option>
+                        <option value="KR">{{ _('ui_auto_04653e650280') }}</option>
+                        <option value="CN">{{ _('ui_auto_d2eaf2aa1512') }}</option>
+                        <option value="IN">{{ _('ui_auto_967ce367d89d') }}</option>
+                        <option value="BR">{{ _('ui_auto_37497aa5a227') }}</option>
+                        <option value="RU">{{ _('ui_auto_6754fe3cd831') }}</option>
+                        <option value="SA">{{ _('ui_auto_6f49c31192f5') }}</option>
+                        <option value="AE">{{ _('ui_auto_d115b8d5acb8') }}</option>
+                        <option value="EG">{{ _('ui_auto_1c39abf68e93') }}</option>
+                        <option value="ZA">{{ _('ui_auto_35fda17ff05f') }}</option>
                     </select>
                 </div>
 
-                <div class="field">
-                    <select id="city" name="city" required class="w-full bg-white/[0.04] border border-white/[0.08] rounded-2xl p-4"Outfit', sans-serif; font-size: var(--font-size-14, 14px); font-weight: 500; color: var(--c, var(--color-white, #ffffff)f); outline: none; cursor: pointer;" disabled>
-                        <option value="" class="bg-slate-900">{{ _('ui_auto_181b5b9cf58f') }}</option>
+                <div class="field-group">
+                    <label class="field-group-label" for="city">{{ _('ui_auto_181b5b9cf58f') }}</label>
+                    <select id="city" name="city" required class="field-select" disabled>
+                        <option value="">Önce ülke seçiniz</option>
                     </select>
                 </div>
 
-                <div class="field">
-                    <div class="flex items-center gap-2">
-                        <span id="phone-code" class="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-4"Outfit', sans-serif; font-size: var(--font-size-14, 14px); font-weight: 500; color: var(--c, var(--color-white, #ffffff)f); white-space: nowrap;">+90</span>
-                        <input id="phone" type="tel" name="phone" placeholder=" " required autocomplete="tel" class="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-2xl p-4"Outfit', sans-serif; font-size: var(--font-size-14, 14px); font-weight: 500; color: var(--c, var(--color-white, #ffffff)f); outline: none;">
+                <div class="field-group">
+                    <label class="field-group-label" for="phone">{{ _('ui_auto_d5b11ebbfc1c') }}</label>
+                    <div class="phone-row">
+                        <span id="phone-code" class="phone-prefix">+90</span>
+                        <input id="phone" type="tel" name="phone" placeholder="5xx xxx xx xx" required autocomplete="tel" class="phone-control">
                     </div>
-                    <label class="field-label" for="phone" class="mt-2">{{ _('ui_auto_d5b11ebbfc1c') }}</label>
                 </div>
 
                 <button data-macro="button_secondary" type="submit" id="submit-btn" class="btn-submit">
@@ -630,7 +742,7 @@ function updateStrength(v) {
     if (v.length >= 12) score++;
     if (/[A-Z]/.test(v) && /[0-9]/.test(v)) score++;
     if (/[^A-Za-z0-9]/.test(v)) score++;
-    const colors = ['var(--color-rose-500)','var(--c, #f97316)','var(--c, #eab308)','var(--color-emerald-500)'];
+    const colors = ['var(--color-rose-500)','var(--orange-500)','var(--amber-500)','var(--color-emerald-500)'];
     const labels = ['Çok Zayıf','Zayıf','Orta','Güçlü'];
     bars.forEach((b, i) => { b.style.background = i < score ? colors[score-1] : 'rgba(255,255,255,0.08)'; });
     lbl.textContent = v.length ? (labels[score-1] || '') : '';
