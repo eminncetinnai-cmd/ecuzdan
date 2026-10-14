@@ -1,39 +1,70 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
 cd /d "%~dp0"
 
-echo E-Cuzdan başlatılıyor...
+title E-Cuzdan -- Intelligent Wealth Platform
 
-if exist ".venv\Scripts\python.exe" (
-    set "PYTHON_EXE=%~dp0.venv\Scripts\python.exe"
-    goto :run
-)
+echo(
+echo   ============================================================
+echo     _____         ____ _   _ _____ ____    _    _   _ 
+echo    ^| ____^|       / ___^| ^| ^| ^|__  /^|  _ \  / \  ^| \ ^| ^|
+echo    ^|  _^|  _____ ^| ^|   ^| ^| ^| ^| / / ^| ^| ^| ^|/ _ \ ^|  ^\ ^| ^|
+echo    ^| ^|___^|_____^|^| ^|___^| ^|_^| ^|/ /_ ^| ^|_^| / ___ \^| ^|^\  ^|
+echo    ^|_____^|       ^\____^|^\___//____^|^|____/_/   ^\_\_^| ^\_^|
+echo(
+echo     E-CUZDAN -- AKILLI VARLIK VE FINANS YONETIM PLATFORMU
+echo   ============================================================
+echo(
 
+:: 1. Prefer existing .venv Python if available
+if not exist ".venv\Scripts\python.exe" goto :try_py
+".venv\Scripts\python.exe" scripts\runtime\bootstrap.py %*
+if not errorlevel 1 goto :end
+echo [.venv Python basarisiz oldu, sistem Python deneniyor...]
+
+:try_py
+:: 2. Search for Windows py launcher
 where py >nul 2>nul
-if not errorlevel 1 (
-    set "PYTHON_EXE=py"
-    set "PYTHON_ARGS=-3"
-    goto :run
-)
+if errorlevel 1 goto :try_python
+py -3.13 scripts\runtime\bootstrap.py %* 2>nul
+if not errorlevel 1 goto :end
+py scripts\runtime\bootstrap.py %*
+if not errorlevel 1 goto :end
 
+:try_python
+:: 3. Search for python in PATH
 where python >nul 2>nul
-if not errorlevel 1 (
-    set "PYTHON_EXE=python"
-    goto :run
-)
+if errorlevel 1 goto :no_python
+python scripts\runtime\bootstrap.py %*
+goto :end
 
-echo Python bulunamadı. Lütfen Python kurulu olduğundan emin olun.
+:no_python
+echo(
+echo ============================================================
+echo   E-CUZDAN RUNTIME HATASI: PYTHON BULUNAMADI
+echo ============================================================
+echo   Sistemde Python calistiricisi tespit edilemedi.
+echo   Lutfen https://www.python.org/downloads/ adresinden
+echo   Python 3.13 kurun ve "Add Python to PATH" secenegini isaretleyin.
+echo ============================================================
+echo(
 pause
 exit /b 1
 
-:run
-if defined PYTHON_ARGS (
-    "%PYTHON_EXE%" %PYTHON_ARGS% app.py
-) else (
-    "%PYTHON_EXE%" app.py
-)
+:end
+if not errorlevel 1 goto :success
+echo(
+echo ============================================================
+echo   E-Cuzdan calismasi bir hata ile sonlandi.
+echo ============================================================
+echo(
+pause
+exit /b 1
 
-if errorlevel 1 (
-    echo Başlatma başarısız oldu.
-    pause
-)
+:success
+if "%~1"=="--check-only" goto :eof
+echo(
+echo E-Cuzdan sunucusu durduruldu.
+echo Pencereyi kapatmak icin bir tusa basin...
+pause >nul
+goto :eof

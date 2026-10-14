@@ -5,7 +5,8 @@ import traceback
 
 from flask import g, jsonify, redirect, render_template, request, session, url_for
 
-from bootstrap.container import get_container
+from bootstrap.container import get_container  # noqa: F401
+from infrastructure.i18n import i18n
 from utils.ajax_helpers import handle_ajax_or_flash, is_ajax_request
 from utils.db_session import rollback_session
 from utils.notification_helpers import flash_error
@@ -15,8 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 def _get_logbook_service():
-    from bootstrap import get_container
-    return get_container().applications.logbook()
+    from bootstrap import get_container as current_get_container
+    return current_get_container().applications.logbook()
 
 
 def register_logbook_routes(bp):
@@ -35,7 +36,7 @@ def register_logbook_routes(bp):
             )
         except Exception as e:
             logger.exception(f"Logbook index error: {e}")
-            flash_error('Logbook yüklenirken hata oluştu.')
+            flash_error(i18n.gettext('logbook_load_error'))
             return render_template('logbook.html', entries=[], view_type='timeline')
 
     @bp.route('/timeline')
@@ -55,24 +56,24 @@ def register_logbook_routes(bp):
                 tenant_id=g.get('tenant_id'),
                 user_id=session.get('user_id'),
             )
-            response = handle_ajax_or_flash(True, 'Kayıt başarıyla oluşturuldu!', 'Kayıt oluşturulamadı.')
+            response = handle_ajax_or_flash(True, i18n.gettext('logbook_save'), i18n.gettext('logbook_save_failed'))
             if response:
                 return response
         except ValueError as e:
             rollback_session()
-            response = handle_ajax_or_flash(False, None, f'Validasyon hatası: {str(e)}')
+            response = handle_ajax_or_flash(False, None, f"{i18n.gettext('logbook_save_failed')}: {str(e)}")
             if response:
                 return response
         except Exception as e:
             logger.error("LOGBOOK CREATE GERÇEK HATA - Tip: %s, Mesaj: %s", type(e).__name__, str(e))
             logger.error("Tam traceback:\n%s", traceback.format_exc())
             rollback_session()
-            response = handle_ajax_or_flash(False, None, 'Kayıt oluşturulurken beklenmeyen bir hata oluştu.')
+            response = handle_ajax_or_flash(False, None, i18n.gettext('logbook_save_error'))
             if response:
                 return response
 
         if is_ajax:
-            return jsonify({'success': False, 'message': 'Bilinmeyen bir hata oluştu.'})
+            return jsonify({'success': False, 'message': i18n.gettext('logbook_save_error')})
         return redirect(url_for('logbook.index'))
 
     @bp.route('/<int:id>')
@@ -82,8 +83,8 @@ def register_logbook_routes(bp):
             entry_data = logbook_service.detail_payload(id, g.get('tenant_id'))
             if not entry_data:
                 if is_ajax:
-                    return jsonify({'success': False, 'message': 'Kayıt bulunamadı veya yetkiniz yok.'}), 404
-                flash_error('Kayıt bulunamadı veya yetkiniz yok.')
+                    return jsonify({'success': False, 'message': i18n.gettext('logbook_not_found')}), 404
+                flash_error(i18n.gettext('logbook_not_found'))
                 return redirect(url_for('logbook.index'))
 
             if is_ajax:
@@ -92,8 +93,8 @@ def register_logbook_routes(bp):
         except Exception as e:
             logger.exception(f"Logbook detail error: {e}")
             if is_ajax:
-                return jsonify({'success': False, 'message': 'Kayıt yüklenirken hata oluştu.'}), 500
-            flash_error('Kayıt detayı yüklenirken hata oluştu.')
+                return jsonify({'success': False, 'message': i18n.gettext('logbook_load_error')}), 500
+            flash_error(i18n.gettext('logbook_load_error'))
             return redirect(url_for('logbook.index'))
 
     @bp.route('/<int:id>/update', methods=['POST'])
@@ -101,23 +102,23 @@ def register_logbook_routes(bp):
         is_ajax = is_ajax_request()
         try:
             logbook_service.update_entry(id, logbook_entry_from_request(request.form), g.get('tenant_id'))
-            response = handle_ajax_or_flash(True, 'Kayıt başarıyla güncellendi!', 'Kayıt güncellenemedi.')
+            response = handle_ajax_or_flash(True, i18n.gettext('logbook_save'), i18n.gettext('logbook_save_failed'))
             if response:
                 return response
         except ValueError as e:
             rollback_session()
-            response = handle_ajax_or_flash(False, None, f'Validasyon hatası: {str(e)}')
+            response = handle_ajax_or_flash(False, None, f"{i18n.gettext('logbook_save_failed')}: {str(e)}")
             if response:
                 return response
         except Exception as e:
             logger.exception(f"Update logbook entry error: {e}")
             rollback_session()
-            response = handle_ajax_or_flash(False, None, 'Kayıt güncellenirken beklenmeyen bir hata oluştu.')
+            response = handle_ajax_or_flash(False, None, i18n.gettext('logbook_save_error'))
             if response:
                 return response
 
         if is_ajax:
-            return jsonify({'success': False, 'message': 'Bilinmeyen bir hata oluştu.'})
+            return jsonify({'success': False, 'message': i18n.gettext('logbook_save_error')})
         return redirect(url_for('logbook.index'))
 
     @bp.route('/<int:id>/delete', methods=['POST'])
@@ -125,7 +126,7 @@ def register_logbook_routes(bp):
         is_ajax = is_ajax_request()
         try:
             logbook_service.delete_entry(id, g.get('tenant_id'))
-            response = handle_ajax_or_flash(True, 'Kayıt silindi.', 'Kayıt silinemedi.')
+            response = handle_ajax_or_flash(True, i18n.gettext('logbook_delete'), i18n.gettext('logbook_delete_failed'))
             if response:
                 return response
         except ValueError as e:
@@ -136,12 +137,12 @@ def register_logbook_routes(bp):
         except Exception as e:
             logger.exception(f"Delete logbook entry error: {e}")
             rollback_session()
-            response = handle_ajax_or_flash(False, None, 'Kayıt silinirken beklenmeyen bir hata oluştu.')
+            response = handle_ajax_or_flash(False, None, i18n.gettext('logbook_delete_error'))
             if response:
                 return response
 
         if is_ajax:
-            return jsonify({'success': False, 'message': 'Bilinmeyen bir hata oluştu.'})
+            return jsonify({'success': False, 'message': i18n.gettext('logbook_save_error')})
         return redirect(url_for('logbook.index'))
 
     @bp.route('/api/entries')

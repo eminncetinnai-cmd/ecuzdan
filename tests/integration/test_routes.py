@@ -3,6 +3,8 @@ Integration Tests - Routes
 Route'lar için integration testler
 """
 
+import pytest
+
 from domain.portfolio.models import AssetUpdate
 from models import db
 
@@ -35,6 +37,50 @@ def test_dashboard_authenticated(authenticated_client):
     assert response.status_code == 200
 
 
+def test_dashboard_get_is_read_only_for_rolling_plan(
+    authenticated_client, monkeypatch
+):
+    """Dashboard GET must not materialize plan transactions or occurrences."""
+    from models import PlanOccurrence, RecurringPlan, Transaction
+    from repositories.financial_repository import FinancialRepository
+
+    plan = RecurringPlan(
+        name='Dashboard no-write rolling plan',
+        category='Maaş',
+        flow_type='Gelir',
+        amount=1000,
+        installments=12,
+        payment_day=25,
+        start_date='2026-08-25',
+        plan_type='Taksit',
+        frequency='Aylık',
+        status='Aktif',
+        tenant_id='default',
+    )
+    db.session.add(plan)
+    db.session.commit()
+    plan_id = plan.id
+
+    transaction_count_before = Transaction.query.filter_by(tenant_id='default').count()
+    occurrence_count_before = PlanOccurrence.query.filter_by(tenant_id='default').count()
+
+    def fail_if_materialized(*args, **kwargs):
+        raise AssertionError('Dashboard GET must not materialize rolling transactions')
+
+    monkeypatch.setattr(
+        FinancialRepository,
+        'generate_rolling_transactions',
+        fail_if_materialized,
+    )
+
+    response = authenticated_client.get('/')
+
+    assert response.status_code == 200
+    assert Transaction.query.filter_by(tenant_id='default').count() == transaction_count_before
+    assert PlanOccurrence.query.filter_by(tenant_id='default').count() == occurrence_count_before
+    assert PlanOccurrence.query.filter_by(plan_id=plan_id).count() == 0
+
+
 def test_settings_page_loads(authenticated_client):
     """Ayarlar sayfası yüklenmeli ve kritik UI bileşenleri doğru olmalı."""
     response = authenticated_client.get('/settings')
@@ -52,7 +98,7 @@ def test_dashboard_unauthenticated(client):
 
 def test_reset_data_clears_tenant_financial_records(authenticated_admin_client, app, admin_user):
     """Reset data route should remove tenant-scoped financial records without failing."""
-    from models import Asset, RecurringPlan, Transaction
+    from models import Asset, Transaction
 
     transaction = Transaction(
         date='2026-01-01',
@@ -231,7 +277,7 @@ def test_assets_management_page(authenticated_client):
 
 def test_asset_crud_flow(authenticated_client, app):
     """Varlık ekleme, güncelleme ve silme akışı"""
-    from models import AssetSector, Asset, AssetTransaction, Transaction
+    from models import Asset, AssetSector, AssetTransaction, Transaction
     sector = AssetSector.query.first()
     sector_id = sector.id if sector else 1
     response = authenticated_client.post('/new_asset', data={
@@ -250,7 +296,6 @@ def test_asset_crud_flow(authenticated_client, app):
     }, follow_redirects=True)
     assert response.status_code == 200
 
-    from models import Asset, AssetTransaction, Transaction
     asset = Asset.query.filter_by(name='Test Hisse').first()
     assert asset is not None
     asset_id = asset.id
@@ -305,7 +350,35 @@ def test_monthly_dashboard_page(authenticated_client):
     assert response.status_code == 200
     assert b'Ger\xc3\xa7ekle\xc5\x9fen Net Nakit' in response.data
     assert b'Bekleyen Net Etki' in response.data
-    assert b'Varl\xc4\xb1k De\xc4\x9ferleme Fark\xc4\xb1' in response.data
+    assert 'Varlık Değerleme Farkı' in response.get_data(as_text=True)
+
+
+@pytest.mark.parametrize(
+    ('language', 'first_month', 'last_month'),
+    [
+        ('tr', 'Ocak', 'Aralık'),
+        ('en', 'January', 'December'),
+        ('de', 'Januar', 'Dezember'),
+        ('it', 'Gennaio', 'Dicembre'),
+    ],
+)
+def test_monthly_dashboard_month_labels_follow_selected_locale(
+    authenticated_client, language, first_month, last_month
+):
+    with authenticated_client.session_transaction() as flask_session:
+        flask_session['lang'] = language
+        flask_session['lang_source'] = 'explicit'
+
+    response = authenticated_client.get('/monthly_dashboard')
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert first_month in html
+    assert last_month in html
+    assert f'<html lang="{language}"' in html
+    if language != 'tr':
+        assert 'Ocak' not in html
+        assert 'Aralık' not in html
+
 
 def test_security_headers(client):
     """Security headers testi"""

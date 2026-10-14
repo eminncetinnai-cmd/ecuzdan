@@ -1,0 +1,26 @@
+<!-- Notification Modal Widget -->
+<div id="notificationModal" class="notification-modal hidden fixed inset-0 z-[100]">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeNotificationModal()"></div>
+    <div class="absolute right-4 top-16 w-full max-w-md bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200/50 max-h-[80vh] flex flex-col">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between p-4 border-b border-slate-200/50">
+            <h3 class="text-sm font-bold text-slate-800">{{ _('nav_notifications') }}</h3>
+            <div class="flex items-center gap-2">
+                <button data-macro="button_secondary" type="button" onclick="markAllAsRead()" class="text-xs text-slate-500 hover:text-slate-700 transition">{{ _('notification_mark_all_read') }}</button>
+                <button data-macro="button_secondary" type="button" onclick="closeNotificationModal()" class="p-1 hover:bg-slate-100 rounded-lg transition">
+                    <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <!-- Modal Content -->
+        <div id="notificationList" class="flex-1 overflow-y-auto p-2">
+            <div class="text-center py-8 text-slate-500 text-sm">{{ _('notification_loading') }}</div>
+        </div>
+        <!-- Modal Footer -->
+        <div class="p-3 border-t border-slate-200/50">
+            <a href="/notifications" class="block text-center text-xs font-semibold text-slate-600 hover:text-slate-800 transition">{{ _('notification_view_all') }}</a>
+        </div>
+    </div>
+</div>

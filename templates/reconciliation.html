@@ -1,0 +1,213 @@
+{% extends 'layout.html' %}
+
+{% block title %}{{ _('reconciliation_title') }} | {{ brand }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static_asset_url('css/reconciliation.css') }}">
+{% endblock %}
+
+{% block content %}
+<div id="reconciliationPage" class="reconciliation-page space-y-6" data-page="reconciliation">
+    <!-- Segmented Navigation Hub -->
+    <div class="mb-6 flex flex-wrap items-center gap-2 border-b border-slate-200/80 pb-4 dark:border-slate-800">
+        <a href="{{ url_for('transactions.transactions') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'transactions.transactions' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+            <span>İşlem Geçmişi &amp; Defter</span>
+        </a>
+        <a href="{{ url_for('transactions.reconciliation_page') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'transactions.reconciliation_page' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>Banka &amp; Bakiye Mutabakatı</span>
+        </a>
+        <a href="{{ url_for('dashboard.monthly_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'dashboard.monthly_dashboard' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
+            <span>Aylık Konsolide Rapor</span>
+        </a>
+        <a href="{{ url_for('plans.payment_calendar') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'plans.payment_calendar' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
+            <span>Ödeme Takvimi &amp; Projeksiyon</span>
+        </a>
+    </div>
+
+    <section class="reconciliation-hero overflow-hidden rounded-[2rem] px-6 py-8 text-white shadow-2xl md:px-10 md:py-10">
+        <div class="flex flex-col gap-7 xl:flex-row xl:items-end xl:justify-between">
+            <div class="max-w-3xl">
+                <div class="mb-4 flex items-center gap-3">
+                    <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/15">
+                        <svg class="h-6 w-6 text-indigo-200" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                    </span>
+                    <span class="text-[10px] font-black uppercase tracking-[.24em] text-indigo-200">{{ _('reconciliation_status') }}</span>
+                </div>
+                <h1 class="text-3xl font-black tracking-tight md:text-5xl">{{ _('reconciliation_title') }}</h1>
+                <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-300">{{ _('reconciliation_subtitle') }}</p>
+                <p class="mt-4 max-w-2xl text-xs leading-5 text-slate-400">{{ _('reconciliation_intro') }}</p>
+            </div>
+            <div class="max-w-sm rounded-2xl border border-white/10 bg-white/10 p-4 text-xs leading-5 text-slate-300 backdrop-blur">
+                <div class="flex gap-3"><span class="mt-0.5 text-emerald-300">●</span><span>{{ _('reconciliation_read_only_note') }}</span></div>
+                <div class="mt-3 flex gap-3"><span class="mt-0.5 text-amber-300">●</span><span>{{ _('reconciliation_close_not_available') }}</span></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="reconciliationPanel" class="space-y-5" aria-labelledby="reconciliationTitle">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+                <h2 id="reconciliationTitle" class="text-lg font-black tracking-tight text-slate-900">{{ _('reconciliation_accounts_title') }}</h2>
+                <p class="mt-1 text-xs text-slate-500">{{ _('reconciliation_accounts_subtitle') }}</p>
+            </div>
+            <button data-macro="button_secondary" id="addBankAccount" type="button" class="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-xs font-black text-white shadow-lg shadow-indigo-200 transition hover:bg-indigo-700">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                {{ _('reconciliation_add_account') }}
+            </button>
+        </div>
+        <div id="reconciliationAccountCards" class="flex gap-3 overflow-x-auto pb-2" aria-live="polite">
+            <div class="reconciliation-skeleton h-28 w-full rounded-2xl bg-slate-100"></div>
+        </div>
+
+        <div id="reconciliationEmptyState" class="hidden rounded-3xl border border-dashed border-indigo-200 bg-indigo-50/70 p-8 text-center">
+            <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600">
+                <svg class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10.5 12 4l9 6.5M5 9.5V20h14V9.5M9 20v-6h6v6"/></svg>
+            </div>
+            <h3 class="mt-4 text-lg font-black text-slate-900">{{ _('reconciliation_add_account_title') }}</h3>
+            <p class="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-600">{{ _('reconciliation_add_account_subtitle') }}</p>
+            <button data-macro="button_secondary" type="button" data-open-account-modal class="mt-5 rounded-xl bg-indigo-600 px-5 py-3 text-xs font-black text-white hover:bg-indigo-700">{{ _('reconciliation_add_account_action') }}</button>
+        </div>
+
+        <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-[1.25fr_1fr_1fr_1.25fr_auto] xl:items-end">
+                <label class="block text-xs font-black text-slate-600">
+                    {{ _('reconciliation_select_account') }}
+                    <select id="reconciliationAccountSelect" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-800 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100">
+                        <option value="all">{{ _('reconciliation_scope_all') }}</option>
+                    </select>
+                </label>
+                <label id="reconciliationCurrencyWrap" class="hidden block text-xs font-black text-slate-600">
+                    {{ _('reconciliation_select_currency') }}
+                    <select id="reconciliationCurrency" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-800 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"></select>
+                </label>
+                <label class="block text-xs font-black text-slate-600">
+                    {{ _('reconciliation_as_of') }}
+                    <input id="reconciliationAsOf" type="date" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-800 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100">
+                </label>
+                <label class="block text-xs font-black text-slate-600">
+                    {{ _('reconciliation_statement_balance') }}
+                    <span class="font-normal text-slate-400">({{ _('reconciliation_statement_hint') }})</span>
+                    <input id="reconciliationStatementBalance" inputmode="decimal" placeholder="0,00" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-black text-slate-800 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100">
+                </label>
+                <div class="flex gap-2">
+                    <button data-macro="button_secondary" id="runReconciliation" type="button" class="flex-1 rounded-xl bg-slate-900 px-4 py-3 text-xs font-black text-white transition hover:bg-slate-700 disabled:cursor-wait disabled:opacity-60">{{ _('reconciliation_run') }}</button>
+                    <button data-macro="button_secondary" id="saveReconciliationStatement" type="button" class="flex-1 rounded-xl bg-indigo-600 px-4 py-3 text-xs font-black text-white transition hover:bg-indigo-700 disabled:cursor-wait disabled:opacity-60">{{ _('reconciliation_save_statement') }}</button>
+                </div>
+            </div>
+            <div class="mt-4 flex flex-col gap-2 border-t border-slate-100 pt-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+                <span id="reconciliationScopeMeta"></span>
+                <span id="reconciliationStatus" aria-live="polite" class="font-black text-slate-500">{{ _('reconciliation_status_loading') }}</span>
+            </div>
+            <label class="mt-3 block max-w-xl text-xs font-black text-slate-600">{{ _('reconciliation_note_optional') }}<input id="reconciliationStatementNote" maxlength="300" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 outline-none focus:border-indigo-400" /></label>
+            <p id="reconciliationCurrencyHint" class="mt-3 hidden rounded-xl bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800"></p>
+        </div>
+
+        <div id="reconciliationResult" class="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6" aria-live="polite">
+            {% for metric in ['book_balance', 'statement_balance', 'cleared_balance', 'pending_net', 'difference', 'pending_count'] %}
+            <div class="reconciliation-metric rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">{{ _('reconciliation_' ~ metric) }}</p>
+                <strong data-reconciliation="{{ metric }}" class="mt-3 block text-xl font-black tracking-tight text-slate-900">—</strong>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+            <section class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+                <div class="flex flex-col gap-2 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
+                    <div><h3 class="text-sm font-black uppercase tracking-tight text-slate-800">{{ _('reconciliation_pending_title') }}</h3><p class="mt-1 text-xs text-slate-500">{{ _('reconciliation_pending_subtitle') }}</p></div>
+                    <span id="reconciliationPendingMeta" class="text-[10px] font-black uppercase tracking-wider text-slate-400"></span>
+                </div>
+                <div id="reconciliationPendingSection" class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 text-[9px] font-black uppercase tracking-wider text-slate-400"><tr><th class="px-3 py-2.5">{{ _('table_date') }}</th><th class="px-3 py-2.5">{{ _('table_description') }}</th><th class="px-3 py-2.5">{{ _('tx_filter_category') }}</th><th class="px-3 py-2.5">{{ _('table_type') }}</th><th class="px-3 py-2.5 text-right">{{ _('table_amount') }}</th><th class="px-3 py-2.5 text-right">{{ _('table_action') }}</th></tr></thead>
+                        <tbody id="reconciliationPendingBody"><tr><td colspan="6" class="px-3 py-8 text-center text-sm text-slate-400">{{ _('reconciliation_status_loading') }}</td></tr></tbody>
+                    </table>
+                </div>
+            </section>
+            <aside class="space-y-5">
+                <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><h3 class="text-sm font-black uppercase tracking-tight text-slate-800">{{ _('reconciliation_issue_title') }}</h3><div id="reconciliationIssueList" class="mt-3 space-y-2"></div></section>
+                <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><h3 class="text-sm font-black uppercase tracking-tight text-slate-800">{{ _('reconciliation_next_actions') }}</h3><div id="reconciliationRecommendations" class="mt-3 flex flex-col gap-2"></div></section>
+                <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><h3 class="text-sm font-black uppercase tracking-tight text-slate-800">{{ _('reconciliation_statement_coverage') }}</h3><div id="reconciliationCoverage" class="mt-3 text-xs leading-5 text-slate-500"></div></section>
+            </aside>
+        </div>
+
+        <section class="rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div class="flex items-center justify-between border-b border-slate-100 p-5"><div><h3 class="text-sm font-black uppercase tracking-tight text-slate-800">{{ _('reconciliation_history_title') }}</h3><p class="mt-1 text-xs text-slate-500">{{ _('reconciliation_saved_statement') }}</p></div><span id="reconciliationHistoryMeta" class="text-[10px] font-black uppercase tracking-wider text-slate-400"></span></div>
+            <div class="overflow-x-auto"><table class="w-full text-left"><thead class="bg-slate-50 text-[9px] font-black uppercase tracking-wider text-slate-400"><tr><th class="px-3 py-2.5">{{ _('reconciliation_history_as_of') }}</th><th class="px-3 py-2.5">{{ _('reconciliation_history_balance') }}</th><th class="px-3 py-2.5">{{ _('reconciliation_history_source') }}</th><th class="px-3 py-2.5 text-right">{{ _('table_action') }}</th></tr></thead><tbody id="reconciliationHistoryBody"><tr><td colspan="4" class="px-3 py-6 text-center text-sm text-slate-400">—</td></tr></tbody></table></div>
+        </section>
+    </section>
+</div>
+
+<div id="bankAccountModal" class="fixed inset-0 z-[90] hidden items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="bankAccountModalTitle">
+    <div class="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl md:p-8">
+        <div class="flex items-start justify-between gap-4"><div><h2 id="bankAccountModalTitle" class="text-xl font-black tracking-tight text-slate-900">{{ _('reconciliation_add_account_title') }}</h2><p class="mt-2 text-xs leading-5 text-slate-500">{{ _('reconciliation_add_account_subtitle') }}</p></div><button data-macro="button_secondary" type="button" data-close-account-modal class="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="{{ _('reconciliation_cancel') }}">×</button></div>
+        <form id="bankAccountForm" class="mt-6 space-y-4">
+            <label class="block text-xs font-black text-slate-600">{{ _('reconciliation_account_name') }}<input name="name" required maxlength="100" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold outline-none focus:border-indigo-400" /></label>
+            <label class="block text-xs font-black text-slate-600">{{ _('reconciliation_institution') }}<input name="institution" maxlength="100" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold outline-none focus:border-indigo-400" /></label>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2"><label class="block text-xs font-black text-slate-600">{{ _('reconciliation_account_type') }}<select name="account_type" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold outline-none focus:border-indigo-400"><option value="checking">{{ _('reconciliation_type_checking') }}</option><option value="savings">{{ _('reconciliation_type_savings') }}</option><option value="credit_card">{{ _('reconciliation_type_credit_card') }}</option><option value="cash">{{ _('reconciliation_type_cash') }}</option></select></label><label class="block text-xs font-black text-slate-600">{{ _('reconciliation_currency') }}<input name="currency" value="TRY" maxlength="3" required class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold uppercase outline-none focus:border-indigo-400" /></label></div>
+            <p id="bankAccountFormError" class="hidden rounded-xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700"></p>
+            <div class="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end"><button data-macro="button_secondary" type="button" data-close-account-modal class="rounded-xl border border-slate-200 px-4 py-3 text-xs font-black text-slate-600 hover:bg-slate-50">{{ _('reconciliation_cancel') }}</button><button data-macro="button_secondary" type="submit" class="rounded-xl bg-indigo-600 px-4 py-3 text-xs font-black text-white hover:bg-indigo-700">{{ _('reconciliation_create_account') }}</button></div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.ReconciliationI18n = {
+        accountCreated: {{ _('reconciliation_account_created')|tojson }},
+        accountCreateError: {{ _('reconciliation_account_create_error')|tojson }},
+        addAccountAction: {{ _('reconciliation_add_account_action')|tojson }},
+        assignTransactions: {{ _('reconciliation_assign_transactions')|tojson }},
+        currencyHint: {{ _('reconciliation_currency_hint')|tojson }},
+        enterStatement: {{ _('reconciliation_enter_statement')|tojson }},
+        explained: {{ _('reconciliation_status_explained')|tojson }},
+        historyEmpty: {{ _('reconciliation_history_empty')|tojson }},
+        historyOpen: {{ _('reconciliation_history_open')|tojson }},
+        issueCurrency: {{ _('reconciliation_status_currency_required')|tojson }},
+        issueNoAccounts: {{ _('reconciliation_status_no_accounts')|tojson }},
+        issuePending: {{ _('reconciliation_status_explained')|tojson }},
+        issueStatement: {{ _('reconciliation_status_statement_required')|tojson }},
+        issueTitle: {{ _('reconciliation_issue_title')|tojson }},
+        issueUnassigned: {{ _('reconciliation_unassigned_note')|tojson }},
+        issueUnexplained: {{ _('reconciliation_status_unreconciled')|tojson }},
+        noAccounts: {{ _('reconciliation_no_accounts')|tojson }},
+        pendingEmpty: {{ _('reconciliation_pending_empty')|tojson }},
+        pendingLimit: {{ _('reconciliation_pending_count')|tojson }},
+        reviewExceptions: {{ _('reconciliation_review_exceptions')|tojson }},
+        reviewPending: {{ _('reconciliation_review_pending')|tojson }},
+        savedSource: {{ _('reconciliation_statement_source_saved')|tojson }},
+        manualSource: {{ _('reconciliation_statement_source_manual')|tojson }},
+        saveError: {{ _('reconciliation_statement_save_error')|tojson }},
+        saved: {{ _('reconciliation_statement_saved')|tojson }},
+        selectAccount: {{ _('reconciliation_select_account')|tojson }},
+        selectCurrency: {{ _('reconciliation_select_currency_action')|tojson }},
+        statusCurrency: {{ _('reconciliation_status_currency_required')|tojson }},
+        statusError: {{ _('reconciliation_status_error')|tojson }},
+        statusExplained: {{ _('reconciliation_status_explained')|tojson }},
+        statusLoading: {{ _('reconciliation_status_loading')|tojson }},
+        statusNoAccounts: {{ _('reconciliation_status_no_accounts')|tojson }},
+        statusReconciled: {{ _('reconciliation_status_reconciled')|tojson }},
+        statusRequired: {{ _('reconciliation_status_statement_required')|tojson }},
+        statusUnreconciled: {{ _('reconciliation_status_unreconciled')|tojson }},
+        unassignedNote: {{ _('reconciliation_unassigned_note')|tojson }},
+        currency: {{ _('reconciliation_currency')|tojson }},
+        accountScope: {{ _('reconciliation_scope_account')|tojson }},
+        allScope: {{ _('reconciliation_scope_all')|tojson }},
+        coverageComplete: {{ _('reconciliation_statement_coverage_complete')|tojson }},
+        coverageMissing: {{ _('reconciliation_statement_coverage_missing')|tojson }},
+        accountsWithStatement: {{ _('reconciliation_accounts_with_statement')|tojson }},
+        accountsMissingStatement: {{ _('reconciliation_accounts_missing_statement')|tojson }},
+        typeChecking: {{ _('reconciliation_type_checking')|tojson }},
+        typeSavings: {{ _('reconciliation_type_savings')|tojson }},
+        typeCreditCard: {{ _('reconciliation_type_credit_card')|tojson }},
+        typeCash: {{ _('reconciliation_type_cash')|tojson }},
+        transaction: {{ _('table_edit')|tojson }},
+    };
+</script>
+<script src="{{ static_asset_url('js/reconciliation.js') }}"></script>
+{% endblock %}

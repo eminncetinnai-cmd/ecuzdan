@@ -23,6 +23,67 @@ def ensure_upload_folder():
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
+def optimize_image_file(source, target_path: str, max_dim: int = 400, quality: int = 85) -> bool:
+    """Resize and optimize an image file for profile display.
+
+    Converts image to maximum bounding box of max_dim x max_dim and compresses
+    it to reduce storage footprint and load times. Handles EXIF orientation.
+    Gracefully falls back to raw copy if Pillow processing is unavailable or fails.
+
+    Args:
+        source: File path (str) or file-like object (e.g. Werkzeug FileStorage / BytesIO)
+        target_path: Destination file path
+        max_dim: Maximum width/height in pixels (default 400)
+        quality: JPEG/WebP compression quality (default 85)
+
+    Returns:
+        bool: True if processed successfully, False otherwise
+    """
+    try:
+        from PIL import Image, ImageOps
+
+        os.makedirs(os.path.dirname(os.path.abspath(target_path)), exist_ok=True)
+
+        with Image.open(source) as img:
+            img = ImageOps.exif_transpose(img) or img
+
+            target_ext = os.path.splitext(target_path)[1].lower()
+            save_kwargs = {'optimize': True}
+
+            if target_ext in ('.jpg', '.jpeg'):
+                if img.mode in ('RGBA', 'LA', 'P'):
+                    background = Image.new('RGB', img.size, (255, 255, 255))
+                    if img.mode == 'P':
+                        img = img.convert('RGBA')
+                    background.paste(img, mask=img.split()[3] if img.mode == 'RGBA' else None)
+                    img = background
+                elif img.mode != 'RGB':
+                    img = img.convert('RGB')
+                save_kwargs['quality'] = quality
+            elif target_ext == '.webp':
+                if img.mode not in ('RGB', 'RGBA'):
+                    img = img.convert('RGBA')
+                save_kwargs['quality'] = quality
+            elif target_ext == '.png':
+                if img.mode not in ('RGB', 'RGBA'):
+                    img = img.convert('RGBA')
+
+            img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
+            img.save(target_path, **save_kwargs)
+            return True
+    except Exception as e:
+        logger.debug("Profile image optimization fallback: %s", e)
+        if isinstance(source, str) and os.path.exists(source) and source != target_path:
+            import shutil
+            shutil.copy2(source, target_path)
+            return True
+        elif hasattr(source, 'save') and callable(source.save):
+            source.seek(0)
+            source.save(target_path)
+            return True
+        return False
+
+
 def download_profile_image(image_url: str) -> str | None:
     """Download profile image from URL and save to local filesystem.
 
@@ -63,11 +124,18 @@ def download_profile_image(image_url: str) -> str | None:
             for chunk in response.iter_content(chunk_size=8192):
                 f.write(chunk)
 
+        # Optimize image to standard avatar dimension in place if valid image
+        try:
+            optimize_image_file(filepath, filepath)
+        except Exception:
+            pass
+
         logger.info(f"Profile image saved: {filepath}")
         return f"/static/uploads/profiles/{filename}"
 
     except Exception as e:
-        logger.error(f"Failed to download profile image: {e}")
+        # OAuth sağlayıcısındaki geçici/kayıp görseller fallback ile tolere edilir.
+        logger.warning("Failed to download profile image (expected for missing OAuth assets): %s", e)
         return None
 
 

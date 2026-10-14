@@ -24,18 +24,44 @@ html.dark {
     --slate-800: #f1f5f9;
     --slate-900: #f8fafc;
 
-    /* Semantik alias'lar — custom CSS'in büyük kısmı bunları kullanır
-       (--color-surface tek başına 40'tan fazla kuralda geçiyor). */
-    --color-bg:          #0b1220;
-    --color-surface:     #131c2e;
-    --color-border:      #273449;
-    --color-text:        #e2e8f0;
-    --color-text-muted:  #a3b1c6;
-    --color-text-subtle: #94a3b8;
-    --color-text-strong: #f8fafc;
+    /* Premium semantic alias'lar — tüm yüzeyler aynı kontrast sistemini kullanır. */
+    --color-primary:        #8b9cff;
+    --color-primary-hover:  #a5b4fc;
+    --color-primary-soft:   rgba(99, 102, 241, 0.18);
+    --color-accent:         #38bdf8;
+    --color-accent-hover:   #7dd3fc;
+    --color-bg:             #09111f;
+    --color-bg-elevated:    #0f1a2d;
+    --color-surface:        #142238;
+    --color-surface-raised: #172943;
+    --color-surface-muted:  #102038;
+    --color-border:         #2e425e;
+    --color-border-strong:  #4a6588;
+    --color-text:           #dce7f5;
+    --color-text-muted:     #a9bbd0;
+    --color-text-subtle:    #8196b1;
+    --color-text-strong:    #f8fbff;
+    --color-focus:          #67e8f9;
+    --page-gradient:        radial-gradient(circle at 10% 12%, #12213a 0%, #09111f 58%, #0f1a2d 100%);
+    --chart-surface:        #101c30;
+    --chart-surface-soft:   rgba(20, 34, 56, 0.72);
+    --chart-grid:           #2e425e;
+    --chart-text:           #a9bbd0;
+    --chart-text-strong:    #e7eef8;
+    --chart-border:         #3a5273;
+    --chart-tooltip-bg:     rgba(20, 34, 56, 0.97);
+    --chart-tooltip-text:   #f8fbff;
 
-    --glass-bg:     rgba(19, 28, 46, 0.97);
-    --glass-border: rgba(51, 65, 85, 0.85);
+    --theme-toggle-bg:       linear-gradient(135deg, #1b2c4a 0%, #16334d 100%);
+    --theme-toggle-bg-hover: linear-gradient(135deg, #243d63 0%, #1e4b69 100%);
+    --theme-toggle-border:   #5b7ec2;
+    --theme-toggle-text:     #eef4ff;
+    --theme-toggle-icon-bg:  rgba(148, 163, 184, 0.16);
+    --theme-toggle-indicator: #fbbf24;
+    --theme-toggle-glow:     0 0 0 3px rgba(103, 232, 249, 0.16), 0 12px 28px rgba(0, 0, 0, 0.36);
+
+    --glass-bg:     rgba(20, 34, 56, 0.94);
+    --glass-border: rgba(74, 101, 136, 0.72);
 
     --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.40);
     --shadow-md:  0 4px 20px rgba(0, 0, 0, 0.45);
@@ -47,8 +73,8 @@ html.dark {
 }
 
 html.dark body {
-    background: #0b1220;
-    color: #e2e8f0;
+    background: var(--page-gradient);
+    color: var(--color-text);
 }
 
 /* ─── 2. Kart / konteyner yüzeyleri ──────────────────────────────────────── */
@@ -91,7 +117,7 @@ html.dark .calc-box,
 html.dark .info-box,
 html.dark .tip-box,
 html.dark .invite-link-box {
-    background: #131c2e !important;
+    background: var(--color-surface) !important;
     border-color: rgba(51, 65, 85, 0.85);
     box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(148, 163, 184, 0.06);
 }
@@ -109,14 +135,14 @@ html.dark .strat-card::before {
 }
 
 /* ─── 3. Tailwind zemin utility'leri ─────────────────────────────────────── */
-html.dark .bg-white          { background-color: #131c2e !important; }
-html.dark .bg-white\/95      { background-color: rgba(19, 28, 46, 0.95) !important; }
-html.dark .bg-white\/90      { background-color: rgba(19, 28, 46, 0.90) !important; }
-html.dark .bg-white\/85      { background-color: rgba(19, 28, 46, 0.85) !important; }
-html.dark .bg-white\/80      { background-color: rgba(19, 28, 46, 0.80) !important; }
-html.dark .bg-white\/70      { background-color: rgba(19, 28, 46, 0.70) !important; }
-html.dark .bg-white\/60      { background-color: rgba(19, 28, 46, 0.60) !important; }
-html.dark .bg-white\/50      { background-color: rgba(19, 28, 46, 0.50) !important; }
+html.dark .bg-white          { background-color: var(--color-surface) !important; }
+html.dark .bg-white\/95      { background-color: color-mix(in srgb, var(--color-surface) 95%, transparent) !important; }
+html.dark .bg-white\/90      { background-color: color-mix(in srgb, var(--color-surface) 90%, transparent) !important; }
+html.dark .bg-white\/85      { background-color: color-mix(in srgb, var(--color-surface) 85%, transparent) !important; }
+html.dark .bg-white\/80      { background-color: color-mix(in srgb, var(--color-surface) 80%, transparent) !important; }
+html.dark .bg-white\/70      { background-color: color-mix(in srgb, var(--color-surface) 70%, transparent) !important; }
+html.dark .bg-white\/60      { background-color: color-mix(in srgb, var(--color-surface) 60%, transparent) !important; }
+html.dark .bg-white\/50      { background-color: color-mix(in srgb, var(--color-surface) 50%, transparent) !important; }
 html.dark .bg-white\/5       { background-color: rgba(148, 163, 184, 0.05) !important; }
 
 html.dark .bg-slate-50       { background-color: #172033 !important; }
@@ -248,22 +274,53 @@ html.dark th       { border-color: #273449; }
    çevirisi onlara ulaşmıyor. Kontrast denetimi 17 düşük-kontrastlı öğe
    yakaladı, hepsi bu iki bileşendeydi. */
 html.dark .sidebar-premium {
-    background: rgba(19, 28, 46, 0.92) !important;
-    border-right-color: #273449;
+    background: #0f172a !important;
+    border-right-color: #1e293b;
 }
 
-/* Marka alanı açık bir gradyan taşıyor; koyu temada başlık beyaz-üstü-beyaz kalıyordu. */
+/* Marka alanı koyu temada dengeli */
 html.dark .brand-area {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.85), rgba(23, 32, 51, 0.65));
-    border-color: rgba(51, 65, 85, 0.7);
+    background: rgba(30, 41, 59, 0.6);
+    border-color: rgba(51, 65, 85, 0.6);
 }
 
 html.dark .brand-title      { color: #f8fafc; }
 html.dark .brand-kicker     { color: #94a3b8; }
-html.dark .nav-link         { color: #cbd5e1; }
+html.dark .nav-link         { color: #94a3b8; }
 html.dark .nav-link:hover   { background: #1e293b; color: #f8fafc; }
-/* Aktif bağlantı açık zemin + koyu metin olarak kalır — kasıtlı vurgu. */
-html.dark .nav-link.active  { background: #e2e8f0; color: #0f172a; }
+html.dark .nav-link.active  { background: rgba(99, 102, 241, 0.16) !important; color: #e0e7ff !important; border-color: rgba(99, 102, 241, 0.35) !important; }
+html.dark .nav-link.active svg { color: #818cf8 !important; }
+
+/* Sol Menü Grup Başlıkları (Section Titles) Koyu Tema */
+html.dark .nav-section-title {
+    color: #64748b;
+}
+html.dark .nav-section-title.collapsible:hover {
+    background: rgba(30, 41, 59, 0.5);
+    color: #cbd5e1;
+}
+html.dark .nav-section-title.collapsible .chevron {
+    color: #64748b;
+}
+html.dark .nav-section-title.collapsible:hover .chevron {
+    color: #cbd5e1;
+}
+
+/* Sol Menü İnce Kaydırma Çubuğu Koyu Tema */
+html.dark .sidebar-middle::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.3);
+}
+html.dark .sidebar-middle::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 0.55);
+}
+
+/* Sol Menü Bildirim Rozeti & Ray Alt Kısım Koyu Tema */
+html.dark .sidebar-rail-footer {
+    border-color: rgba(30, 41, 59, 0.85) !important;
+}
+html.dark .sidebar-badge {
+    border-color: #0f172a;
+}
 
 /* Üst bar açık temada da koyu bir gradyan; metinleri AÇIK kalmalı.
    Token çevirisi (--slate-50 → koyu) burada ters etki yaratıyordu. */

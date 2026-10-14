@@ -2,8 +2,9 @@
 
 import logging
 import os
+from typing import Any, Dict, Optional
+
 import yaml
-from typing import Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +15,7 @@ class DemoDataConfigLoader:
     def __init__(self, config_dir: Optional[str] = None) -> None:
         """
         Initialize the config loader.
-        
+
         Args:
             config_dir: Path to config directory. If None, uses default.
         """
@@ -22,7 +23,7 @@ class DemoDataConfigLoader:
             # Default to config/demo_data relative to project root
             project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
             config_dir = os.path.join(project_root, 'config', 'demo_data')
-        
+
         self.config_dir: str = config_dir
         self._category_mappings: Optional[Dict[str, Any]] = None
         self._generation_rules: Optional[Dict[str, Any]] = None
@@ -79,18 +80,18 @@ class DemoDataConfigLoader:
     def get_standard_category_name(self, logical_name: str, category_type: str) -> Optional[str]:
         """
         Get standard category name for a logical name.
-        
+
         Args:
             logical_name: Logical/demo category name (e.g., 'salary')
             category_type: Category type ('income', 'expense', 'investment', 'transfer')
-        
+
         Returns:
             Standard category name or None if not found
         """
         mappings = self.load_category_mappings()
         type_mappings = mappings.get(category_type, {})
         category_info = type_mappings.get(logical_name)
-        
+
         if category_info:
             return category_info.get('standard_name')
         return None
@@ -98,11 +99,11 @@ class DemoDataConfigLoader:
     def get_generation_rule(self, rule_name: str, rule_type: str) -> Optional[Dict[str, Any]]:
         """
         Get generation rule by name and type.
-        
+
         Args:
             rule_name: Rule name (e.g., 'salary', 'food')
             rule_type: Rule type ('income_rules', 'expense_rules', 'investment_rules')
-        
+
         Returns:
             Rule configuration or None if not found
         """
@@ -113,10 +114,10 @@ class DemoDataConfigLoader:
     def get_transaction_template(self, template_name: str) -> Optional[Dict[str, Any]]:
         """
         Get transaction template by name.
-        
+
         Args:
             template_name: Template name (e.g., 'monthly_salary')
-        
+
         Returns:
             Template configuration or None if not found
         """
@@ -127,10 +128,10 @@ class DemoDataConfigLoader:
     def get_recurring_plan_template(self, template_name: str) -> Optional[Dict[str, Any]]:
         """
         Get recurring plan template by name.
-        
+
         Args:
             template_name: Template name (e.g., 'salary_plan')
-        
+
         Returns:
             Template configuration or None if not found
         """
@@ -141,10 +142,10 @@ class DemoDataConfigLoader:
     def get_asset_template(self, template_name: str) -> Optional[Dict[str, Any]]:
         """
         Get asset template by name.
-        
+
         Args:
             template_name: Template name (e.g., 'stock', 'gold')
-        
+
         Returns:
             Template configuration or None if not found
         """

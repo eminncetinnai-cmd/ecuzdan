@@ -12,6 +12,7 @@ codes:
     metadata:
       granted_by: "system"
       notes: "Super admin access code"
+      grants_all_capabilities: true
 
   # Example codes (commented out)
   # admin2024:

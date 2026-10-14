@@ -1,9 +1,10 @@
 """Unit tests for DemoDataStartupValidator."""
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
-from tempfile import TemporaryDirectory
 import os
+from tempfile import TemporaryDirectory
+from unittest.mock import Mock, patch
+
+import pytest
 
 from domain.demo.startup_validation import DemoDataStartupValidator, validate_demo_data_config
 
@@ -33,10 +34,10 @@ class TestDemoDataStartupValidator:
     def mock_validator(self, mock_category_service):
         """Mock validator."""
         from domain.demo.validators.demo_data_validator import DemoDataValidator, ValidationResult
-        
+
         validator = Mock(spec=DemoDataValidator)
         validator.category_service = mock_category_service
-        
+
         # Mock validation results
         validator.validate_category_mappings.return_value = ValidationResult(
             is_valid=True, errors=[], warnings=[]
@@ -47,7 +48,7 @@ class TestDemoDataStartupValidator:
         validator.validate_data_templates.return_value = ValidationResult(
             is_valid=True, errors=[], warnings=[]
         )
-        
+
         return validator
 
     def test_validate_all_success(self, startup_validator, temp_config_dir, mock_validator):
@@ -74,7 +75,7 @@ class TestDemoDataStartupValidator:
                 }
             }
         }
-        
+
         import yaml
         with open(os.path.join(temp_config_dir, 'category_mappings.yaml'), 'w') as f:
             yaml.dump(category_mappings, f)
@@ -82,12 +83,12 @@ class TestDemoDataStartupValidator:
             yaml.dump(generation_rules, f)
         with open(os.path.join(temp_config_dir, 'data_templates.yaml'), 'w') as f:
             yaml.dump(data_templates, f)
-        
+
         # Patch validator
         startup_validator.validator = mock_validator
-        
+
         result = startup_validator.validate_all()
-        
+
         assert result is True
 
     def test_validate_all_with_warnings(self, startup_validator, temp_config_dir, mock_validator):
@@ -115,7 +116,7 @@ class TestDemoDataStartupValidator:
                 }
             }
         }
-        
+
         import yaml
         with open(os.path.join(temp_config_dir, 'category_mappings.yaml'), 'w') as f:
             yaml.dump(category_mappings, f)
@@ -123,16 +124,16 @@ class TestDemoDataStartupValidator:
             yaml.dump(generation_rules, f)
         with open(os.path.join(temp_config_dir, 'data_templates.yaml'), 'w') as f:
             yaml.dump(data_templates, f)
-        
+
         # Mock validator with warning
         from domain.demo.validators.demo_data_validator import ValidationResult
         mock_validator.validate_generation_rules.return_value = ValidationResult(
             is_valid=True, errors=[], warnings=['Status distribution does not sum to 1.0']
         )
         startup_validator.validator = mock_validator
-        
+
         result = startup_validator.validate_all()
-        
+
         # Should still pass (warnings don't fail validation)
         assert result is True
 
@@ -160,7 +161,7 @@ class TestDemoDataStartupValidator:
                 }
             }
         }
-        
+
         import yaml
         with open(os.path.join(temp_config_dir, 'category_mappings.yaml'), 'w') as f:
             yaml.dump(category_mappings, f)
@@ -168,16 +169,16 @@ class TestDemoDataStartupValidator:
             yaml.dump(generation_rules, f)
         with open(os.path.join(temp_config_dir, 'data_templates.yaml'), 'w') as f:
             yaml.dump(data_templates, f)
-        
+
         # Mock validator with error
         from domain.demo.validators.demo_data_validator import ValidationResult
         mock_validator.validate_generation_rules.return_value = ValidationResult(
             is_valid=False, errors=['Missing required field: amount_range'], warnings=[]
         )
         startup_validator.validator = mock_validator
-        
+
         result = startup_validator.validate_all()
-        
+
         # Should fail due to missing required field
         assert result is False
 
@@ -205,7 +206,7 @@ class TestDemoDataStartupValidator:
                 }
             }
         }
-        
+
         import yaml
         with open(os.path.join(temp_config_dir, 'category_mappings.yaml'), 'w') as f:
             yaml.dump(category_mappings, f)
@@ -213,11 +214,11 @@ class TestDemoDataStartupValidator:
             yaml.dump(generation_rules, f)
         with open(os.path.join(temp_config_dir, 'data_templates.yaml'), 'w') as f:
             yaml.dump(data_templates, f)
-        
+
         # Directly set the validator to our mock
         startup_validator.validator = mock_validator
         result = startup_validator.validate_with_tenant('test-tenant')
-        
+
         assert result is True
 
     def test_validate_demo_data_config_convenience(self, temp_config_dir):
@@ -244,7 +245,7 @@ class TestDemoDataStartupValidator:
                 }
             }
         }
-        
+
         import yaml
         with open(os.path.join(temp_config_dir, 'category_mappings.yaml'), 'w') as f:
             yaml.dump(category_mappings, f)
@@ -252,13 +253,13 @@ class TestDemoDataStartupValidator:
             yaml.dump(generation_rules, f)
         with open(os.path.join(temp_config_dir, 'data_templates.yaml'), 'w') as f:
             yaml.dump(data_templates, f)
-        
+
         # Patch the validator
         with patch('domain.demo.startup_validation.DemoDataStartupValidator') as MockValidator:
             mock_instance = Mock()
             mock_instance.validate_all.return_value = True
             MockValidator.return_value = mock_instance
-            
+
             result = validate_demo_data_config(config_dir=temp_config_dir)
-            
+
             assert result is True

@@ -5,7 +5,6 @@ Birleşik defter mimarisi testleri
 
 import pytest
 
-from repositories.financial_repository import FinancialRepository
 from domain.transactions.services.financial_ledger import (
     LedgerError,
     create_asset_position,
@@ -20,6 +19,7 @@ from domain.transactions.services.financial_ledger import (
     update_one_time_transaction,
 )
 from models import Asset, AssetSector, AssetTransaction, AssetUpdate, Category, RecurringPlan, Transaction, db
+from repositories.financial_repository import FinancialRepository
 
 
 def _sector_id():
@@ -267,7 +267,7 @@ def test_delete_recurring_plan(app):
     assert isinstance(result, dict)
     assert result.get('success') is True
     assert db.session.get(RecurringPlan, plan_id) is None
-    assert Transaction.query.filter_by(source_id=plan_id).count() == 0
+    assert Transaction.query.filter_by(source_id=plan_id, is_deleted=False).count() == 0
 
 
 def test_delete_one_time_blocks_linked(app):

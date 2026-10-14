@@ -1,13 +1,12 @@
-import sys
-import os
 import logging
+import os
+import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from sqlalchemy import text
-from shared.db import db
-from models import UserProgress, QuizAttempt, UserAchievement, QuizQuestion
 
+from shared.db import db
 
 logger = logging.getLogger("Migration_Sprint17")
 

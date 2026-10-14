@@ -2,14 +2,13 @@
 
 import json
 import sys
-from datetime import datetime, timezone
 
 # Add parent directory to path
 sys.path.insert(0, '.')
 
-from shared.db import db
-from models import ProfileQuestion
 import app
+from models import ProfileQuestion
+from shared.db import db
 
 
 def get_default_questions():
@@ -646,15 +645,15 @@ def get_default_questions():
 
 def seed_questions():
     """Seed profile questions into the database."""
-    
+
     with app.app.app_context():
         # Clear existing questions
         ProfileQuestion.query.delete()
         db.session.commit()
-        
+
         # Get default questions
         questions = get_default_questions()
-        
+
         # Add questions to database
         for q in questions:
             question = ProfileQuestion(
@@ -663,6 +662,7 @@ def seed_questions():
                 question_text=q['question'],
                 question_type=q['type'],
                 options=json.dumps(q['options']),
+                correct_order=json.dumps(q.get('correct_order'), ensure_ascii=False) if q.get('correct_order') else None,
                 correct_answer=q.get('correct_answer'),
                 scoring_weights=json.dumps(q.get('scoring_weights', {})),
                 explanation=q.get('explanation'),
@@ -671,7 +671,7 @@ def seed_questions():
                 version='1.0'
             )
             db.session.add(question)
-        
+
         db.session.commit()
         print(f"✓ {len(questions)} profile questions seeded successfully")
 

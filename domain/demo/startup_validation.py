@@ -15,7 +15,7 @@ class DemoDataStartupValidator:
     def __init__(self, config_dir: Optional[str] = None) -> None:
         """
         Initialize the startup validator.
-        
+
         Args:
             config_dir: Path to config directory. If None, uses default.
         """
@@ -25,12 +25,12 @@ class DemoDataStartupValidator:
     def validate_all(self) -> bool:
         """
         Validate all demo data configurations.
-        
+
         Returns:
             bool: True if all validations pass, False otherwise
         """
-        logger.info("Starting demo data configuration validation...")
-        
+        logger.debug("Starting demo data configuration validation...")
+
         try:
             # Validate category mappings
             category_result = self.validator.validate_category_mappings()
@@ -39,8 +39,8 @@ class DemoDataStartupValidator:
                 for error in category_result.errors:
                     logger.error(f"  - {error}")
             else:
-                logger.info("✓ Category mappings validation passed")
-            
+                logger.debug("✓ Category mappings validation passed")
+
             # Validate generation rules
             rules_result = self.validator.validate_generation_rules()
             if not rules_result.is_valid:
@@ -48,8 +48,8 @@ class DemoDataStartupValidator:
                 for error in rules_result.errors:
                     logger.error(f"  - {error}")
             else:
-                logger.info("✓ Generation rules validation passed")
-            
+                logger.debug("✓ Generation rules validation passed")
+
             # Validate data templates
             templates_result = self.validator.validate_data_templates()
             if not templates_result.is_valid:
@@ -57,29 +57,29 @@ class DemoDataStartupValidator:
                 for error in templates_result.errors:
                     logger.error(f"  - {error}")
             else:
-                logger.info("✓ Data templates validation passed")
-            
+                logger.debug("✓ Data templates validation passed")
+
             # Log warnings
             all_warnings = category_result.warnings + rules_result.warnings + templates_result.warnings
             if all_warnings:
                 logger.warning("Configuration validation warnings:")
                 for warning in all_warnings:
                     logger.warning(f"  - {warning}")
-            
+
             # Overall result
             is_valid = (
                 category_result.is_valid and
                 rules_result.is_valid and
                 templates_result.is_valid
             )
-            
+
             if is_valid:
-                logger.info("✓ All demo data configuration validations passed")
+                logger.debug("✓ All demo data configuration validations passed")
             else:
                 logger.error("✗ Demo data configuration validation failed")
-            
+
             return is_valid
-            
+
         except Exception as e:
             logger.error(f"Error during configuration validation: {e}")
             logger.exception("Full exception traceback:")
@@ -88,28 +88,28 @@ class DemoDataStartupValidator:
     def validate_with_tenant(self, tenant_id: str) -> bool:
         """
         Validate configurations for a specific tenant.
-        
+
         Args:
             tenant_id: Tenant ID to validate against
-        
+
         Returns:
             bool: True if all validations pass, False otherwise
         """
         logger.info(f"Starting demo data configuration validation for tenant '{tenant_id}'...")
-        
+
         # Update validator with tenant context
         self.validator.tenant_id = tenant_id
-        
+
         return self.validate_all()
 
 
 def validate_demo_data_config(config_dir: Optional[str] = None) -> bool:
     """
     Convenience function to validate demo data configuration.
-    
+
     Args:
         config_dir: Path to config directory. If None, uses default.
-    
+
     Returns:
         bool: True if all validations pass, False otherwise
     """

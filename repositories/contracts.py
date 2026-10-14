@@ -76,6 +76,15 @@ class CatalogRepositoryContract(Protocol):
     def delete_category(self, category_id: Any, tenant_id: Optional[str] = None) -> bool:
         ...
 
+    def restore_category(self, category_id: Any, tenant_id: Optional[str] = None) -> bool:
+        ...
+
+    def merge_categories(self, source_id: Any, target_id: Any, tenant_id: Optional[str] = None) -> Any:
+        ...
+
+    def get_category_metrics(self, tenant_id: Optional[str] = None) -> Any:
+        ...
+
     def update_asset_type(self, asset_type_id: Any, new_name: str) -> Any:
         ...
 
@@ -109,6 +118,8 @@ class FinancialRepositoryContract(Protocol):
         source_type: Optional[str] = None,
         installment_number: Optional[int] = None,
         tenant_id: Optional[str] = None,
+        bank_account_id: Optional[int] = None,
+
     ) -> Any:
         ...
 

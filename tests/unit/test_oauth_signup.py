@@ -1,13 +1,13 @@
 """Tests for OAuth sign-up flow and multi-method authentication."""
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
+import os
+from unittest.mock import Mock, patch
+
 from werkzeug.security import generate_password_hash
 
 from domain.users.services.auth_service import AuthService
+from models import Tenant, User
 from repositories.user_repository import UserRepository
-from models import User, Tenant
-from shared.db import db
 
 
 class TestAuthServiceMultiMethodAuth:
@@ -209,6 +209,42 @@ class TestProfileImageUtility:
         result = delete_profile_image('/static/uploads/profiles/test.jpg')
 
         assert result is False
+
+    def test_optimize_image_file_resizes_large_image(self, tmp_path):
+        """Test optimize_image_file resizes a large image to max 400x400."""
+        from PIL import Image
+
+        from utils.profile_image import optimize_image_file
+
+        src_path = str(tmp_path / "large.jpg")
+        dst_path = str(tmp_path / "optimized.jpg")
+
+        # Create 1200x800 image
+        img = Image.new('RGB', (1200, 800), color='blue')
+        img.save(src_path, format='JPEG')
+
+        assert optimize_image_file(src_path, dst_path, max_dim=400) is True
+        assert os.path.exists(dst_path)
+
+        with Image.open(dst_path) as opt_img:
+            assert opt_img.width <= 400
+            assert opt_img.height <= 400
+            assert opt_img.size == (400, 267)
+
+    def test_optimize_image_file_fallback_on_corrupt(self, tmp_path):
+        """Test optimize_image_file handles corrupt files gracefully."""
+        from utils.profile_image import optimize_image_file
+
+        src_path = str(tmp_path / "corrupt.jpg")
+        dst_path = str(tmp_path / "target.jpg")
+
+        with open(src_path, 'wb') as f:
+            f.write(b"not a valid image")
+
+        # Falls back to copy or returns result
+        result = optimize_image_file(src_path, dst_path)
+        assert result is True  # copied as fallback
+        assert os.path.exists(dst_path)
 
 
 class TestOAuthSignupFlow:

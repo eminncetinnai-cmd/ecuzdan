@@ -1,0 +1,485 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ _('storage_health.title') }} - {{ brand }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static_asset_url('css/storage_health.css') }}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ static_asset_url('js/storage_health.js') }}" defer></script>
+{% endblock %}
+
+{% block content %}
+<main id="storage-health-page" class="storage-health-page"
+      data-overview-url="{{ url_for('storage_health.storage_health_overview') }}"
+      data-cleanup-url="{{ url_for('storage_health.storage_health_cleanup') }}"
+      data-tuneup-url="{{ url_for('storage_health.storage_health_tune_up') }}"
+      data-dbhealth-url="{{ url_for('storage_health.storage_health_db_health') }}"
+      data-history-url="{{ url_for('storage_health.storage_health_history') }}"
+      data-csrf-token="{{ csrf_token() if csrf_token is defined else '' }}"
+      data-loading="{{ _('storage_health.loading') }}"
+      data-error="{{ _('storage_health.error') }}"
+      data-scan-complete="{{ _('storage_health.scan_complete') }}"
+      data-scan-review="{{ _('storage_health.scan_review_required') }}"
+      data-trend-available="{{ _('storage_health.trend_available') }}"
+      data-trend-unavailable="{{ _('storage_health.trend_unavailable') }}"
+      data-recommend-only="{{ _('storage_health.recommend_only') }}"
+      data-retention-hold="{{ _('storage_health.retention_hold') }}"
+      data-retention-owner-policy="{{ _('storage_health.retention_owner_policy') }}"
+      data-retention-never="{{ _('storage_health.retention_never') }}"
+      data-retention-period-unassigned="{{ _('storage_health.retention_period_unassigned') }}"
+      data-retention-no-mutation="{{ _('storage_health.retention_no_mutation') }}"
+      data-cleanup-select="{{ _('storage_health.cleanup_select') }}"
+      data-cleanup-delete-selected="{{ _('storage_health.cleanup_delete_selected') }}"
+      data-cleanup-modal-title="{{ _('storage_health.cleanup_modal_title') }}"
+      data-cleanup-modal-body="{{ _('storage_health.cleanup_modal_body') }}"
+      data-cleanup-modal-confirm="{{ _('storage_health.cleanup_modal_confirm') }}"
+      data-cleanup-modal-cancel="{{ _('storage_health.cleanup_modal_cancel') }}"
+      data-cleanup-success="{{ _('storage_health.cleanup_success') }}"
+      data-cleanup-error="{{ _('storage_health.cleanup_error') }}"
+      data-cleanup-running="{{ _('storage_health.cleanup_running') }}"
+      data-cleanup-none-selected="{{ _('storage_health.cleanup_none_selected') }}"
+      data-safe-auto-label="{{ _('storage_health.safe_auto_label') }}"
+      aria-labelledby="storage-health-title">
+
+    {# ── HERO COMMAND RIBBON ────────────────────────────────── #}
+    <header class="storage-health-hero">
+        <div>
+            <div class="storage-health-eyebrow">
+                <span class="storage-health-mark" aria-hidden="true"></span>
+                <span>{{ _('storage_health.eyebrow') }} • KURUMSAL SİSTEM VE VERİTABANI BAKIMI</span>
+            </div>
+            <h1 id="storage-health-title">{{ _('storage_health.title') }}</h1>
+            <p>{{ _('storage_health.subtitle') }}</p>
+        </div>
+        <div class="storage-health-actions">
+            <button data-macro="button_primary" id="btn-smart-tuneup" class="sh-tuneup-cta-btn" type="button"
+                    aria-label="Akıllı Sistem Bakımını Başlat">
+                <span aria-hidden="true">⚡</span>
+                <span>Akıllı Sistem Bakımını Başlat</span>
+            </button>
+            <button data-macro="button_secondary" id="storage-health-refresh" class="storage-health-refresh" type="button"
+                    aria-label="{{ _('storage_health.refresh') }}">
+                <span aria-hidden="true">↻</span>
+                <span>{{ _('storage_health.refresh') }}</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Segmented Navigation Hub -->
+    <div class="mb-6 flex flex-wrap items-center gap-2 border-b border-slate-200/80 pb-4 dark:border-slate-800">
+        <a href="{{ url_for('settings.settings') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'settings.settings' or request.path.startswith('/settings') %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <span>Sistem &amp; Tercihler</span>
+        </a>
+        <a href="{{ url_for('categories.categories_page') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'categories.categories_page' or request.path.startswith('/categories') %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+            <span>Finansal Taksonomi</span>
+        </a>
+        <a href="{{ url_for('profile.index') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'profile.index' or request.path.startswith('/profile') %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            <span>Yatırımcı Profili &amp; Risk</span>
+        </a>
+        <a href="{{ url_for('storage_health.storage_health_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'storage_health.storage_health_dashboard' or request.path.startswith('/storage-health') %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
+            <span>Depolama Sağlığı &amp; Bakım</span>
+        </a>
+    </div>
+
+    {# ── STATUS BAR ────────────────────────────────────────── #}
+    <section class="storage-health-status" aria-live="polite" aria-atomic="true">
+        <span id="storage-health-status-dot" class="storage-health-status-dot" aria-hidden="true"></span>
+        <span id="storage-health-status-text">{{ _('storage_health.loading') }}</span>
+        <span class="storage-health-status-divider" aria-hidden="true"></span>
+        <span>
+            {{ _('storage_health.last_scan') }}
+            <strong id="storage-health-last-scan">—</strong>
+        </span>
+        <span class="storage-health-status-divider" aria-hidden="true"></span>
+        <span class="sh-live-tag">
+            <span class="sh-live-dot" aria-hidden="true"></span>
+            Canlı Telemetri Aktif
+        </span>
+    </section>
+
+    {# ── 4 ANTIGRAVITY STAT PODS ────────────────────────────── #}
+    <section class="storage-health-kpis" aria-label="Sistem ve Depolama Sağlık Göstergeleri">
+        <!-- Pod 1: OS Disk Telemetrisi -->
+        <article class="storage-health-kpi storage-health-kpi-primary">
+            <span class="storage-health-kpi-label">Sunucu Disk Kapasitesi</span>
+            <strong id="kpi-disk-free" aria-live="polite">—</strong>
+            <div class="sh-progress-track" aria-hidden="true">
+                <div id="kpi-disk-bar" class="sh-progress-bar"></div>
+            </div>
+            <small id="kpi-disk-total">İşletim Sistemi Diski</small>
+        </article>
+
+        <!-- Pod 2: Veritabanı Sağlığı -->
+        <article class="storage-health-kpi">
+            <span class="storage-health-kpi-label">Veritabanı Motoru (SQLite)</span>
+            <strong id="kpi-db-size" aria-live="polite">—</strong>
+            <div class="sh-kpi-badge-row">
+                <span id="kpi-db-integrity" class="sh-kpi-pill ok">Bütünlük: OK</span>
+                <span id="kpi-db-wal" class="sh-kpi-pill neutral">WAL: —</span>
+            </div>
+            <small id="kpi-db-meta">e_cuzdan_v15.db</small>
+        </article>
+
+        <!-- Pod 3: Geri Kazanılabilir Alan Potansiyeli -->
+        <article class="storage-health-kpi">
+            <span class="storage-health-kpi-label">Geri Kazanılabilir Alan</span>
+            <strong id="kpi-reclaimable-total" class="text-emerald-600 dark:text-emerald-400" aria-live="polite">—</strong>
+            <div class="sh-kpi-badge-row">
+                <span id="kpi-freelist-pages" class="sh-kpi-pill warning">— Freelist Sayfası</span>
+            </div>
+            <small id="kpi-reclaimable-meta">VACUUM & Checkpoint ile Diske İade</small>
+        </article>
+
+        <!-- Pod 4: Güvenlik ve Koruma Kalkanı -->
+        <article class="storage-health-kpi">
+            <span class="storage-health-kpi-label">Güvenlik Kalkanı</span>
+            <strong id="kpi-safe" aria-live="polite">Fail-Safe Aktif</strong>
+            <div class="sh-kpi-badge-row">
+                <span class="sh-kpi-pill safe">Sıfır Risk Garantili</span>
+            </div>
+            <small>Bakım Öncesi Otomatik Snapshot</small>
+        </article>
+    </section>
+
+    {# ── OVERVIEW GRID: Breakdown Donut + DB Diagnostics ───── #}
+    <section class="storage-health-grid storage-health-overview-grid">
+
+        {# Depolama Kategori Dağılımı (Chart.js Donut) #}
+        <article class="storage-health-panel storage-health-distribution-panel">
+            <div class="storage-health-panel-heading">
+                <div>
+                    <span class="storage-health-panel-kicker">KAPASİTE VE DAĞILIM</span>
+                    <h2>Depolama Kategori Dağılımı</h2>
+                </div>
+                <span id="storage-health-scan-quality" class="storage-health-quality"
+                      aria-live="polite">—</span>
+            </div>
+            <div class="sh-chart-container">
+                <div class="sh-canvas-wrap">
+                    <canvas id="sh-breakdown-chart" height="220"></canvas>
+                </div>
+                <div id="sh-chart-legend" class="sh-chart-legend" aria-live="polite">
+                    <div class="storage-health-empty">{{ _('storage_health.loading') }}</div>
+                </div>
+            </div>
+        </article>
+
+        {# Veritabanı Motoru Teşhis & Sağlık Matrisi #}
+        <article class="storage-health-panel storage-health-integrity-panel">
+            <div class="storage-health-panel-heading">
+                <div>
+                    <span class="storage-health-panel-kicker">VERİTABANI SAĞLIK TEŞHİSİ</span>
+                    <h2>Motor Vital Göstergeleri</h2>
+                </div>
+                <span class="storage-health-shield" aria-hidden="true">✓</span>
+            </div>
+            <dl class="storage-health-integrity-list">
+                <div>
+                    <dt>Fiziksel Bütünlük</dt>
+                    <dd id="vitals-integrity" class="text-emerald-600 font-bold" aria-live="polite">Doğrulanıyor…</dd>
+                </div>
+                <div>
+                    <dt>Günlük Modu (Journal Mode)</dt>
+                    <dd id="vitals-journal-mode" aria-live="polite">—</dd>
+                </div>
+                <div>
+                    <dt>İkincil Anahtar Kontrolü (FK)</dt>
+                    <dd id="vitals-fk-status" aria-live="polite">—</dd>
+                </div>
+                <div>
+                    <dt>Boşta Duran Sayfalar (Freelist)</dt>
+                    <dd id="vitals-freelist" aria-live="polite">—</dd>
+                </div>
+                <div>
+                    <dt>Sayfa Boyutu (Page Size)</dt>
+                    <dd id="vitals-page-size" aria-live="polite">—</dd>
+                </div>
+                <div>
+                    <dt>Sistem Koruma Modu</dt>
+                    <dd id="vitals-guard-status" class="text-indigo-600 font-semibold" aria-live="polite">Fail-Closed Aktif</dd>
+                </div>
+            </dl>
+            <div class="storage-health-callout" role="note">
+                <strong>Veri Bütünlüğü Kuralı:</strong>
+                <span>Bakım operasyonlarında kaynak kodlar, güvenlik denetim kayıtları (audit log) ve veritabanı asla doğrudan silinmez; yalnızca defragmente edilir.</span>
+            </div>
+        </article>
+
+    </section>
+
+    {# ── CANDIDATES TABLE ──────────────────────────────────── #}
+    <section class="storage-health-panel storage-health-candidates-panel">
+        <div class="storage-health-panel-heading storage-health-candidates-heading">
+            <div>
+                <span class="storage-health-panel-kicker">{{ _('storage_health.recommendation_layer') }}</span>
+                <h2>{{ _('storage_health.candidate_title') }}</h2>
+                <p>{{ _('storage_health.candidate_subtitle') }}</p>
+            </div>
+            <div class="storage-health-candidate-tools">
+                <button data-macro="button_secondary" id="sh-export-candidates-csv"
+                        type="button"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold transition hover:bg-slate-50 dark:hover:bg-slate-700"
+                        title="Aday Listesini CSV Olarak Dışa Aktar"
+                        aria-label="Aday Listesini CSV Olarak Dışa Aktar">
+                    <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <span>CSV</span>
+                </button>
+                <label class="storage-health-search-label"
+                       for="storage-health-filter">{{ _('storage_health.filter') }}</label>
+                <input id="storage-health-filter"
+                       type="search"
+                       autocomplete="off"
+                       spellcheck="false"
+                       placeholder="{{ _('storage_health.filter_placeholder') }}"
+                       aria-label="{{ _('storage_health.filter') }}">
+            </div>
+        </div>
+        <div class="storage-health-table-wrap">
+            <table class="storage-health-table" id="storage-health-candidates-table" aria-label="{{ _('storage_health.candidate_title') }}">
+                <thead>
+                    <tr>
+                        <th scope="col" class="storage-health-cb-cell">
+                            <input type="checkbox" id="sh-select-all"
+                                   aria-label="{{ _('storage_health.cleanup_select') }}"
+                                   title="{{ _('storage_health.cleanup_select') }}"
+                                   disabled>
+                        </th>
+                        <th scope="col" class="cursor-pointer select-none" data-sort-col="resource" title="Kaynağa göre sırala">
+                            {{ _('storage_health.resource') }} <span class="sh-sort-indicator text-slate-400">⇅</span>
+                        </th>
+                        <th scope="col" class="cursor-pointer select-none" data-sort-col="category" title="Kategoriye göre sırala">
+                            {{ _('storage_health.category') }} <span class="sh-sort-indicator text-slate-400">⇅</span>
+                        </th>
+                        <th scope="col" class="cursor-pointer select-none" data-sort-col="policy" title="Politikaya göre sırala">
+                            {{ _('storage_health.policy') }} <span class="sh-sort-indicator text-slate-400">⇅</span>
+                        </th>
+                        <th scope="col" class="cursor-pointer select-none" data-sort-col="risk" title="Riske göre sırala">
+                            {{ _('storage_health.risk') }} <span class="sh-sort-indicator text-slate-400">⇅</span>
+                        </th>
+                        <th scope="col" class="cursor-pointer select-none" data-sort-col="bytes" title="Boyuta göre sırala">
+                            {{ _('storage_health.bytes') }} <span class="sh-sort-indicator text-slate-400">⇅</span>
+                        </th>
+                        <th scope="col">{{ _('storage_health.rollback') }}</th>
+                        <th scope="col">{{ _('storage_health.owner') }}</th>
+                        <th scope="col">{{ _('storage_health.lifecycle') }}</th>
+                        <th scope="col">{{ _('storage_health.retention') }}</th>
+                        <th scope="col">{{ _('storage_health.action_state') }}</th>
+                    </tr>
+                </thead>
+                <tbody id="storage-health-candidates-body">
+                    <tr>
+                        <td colspan="11" class="storage-health-empty">
+                            {{ _('storage_health.loading') }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="storage-health-empty-state" class="storage-health-empty-state" hidden>
+            <strong>{{ _('storage_health.no_candidates') }}</strong>
+            <span>{{ _('storage_health.no_candidates_detail') }}</span>
+        </div>
+
+        {# Delete action bar (shown when rows are selected) #}
+        <div id="storage-health-delete-bar"
+             class="storage-health-delete-bar"
+             role="toolbar"
+             aria-label="{{ _('storage_health.cleanup_delete_selected') }}"
+             hidden>
+            <div class="storage-health-delete-bar-info">
+                <span>{{ _('storage_health.cleanup_delete_selected') }}</span>
+                <span class="storage-health-selected-badge"
+                      id="storage-health-selected-count"
+                      aria-live="polite">0</span>
+                <span>{{ _('storage_health.cleanup_select') }}</span>
+            </div>
+            <button data-macro="button_danger" id="storage-health-delete-btn"
+                    type="button"
+                    class="storage-health-delete-btn"
+                    disabled>
+                🗑 {{ _('storage_health.cleanup_delete_selected') }}
+            </button>
+        </div>
+    </section>
+
+    {# ── MAINTENANCE AUDIT LOGBOOK ──────────────────────────── #}
+    <section class="storage-health-panel storage-health-history-panel" aria-labelledby="sh-history-title">
+        <div class="storage-health-panel-heading">
+            <div>
+                <span class="storage-health-panel-kicker">DENETİM İZİ & GEÇMİŞ</span>
+                <h2 id="sh-history-title">Sistem Bakım Günlüğü</h2>
+                <p>Gerçekleştirilen otonom ve manuel bakım operasyonlarının kayıt defteri</p>
+            </div>
+            <span class="sh-kpi-pill safe">Sıfır Veri Kaybı Garantisi</span>
+        </div>
+        <div class="storage-health-table-wrap">
+            <table class="storage-health-table" aria-label="Sistem Bakım Günlüğü">
+                <thead>
+                    <tr>
+                        <th scope="col">Tarih / Saat</th>
+                        <th scope="col">Tetikleyici</th>
+                        <th scope="col">Yönetici / Aktör</th>
+                        <th scope="col">Geri Kazanılan Alan</th>
+                        <th scope="col">Veritabanı</th>
+                        <th scope="col">Önbellek</th>
+                        <th scope="col">İşlem Süresi</th>
+                        <th scope="col">Güvenlik Snapshot'ı</th>
+                        <th scope="col">Sonuç</th>
+                    </tr>
+                </thead>
+                <tbody id="sh-history-body">
+                    <tr>
+                        <td colspan="9" class="storage-health-empty">
+                            Kayıtlı bakım geçmişi bulunmuyor.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    {# ── CANDIDATE CLEANUP CONFIRMATION MODAL ────────────────── #}
+    <div id="sh-cleanup-modal"
+
+         class="sh-modal-overlay"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="sh-modal-title"
+         hidden>
+        <div class="sh-modal-box">
+            <div class="sh-modal-header">
+                <span class="sh-modal-icon" aria-hidden="true">🗑</span>
+                <div>
+                    <h2 class="sh-modal-title" id="sh-modal-title">{{ _('storage_health.cleanup_modal_title') }}</h2>
+                    <p class="m-0 text-slate-500 text-[12px]">{{ _('storage_health.cleanup_modal_body') }}</p>
+                </div>
+            </div>
+            <div class="sh-modal-body">
+                <p>{{ _('storage_health.cleanup_modal_body') }}</p>
+                <div class="sh-modal-count-row">
+                    <span>🔢</span>
+                    <span>
+                        <strong data-modal-count>0</strong>
+                        {{ _('storage_health.cleanup_select') }}
+                        — {{ _('storage_health.safe_auto_label') }}
+                    </span>
+                </div>
+            </div>
+            <div class="sh-modal-footer">
+                <button data-macro="button_secondary" id="sh-modal-cancel"
+                        type="button"
+                        class="sh-modal-cancel"
+                        data-modal-cancel>
+                    {{ _('storage_health.cleanup_modal_cancel') }}
+                </button>
+                <button data-macro="button_secondary" id="sh-modal-confirm"
+                        type="button"
+                        class="sh-modal-confirm"
+                        data-modal-confirm>
+                    {{ _('storage_health.cleanup_modal_confirm') }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {# ── ENTERPRISE SMART TUNE-UP CONSOLE MODAL ─────────────── #}
+    <div id="sh-tuneup-modal"
+         class="sh-modal-overlay"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="sh-tuneup-title"
+         hidden>
+        <div class="sh-tuneup-box">
+            <div class="sh-tuneup-header">
+                <div class="sh-tuneup-title-wrap">
+                    <span class="sh-tuneup-icon" aria-hidden="true">⚡</span>
+                    <div>
+                        <h2 class="sh-tuneup-title" id="sh-tuneup-title">Akıllı Sistem Bakımı & Optimizasyonu</h2>
+                        <p class="sh-tuneup-subtitle">Canlı Güvenlik Snapshot'ı, WAL Checkpoint, VACUUM ve Önbellek Tasfiyesi</p>
+                    </div>
+                </div>
+                <button data-macro="button_secondary" type="button" id="sh-tuneup-close-btn" class="sh-tuneup-close" aria-label="Kapat">✕</button>
+            </div>
+
+            <div class="sh-tuneup-body">
+                <!-- Progress & status -->
+                <div class="sh-tuneup-status-bar">
+                    <span id="sh-tuneup-spinner" class="sh-tuneup-spinner" aria-hidden="true"></span>
+                    <span id="sh-tuneup-status-msg">Bakım hattı hazırlanıyor…</span>
+                    <span id="sh-tuneup-timer" class="sh-tuneup-timer">0.0s</span>
+                </div>
+
+                <!-- Steps execution list -->
+                <div class="sh-tuneup-steps-list" id="sh-tuneup-steps-list">
+                    <div class="sh-tuneup-step" data-step="preflight">
+                        <span class="sh-step-icon">○</span>
+                        <span class="sh-step-text">Ön Bütünlük Doğrulaması (PRAGMA integrity_check)</span>
+                        <span class="sh-step-badge">Bekliyor</span>
+                    </div>
+                    <div class="sh-tuneup-step" data-step="snapshot">
+                        <span class="sh-step-icon">○</span>
+                        <span class="sh-step-text">Canlı Güvenlik Snapshot'ı (Hot Online Backup)</span>
+                        <span class="sh-step-badge">Bekliyor</span>
+                    </div>
+                    <div class="sh-tuneup-step" data-step="wal">
+                        <span class="sh-step-icon">○</span>
+                        <span class="sh-step-text">SQLite WAL Checkpoint & Sıfırlama (TRUNCATE)</span>
+                        <span class="sh-step-badge">Bekliyor</span>
+                    </div>
+                    <div class="sh-tuneup-step" data-step="vacuum">
+                        <span class="sh-step-icon">○</span>
+                        <span class="sh-step-text">Veritabanı Defragmentasyonu & Freelist Tasfiyesi (VACUUM)</span>
+                        <span class="sh-step-badge">Bekliyor</span>
+                    </div>
+                    <div class="sh-tuneup-step" data-step="cache">
+                        <span class="sh-step-icon">○</span>
+                        <span class="sh-step-text">Geçici Dosyalar ve Önbellek Tasfiyesi (Safe Purge)</span>
+                        <span class="sh-step-badge">Bekliyor</span>
+                    </div>
+                    <div class="sh-tuneup-step" data-step="optimize">
+                        <span class="sh-step-icon">○</span>
+                        <span class="sh-step-text">Sorgu Planlayıcı Optimizasyonu (PRAGMA optimize)</span>
+                        <span class="sh-step-badge">Bekliyor</span>
+                    </div>
+                    <div class="sh-tuneup-step" data-step="postflight">
+                        <span class="sh-step-icon">○</span>
+                        <span class="sh-step-text">Son Bütünlük Tescili (100% Sağlam)</span>
+                        <span class="sh-step-badge">Bekliyor</span>
+                    </div>
+                </div>
+
+                <!-- Final result callout -->
+                <div id="sh-tuneup-summary-callout" class="sh-tuneup-callout" hidden>
+                    <span class="sh-callout-icon">🎉</span>
+                    <div>
+                        <strong id="sh-callout-heading">Bakım Başarıyla Tamamlandı!</strong>
+                        <p id="sh-callout-detail">—</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sh-tuneup-footer">
+                <button data-macro="button_secondary" id="sh-tuneup-action-btn" type="button" class="sh-tuneup-btn-primary">
+                    Bakımı Başlat
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {# ── FOOTNOTE ──────────────────────────────────────────── #}
+    <footer class="storage-health-footnote" aria-label="Scan metadata">
+        <span>
+            {{ _('storage_health.snapshot_label') }}
+            <code id="storage-health-snapshot">—</code>
+        </span>
+        <span>Sıfır Kesinti & ACID Güvenceli Bakım Motoru Aktif</span>
+    </footer>
+
+</main>
+{% endblock %}

@@ -1,16 +1,16 @@
 """
 Sprint 05 — RecurringPlan ve Asset Genişletmesi
 ===========================================
-Amaç: Faz 1 kapsamındaki DCA, Abonelik, Kira tipleri için 
+Amaç: Faz 1 kapsamındaki DCA, Abonelik, Kira tipleri için
 RecurringPlan ve Asset tablolarına gerekli sütunların eklenmesi.
 
 Çalıştırma:
   python database/migrations/sprint05_recurring_plan_expansion.py
 """
 
-import sqlite3
-import os
 import logging
+import os
+import sqlite3
 
 logger = logging.getLogger("Migration_Sprint05")
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
@@ -35,7 +35,7 @@ def run_migration():
             "ALTER TABLE recurring_plan ADD COLUMN status VARCHAR(20) DEFAULT 'Aktif' NOT NULL;",
             "ALTER TABLE recurring_plan ADD COLUMN target_asset_id INTEGER REFERENCES asset(id);"
         ]
-        
+
         for sql in plan_columns:
             try:
                 cursor.execute(sql)
@@ -46,7 +46,7 @@ def run_migration():
                 else:
                     logger.error(f"Hata: {e}")
                     raise
-        
+
         # Mevcut planları Taksit olarak güncelle
         try:
             cursor.execute("UPDATE recurring_plan SET plan_type = 'Taksit', frequency = 'Aylık', status = 'Aktif' WHERE plan_type = 'installment' OR plan_type = 'Taksit';")
@@ -59,7 +59,7 @@ def run_migration():
             "ALTER TABLE asset ADD COLUMN rent_plan_id INTEGER REFERENCES recurring_plan(id);",
             "ALTER TABLE asset ADD COLUMN dividend_yield NUMERIC(6,4);"
         ]
-        
+
         for sql in asset_columns:
             try:
                 cursor.execute(sql)

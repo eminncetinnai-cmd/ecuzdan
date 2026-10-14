@@ -1,1 +1,1 @@
-﻿# application.transactions package
+# application.transactions package

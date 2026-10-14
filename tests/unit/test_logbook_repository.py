@@ -3,8 +3,10 @@ Unit Tests - Logbook Repository
 Repository for logbook entries and related dropdown data
 """
 
+from unittest.mock import Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+
 from repositories.logbook_repository import LogbookRepository
 
 
@@ -18,7 +20,7 @@ def test_logbook_repository_class_exists():
 def test_logbook_repository_inheritance():
     """Test LogbookRepository inherits from BaseRepository"""
     from repositories.base import BaseRepository
-    
+
     assert issubclass(LogbookRepository, BaseRepository)
 
 
@@ -28,7 +30,7 @@ def test_logbook_repository_init():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = LogbookRepository(database=mock_db)
     assert repo.session == mock_session
 
@@ -44,10 +46,10 @@ def test_logbook_repository_imports():
 def test_logbook_repository_module_structure():
     """Test logbook_repository module structure"""
     import repositories.logbook_repository as logbook_repo_module
-    
+
     # Check for expected class
     assert hasattr(logbook_repo_module, 'LogbookRepository')
-    
+
     # Check for expected imports
     assert hasattr(logbook_repo_module, 'Asset')
     assert hasattr(logbook_repo_module, 'LogbookEntry')
@@ -156,14 +158,14 @@ def test_query_entries_no_filters():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = LogbookRepository(database=mock_db)
     mock_query = Mock()
-    
+
     with patch('repositories.logbook_repository.LogbookEntry') as mock_entry_class:
         mock_entry_class.query.filter_by.return_value = mock_query
         result = repo.query_entries('test_tenant')
-        
+
         assert result == mock_query
 
 
@@ -173,17 +175,17 @@ def test_query_entries_with_category_filter():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = LogbookRepository(database=mock_db)
     mock_query = Mock()
     mock_filtered_query = Mock()
-    
+
     with patch('repositories.logbook_repository.LogbookEntry') as mock_entry_class:
         mock_entry_class.query.filter_by.return_value = mock_filtered_query
         mock_filtered_query.filter_by.return_value = mock_query
-        
+
         result = repo.query_entries('test_tenant', {'category': 'Test Category'})
-        
+
         assert result == mock_query
 
 
@@ -193,24 +195,43 @@ def test_query_entries_with_sentiment_filter():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = LogbookRepository(database=mock_db)
     mock_query = Mock()
     mock_filtered_query = Mock()
-    
+
     with patch('repositories.logbook_repository.LogbookEntry') as mock_entry_class:
         mock_entry_class.query.filter_by.return_value = mock_filtered_query
         mock_filtered_query.filter_by.return_value = mock_query
-        
+
         result = repo.query_entries('test_tenant', {'sentiment': 'positive'})
-        
+
         assert result == mock_query
 
 
-@pytest.mark.unit
-def test_query_entries_with_date_filters():
-    """Test query_entries with date filters - skipped due to complex SQLAlchemy mocking"""
-    pytest.skip("Complex SQLAlchemy filter mocking requires actual query objects")
+@pytest.mark.integration
+def test_query_entries_with_date_filters(app, test_user):
+    """Date-from and date-to filters compose correctly."""
+    from models import LogbookEntry, db
+
+    with app.app_context():
+        db.session.add_all([
+            LogbookEntry(
+                tenant_id='default', user_id=test_user.id, title='Ocak',
+                content='Ocak notu', entry_date='2025-01-15', category='Finansal'
+            ),
+            LogbookEntry(
+                tenant_id='default', user_id=test_user.id, title='Şubat',
+                content='Şubat notu', entry_date='2025-02-15', category='Yatırım'
+            ),
+        ])
+        db.session.commit()
+
+        result = LogbookRepository(database=db).query_entries(
+            'default', {'date_from': '2025-02-01', 'date_to': '2025-02-28'}
+        ).all()
+
+    assert [entry.title for entry in result] == ['Şubat']
 
 
 @pytest.mark.unit
@@ -219,20 +240,20 @@ def test_list_entries_default_order():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = LogbookRepository(database=mock_db)
     mock_query = Mock()
     mock_ordered_query = Mock()
     mock_entries = [Mock(), Mock()]
-    
+
     with patch('repositories.logbook_repository.LogbookEntry') as mock_entry_class:
         mock_entry_class.entry_date.desc.return_value = Mock()
         mock_query.order_by.return_value = mock_ordered_query
         mock_ordered_query.all.return_value = mock_entries
         repo.query_entries = Mock(return_value=mock_query)
-        
+
         result = repo.list_entries('test_tenant')
-        
+
         assert result == mock_entries
 
 
@@ -242,20 +263,20 @@ def test_list_entries_ascending_order():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = LogbookRepository(database=mock_db)
     mock_query = Mock()
     mock_ordered_query = Mock()
     mock_entries = [Mock(), Mock()]
-    
+
     with patch('repositories.logbook_repository.LogbookEntry') as mock_entry_class:
         mock_entry_class.entry_date.asc.return_value = Mock()
         mock_query.order_by.return_value = mock_ordered_query
         mock_ordered_query.all.return_value = mock_entries
         repo.query_entries = Mock(return_value=mock_query)
-        
+
         result = repo.list_entries('test_tenant', ascending=True)
-        
+
         assert result == mock_entries
 
 
@@ -265,39 +286,87 @@ def test_paginate_entries():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = LogbookRepository(database=mock_db)
     mock_query = Mock()
     mock_ordered_query = Mock()
     mock_paginated = Mock()
-    
+
     with patch('repositories.logbook_repository.LogbookEntry') as mock_entry_class:
         mock_entry_class.entry_date.desc.return_value = Mock()
         mock_query.order_by.return_value = mock_ordered_query
         mock_ordered_query.paginate.return_value = mock_paginated
         repo.query_entries = Mock(return_value=mock_query)
-        
+
         result = repo.paginate_entries('test_tenant', page=2, per_page=50)
-        
+
         assert result == mock_paginated
 
 
-@pytest.mark.unit
-def test_query_entries_with_date_from_filter():
-    """Test query_entries with date_from filter - skipped due to SQLAlchemy comparison operators"""
-    pytest.skip("SQLAlchemy filter with comparison operators requires actual query objects")
+@pytest.mark.integration
+def test_query_entries_with_date_from_filter(app, test_user):
+    """Date-from filter excludes earlier entries."""
+    from models import LogbookEntry, db
+
+    with app.app_context():
+        db.session.add_all([
+            LogbookEntry(
+                tenant_id='default', user_id=test_user.id, title='Eski',
+                content='Eski not', entry_date='2025-01-01'
+            ),
+            LogbookEntry(
+                tenant_id='default', user_id=test_user.id, title='Yeni',
+                content='Yeni not', entry_date='2025-02-01'
+            ),
+        ])
+        db.session.commit()
+        result = LogbookRepository(database=db).query_entries(
+            'default', {'date_from': '2025-02-01'}
+        ).all()
+
+    assert [entry.title for entry in result] == ['Yeni']
 
 
-@pytest.mark.unit
-def test_query_entries_with_date_to_filter():
-    """Test query_entries with date_to filter - skipped due to SQLAlchemy comparison operators"""
-    pytest.skip("SQLAlchemy filter with comparison operators requires actual query objects")
+@pytest.mark.integration
+def test_query_entries_with_date_to_filter(app, test_user):
+    """Date-to filter excludes later entries."""
+    from models import LogbookEntry, db
+
+    with app.app_context():
+        db.session.add_all([
+            LogbookEntry(
+                tenant_id='default', user_id=test_user.id, title='Erken',
+                content='Erken not', entry_date='2025-01-01'
+            ),
+            LogbookEntry(
+                tenant_id='default', user_id=test_user.id, title='Geç',
+                content='Geç not', entry_date='2025-02-01'
+            ),
+        ])
+        db.session.commit()
+        result = LogbookRepository(database=db).query_entries(
+            'default', {'date_to': '2025-01-31'}
+        ).all()
+
+    assert [entry.title for entry in result] == ['Erken']
 
 
-@pytest.mark.unit
-def test_query_entries_with_both_date_filters():
-    """Test query_entries with both date filters - skipped due to SQLAlchemy comparison operators"""
-    pytest.skip("SQLAlchemy filter with comparison operators requires actual query objects")
+@pytest.mark.integration
+def test_query_entries_with_both_date_filters(app, test_user):
+    """Both date boundaries are inclusive."""
+    from models import LogbookEntry, db
+
+    with app.app_context():
+        db.session.add(LogbookEntry(
+            tenant_id='default', user_id=test_user.id, title='Sınır',
+            content='Sınır not', entry_date='2025-01-31'
+        ))
+        db.session.commit()
+        result = LogbookRepository(database=db).query_entries(
+            'default', {'date_from': '2025-01-31', 'date_to': '2025-01-31'}
+        ).all()
+
+    assert [entry.title for entry in result] == ['Sınır']
 
 
 @pytest.mark.unit
@@ -306,15 +375,15 @@ def test_get_entry():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = LogbookRepository(database=mock_db)
     mock_entry = Mock()
-    
+
     with patch('repositories.logbook_repository.LogbookEntry') as mock_entry_class:
         mock_entry_class.query.filter_by.return_value.first.return_value = mock_entry
-        
+
         result = repo.get_entry(1, 'test_tenant')
-        
+
         assert result == mock_entry
 
 
@@ -324,16 +393,16 @@ def test_add_entry():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = LogbookRepository(database=mock_db)
     mock_entry = Mock()
-    
+
     with patch('repositories.logbook_repository.LogbookEntry') as mock_entry_class:
         mock_entry_class.return_value = mock_entry
         repo.add = Mock(return_value=mock_entry)
-        
+
         result = repo.add_entry(category='Test', content='Test content', tenant_id='test_tenant')
-        
+
         assert result == mock_entry
 
 
@@ -343,15 +412,15 @@ def test_get_asset():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = LogbookRepository(database=mock_db)
     mock_asset = Mock()
-    
+
     with patch('repositories.logbook_repository.Asset') as mock_asset_class:
         mock_asset_class.query.filter_by.return_value.first.return_value = mock_asset
-        
+
         result = repo.get_asset(1, 'test_tenant')
-        
+
         assert result == mock_asset
 
 
@@ -361,15 +430,15 @@ def test_get_transaction():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = LogbookRepository(database=mock_db)
     mock_transaction = Mock()
-    
+
     with patch('repositories.logbook_repository.Transaction') as mock_transaction_class:
         mock_transaction_class.query.filter_by.return_value.first.return_value = mock_transaction
-        
+
         result = repo.get_transaction(1, 'test_tenant')
-        
+
         assert result == mock_transaction
 
 
@@ -379,17 +448,17 @@ def test_list_assets():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = LogbookRepository(database=mock_db)
     mock_assets = [Mock(), Mock()]
     mock_query = Mock()
-    
+
     with patch('repositories.logbook_repository.Asset') as mock_asset_class:
         mock_asset_class.query.filter_by.return_value = mock_query
         mock_query.order_by.return_value.all.return_value = mock_assets
-        
+
         result = repo.list_assets('test_tenant')
-        
+
         assert result == mock_assets
 
 
@@ -399,17 +468,17 @@ def test_list_transactions():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = LogbookRepository(database=mock_db)
     mock_transactions = [Mock(), Mock()]
     mock_query = Mock()
-    
+
     with patch('repositories.logbook_repository.Transaction') as mock_transaction_class:
         mock_transaction_class.query.filter_by.return_value = mock_query
         mock_query.order_by.return_value.limit.return_value.all.return_value = mock_transactions
-        
+
         result = repo.list_transactions('test_tenant', limit=50)
-        
+
         assert result == mock_transactions
 
 
@@ -419,16 +488,16 @@ def test_list_transactions_default_limit():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = LogbookRepository(database=mock_db)
     mock_transactions = [Mock()]
     mock_query = Mock()
-    
+
     with patch('repositories.logbook_repository.Transaction') as mock_transaction_class:
         mock_transaction_class.query.filter_by.return_value = mock_query
         mock_query.order_by.return_value.limit.return_value.all.return_value = mock_transactions
-        
+
         result = repo.list_transactions('test_tenant')
-        
+
         assert result == mock_transactions
         mock_query.order_by.return_value.limit.assert_called_once_with(100)

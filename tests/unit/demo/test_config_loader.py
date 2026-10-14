@@ -1,10 +1,10 @@
 """Unit tests for DemoDataConfigLoader."""
 
-import pytest
 import os
 import tempfile
+
+import pytest
 import yaml
-from unittest.mock import patch, MagicMock
 
 from domain.demo.config_loader import DemoDataConfigLoader
 
@@ -95,9 +95,9 @@ class TestDemoDataConfigLoader:
         filepath = os.path.join(temp_config_dir, 'category_mappings.yaml')
         with open(filepath, 'w', encoding='utf-8') as f:
             yaml.dump(sample_category_mappings, f)
-        
+
         result = config_loader.load_category_mappings()
-        
+
         assert result == sample_category_mappings
         assert 'income' in result
         assert 'salary' in result['income']
@@ -108,9 +108,9 @@ class TestDemoDataConfigLoader:
         filepath = os.path.join(temp_config_dir, 'generation_rules.yaml')
         with open(filepath, 'w', encoding='utf-8') as f:
             yaml.dump(sample_generation_rules, f)
-        
+
         result = config_loader.load_generation_rules()
-        
+
         assert result == sample_generation_rules
         assert 'income_rules' in result
         assert 'salary' in result['income_rules']
@@ -121,9 +121,9 @@ class TestDemoDataConfigLoader:
         filepath = os.path.join(temp_config_dir, 'data_templates.yaml')
         with open(filepath, 'w', encoding='utf-8') as f:
             yaml.dump(sample_data_templates, f)
-        
+
         result = config_loader.load_data_templates()
-        
+
         assert result == sample_data_templates
         assert 'transaction_templates' in result
         assert 'monthly_salary' in result['transaction_templates']
@@ -133,9 +133,9 @@ class TestDemoDataConfigLoader:
         filepath = os.path.join(temp_config_dir, 'category_mappings.yaml')
         with open(filepath, 'w', encoding='utf-8') as f:
             yaml.dump(sample_category_mappings, f)
-        
+
         result = config_loader.get_standard_category_name('salary', 'income')
-        
+
         assert result == 'Maaş / Ücret Geliri'
 
     def test_get_standard_category_name_not_found(self, config_loader, temp_config_dir, sample_category_mappings):
@@ -143,9 +143,9 @@ class TestDemoDataConfigLoader:
         filepath = os.path.join(temp_config_dir, 'category_mappings.yaml')
         with open(filepath, 'w', encoding='utf-8') as f:
             yaml.dump(sample_category_mappings, f)
-        
+
         result = config_loader.get_standard_category_name('nonexistent', 'income')
-        
+
         assert result is None
 
     def test_get_generation_rule(self, config_loader, temp_config_dir, sample_generation_rules):
@@ -153,9 +153,9 @@ class TestDemoDataConfigLoader:
         filepath = os.path.join(temp_config_dir, 'generation_rules.yaml')
         with open(filepath, 'w', encoding='utf-8') as f:
             yaml.dump(sample_generation_rules, f)
-        
+
         result = config_loader.get_generation_rule('salary', 'income_rules')
-        
+
         assert result is not None
         assert result['base_amount'] == 50000
         assert result['payment_day'] == 15
@@ -165,9 +165,9 @@ class TestDemoDataConfigLoader:
         filepath = os.path.join(temp_config_dir, 'data_templates.yaml')
         with open(filepath, 'w', encoding='utf-8') as f:
             yaml.dump(sample_data_templates, f)
-        
+
         result = config_loader.get_transaction_template('monthly_salary')
-        
+
         assert result is not None
         assert result['category_mapping'] == 'salary'
         assert result['type'] == 'Gelir'
@@ -177,9 +177,9 @@ class TestDemoDataConfigLoader:
         filepath = os.path.join(temp_config_dir, 'data_templates.yaml')
         with open(filepath, 'w', encoding='utf-8') as f:
             yaml.dump(sample_data_templates, f)
-        
+
         result = config_loader.get_recurring_plan_template('salary_plan')
-        
+
         assert result is not None
         assert result['category_mapping'] == 'salary'
         assert result['installments'] == 12
@@ -189,9 +189,9 @@ class TestDemoDataConfigLoader:
         filepath = os.path.join(temp_config_dir, 'generation_rules.yaml')
         with open(filepath, 'w', encoding='utf-8') as f:
             yaml.dump(sample_generation_rules, f)
-        
+
         result = config_loader.get_global_settings()
-        
+
         assert result is not None
         assert result['inflation_rate'] == 0.40
         assert result['salary_growth_rate'] == 0.08
@@ -201,20 +201,20 @@ class TestDemoDataConfigLoader:
         filepath = os.path.join(temp_config_dir, 'category_mappings.yaml')
         with open(filepath, 'w', encoding='utf-8') as f:
             yaml.dump(sample_category_mappings, f)
-        
+
         # Load first time
         result1 = config_loader.load_category_mappings()
         assert result1 is not None
-        
+
         # Modify file
         sample_category_mappings['income']['salary']['standard_name'] = 'Updated Maaş'
         with open(filepath, 'w', encoding='utf-8') as f:
             yaml.dump(sample_category_mappings, f)
-        
+
         # Reload
         config_loader.reload_configs()
         result2 = config_loader.load_category_mappings()
-        
+
         assert result2['income']['salary']['standard_name'] == 'Updated Maaş'
 
     def test_caching(self, config_loader, temp_config_dir, sample_category_mappings):
@@ -222,11 +222,11 @@ class TestDemoDataConfigLoader:
         filepath = os.path.join(temp_config_dir, 'category_mappings.yaml')
         with open(filepath, 'w', encoding='utf-8') as f:
             yaml.dump(sample_category_mappings, f)
-        
+
         # Load first time
         result1 = config_loader.load_category_mappings()
-        
+
         # Load second time (should use cache)
         result2 = config_loader.load_category_mappings()
-        
+
         assert result1 is result2  # Same object reference (cached)

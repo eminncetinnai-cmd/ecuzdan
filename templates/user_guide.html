@@ -1,9 +1,8 @@
 {% extends "layout.html" %}
 {% block content %}
 <style>
-    body {
+    .user-guide-wrapper {
         font-family: 'Outfit', sans-serif;
-        background: radial-gradient(circle at 10% 20%, rgb(242, 246, 250) 0%, rgb(224, 233, 244) 90.1%);
         min-height: 100vh;
     }
     .guide-card {
@@ -20,14 +19,14 @@
         box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.08);
     }
     .section-header {
-        background: linear-gradient(135deg, #0f172a 0%, #312e81 100%);
+        background: linear-gradient(135deg, var(--color-slate-900, var(--color-slate-900, #0f172a)) 0%, var(--c, #312e81) 100%);
         color: white;
         padding: 1.5rem 2rem;
         border-radius: 1rem;
         margin-bottom: 1.5rem;
     }
     .step-number {
-        background: linear-gradient(135deg, #0f172a 0%, #312e81 100%);
+        background: linear-gradient(135deg, var(--color-slate-900, var(--color-slate-900, #0f172a)) 0%, var(--c, #312e81) 100%);
         color: white;
         width: 40px;
         height: 40px;
@@ -36,82 +35,120 @@
         align-items: center;
         justify-content: center;
         font-weight: 900;
-        font-size: 18px;
+        font-size: var(--font-size-18, 18px);
         flex-shrink: 0;
     }
     .feature-icon {
         width: 50px;
         height: 50px;
-        border-radius: 12px;
+        border-radius: var(--border-radius-12, 12px);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 24px;
+        font-size: var(--font-size-24, 24px);
     }
     .faq-item {
-        border-left: 4px solid #0f172a;
+        border-left: 4px solid var(--color-slate-900, var(--color-slate-900, #0f172a));
         padding-left: 1.5rem;
         margin-bottom: 1.5rem;
     }
     .faq-question {
         font-weight: 800;
-        color: #0f172a;
-        font-size: 14px;
+        color: var(--color-slate-900, var(--color-slate-900, #0f172a));
+        font-size: var(--font-size-14, 14px);
         margin-bottom: 0.5rem;
     }
     .faq-answer {
-        color: #64748b;
-        font-size: 13px;
+        color: var(--slate-500, var(--color-slate-500, #64748b));
+        font-size: var(--font-size-13, 13px);
         line-height: 1.6;
     }
     .toc-link {
         display: block;
         padding: 0.75rem 1rem;
         border-radius: 0.75rem;
-        color: #64748b;
+        color: var(--slate-500, var(--color-slate-500, #64748b));
         text-decoration: none;
         font-weight: 600;
-        font-size: 13px;
+        font-size: var(--font-size-13, 13px);
         transition: all 0.2s;
         border-left: 3px solid transparent;
     }
-    .toc-link:hover {
-        background: #f1f5f9;
-        color: #0f172a;
-        border-left-color: #0f172a;
+    .toc-link:hover,
+    .toc-link.is-active {
+        background: var(--color-slate-100, var(--color-slate-100, #f1f5f9));
+        color: var(--color-slate-900, var(--color-slate-900, #0f172a));
+        border-left-color: var(--color-slate-900, var(--color-slate-900, #0f172a));
+    }
+    .guide-search {
+        background: rgba(248, 250, 252, 0.92);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+    .guide-search:focus {
+        border-color: var(--c, #38bdf8);
+        box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.15);
+        outline: none;
+    }
+    .guide-section[data-guide-hidden="true"] {
+        display: none;
+    }
+    .guide-no-results {
+        display: none;
+    }
+    .guide-no-results.is-visible {
+        display: block;
     }
 </style>
 
-<div class="max-w-7xl mx-auto px-4 py-8">
+<div class="user-guide-wrapper max-w-7xl mx-auto px-4 py-8">
     <!-- Başlık -->
     <div class="section-header mb-8">
         <h1 class="text-3xl font-black mb-2">📘 {{ _('ug_title') }}</h1>
-        <p class="text-sky-200 font-semibold text-sm">{{ _('ug_subtitle') }}</p>
+                <p class="text-sky-200 font-semibold text-sm">{{ _('ug_subtitle') }}</p>
+        <p class="text-sky-100/80 text-xs mt-3">{{ _('ug2_last_updated') }}</p>
+
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <!-- İçindekiler -->
         <div class="lg:col-span-1">
             <div class="guide-card p-6 sticky top-8">
-                <h3 class="font-black text-slate-800 text-sm uppercase tracking-wider mb-4">📑 {{ _('ug_toc') }}</h3>
-                <nav class="space-y-1">
+                                <h3 class="font-black text-slate-800 text-sm uppercase tracking-wider mb-4">📑 {{ _('ug_toc') }}</h3>
+                <label for="guideSearch" class="sr-only">{{ _('ug2_search_label') }}</label>
+                <input id="guideSearch" type="search" class="guide-search w-full rounded-xl px-3 py-2.5 text-xs text-slate-700 mb-4" placeholder="{{ _('ug2_search_placeholder') }}" autocomplete="off">
+                <nav id="guideToc" class="space-y-1">
+
                     <a href="#intro" class="toc-link">{{ _('ug_toc_intro') }}</a>
                     <a href="#getting-started" class="toc-link">{{ _('ug_toc_getting_started') }}</a>
                     <a href="#transactions" class="toc-link">{{ _('ug_toc_transactions') }}</a>
-                    <a href="#planned" class="toc-link">{{ _('ug_toc_planned') }}</a>
+                                        <a href="#planned" class="toc-link">{{ _('ug_toc_planned') }}</a>
+                    <a href="#workflow" class="toc-link">{{ _('ug2_toc_workflow') }}</a>
                     <a href="#assets" class="toc-link">{{ _('ug_toc_assets') }}</a>
+                    <a href="#controls" class="toc-link">{{ _('ug2_toc_controls') }}</a>
+
                     <a href="#dashboard" class="toc-link">{{ _('ug_toc_dashboard') }}</a>
                     <a href="#calendar" class="toc-link">{{ _('ug_toc_calendar') }}</a>
-                    <a href="#strategy" class="toc-link">{{ _('ug_toc_strategy') }}</a>
-                    <a href="#education" class="toc-link">{{ _('ug_toc_education') }}</a>
+                                        <a href="#strategy" class="toc-link">{{ _('ug_toc_strategy') }}</a>
+                                        <a href="#education" class="toc-link">{{ _('ug_toc_education') }}</a>
+
+                    <a href="#settings" class="toc-link">{{ _('ug2_toc_settings') }}</a>
+                    {% if current_user and current_user.has_capability('monitoring.view') %}
+                    <a href="#monitoring" class="toc-link">{{ _('ug2_toc_monitoring') }}</a>
+                    {% endif %}
+                    {% if current_user and current_user.has_capability('storage_health.view') %}
+                    <a href="#storage-health" class="toc-link">{{ _('ug_toc_storage_health') }}</a>
+                    {% endif %}
                     <a href="#faq" class="toc-link">{{ _('ug_toc_faq') }}</a>
                 </nav>
+                                <p id="guideNoResults" class="guide-no-results text-xs text-slate-500 mt-4" role="status">{{ _('ug2_no_results') }}</p>
             </div>
+
         </div>
 
         <!-- Ana İçerik -->
-        <div class="lg:col-span-3 space-y-8">
-            
+        <div id="guideContent" class="lg:col-span-3 space-y-8">
+
             <!-- Giriş -->
             <div id="intro" class="guide-card p-8">
                 <h2 class="text-2xl font-black text-slate-800 mb-4 flex items-center gap-3">
@@ -252,10 +289,51 @@
                     <li>{{ _('ug_planned_create_3') }}</li>
                     <li>{{ _('ug_planned_create_4') }}</li>
                     <li>{{ _('ug_planned_create_5') }}</li>
-                </ol>
+                                </ol>
+            </div>
+
+            <!-- Önerilen Finansal İş Akışı -->
+            <div id="workflow" class="guide-card p-8 guide-section">
+                <h2 class="text-2xl font-black text-slate-800 mb-4 flex items-center gap-3">
+                    <span class="feature-icon bg-gradient-to-br from-cyan-500 to-blue-600">🧭</span>
+                    {{ _('ug2_workflow_title') }}
+                </h2>
+                <p class="text-slate-600 mb-6">{{ _('ug2_workflow_desc') }}</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for step in range(1, 7) %}
+                    <div class="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-5">
+                        <div class="flex items-start gap-3">
+                            <div class="step-number">{{ step }}</div>
+                            <div>
+                                <h3 class="font-bold text-slate-800 mb-2">{{ _('ug2_workflow_step_' ~ step ~ '_title') }}</h3>
+                                <p class="text-slate-600 text-sm leading-relaxed">{{ _('ug2_workflow_step_' ~ step ~ '_desc') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+                        <h3 class="font-bold text-amber-900 mb-2">{{ _('ug2_planned_semantics_title') }}</h3>
+                        <p class="text-amber-800 text-sm leading-relaxed">{{ _('ug2_planned_semantics_desc') }}</p>
+                    </div>
+                    <div class="rounded-2xl border border-sky-200 bg-sky-50 p-5">
+                        <h3 class="font-bold text-sky-900 mb-2">{{ _('ug2_planned_start_date_title') }}</h3>
+                        <p class="text-sky-800 text-sm leading-relaxed">{{ _('ug2_planned_start_date_desc') }}</p>
+                    </div>
+                    <div class="rounded-2xl border border-indigo-200 bg-indigo-50 p-5">
+                        <h3 class="font-bold text-indigo-900 mb-2">{{ _('ug2_planned_occurrence_title') }}</h3>
+                        <p class="text-indigo-800 text-sm leading-relaxed">{{ _('ug2_planned_occurrence_desc') }}</p>
+                    </div>
+                    <div class="rounded-2xl border border-violet-200 bg-violet-50 p-5">
+                        <h3 class="font-bold text-violet-900 mb-2">{{ _('ug2_planned_types_title') }}</h3>
+                        <p class="text-violet-800 text-sm leading-relaxed">{{ _('ug2_planned_types_desc') }}</p>
+                    </div>
+                </div>
             </div>
 
             <!-- Varlık Yönetimi -->
+
             <div id="assets" class="guide-card p-8">
                 <h2 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-3">
                     <span class="feature-icon bg-gradient-to-br from-amber-500 to-yellow-600">🏆</span>
@@ -299,10 +377,38 @@
                     <li>{{ _('ug_assets_add_3') }}</li>
                     <li>{{ _('ug_assets_add_4') }}</li>
                     <li>{{ _('ug_assets_add_5') }}</li>
-                </ol>
+                                </ol>
+            </div>
+
+            <!-- Veri Bütünlüğü ve Mutabakat -->
+            <div id="controls" class="guide-card p-8 guide-section">
+                <h2 class="text-2xl font-black text-slate-800 mb-4 flex items-center gap-3">
+                    <span class="feature-icon bg-gradient-to-br from-rose-500 to-orange-600">🛡️</span>
+                    {{ _('ug2_controls_title') }}
+                </h2>
+                <p class="text-slate-600 mb-6">{{ _('ug2_controls_desc') }}</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+                        <h3 class="font-bold text-emerald-900 mb-2">{{ _('ug2_controls_categories_title') }}</h3>
+                        <p class="text-emerald-800 text-sm leading-relaxed">{{ _('ug2_controls_categories_desc') }}</p>
+                    </div>
+                    <div class="rounded-2xl border border-sky-200 bg-sky-50 p-5">
+                        <h3 class="font-bold text-sky-900 mb-2">{{ _('ug2_controls_reconciliation_title') }}</h3>
+                        <p class="text-sky-800 text-sm leading-relaxed">{{ _('ug2_controls_reconciliation_desc') }}</p>
+                    </div>
+                    <div class="rounded-2xl border border-indigo-200 bg-indigo-50 p-5">
+                        <h3 class="font-bold text-indigo-900 mb-2">{{ _('ug2_controls_ledger_title') }}</h3>
+                        <p class="text-indigo-800 text-sm leading-relaxed">{{ _('ug2_controls_ledger_desc') }}</p>
+                    </div>
+                    <div class="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+                        <h3 class="font-bold text-amber-900 mb-2">{{ _('ug2_controls_import_export_title') }}</h3>
+                        <p class="text-amber-800 text-sm leading-relaxed">{{ _('ug2_controls_import_export_desc') }}</p>
+                    </div>
+                </div>
             </div>
 
             <!-- Dashboard & Analiz -->
+
             <div id="dashboard" class="guide-card p-8">
                 <h2 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-3">
                     <span class="feature-icon bg-gradient-to-br from-pink-500 to-rose-600">📊</span>
@@ -384,8 +490,10 @@
                 </div>
             </div>
 
+
             <!-- Finansal Eğitim Rehberi -->
             <div id="education" class="guide-card p-8">
+
                 <h2 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-3">
                     <span class="feature-icon bg-gradient-to-br from-emerald-500 to-teal-600">📚</span>
                     {{ _('ug_education_title') }}
@@ -518,6 +626,109 @@
                 </div>
             </div>
 
+                        <!-- Dil, Tema ve Yedekleme -->
+            <div id="settings" class="guide-card p-8 guide-section">
+                <h2 class="text-2xl font-black text-slate-800 mb-4 flex items-center gap-3">
+                    <span class="feature-icon bg-gradient-to-br from-slate-600 to-slate-900">⚙️</span>
+                    {{ _('ug2_settings_title') }}
+                </h2>
+                <p class="text-slate-600 mb-6">{{ _('ug2_settings_desc') }}</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="rounded-2xl border border-sky-200 bg-sky-50 p-5">
+                        <h3 class="font-bold text-sky-900 mb-2">{{ _('ug2_settings_language_title') }}</h3>
+                        <p class="text-sky-800 text-sm leading-relaxed">{{ _('ug2_settings_language_desc') }}</p>
+                    </div>
+                    <div class="rounded-2xl border border-violet-200 bg-violet-50 p-5">
+                        <h3 class="font-bold text-violet-900 mb-2">{{ _('ug2_settings_theme_title') }}</h3>
+                        <p class="text-violet-800 text-sm leading-relaxed">{{ _('ug2_settings_theme_desc') }}</p>
+                    </div>
+                    <div class="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+                        <h3 class="font-bold text-amber-900 mb-2">{{ _('ug2_settings_privacy_title') }}</h3>
+                        <p class="text-amber-800 text-sm leading-relaxed">{{ _('ug2_settings_privacy_desc') }}</p>
+                    </div>
+                    <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+                        <h3 class="font-bold text-emerald-900 mb-2">{{ _('ug2_settings_backup_title') }}</h3>
+                        <p class="text-emerald-800 text-sm leading-relaxed">{{ _('ug2_settings_backup_desc') }}</p>
+                    </div>
+                    <div class="rounded-2xl border border-rose-200 bg-rose-50 p-5 md:col-span-2">
+                        <h3 class="font-bold text-rose-900 mb-2">{{ _('ug2_settings_special_code_title') }}</h3>
+                        <p class="text-rose-800 text-sm leading-relaxed">{{ _('ug2_settings_special_code_desc') }}</p>
+                    </div>
+                </div>
+            </div>
+
+            {% if current_user and current_user.has_capability('monitoring.view') %}
+            <!-- Monitoring ve Destek -->
+            <div id="monitoring" class="guide-card p-8 guide-section">
+                <h2 class="text-2xl font-black text-slate-800 mb-4 flex items-center gap-3">
+                    <span class="feature-icon bg-gradient-to-br from-emerald-500 to-teal-700">📡</span>
+                    {{ _('ug2_monitoring_title') }}
+                </h2>
+                <p class="text-slate-600 mb-6">{{ _('ug2_monitoring_desc') }}</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                        <h3 class="font-bold text-slate-800 mb-2">{{ _('ug2_monitoring_access_title') }}</h3>
+                        <p class="text-slate-600 text-sm leading-relaxed">{{ _('ug2_monitoring_access_desc') }}</p>
+                    </div>
+                    <div class="rounded-2xl border border-sky-200 bg-sky-50 p-5">
+                        <h3 class="font-bold text-sky-900 mb-2">{{ _('ug2_monitoring_upload_title') }}</h3>
+                        <p class="text-sky-800 text-sm leading-relaxed">{{ _('ug2_monitoring_upload_desc') }}</p>
+                    </div>
+                    <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 md:col-span-2">
+                        <h3 class="font-bold text-emerald-900 mb-2">{{ _('ug2_monitoring_sse_title') }}</h3>
+                        <p class="text-emerald-800 text-sm leading-relaxed">{{ _('ug2_monitoring_sse_desc') }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% if current_user and current_user.has_capability('storage_health.view') %}
+            <!-- Depo Sağlığı -->
+            <div id="storage-health" class="guide-card p-8">
+                <h2 class="text-2xl font-black text-slate-800 mb-4 flex items-center gap-3">
+                    <span class="feature-icon bg-gradient-to-br from-teal-500 to-cyan-600">💾</span>
+                    {{ _('ug_storage_health_title') }}
+                </h2>
+                <p class="text-slate-600 leading-relaxed mb-6">
+                    {{ _('ug_storage_health_intro') }}
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="rounded-2xl border border-teal-200 bg-teal-50/50 p-5">
+                        <h3 class="font-bold text-teal-950 mb-2 flex items-center gap-2">
+                            <span>🔍</span> İzleme & Güvenlik Duruşu
+                        </h3>
+                        <p class="text-slate-600 text-sm leading-relaxed">
+                            Disk ayak izi, korunan sistem dosyaları, veritabanı bütünlüğü ve audit log retention durumunu (HOLD) anlık ve salt okunur olarak takip edebilirsiniz.
+                        </p>
+                    </div>
+                    <div class="rounded-2xl border border-sky-200 bg-sky-50/50 p-5">
+                        <h3 class="font-bold text-sky-950 mb-2 flex items-center gap-2">
+                            <span>🧹</span> Güvenli Temizleme (SAFE_AUTO)
+                        </h3>
+                        <p class="text-slate-600 text-sm leading-relaxed">
+                            Sadece önbellek (<code>__pycache__</code>) ve geçici (<code>tmp/</code>) dosyalar gibi güvenli adaylar seçilerek iki adımlı onay ile temizlenebilir.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-6">
+                    <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                        <span>⚡</span> {{ _('ug_storage_health_cleanup_flow') }}
+                    </h3>
+                    <ol class="space-y-3 text-sm text-slate-600 list-decimal list-inside">
+                        <li><strong>Adayları İnceleyin:</strong> Tabloda yalnızca <code>GÜVENLİ-OTOMATİK (SAFE_AUTO)</code> olan satırlarda onay kutusu bulunur.</li>
+                        <li><strong>Seçim Yapın:</strong> Temizlemek istediğiniz adayları tek tek veya sütun başındaki kutudan topluca seçin.</li>
+                        <li><strong>Sil Butonuna Tıklayın:</strong> Seçim yapıldığında altta beliren <em>"Seçilenleri Sil"</em> çubuğunu kullanın.</li>
+                        <li><strong>Onaylayın:</strong> Açılan güvenlik penceresinde silinecek aday sayısını doğrulayıp onay verin.</li>
+                    </ol>
+                </div>
+
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-900 leading-relaxed">
+                    <strong>🛡️ Güvenlik Koruması:</strong> Veritabanı dosyaları (<code>.db</code>, <code>.db-wal</code>), kaynak kodlar ve güvenlik denetim logları koruma altındadır; hiçbir zaman silme adayı olamaz veya silinemez.
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Sıkça Sorulan Sorular -->
             <div id="faq" class="guide-card p-8">
                 <h2 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-3">
@@ -530,7 +741,7 @@
                         <p class="faq-question">{{ _('ug_faq_1_q') }}</p>
                         <p class="faq-answer">{{ _('ug_faq_1_a') }}</p>
                     </div>
-                    
+
                     <div class="faq-item">
                         <p class="faq-question">{{ _('ug_faq_2_q') }}</p>
                         <p class="faq-answer">{{ _('ug_faq_2_a') }}</p>
@@ -561,11 +772,18 @@
                         <p class="faq-answer">{{ _('ug_faq_7_a') }}</p>
                     </div>
                     
-                    <div class="faq-item">
+                                        <div class="faq-item">
                         <p class="faq-question">{{ _('ug_faq_8_q') }}</p>
                         <p class="faq-answer">{{ _('ug_faq_8_a') }}</p>
                     </div>
+                    {% for number in range(9, 13) %}
+                    <div class="faq-item">
+                        <p class="faq-question">{{ _('ug2_faq_' ~ number ~ '_q') }}</p>
+                        <p class="faq-answer">{{ _('ug2_faq_' ~ number ~ '_a') }}</p>
+                    </div>
+                    {% endfor %}
                 </div>
+
             </div>
 
             <!-- İletişim -->
@@ -573,11 +791,57 @@
                 <h2 class="text-2xl font-black mb-4">📞 {{ _('ug_contact_title') }}</h2>
                 <p class="text-slate-300 mb-4">{{ _('ug_contact_desc') }}</p>
                 <div class="flex items-center gap-3">
-                    <span class="bg-sky-500 px-4 py-2 rounded-lg font-bold text-sm">E-Cüzdan v15.0</span>
+                    <span class="bg-sky-500 px-4 py-2 rounded-lg font-bold text-sm">{{ _('ug_version') }}</span>
                     <span class="text-slate-400 text-sm">{{ _('ug_contact_version') }}</span>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<script>
+    (() => {
+        const search = document.getElementById('guideSearch');
+        const content = document.getElementById('guideContent');
+        const toc = document.getElementById('guideToc');
+        const noResults = document.getElementById('guideNoResults');
+        if (!search || !content || !toc) return;
+
+        const sections = Array.from(content.querySelectorAll(':scope > div[id]'));
+        const links = Array.from(toc.querySelectorAll('a[href^="#"]'));
+        const normalize = value => String(value || '').toLocaleLowerCase(document.documentElement.lang || 'tr').normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
+
+        function applyFilter() {
+            const query = normalize(search.value.trim());
+            let visible = 0;
+            sections.forEach(section => {
+                const haystack = normalize(section.textContent);
+                const matches = !query || haystack.includes(query);
+                section.dataset.guideHidden = matches ? 'false' : 'true';
+                const link = links.find(item => item.getAttribute('href') === `#${section.id}`);
+                if (link) link.hidden = !matches;
+                if (matches) visible += 1;
+            });
+            noResults.classList.toggle('is-visible', Boolean(query) && visible === 0);
+        }
+
+        search.addEventListener('input', applyFilter);
+        search.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && search.value) {
+                search.value = '';
+                applyFilter();
+            }
+        });
+        applyFilter();
+
+        if ('IntersectionObserver' in window) {
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (!entry.isIntersecting) return;
+                    links.forEach(link => link.classList.toggle('is-active', link.getAttribute('href') === `#${entry.target.id}`));
+                });
+            }, { rootMargin: '-18% 0px -70% 0px', threshold: 0 });
+            sections.forEach(section => observer.observe(section));
+        }
+    })();
+</script>
 {% endblock %}

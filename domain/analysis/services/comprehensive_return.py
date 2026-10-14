@@ -200,8 +200,8 @@ class ComprehensiveReturnCalculator:
         Returns:
             Transaction instance
         """
-        from flask import g
-        tenant_id = tenant_id or g.get('tenant_id')
+        from domain.tenant.context import TenantContext
+        tenant_id = tenant_id or TenantContext.optional()
 
         dividend_tx = Transaction(
             date=payment_date,
@@ -239,8 +239,8 @@ class ComprehensiveReturnCalculator:
         Returns:
             Transaction instance
         """
-        from flask import g
-        tenant_id = tenant_id or g.get('tenant_id')
+        from domain.tenant.context import TenantContext
+        tenant_id = tenant_id or TenantContext.optional()
 
         interest_tx = Transaction(
             date=payment_date,

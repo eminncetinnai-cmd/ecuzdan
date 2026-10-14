@@ -137,7 +137,6 @@ class TestOAuthApplicationService:
             service.verify_and_login('code123', 'https://callback')
 
     @patch('application.users.oauth_application_service.db')
-    @pytest.mark.skip(reason="Requires Flask application context")
     def test_verify_and_login_unverified_email(self, mock_db):
         """Test verify_and_login with unverified email"""
         mock_provider = Mock(spec=OAuthProvider)

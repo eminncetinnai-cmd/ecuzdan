@@ -3,17 +3,12 @@ Unit Tests - Log Actions
 Log Action System - Log sınıflandırma ve otomatik aksiyon sistemi
 """
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime, timedelta
-from utils.log_actions import (
-    LogSeverity,
-    LogCategory,
-    LogAction,
-    LogActionConfig,
-    LogClassifier,
-    get_log_classifier
-)
+from unittest.mock import Mock, patch
+
+import pytest
+
+from utils.log_actions import LogAction, LogActionConfig, LogCategory, LogClassifier, LogSeverity, get_log_classifier
 
 
 @pytest.mark.unit
@@ -117,10 +112,10 @@ def test_can_execute_action_within_cooldown():
     """Test can_execute_action within cooldown period"""
     config = LogActionConfig()
     action = LogAction("test_action", 5, 30)
-    
+
     action_key = f"{action.action_type}_{action.priority}"
     config.action_history[action_key] = datetime.now()
-    
+
     assert config.can_execute_action(action) is False
 
 
@@ -129,10 +124,10 @@ def test_can_execute_action_after_cooldown():
     """Test can_execute_action after cooldown period"""
     config = LogActionConfig()
     action = LogAction("test_action", 5, 1)
-    
+
     action_key = f"{action.action_type}_{action.priority}"
     config.action_history[action_key] = datetime.now() - timedelta(minutes=2)
-    
+
     assert config.can_execute_action(action) is True
 
 
@@ -142,7 +137,7 @@ def test_execute_action_disabled():
     config = LogActionConfig()
     action = LogAction("test_action", 5, 30, enabled=False)
     log_data = {"message": "test"}
-    
+
     # Should not execute if disabled
     config.execute_action(action, log_data)
     # No exception should be raised
@@ -153,10 +148,10 @@ def test_execute_action_within_cooldown():
     """Test execute_action within cooldown period"""
     config = LogActionConfig()
     action = LogAction("test_action", 5, 30)
-    
+
     action_key = f"{action.action_type}_{action.priority}"
     config.action_history[action_key] = datetime.now()
-    
+
     log_data = {"message": "test"}
     config.execute_action(action, log_data)
     # Should not execute due to cooldown
@@ -168,7 +163,7 @@ def test_execute_action_no_handler():
     config = LogActionConfig()
     action = LogAction("nonexistent_action", 5, 30, enabled=True)
     log_data = {"message": "test"}
-    
+
     config.execute_action(action, log_data)
     # Should not raise exception
 
@@ -178,11 +173,11 @@ def test_log_to_db_handler():
     """Test _log_to_db handler"""
     config = LogActionConfig()
     log_data = {"message": "test", "severity": "ERROR"}
-    
+
     with patch('utils.log_actions.logging.getLogger') as mock_get_logger:
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
-        
+
         config._log_to_db(log_data)
         mock_logger.info.assert_called_once()
 
@@ -192,11 +187,11 @@ def test_immediate_notification_handler():
     """Test _immediate_notification handler"""
     config = LogActionConfig()
     log_data = {"message": "test", "severity": "CRITICAL"}
-    
+
     with patch('utils.log_actions.logging.getLogger') as mock_get_logger:
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
-        
+
         config._immediate_notification(log_data)
         mock_logger.info.assert_called_once()
 
@@ -206,11 +201,11 @@ def test_create_ticket_handler():
     """Test _create_ticket handler"""
     config = LogActionConfig()
     log_data = {"message": "test", "severity": "ERROR"}
-    
+
     with patch('utils.log_actions.logging.getLogger') as mock_get_logger:
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
-        
+
         config._create_ticket(log_data)
         mock_logger.info.assert_called_once()
 
@@ -220,11 +215,11 @@ def test_monitoring_dashboard_handler():
     """Test _monitoring_dashboard handler"""
     config = LogActionConfig()
     log_data = {"message": "test", "severity": "WARNING"}
-    
+
     with patch('utils.log_actions.logging.getLogger') as mock_get_logger:
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
-        
+
         config._monitoring_dashboard(log_data)
         mock_logger.info.assert_called_once()
 
@@ -234,11 +229,11 @@ def test_security_team_alert_handler():
     """Test _security_team_alert handler"""
     config = LogActionConfig()
     log_data = {"message": "test", "severity": "CRITICAL"}
-    
+
     with patch('utils.log_actions.logging.getLogger') as mock_get_logger:
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
-        
+
         config._security_team_alert(log_data)
         mock_logger.info.assert_called_once()
 
@@ -248,11 +243,11 @@ def test_audit_log_handler():
     """Test _audit_log handler"""
     config = LogActionConfig()
     log_data = {"message": "test", "severity": "INFO"}
-    
+
     with patch('utils.log_actions.logging.getLogger') as mock_get_logger:
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
-        
+
         config._audit_log(log_data)
         mock_logger.info.assert_called_once()
 
@@ -262,11 +257,11 @@ def test_email_alert_handler_critical():
     """Test _email_alert handler for CRITICAL severity"""
     config = LogActionConfig()
     log_data = {"message": "test", "severity": "CRITICAL", "category": "SECURITY"}
-    
+
     with patch('utils.email_alerts.get_email_alert_system') as mock_get_email:
         mock_email_system = Mock()
         mock_get_email.return_value = mock_email_system
-        
+
         config._email_alert(log_data)
         mock_email_system.send_critical_alert.assert_called_once()
 
@@ -276,11 +271,11 @@ def test_email_alert_handler_error():
     """Test _email_alert handler for ERROR severity"""
     config = LogActionConfig()
     log_data = {"message": "test", "severity": "ERROR", "category": "DATABASE"}
-    
+
     with patch('utils.email_alerts.get_email_alert_system') as mock_get_email:
         mock_email_system = Mock()
         mock_get_email.return_value = mock_email_system
-        
+
         config._email_alert(log_data)
         mock_email_system.send_error_alert.assert_called_once()
 
@@ -290,11 +285,11 @@ def test_email_alert_handler_warning():
     """Test _email_alert handler for WARNING severity"""
     config = LogActionConfig()
     log_data = {"message": "test", "severity": "WARNING", "category": "SYSTEM"}
-    
+
     with patch('utils.email_alerts.get_email_alert_system') as mock_get_email:
         mock_email_system = Mock()
         mock_get_email.return_value = mock_email_system
-        
+
         config._email_alert(log_data)
         mock_email_system.send_warning_alert.assert_called_once()
 
@@ -304,12 +299,12 @@ def test_email_alert_handler_import_error():
     """Test _email_alert handler with import error"""
     config = LogActionConfig()
     log_data = {"message": "test", "severity": "CRITICAL"}
-    
+
     with patch('utils.email_alerts.get_email_alert_system', side_effect=ImportError):
         with patch('utils.log_actions.logging.getLogger') as mock_get_logger:
             mock_logger = Mock()
             mock_get_logger.return_value = mock_logger
-            
+
             config._email_alert(log_data)
             mock_logger.info.assert_called_once()
 
@@ -400,7 +395,7 @@ def test_detect_category_case_insensitive():
 def test_process_log():
     """Test process_log method"""
     classifier = LogClassifier()
-    
+
     with patch.object(classifier.action_config, 'execute_action') as mock_execute:
         classifier.process_log("test message", "ERROR")
         assert mock_execute.called
@@ -427,15 +422,15 @@ def test_execute_action_success_updates_history():
     config = LogActionConfig()
     action = LogAction("log_to_db", 5, 30, enabled=True)
     log_data = {"message": "test", "severity": "ERROR"}
-    
+
     action_key = f"{action.action_type}_{action.priority}"
-    
+
     with patch('utils.log_actions.logging.getLogger') as mock_get_logger:
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
-        
+
         config.execute_action(action, log_data)
-        
+
         # Verify action history was updated
         assert action_key in config.action_history
         assert isinstance(config.action_history[action_key], datetime)
@@ -447,18 +442,18 @@ def test_execute_action_handler_exception():
     config = LogActionConfig()
     action = LogAction("log_to_db", 5, 30, enabled=True)
     log_data = {"message": "test", "severity": "ERROR"}
-    
+
     # Patch the handler in the action_handlers dict
     original_handler = config.action_handlers['log_to_db']
     config.action_handlers['log_to_db'] = Mock(side_effect=Exception("Handler error"))
-    
+
     try:
         with patch('utils.log_actions.logging.getLogger') as mock_get_logger:
             mock_logger = Mock()
             mock_get_logger.return_value = mock_logger
-            
+
             config.execute_action(action, log_data)
-            
+
             # Verify error was logged
             mock_logger.error.assert_called_once()
     finally:
@@ -471,17 +466,17 @@ def test_email_alert_handler_general_exception():
     """Test _email_alert handler with general exception"""
     config = LogActionConfig()
     log_data = {"message": "test", "severity": "CRITICAL"}
-    
+
     with patch('utils.email_alerts.get_email_alert_system') as mock_get_email:
         mock_email_system = Mock()
         mock_email_system.send_critical_alert.side_effect = Exception("Email error")
         mock_get_email.return_value = mock_email_system
-        
+
         with patch('utils.log_actions.logging.getLogger') as mock_get_logger:
             mock_logger = Mock()
             mock_get_logger.return_value = mock_logger
-            
+
             config._email_alert(log_data)
-            
+
             # Verify error was logged
             mock_logger.error.assert_called_once()

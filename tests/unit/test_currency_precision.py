@@ -4,17 +4,18 @@ Currency-specific decimal precision for different asset types
 """
 
 import pytest
+
 from shared.currency_precision import (
-    CurrencyPrecision,
-    CurrencyType,
-    get_currency_scale,
-    get_asset_type_scale,
-    get_currency_symbol,
-    SUPPORTED_FIAT,
     SUPPORTED_CRYPTO,
+    SUPPORTED_FIAT,
+    SUPPORTED_FUNDS,
     SUPPORTED_GOLD,
     SUPPORTED_STOCKS,
-    SUPPORTED_FUNDS,
+    CurrencyPrecision,
+    CurrencyType,
+    get_asset_type_scale,
+    get_currency_scale,
+    get_currency_symbol,
 )
 
 

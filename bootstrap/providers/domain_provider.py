@@ -101,12 +101,6 @@ class DomainProvider:
             return LogbookService(repository=self.repositories.logbook())
         return self._get_or_create('logbook_svc', _factory)
 
-    def session(self):
-        from domain.users.services.session_service import SessionService
-        def _factory():
-            return SessionService(repository=self.repositories.user())
-        return self._get_or_create('session_svc', _factory)
-
 
     def strategy_svc(self):
         from domain.analysis.services.strategy_service import StrategyService

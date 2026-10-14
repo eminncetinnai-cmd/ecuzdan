@@ -4,10 +4,12 @@ Blueprint pattern ile route'ların mantıksal gruplara ayrılması
 """
 
 import logging
+import math
 import secrets
 from datetime import datetime
+from decimal import Decimal
 
-from flask import Blueprint, flash, g, render_template, request, session
+from flask import Blueprint, current_app, flash, g, jsonify, make_response, render_template, request, session, url_for
 from markupsafe import Markup, escape
 from sqlalchemy.orm.exc import DetachedInstanceError
 from werkzeug.exceptions import HTTPException
@@ -15,13 +17,15 @@ from werkzeug.exceptions import HTTPException
 from bootstrap import get_container
 from engines.financial_engine import get_live_data
 from infrastructure.i18n import i18n
+from shared.currency_precision import get_currency_symbol
 from utils.db_session import remove_session, rollback_session
 from utils.format_utils import format_date, format_money, today_display
 
 logger = logging.getLogger(__name__)
 
+_WEEKDAYS = ("Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar")
+
 def _get_session_service():
-    from bootstrap import get_container
     return get_container().applications.session()
 
 
@@ -44,6 +48,10 @@ profile_bp = Blueprint('profile', __name__, url_prefix='/profile')
 monitoring_bp = Blueprint('monitoring', __name__, url_prefix='/monitoring')
 notifications_bp = Blueprint('notifications', __name__, url_prefix='/notifications')
 analysis_bp = Blueprint('analysis', __name__, url_prefix='/analysis')
+central_bank_reserves_bp = Blueprint('central_bank_reserves', __name__, url_prefix='/')
+global_ratios_bp = Blueprint('global_ratios', __name__, url_prefix='/')
+from .storage_health import storage_health_bp
+
 
 def register_blueprints(app):
     """
@@ -53,22 +61,25 @@ def register_blueprints(app):
         app: Flask uygulaması
     """
     from .admin import register_admin_routes
+    from .analysis import register_analysis_routes
     from .assets import register_asset_routes
     from .auth import register_auth_routes
     from .categories import register_category_routes
+    from .central_bank_reserves import register_central_bank_reserves_routes
     from .dashboard import register_dashboard_routes
     from .export import register_export_routes
     from .financial_education import register_financial_education_routes
+    from .global_ratios import register_global_ratios_routes
     from .logbook import register_logbook_routes
+    from .monitoring import register_monitoring_routes
+    from .notifications import register_notification_routes
     from .plans import register_plan_routes
     from .profile import register_profile_routes
-    from .notifications import register_notification_routes
     from .settings import register_settings_routes
+    from .storage_health import register_storage_health_routes
     from .strategy import register_strategy_routes
     from .tenant import register_tenant_routes
     from .transactions import register_transaction_routes
-    from .monitoring import register_monitoring_routes
-    from .analysis import register_analysis_routes
 
     register_auth_routes(auth_bp)
     register_settings_routes(settings_bp)
@@ -87,6 +98,9 @@ def register_blueprints(app):
     register_profile_routes(profile_bp)
     register_monitoring_routes(monitoring_bp)
     register_analysis_routes(analysis_bp)
+    register_central_bank_reserves_routes(central_bank_reserves_bp)
+    register_global_ratios_routes(global_ratios_bp)
+    register_storage_health_routes(storage_health_bp)
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(settings_bp)
@@ -105,6 +119,9 @@ def register_blueprints(app):
     app.register_blueprint(monitoring_bp)
     app.register_blueprint(notifications_bp)
     app.register_blueprint(analysis_bp)
+    app.register_blueprint(central_bank_reserves_bp)
+    app.register_blueprint(global_ratios_bp)
+    app.register_blueprint(storage_health_bp)
 
 # --- Template Filters ---
 
@@ -139,6 +156,48 @@ def register_template_filters(app):
             '#10b981',  # Emerald— Nasdaq
         ]
         return palette[(int(index) - 1) % len(palette)]
+
+    @app.template_filter('format_ticker_price')
+    def format_ticker_price_filter(v):
+        """Piyasa ve canlı ticker fiyatlarını 2 ondalık basamak ve Türkçe binlik ayracı ile formatlar."""
+        if v is None or v == '' or v == '--':
+            return '--'
+        try:
+            if isinstance(v, (int, float, Decimal)):
+                val_float = float(v)
+            else:
+                s = str(v).strip()
+                if not s or s.lower() in {'nan', 'nat', 'none', '--'}:
+                    return '--'
+                has_dot = '.' in s
+                has_comma = ',' in s
+                if has_dot and has_comma:
+                    if s.rfind(',') > s.rfind('.'):
+                        # Turkish: 1.234,56
+                        s = s.replace('.', '').replace(',', '.')
+                    else:
+                        # US: 1,234.56
+                        s = s.replace(',', '')
+                elif has_comma:
+                    s = s.replace(',', '.')
+                val_float = float(s)
+
+            if not math.isfinite(val_float):
+                return '--'
+
+            parts = f"{val_float:,.2f}".split('.')
+            int_part = parts[0].replace(',', '.')
+            dec_part = parts[1]
+            return f"{int_part},{dec_part}"
+        except Exception:
+            return str(v)
+
+    @app.template_filter('currency_symbol')
+    def currency_symbol_filter(v):
+        """Para birimi kodundan simge üretir (örn. USD -> $, TRY -> ₺)"""
+        if not v:
+            return ''
+        return get_currency_symbol(str(v)) or str(v)
 
 # --- Context Processor ---
 
@@ -185,20 +244,32 @@ def register_context_processor(app):
                 # Logout gibi akışlarda User nesnesi session'dan kopmuş olabilir;
                 # lazy ilişki yüklenemez. Tema kritik değil, açık temaya düşülür.
                 pass
+        base_currency_code = 'TRY'
+        base_currency_symbol = '₺'
+        if current_user is not None:
+            try:
+                base_currency_code = getattr(current_user, 'base_currency', None) or 'TRY'
+                base_currency_symbol = get_currency_symbol(base_currency_code) or '₺'
+            except Exception:
+                pass
 
+        from database.schema_version import SCHEMA_VERSION
         return dict(
             live=get_live_data(),
             date_str=format_date(dt.strftime("%Y-%m-%d")),
             today_display=today_display(),
-            current_day=["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"][dt.weekday()],
+            current_day=_WEEKDAYS[dt.weekday()],
             current_time=dt.strftime("%H:%M"),
-            version="v15.0 [Armor Edition]",
+            version=f"{SCHEMA_VERSION} [Armor Edition]",
             brand="E-Cüzdan",
             csrf_token=lambda: csrf,
             lang=g.get("lang", i18n.default_lang),
             current_user=current_user,
             user_theme=theme,
             privacy_mode=privacy_mode,
+            static_asset_url=lambda filename: url_for("static", filename=filename, v=(current_app.config.get("APP_BOOT_ID") or "v15")[:8]),
+            base_currency_code=base_currency_code,
+            base_currency_symbol=base_currency_symbol,
         )
 
 # --- CSRF Protection ---
@@ -215,7 +286,7 @@ def register_csrf_protection(app):
     def csrf_protect():
         if app.config.get('TESTING'):
             return
-        
+
         # CSRF'den muaf endpoint'ler
         csrf_exempt_paths = [
             "/login",
@@ -230,11 +301,11 @@ def register_csrf_protection(app):
             "/monitoring/api",
             "/payment_calendar"
         ]
-        
+
         # CSRF'den muaf endpoint'leri kontrol et
         if request.path in csrf_exempt_paths:
             return
-        
+
         # CSRF'den muaf endpoint pattern kontrolü (dinamik rotalar için)
         if request.path.startswith('/notifications/') and request.method == 'POST':
             return
@@ -244,27 +315,41 @@ def register_csrf_protection(app):
             return
         if request.path.startswith('/payment_calendar/'):
             return
-            
+
         # Sadece state-changing request'leri kontrol et
         if request.method in ["POST", "PUT", "DELETE", "PATCH"]:
             # Token'ı form veya header'dan al
-            token = request.form.get("csrf_token") or request.headers.get("X-CSRF-Token")
+            token = request.form.get("csrf_token") or request.headers.get("X-CSRF-Token") or request.headers.get("X-CSRFToken")
             session_token = session.get("csrf_token")
-            
+
             if not token:
                 logger.warning(f"CSRF verification failed: token is missing from request to {request.path}")
                 return render_template("error.html", code=400, message="Güvenlik uyarısı: CSRF token bulunamadı. Lütfen sayfayı yenileyip tekrar deneyin."), 400
-            
+
             if not session_token:
                 logger.warning(f"CSRF verification failed: session token missing for request to {request.path}")
                 return render_template("error.html", code=400, message="Güvenlik uyarısı: Session süresi doldu. Lütfen tekrar giriş yapın."), 400
-                
+
             if token != session_token:
                 logger.warning(
                     "CSRF verification failed: token mismatch for request to %s",
                     request.path,
                 )
                 return render_template("error.html", code=400, message="Güvenlik uyarısı: CSRF doğrulaması başarısız. Lütfen formu yeniden gönderip tekrar deneyin."), 400
+
+
+def _should_return_json() -> bool:
+    from utils.ajax_helpers import is_ajax_request
+    if request.path.startswith('/api/') or '/api/' in request.path:
+        return True
+    if is_ajax_request():
+        return True
+    if request.is_json:
+        return True
+    accept = request.headers.get('Accept', '')
+    if 'application/json' in accept and 'text/html' not in accept:
+        return True
+    return False
 
 
 # --- Error Handlers ---
@@ -295,12 +380,21 @@ def register_error_handlers(app):
     @app.errorhandler(HTTPException)
     def handle_http_exception(error):
         request_context = _build_request_context(error)
-        logger.warning(
-            "HTTP exception caught: %s %s %s",
-            error.code,
-            request.method,
-            request.path,
-        )
+        code = error.code or 500
+        if code in (404, 405):
+            logger.info(
+                "HTTP exception caught: %s %s %s",
+                error.code,
+                request.method,
+                request.path,
+            )
+        else:
+            logger.warning(
+                "HTTP exception caught: %s %s %s",
+                error.code,
+                request.method,
+                request.path,
+            )
         logger.debug("HTTP exception request context: %s", request_context)
 
         code = error.code or 500
@@ -313,7 +407,21 @@ def register_error_handlers(app):
         else:
             message = error.description or "Bir hata oluştu. Lütfen sayfayı yenileyin veya tekrar deneyin."
 
-        return render_template("error.html", code=code, message=message), code
+        if _should_return_json():
+            resp = make_response(jsonify({
+                'success': False,
+                'error': message,
+                'code': code,
+                'error_code': f'http_{code}',
+            }), code)
+            if code == 429 and 'Retry-After' not in resp.headers:
+                resp.headers['Retry-After'] = '60'
+            return resp
+
+        resp = make_response(render_template("error.html", code=code, message=message), code)
+        if code == 429 and 'Retry-After' not in resp.headers:
+            resp.headers['Retry-After'] = '60'
+        return resp
 
     @app.errorhandler(Exception)
     def handle_unhandled_exception(error):
@@ -329,6 +437,14 @@ def register_error_handlers(app):
             rollback_session()
         except Exception as rollback_error:
             logger.error("Rollback failed while handling exception: %s", rollback_error)
+
+        if _should_return_json():
+            return jsonify({
+                'success': False,
+                'error': "Sistem içi bir hata oluştu. İşlem geri alındı; lütfen tekrar deneyin.",
+                'code': 500,
+                'error_code': 'internal_server_error',
+            }), 500
 
         return render_template(
             "error.html",
@@ -360,16 +476,22 @@ def register_session_check(app):
     """
     @app.before_request
     def check_session():
-        # Login, logout, register, OAuth, healthcheck ve Transaction Explorer sayfaları hariç
-        if not request.endpoint or request.endpoint in ['auth.login', 'auth.logout', 'auth.register', 'auth.register_with_invite', 'auth.oauth_login', 'auth.oauth_callback', 'auth.oauth_signup', 'transactions.transactions_explorer', 'static', 'healthz']:
+        # Login, logout, register, OAuth, healthcheck ve genel live stream endpoint'leri hariç
+        if not request.endpoint or request.endpoint in ['auth.login', 'auth.logout', 'auth.register', 'auth.register_with_invite', 'auth.oauth_login', 'auth.oauth_callback', 'auth.oauth_signup', 'dashboard.live_quotes', 'dashboard.live_stream', 'static', 'healthz', 'favicon']:
             return
 
         from flask import redirect, url_for
 
         from config import Config
 
-        # Session kontrolü - kullanıcı giriş yapmamışsa login'e yönlendir
+        # Session kontrolü - kullanıcı giriş yapmamışsa login'e yönlendir (API için 401 JSON)
         if 'user_id' not in session:
+            if _should_return_json():
+                return jsonify({
+                    'success': False,
+                    'error_code': 'authentication_required',
+                    'message': 'Oturum gerekli.',
+                }), 401
             return redirect(url_for('auth.login'))
 
         # Session timeout kontrolü
@@ -386,6 +508,12 @@ def register_session_check(app):
             session_age = datetime.now() - session_created_at
             if session_age.total_seconds() > (session_timeout_hours * 3600):
                 session.clear()
+                if _should_return_json():
+                    return jsonify({
+                        'success': False,
+                        'error_code': 'session_expired',
+                        'message': f'Oturumunuz {session_timeout_hours} saat sonra zaman aşımına uğradı.',
+                    }), 401
                 flash(f'Oturumunuz {session_timeout_hours} saat sonra otomatik olarak kapatıldı. Lütfen tekrar giriş yapın.', 'warning')
                 return redirect(url_for('auth.login'))
 
@@ -393,6 +521,12 @@ def register_session_check(app):
         # Böylece http://127.0.0.1:5000/ doğrudan açılsa bile yeniden şifre istenir.
         if not app.config.get('TESTING') and session.get('app_boot_id') != app.config.get('APP_BOOT_ID'):
             session.clear()
+            if _should_return_json():
+                return jsonify({
+                    'success': False,
+                    'error_code': 'session_invalid',
+                    'message': 'Güvenliğiniz için lütfen tekrar giriş yapın.',
+                }), 401
             flash('Güvenliğiniz için lütfen tekrar giriş yapın.', 'warning')
             return redirect(url_for('auth.login'))
 
@@ -401,6 +535,12 @@ def register_session_check(app):
         if user:
             if user.last_session_id and session.get('session_id') != user.last_session_id:
                 session.clear()
+                if _should_return_json():
+                    return jsonify({
+                        'success': False,
+                        'error_code': 'authentication_required',
+                        'message': 'Bu hesap başka bir yerden giriş yapıldı. Oturum gerekli.',
+                    }), 401
                 flash('Bu hesap başka bir yerden giriş yapıldı. Oturumunuz kapatıldı.', 'warning')
                 return redirect(url_for('auth.login'))
 
@@ -408,18 +548,28 @@ def register_session_check(app):
             g.tenant_id = user.tenant_id
         else:
             session.clear()
+            if _should_return_json():
+                return jsonify({
+                    'success': False,
+                    'error_code': 'authentication_required',
+                    'message': 'Kullanıcı kaydı bulunamadı. Oturum gerekli.',
+                }), 401
             flash('Kullanıcı kaydı bulunamadı. Lütfen tekrar giriş yapın.', 'warning')
             return redirect(url_for('auth.login'))
 
 # --- Blueprint Registration ---
 
 def register_security_headers(app):
-    """HTTP güvenlik başlıklarını tüm yanıtlara ekler."""
+    """HTTP güvenlik başlıklarını, statik önbelleklemeyi ve yanıt sıkıştırmayı kaydeder."""
+    import gzip
+
     @app.after_request
-    def set_security_headers(response):
+    def set_security_and_performance_headers(response):
+        # Güvenlik Başlıkları
         response.headers['X-Frame-Options'] = 'SAMEORIGIN'
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
         response.headers['Content-Security-Policy'] = (
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://code.jquery.com https://cdn.datatables.net; "
@@ -428,6 +578,36 @@ def register_security_headers(app):
             "img-src 'self' data:; "
             "connect-src 'self'"
         )
+
+        # Statik Varlık Önbellekleme (Cache-busted varlıklar için 1 yıl immutable cache, diğerleri için 7 gün)
+        if request.path.startswith('/static/'):
+            if not app.config.get('TESTING') and not app.config.get('TEMPLATES_AUTO_RELOAD'):
+                if 'v' in request.args:
+                    response.headers.setdefault('Cache-Control', 'public, max-age=31536000, immutable')
+                else:
+                    response.headers.setdefault('Cache-Control', 'public, max-age=604800')
+
+        # GZIP Yanıt Sıkıştırma (HTML, JSON, JS, CSS yanıtlarında %85-%95 bant genişliği tasarrufu)
+        accept_encoding = request.headers.get('Accept-Encoding', '')
+        if (
+            'gzip' in accept_encoding
+            and 200 <= response.status_code < 300
+            and not response.direct_passthrough
+            and not getattr(response, 'is_streamed', False)
+            and 'Content-Encoding' not in response.headers
+            and any(t in (response.content_type or '') for t in ('text/', 'application/json', 'application/javascript'))
+        ):
+            try:
+                data = response.get_data()
+                if len(data) > 500:
+                    compressed = gzip.compress(data, compresslevel=6)
+                    response.set_data(compressed)
+                    response.headers['Content-Encoding'] = 'gzip'
+                    response.headers['Content-Length'] = len(compressed)
+                    response.headers['Vary'] = 'Accept-Encoding'
+            except Exception as compress_err:
+                logger.debug("GZIP compression skipped: %s", compress_err)
+
         return response
 
 

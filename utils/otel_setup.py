@@ -95,7 +95,7 @@ def instrument_flask_app(app) -> bool:
     except ImportError:
         logger.info(
             'opentelemetry-instrumentation-flask not installed. '
-            'Install requirements-observability.txt to enable tracing.'
+            'Install configuration/dependencies/requirements-observability.txt to enable tracing.'
         )
         return False
     except Exception as exc:

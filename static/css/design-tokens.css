@@ -1,4 +1,4 @@
-﻿/* E-Cüzdan v15 — Design Token Sistemi */
+/* E-Cüzdan v15 — Design Token Sistemi */
 :root {
   /* ─── Spacing Scale (4px base) ─────────────────── */
   --space-1:  4px;
@@ -12,7 +12,9 @@
   --space-12: 48px;
   --space-16: 64px;
 
-  /* ─── Container Genişlikleri ────────────────────── */
+  /* ─── Container & Sidebar Genişlikleri ──────────── */
+  --sidebar-width-expanded: 280px;
+  --sidebar-width-rail:     76px;
   --container-xs:  360px;
   --container-sm:  560px;
   --container-md:  800px;
@@ -104,24 +106,47 @@
   /* ─── Renkler — Turuncu ──────────────────────────── */
   --orange-500: #f97316;
 
-  /* ─── Sayfa Arka Planı (Light Premium) ─────────────── */
-  /* Dark tema token'ları kaldırıldı — ui-modern.css light gradyan kullanıyor */
-
-  /* ─── Semantik Renk Aliases ──────────────────────── */
-  --color-primary:        var(--indigo-500);
-  --color-primary-hover:  var(--indigo-600);
-  --color-bg:             var(--slate-50);
+  /* ─── Premium semantic surface system ─────────────────────────────── */
+  --color-primary:        #4f46e5;
+  --color-primary-hover:  #4338ca;
+  --color-primary-soft:   #eef2ff;
+  --color-accent:         #0ea5e9;
+  --color-accent-hover:   #0284c7;
+  --color-bg:             #f5f7fb;
+  --color-bg-elevated:    #eef3fa;
   --color-surface:        #ffffff;
-  --color-border:         var(--slate-200);
-  --color-text:           var(--slate-700);
-  --color-text-muted:     var(--slate-500);
-  --color-text-subtle:    var(--slate-400);
-  --color-text-strong:    var(--slate-900);
+  --color-surface-raised: #ffffff;
+  --color-surface-muted:  #f3f6fb;
+  --color-border:         #d9e2ef;
+  --color-border-strong:  #b9c8dc;
+  --color-text:           #334155;
+  --color-text-muted:     #5f6f86;
+  --color-text-subtle:    #7f8da3;
+  --color-text-strong:    #14233b;
   --color-danger:         var(--red-500);
   --color-danger-hover:   var(--red-600);
   --color-success:        var(--emerald-500);
   --color-success-hover:  var(--emerald-600);
   --color-warning:        var(--amber-500);
+  --color-focus:          #2563eb;
+  --page-gradient:        radial-gradient(circle at 10% 12%, #edf3ff 0%, #f5f7fb 58%, #eef3fa 100%);
+  --chart-surface:        #ffffff;
+  --chart-surface-soft:   rgba(255, 255, 255, 0.72);
+  --chart-grid:           #d9e2ef;
+  --chart-text:           #52657a;
+  --chart-text-strong:    #1e293b;
+  --chart-border:         #d9e2ef;
+  --chart-tooltip-bg:     rgba(255, 255, 255, 0.97);
+  --chart-tooltip-text:   #1e293b;
+
+  /* Theme switcher: visible state, not only an icon swap. */
+  --theme-toggle-bg:      linear-gradient(135deg, #eef2ff 0%, #e0f2fe 100%);
+  --theme-toggle-bg-hover: linear-gradient(135deg, #e0e7ff 0%, #bae6fd 100%);
+  --theme-toggle-border:  #a5b4fc;
+  --theme-toggle-text:    #312e81;
+  --theme-toggle-icon-bg: rgba(255, 255, 255, 0.86);
+  --theme-toggle-indicator: #f59e0b;
+  --theme-toggle-glow:    0 0 0 3px rgba(99, 102, 241, 0.14), 0 10px 24px rgba(37, 99, 235, 0.14);
 
   /* ─── Gölgeler ───────────────────────────────────── */
   --shadow-sm:  0 1px 3px rgba(15, 23, 42, 0.08);

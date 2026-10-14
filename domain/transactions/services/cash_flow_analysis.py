@@ -189,8 +189,8 @@ class CashFlowAnalyzer:
         Returns:
             Transaction instance
         """
-        from flask import g
-        tenant_id = tenant_id or g.get('tenant_id')
+        from domain.tenant.context import TenantContext
+        tenant_id = tenant_id or TenantContext.optional()
 
         transfer = Transaction(
             date=date,

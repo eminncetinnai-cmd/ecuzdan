@@ -61,15 +61,20 @@ def test_config_production_empty_secret_raises_error():
         Config.SECRET_KEY = original_secret_key
 
 
-def test_config_production_secure_key_allowed():
-    """Verify that a secure custom SECRET_KEY is allowed in production."""
-    os.environ['FLASK_ENV'] = 'production'
-    os.environ['SECRET_KEY'] = 'a-secure-custom-key-12345678901234567890123456789012'
+def test_config_production_secure_key_allowed(monkeypatch):
+    """Verify that a complete secure production configuration is accepted."""
+    monkeypatch.setenv('FLASK_ENV', 'production')
+    monkeypatch.setenv('SECRET_KEY', 'a-secure-custom-key-12345678901234567890123456789012')
+    monkeypatch.setenv('DATABASE_URL', 'postgresql+psycopg://app:placeholder@db.internal:5432/e_cuzdan')
+    monkeypatch.setenv('HTTPS_ENABLED', 'true')
+    monkeypatch.setenv('FORCE_HTTPS', 'true')
+    monkeypatch.setenv('RATELIMIT_STORAGE_URI', 'redis://:placeholder@redis.internal:6379/0')
 
-    # Should not raise error
     config = Config()
     assert config.SECRET_KEY == 'a-secure-custom-key-12345678901234567890123456789012'
     assert config.FLASK_ENV == 'production'
+    assert config.HTTPS_ENABLED is True
+    assert config.FORCE_HTTPS is True
 
 
 def test_config_inflation_rate_uses_decimal():

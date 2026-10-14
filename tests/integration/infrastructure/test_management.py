@@ -1,62 +1,83 @@
-"""
-Unit Tests - Database Management
-Database export/import functionality
-"""
+"""Integration tests for database backup management boundaries."""
+
+import json
 
 import pytest
-from unittest.mock import Mock, patch, MagicMock
-import json
+
+from infrastructure.database.management import (
+    export_database_to_json,
+    import_database_from_json,
+)
 
 
 @pytest.mark.unit
 def test_export_database_to_json_exists():
-    """Test export_database_to_json function exists"""
-    from infrastructure.database.management import export_database_to_json
     assert export_database_to_json is not None
 
 
 @pytest.mark.unit
 def test_import_database_from_json_exists():
-    """Test import_database_from_json function exists"""
-    from infrastructure.database.management import import_database_from_json
     assert import_database_from_json is not None
 
 
 @pytest.mark.unit
 def test_module_structure():
-    """Test management module structure"""
     import infrastructure.database.management as mgmt_module
-    
-    # Check for expected functions
+
     assert hasattr(mgmt_module, 'export_database_to_json')
     assert hasattr(mgmt_module, 'import_database_from_json')
 
 
-@pytest.mark.unit
-def test_export_database_to_json_no_encrypt():
-    """Test export_database_to_json without encryption - skipped due to complex dependencies"""
-    pytest.skip("Requires complex mocking of SQLAlchemy models and backup services")
+@pytest.mark.integration
+def test_export_database_to_json_no_encrypt(app):
+    with app.app_context():
+        result = json.loads(export_database_to_json())
+
+    assert result['schema_version']
+    assert isinstance(result['users'], list)
+    assert isinstance(result['transactions'], list)
 
 
-@pytest.mark.unit
-def test_export_database_to_json_encrypt_requires_password():
-    """Test export_database_to_json with encrypt=True requires password - skipped due to complex dependencies"""
-    pytest.skip("Requires complex mocking of SQLAlchemy models and backup services")
+@pytest.mark.integration
+def test_export_database_to_json_encrypt_requires_password(app):
+    with app.app_context(), pytest.raises(ValueError, match='Şifreleme için şifre gerekli'):
+        export_database_to_json(encrypt=True)
 
 
-@pytest.mark.unit
-def test_import_database_from_json_invalid_json():
-    """Test import_database_from_json with invalid JSON - skipped due to complex dependencies"""
-    pytest.skip("Requires complex mocking of SQLAlchemy models and backup services")
+@pytest.mark.integration
+def test_import_database_from_json_invalid_json(app):
+    with app.app_context():
+        success, message = import_database_from_json('{invalid-json')
+
+    assert success is False
+    assert message.startswith('JSON format hatası:')
 
 
-@pytest.mark.unit
-def test_import_database_from_json_encrypted_requires_password():
-    """Test import_database_from_json with encrypted backup requires password - skipped due to complex dependencies"""
-    pytest.skip("Requires complex mocking of SQLAlchemy models and backup services")
+@pytest.mark.integration
+def test_import_database_from_json_encrypted_requires_password(app):
+    encrypted_payload = json.dumps({
+        'encrypted': True,
+        'data': 'not-used-without-password',
+        'checksum': 'not-used-without-password',
+        'schema_version': 'v22.0',
+    })
+
+    with app.app_context():
+        success, message = import_database_from_json(encrypted_payload)
+
+    assert success is False
+    assert message == 'Şifreli yedek için şifre gerekli'
 
 
-@pytest.mark.unit
-def test_import_database_from_json_schema_incompatible():
-    """Test import_database_from_json with incompatible schema - skipped due to complex dependencies"""
-    pytest.skip("Requires complex mocking of SQLAlchemy models and backup services")
+@pytest.mark.integration
+def test_import_database_from_json_schema_incompatible(app):
+    incompatible_payload = json.dumps({
+        'schema_version': 'v0.0',
+        'tenants': [],
+    })
+
+    with app.app_context():
+        success, message = import_database_from_json(incompatible_payload)
+
+    assert success is False
+    assert 'Schema uyumsuz' in message

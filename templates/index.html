@@ -1,331 +1,587 @@
 {% extends "layout.html" %}
 {% from 'macros/forms.html' import date_field %}
-{% block vendor_head %}
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.js"></script>
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static_asset_url('css/dashboard.css') }}">
 {% endblock %}
+
 {% block content %}
-<style>
-    body {
-        font-family: 'Outfit', sans-serif;
-        background: radial-gradient(circle at 10% 20%, rgb(242, 246, 250) 0%, rgb(224, 233, 244) 90.1%);
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-    }
-    .premium-card {
-        background: rgba(255, 255, 255, 0.75);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.4);
-        border-radius: 1.5rem;
-        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .premium-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.08);
-        border-color: rgba(255, 255, 255, 0.6);
-    }
-    /* Fixed chart container */
-    .chart-container {
-        position: relative;
-        width: 100%;
-        height: 220px;
-    }
-    .chart-container canvas {
-        max-height: 220px !important;
-    }
-    /* Tooltip styles */
-    .info-tip {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 18px;
-        height: 18px;
-        background: #e2e8f0;
-        color: #64748b;
-        border-radius: 50%;
-        font-size: 11px;
-        font-weight: 700;
-        cursor: help;
-        transition: all 0.2s ease;
-        margin-left: 6px;
-        text-decoration: none;
-    }
-    .info-tip:hover {
-        background: #cbd5e1;
-        color: #475569;
-    }
+<script id="dashboard-chart-data" type="application/json">
+{
+  "weekLabels": {{ week_labels|safe }},
+  "weekData": {{ week_data|safe }},
+  "monthLabels": {{ month_labels|safe }},
+  "monthData": {{ month_data|safe }},
+  "assetLabels": {{ asset_labels|safe }},
+  "assetValues": {{ asset_values|safe }}
+}
+</script>
+<script id="dashboard-meta-data" type="application/json">
+{
+  "incomeCats": {{ global_income_cats|tojson }},
+  "expenseCats": {{ global_expense_cats|tojson }},
+  "investmentCats": {{ global_investment_cats|tojson }},
+  "openAssets": {{ open_assets|tojson }}
+}
+</script>
 
-    /* Premium Table Styling */
-    .premium-table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0 0.5rem;
-    }
-    .premium-table thead th {
-        padding: 1rem;
-        font-size: 0.75rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        color: #94a3b8;
-        letter-spacing: 0.05em;
-    }
-    .premium-table tbody tr {
-        background: white;
-        transition: all 0.3s ease;
-    }
-    .premium-table tbody tr:hover {
-        transform: scale(1.01);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        z-index: 10;
-    }
-    .premium-table td {
-        padding: 1rem;
-        font-size: 0.8125rem;
-        vertical-align: middle;
-    }
-    .premium-table td:first-child { border-radius: 1rem 0 0 1rem; }
-    .premium-table td:last-child { border-radius: 0 1rem 1rem 0; }
+<div id="dashboard-page-data" 
+     class="max-w-7xl mx-auto space-y-8"
+     data-week-labels='{{ week_labels|safe }}'
+     data-week-data='{{ week_data|safe }}'
+     data-month-labels='{{ month_labels|safe }}'
+     data-month-data='{{ month_data|safe }}'
+     data-asset-labels='{{ asset_labels|safe }}'
+     data-asset-values='{{ asset_values|safe }}'>
 
-    /* Type indicators */
-    .type-line {
-        width: 4px;
-        height: 24px;
-        border-radius: 2px;
-        display: inline-block;
-        margin-right: 8px;
-        vertical-align: middle;
-    }
-    .type-income { background: #10b981; }
-    .type-expense { background: #ef4444; }
-    .type-investment { background: #3b82f6; }
+    <!-- ═══ 1. ÜST BAŞLIK & KULLANICI DESTEKLİ FİNANSAL NABIZ ═════════════════ -->
+    <div class="page-header mb-6">
+        <div class="page-header-left">
+            <p class="page-header-eyebrow">Canlı Likidite & Finansal Kontrol · {{ today_display or date_str }}</p>
+            <h1>{{ _('nav_cash_flow') }}</h1>
+            <p class="page-header-subtitle">
+                {% if net_worth >= 0 %}
+                    Likidite pozisyonunuz dengeli ve net servetiniz pozitif. Gelecek dönem nakit akışınızı ve portföy dağılımınızı aşağıdan takip edebilirsiniz.
+                {% else %}
+                    Nakit dengenizi korumak için önümüzdeki dönem bekleyen giderlerinizi ve nakit çıkışlarınızı gözden geçirmeniz önerilir.
+                {% endif %}
+            </p>
+        </div>
 
-    /* Status Badges */
-    .status-badge {
-        padding: 0.25rem 0.75rem;
-        border-radius: 9999px;
-        font-size: 0.7rem;
-        font-weight: 700;
-        text-transform: uppercase;
-    }
-    .status-paid { background: #dcfce7; color: #15803d; }
-    .status-pending { background: #fef3c7; color: #92400e; border: 1px dashed #f59e0b; }
-</style>
-
-<!-- === FAZ 4: NET SERVET HERO BANNER === -->
-<div class="premium-card p-8 mb-8 overflow-hidden" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f2744 100%); color: white; border: 1px solid rgba(99,102,241,0.3);">
-    <div style="display: grid; grid-template-columns: 1fr auto; gap: 2rem; align-items: center;">
-        <div>
-            <p style="font-size: 0.5625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; margin-bottom: 0.5rem;">Toplam Net Servet</p>
-            <div style="font-size: 2.5rem; font-weight: 900; letter-spacing: -0.03em; line-height: 1;" class="{{ 'text-emerald-400' if net_worth >= 0 else 'text-rose-400' }}">
-                {{ net_worth|format_money }} ₺
-            </div>
-            <div style="display: flex; gap: 2rem; margin-top: 1rem; flex-wrap: wrap;">
-                <div>
-                    <p style="font-size: 0.5rem; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin-bottom: 0.25rem;">💵 Nakit Pozisyon</p>
-                    <p style="font-size: 1.125rem; font-weight: 800; color: #34d399;">{{ today_cash|format_money }} ₺</p>
-                </div>
-                <div>
-                    <p style="font-size: 0.5rem; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin-bottom: 0.25rem;">📈 Toplam Varlık</p>
-                    <p style="font-size: 1.125rem; font-weight: 800; color: #60a5fa;">{{ total_asset_value|format_money }} ₺</p>
-                </div>
-                <div>
-                    <p style="font-size: 0.5rem; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin-bottom: 0.25rem;">🏦 Açık Varlık</p>
-                    <p style="font-size: 1.125rem; font-weight: 800; color: #a78bfa;">{{ open_asset_count }} Adet</p>
-                </div>
-            </div>
-        </div>
-        <!-- Nakit vs Yatırım Dağılım Göstergesi -->
-        <div style="min-width: 200px;">
-            <p style="font-size: 0.5rem; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin-bottom: 0.75rem; text-align: right;">Servet Dağılımı</p>
-            <div style="margin-bottom: 0.5rem;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
-                    <span style="font-size: 0.6rem; color: #34d399; font-weight: 700;">💵 Nakit</span>
-                    <span style="font-size: 0.6rem; color: #34d399; font-weight: 700;">{{ cash_pct }}%</span>
-                </div>
-                <div style="height: 8px; background: rgba(255,255,255,0.1); border-radius: 9999px; overflow: hidden;">
-                    <div style="height: 100%; width: {{ cash_pct }}%; background: linear-gradient(to right, #34d399, #10b981); border-radius: 9999px; transition: width 1s ease;"></div>
-                </div>
-            </div>
-            <div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
-                    <span style="font-size: 0.6rem; color: #60a5fa; font-weight: 700;">📈 Yatırım</span>
-                    <span style="font-size: 0.6rem; color: #60a5fa; font-weight: 700;">{{ investment_pct }}%</span>
-                </div>
-                <div style="height: 8px; background: rgba(255,255,255,0.1); border-radius: 9999px; overflow: hidden;">
-                    <div style="height: 100%; width: {{ investment_pct }}%; background: linear-gradient(to right, #60a5fa, #3b82f6); border-radius: 9999px; transition: width 1s ease;"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- === MEVCUT 4-KART SATIRI === -->
-<div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10 text-center">
-    <div class="premium-card p-6 border-b-4 border-emerald-500 bg-white/60">
-        <div class="flex items-center justify-center mb-1.5">
-            <h3 class="text-slate-400 text-[10px] font-black uppercase tracking-wider">{{ _('dashboard_today_cash') }}</h3>
-            <span class="info-tip" title="Bugünkü cüzdanınızdaki toplam nakit miktarı.">?</span>
-        </div>
-        <p class="text-2xl font-black text-slate-800">{{ today_cash|format_money }} ₺</p>
-    </div>
-    <div class="premium-card p-6 border-b-4 border-amber-400 bg-white/60">
-        <div class="flex items-center justify-center mb-1.5">
-            <h3 class="text-slate-400 text-[10px] font-black uppercase tracking-wider">{{ _('dashboard_7day_forecast') }}</h3>
-            <span class="info-tip" title="Sonraki 7 gün içinde beklenen nakit akışı.">?</span>
-        </div>
-        <p class="text-2xl font-black text-slate-800">{{ week_cash|format_money }} ₺</p>
-    </div>
-    <div class="premium-card p-6 border-b-4 border-orange-500 bg-white/60">
-        <div class="flex items-center justify-center mb-1.5">
-            <h3 class="text-slate-400 text-[10px] font-black uppercase tracking-wider">{{ _('dashboard_month_forecast') }}</h3>
-            <span class="info-tip" title="Bu ay sonu beklenen nakit akışı.">?</span>
-        </div>
-        <p class="text-2xl font-black text-slate-800">{{ month_cash|format_money }} ₺</p>
-    </div>
-    <div class="premium-card p-6 border-b-4 border-blue-600 bg-white/60">
-        <div class="flex items-center justify-center mb-1.5">
-            <h3 class="text-slate-400 text-[10px] font-black uppercase tracking-wider">{{ _('dashboard_year_forecast') }}</h3>
-            <span class="info-tip" title="Yıl sonu beklenen nakit akışı.">?</span>
-        </div>
-        <p class="text-2xl font-black text-slate-800">{{ year_end_cash|format_money }} ₺</p>
-    </div>
-</div>
-
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10 text-center">
-    <div class="premium-card p-4 bg-white/60">
-        <div class="flex items-center justify-center mb-1">
-            <h3 class="text-slate-400 text-[9px] font-black uppercase tracking-wider">Yıl içi gerçekleşen nakit</h3>
-            <span class="info-tip" title="Bu yıl içinde ödenmiş işlemlerın net nakit etkisi. Gelir - Gider - Yatırım.">?</span>
-        </div>
-        <p class="text-lg font-black {% if year_paid_cash >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">{{ year_paid_cash|format_money }} ₺</p>
-    </div>
-    <div class="premium-card p-4 bg-white/60">
-        <div class="flex items-center justify-center mb-1">
-            <h3 class="text-slate-400 text-[9px] font-black uppercase tracking-wider">Ödenmiş yatırım transferi</h3>
-            <span class="info-tip" title="Yatırım hesaplarına ödenmiş transferler.">?</span>
-        </div>
-        <p class="text-lg font-black text-blue-600">{{ paid_investment_transfers|format_money }} ₺</p>
-    </div>
-    <div class="premium-card p-4 bg-white/60">
-        <div class="flex items-center justify-center mb-1">
-            <h3 class="text-slate-400 text-[9px] font-black uppercase tracking-wider">Yatırım / Gelir Oranı</h3>
-            <span class="info-tip" title="Yatırım miktarının toplam gelire oranı. Ne kadarını yatırım yaptığınızı gösterir.">?</span>
-        </div>
-        <p class="text-lg font-black text-sky-600">%{{ investment_ratio }}</p>
-    </div>
-    <div class="premium-card p-4 bg-white/60">
-        <div class="flex items-center justify-center mb-1">
-            <h3 class="text-slate-400 text-[9px] font-black uppercase tracking-wider">Bekleyen yıl etkisi</h3>
-            <span class="info-tip" title="Henüz ödenmemiş işlemlerin yıl sonu nakit etkisi.">?</span>
-        </div>
-        <p class="text-lg font-black text-amber-600">{{ pending_year_cash|format_money }} ₺</p>
-        <div class="mt-1 text-[8px] text-slate-400 font-bold uppercase">Bekleyen yatırım: {{ pending_investment_transfers|format_money }} ₺</div>
-    </div>
-</div>
-
-<!-- === FAZ 4: CHART ALANI (Trend + Varlık Dağılımı) === -->
-<div class="grid grid-cols-1 gap-8 mb-10">
-    <div class="premium-card p-8 bg-white/80">
-        <h4 class="font-black text-xs uppercase text-slate-400 tracking-wider mb-1 text-center">{{ _('dashboard_trend_title') }}</h4>
-        <p class="text-[9px] text-center mb-3 flex justify-center gap-3"><span class="text-emerald-600 font-bold">● {{ _('dashboard_positive') }}</span><span class="text-rose-600 font-bold">● {{ _('dashboard_negative') }}</span></p>
-        <div class="chart-container">
-            <canvas id="weekChart"></canvas>
-        </div>
-    </div>
-    <div class="premium-card p-8 bg-white/80">
-        <h4 class="font-black text-xs uppercase text-slate-400 tracking-wider mb-1 text-center">{{ _('dashboard_monthly_trend') }}</h4>
-        <p class="text-[9px] text-center mb-3 flex justify-center gap-3"><span class="text-emerald-600 font-bold">● {{ _('dashboard_positive') }}</span><span class="text-rose-600 font-bold">● {{ _('dashboard_negative') }}</span></p>
-        <div class="chart-container">
-            <canvas id="monthChart"></canvas>
-        </div>
-    </div>
-    <!-- Varlık Tipi Dağılımı -->
-    <div class="premium-card p-8 bg-white/80 flex flex-col">
-        <h4 class="font-black text-xs uppercase text-slate-400 tracking-wider mb-1 text-center">Varlık Tipi Dağılımı</h4>
-        <p class="text-[9px] text-center text-slate-400 font-bold mb-3">Portföy Kompozisyonu</p>
-        {% if open_asset_count > 0 %}
-        <div style="position: relative; flex: 1; display: flex; align-items: center; justify-content: center; max-height: 220px;">
-            <canvas id="assetDistChart"></canvas>
-        </div>
-        {% else %}
-        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #94a3b8; min-height: 160px;">
-            <svg style="width: 3rem; height: 3rem; margin-bottom: 0.75rem; opacity: 0.4;" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/>
-            </svg>
-            <p class="text-[10px] font-bold uppercase">Henüz Varlık Yok</p>
-            <a href="/assets" class="mt-2 text-[9px] text-sky-500 font-black uppercase hover:underline">Varlık Ekle →</a>
-        </div>
-        {% endif %}
-    </div>
-</div>
-
-
-<div class="premium-card p-8 bg-white/80 overflow-hidden">
-    <!-- Section Header -->
-    <div class="flex flex-wrap justify-between items-start mb-6 border-b border-slate-200/60 pb-4 gap-4">
-        <div>
-            <h3 class="font-black text-base text-slate-800 uppercase italic tracking-tight">İşlemlerim</h3>
-            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1">Gelir, gider ve yatırım hareketlerinizi tek yerden yönetin</p>
-        </div>
-        <div class="flex items-center gap-3">
-            <a href="/transactions" class="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-lg hover:shadow-xl transition transform hover:scale-105">Tüm İşlemleri Gör</a>
+        <!-- Finansal Sağlık & Varlık Hızlı Linkleri -->
+        <div class="flex items-center gap-2.5">
+            <a href="/analysis" data-macro="button_secondary" class="btn-premium-secondary">
+                <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                <span>Sağlık Raporu</span>
+            </a>
+            <a href="/assets" data-macro="button_secondary" class="btn-premium-secondary">
+                <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+                <span>Varlık Portföyü</span>
+            </a>
         </div>
     </div>
 
-    <!-- Mini Transaction Summary (Last 5 transactions) -->
-    <div class="space-y-3">
-        {% for t in last_t[:5] %}
-        <div class="flex items-center justify-between p-4 bg-slate-50/80 rounded-xl border border-slate-100 hover:bg-slate-100/80 transition">
-            <div class="flex items-center gap-4">
-                <div class="w-10 h-10 rounded-full flex items-center justify-center {% if t.type == 'Gelir' %}bg-emerald-100{% elif t.type == 'Yatırım' %}bg-blue-100{% else %}bg-rose-100{% endif %}">
-                    <span class="text-lg font-black {% if t.type == 'Gelir' %}text-emerald-600{% elif t.type == 'Yatırım' %}text-blue-500{% else %}text-rose-600{% endif %}">
-                        {% if t.type == 'Gelir' %}↑{% elif t.type == 'Yatırım' %}◆{% else %}↓{% endif %}
+    <!-- ═══ 2. NET SERVET & SERMAYE DAĞILIMI HERO BANNER ═══════════════════════ -->
+    <div class="dash-hero p-6 md:p-8">
+        <!-- Ambient Blur Mesh -->
+        <div class="absolute -right-16 -top-16 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -left-16 -bottom-16 w-72 h-72 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <!-- Sol Kolon: Net Servet & Metrikler (7 Kolon) -->
+            <div class="lg:col-span-7">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+                        <svg class="w-3 h-3 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        Toplam Net Servet
                     </span>
                 </div>
+
+                <div class="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight mb-6 flex items-baseline gap-2 {{ 'text-emerald-400' if net_worth >= 0 else 'text-rose-400' }}">
+                    <span>{{ net_worth|format_money }}</span>
+                    <span class="text-xl md:text-2xl font-bold text-slate-400">{{ base_currency_symbol }}</span>
+                </div>
+
+                <!-- Alt İstatistik Kartları -->
+                <div class="grid grid-cols-3 gap-3 sm:gap-4">
+                    <!-- Nakit Pozisyonu -->
+                    <div class="p-3.5 rounded-2xl bg-white/[0.05] border border-white/[0.08] backdrop-blur-md">
+                        <div class="flex items-center gap-1.5 mb-1">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                            <p class="text-[10px] font-bold text-slate-300 uppercase tracking-wider truncate">{{ _('ui_auto_9721ca219c8b') }}</p>
+                        </div>
+                        <p class="text-sm sm:text-base md:text-lg font-black text-emerald-400 truncate">
+                            {{ today_cash|format_money }} <span class="text-xs font-bold text-slate-400">{{ base_currency_symbol }}</span>
+                        </p>
+                    </div>
+
+                    <!-- Toplam Yatırım Varlığı -->
+                    <div class="p-3.5 rounded-2xl bg-white/[0.05] border border-white/[0.08] backdrop-blur-md">
+                        <div class="flex items-center gap-1.5 mb-1">
+                            <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+                            <p class="text-[10px] font-bold text-slate-300 uppercase tracking-wider truncate">{{ _('ui_auto_03885b7ebff7') }}</p>
+                        </div>
+                        <p class="text-sm sm:text-base md:text-lg font-black text-sky-400 truncate">
+                            {{ total_asset_value|format_money }} <span class="text-xs font-bold text-slate-400">{{ base_currency_symbol }}</span>
+                        </p>
+                    </div>
+
+                    <!-- Aktif Varlık Adedi -->
+                    <div class="p-3.5 rounded-2xl bg-white/[0.05] border border-white/[0.08] backdrop-blur-md">
+                        <div class="flex items-center gap-1.5 mb-1">
+                            <span class="w-2 h-2 rounded-full bg-violet-400"></span>
+                            <p class="text-[10px] font-bold text-slate-300 uppercase tracking-wider truncate">{{ _('ui_auto_9e6fcbd8ff28') }}</p>
+                        </div>
+                        <p class="text-sm sm:text-base md:text-lg font-black text-violet-400 truncate">
+                            {{ open_asset_count }} <span class="text-xs font-bold text-slate-400">{{ _('dashboard_asset_count_unit') }}</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sağ Kolon: Nakit vs Yatırım Dağılım Göstergesi (5 Kolon) -->
+            <div class="lg:col-span-5 p-5 rounded-2xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-md">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-[10px] font-bold text-slate-300 uppercase tracking-wider">{{ _('ui_auto_76e1c1459af1') }}</span>
+                    <span class="text-[10px] font-black text-indigo-300 uppercase tracking-wider">Sermaye Dağılımı</span>
+                </div>
+
+                <!-- Dağılım Çubuğu -->
+                <div class="h-3.5 w-full rounded-full bg-slate-900/90 p-0.5 flex overflow-hidden border border-white/10 mb-4">
+                    <div class="h-full rounded-l-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-500" style="width: {{ cash_pct }}%;"></div>
+                    <div class="h-full rounded-r-full bg-gradient-to-r from-sky-500 to-indigo-500 transition-all duration-500" style="width: {{ investment_pct }}%;"></div>
+                </div>
+
+                <!-- Dağılım Detay Kartları -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50"></span>
+                            <span class="text-xs font-bold text-slate-200">{{ _('ui_auto_57d6766eea87') }}</span>
+                        </div>
+                        <span class="text-xs font-black text-emerald-400 font-mono">%{{ cash_pct }}</span>
+                    </div>
+                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-sky-400 shadow-sm shadow-sky-400/50"></span>
+                            <span class="text-xs font-bold text-slate-200">{{ _('ui_auto_3cb24a98c8c0') }}</span>
+                        </div>
+                        <span class="text-xs font-black text-sky-400 font-mono">%{{ investment_pct }}</span>
+                    </div>
+                </div>
+                {% if net_monthly_delta is defined %}
+                <div class="mt-3 pt-3 border-t border-white/[0.08] flex items-center justify-between text-xs">
+                    <span class="text-slate-300 font-semibold">Ay Sonu Nakit Değişimi:</span>
+                    <span class="font-black font-mono {{ 'text-emerald-400' if net_monthly_delta >= 0 else 'text-rose-400' }}">
+                        {{ '+' if net_monthly_delta > 0 else '' }}{{ net_monthly_delta|format_money }} {{ base_currency_symbol }}
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ 3. KULLANICI DESTEKLİ HIZLI AKSİYONLAR BARI ═══════════════════════ -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+        <button data-macro="button_secondary" type="button" onclick="openQuickTransactionModal('Gelir')" class="quick-action-btn bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 cursor-pointer">
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black">↑</span>
+            <span>+ Hızlı Gelir</span>
+        </button>
+        <button data-macro="button_secondary" type="button" onclick="openQuickTransactionModal('Gider')" class="quick-action-btn bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 hover:bg-rose-100 dark:hover:bg-rose-900/60 cursor-pointer">
+            <span class="w-6 h-6 rounded-full bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center font-black">↓</span>
+            <span>- Hızlı Gider</span>
+        </button>
+        <button data-macro="button_secondary" type="button" onclick="openQuickTransferModal()" class="quick-action-btn bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800/60 hover:bg-sky-100 dark:hover:bg-sky-900/60 cursor-pointer">
+            <span class="w-6 h-6 rounded-full bg-sky-500/20 text-sky-600 dark:text-sky-400 flex items-center justify-center font-black">⇄</span>
+            <span>Yatırım Transferi</span>
+        </button>
+        <a href="/payment_calendar" data-macro="button_secondary" class="quick-action-btn bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60">
+            <span class="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-black">📅</span>
+            <span>Ödeme Takvimi</span>
+        </a>
+        <a href="/assets" data-macro="button_secondary" class="quick-action-btn bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 hover:bg-amber-100 dark:hover:bg-amber-900/60">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black">💼</span>
+            <span>Varlık Portföyü</span>
+        </a>
+    </div>
+
+    <!-- ═══ 3.5. AKILLI BİLGİ & ASİSTAN KARTLARI (SMART FEED) ═══════════════ -->
+    {% if smart_insights %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+        {% for insight in smart_insights %}
+        <div class="p-4 rounded-2xl border flex items-start justify-between gap-3 transition-all hover:shadow-md
+            {% if insight.type == 'danger' %}
+                bg-rose-500/10 border-rose-500/30 text-rose-950 dark:text-rose-100
+            {% elif insight.type == 'warning' %}
+                bg-amber-500/10 border-amber-500/30 text-amber-950 dark:text-amber-100
+            {% elif insight.type == 'success' %}
+                bg-emerald-500/10 border-emerald-500/30 text-emerald-950 dark:text-emerald-100
+            {% else %}
+                bg-sky-500/10 border-sky-500/30 text-sky-950 dark:text-sky-100
+            {% endif %}">
+            <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5
+                    {% if insight.type == 'danger' %}
+                        bg-rose-500/20 text-rose-600 dark:text-rose-400
+                    {% elif insight.type == 'warning' %}
+                        bg-amber-500/20 text-amber-600 dark:text-amber-400
+                    {% elif insight.type == 'success' %}
+                        bg-emerald-500/20 text-emerald-600 dark:text-emerald-400
+                    {% else %}
+                        bg-sky-500/20 text-sky-600 dark:text-sky-400
+                    {% endif %}">
+                    {% if insight.type == 'danger' %}
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    {% elif insight.type == 'warning' %}
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    {% elif insight.type == 'success' %}
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                    {% else %}
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    {% endif %}
+                </div>
                 <div>
-                    <div class="font-bold text-slate-800 text-sm">{{ t.description }}</div>
-                    <div class="text-[10px] text-slate-500 font-semibold">{{ t.category }} • {{ t.date|format_date }}</div>
+                    <h4 class="text-xs font-black tracking-tight">{{ insight.title }}</h4>
+                    <p class="text-[11px] opacity-80 mt-0.5 leading-relaxed">{{ insight.description }}</p>
                 </div>
             </div>
-            <div class="text-right">
-                <div class="font-black text-base {% if t.type == 'Gelir' %}text-emerald-600{% elif t.type == 'Yatırım' %}text-blue-500{% else %}text-rose-600{% endif %}">
-                    {{ t.amount|format_money }} ₺
-                </div>
-                <div class="text-[9px] font-bold {% if t.status == 'Ödendi' %}text-emerald-600{% else %}text-amber-600{% endif %}">{{ t.status }}</div>
-            </div>
+            <a href="{{ insight.action_url }}" data-macro="button_secondary" class="shrink-0 text-[11px] font-bold px-2.5 py-1.5 rounded-lg border whitespace-nowrap transition-colors
+                {% if insight.type == 'danger' %}
+                    bg-rose-500/20 hover:bg-rose-500/30 border-rose-500/30 text-rose-700 dark:text-rose-200
+                {% elif insight.type == 'warning' %}
+                    bg-amber-500/20 hover:bg-amber-500/30 border-amber-500/30 text-amber-700 dark:text-amber-200
+                {% elif insight.type == 'success' %}
+                    bg-emerald-500/20 hover:bg-emerald-500/30 border-emerald-500/30 text-emerald-700 dark:text-emerald-200
+                {% else %}
+                    bg-sky-500/20 hover:bg-sky-500/30 border-sky-500/30 text-sky-700 dark:text-sky-200
+                {% endif %}">
+                {{ insight.action_label }} →
+            </a>
         </div>
         {% endfor %}
     </div>
+    {% endif %}
+
+    <!-- ═══ 4. 4-KART LİKİDİTE PROJEKSİYONLARI ════════════════════════════════ -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <!-- 1. Bugünkü Nakit -->
+        <div class="dash-card p-5 border-l-4 border-l-emerald-500 flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    </div>
+                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ _('dashboard_today_cash') }}</h3>
+                </div>
+                <span class="info-tip" title="{{ _('ui_auto_7912b7a5b3e5') }}">?</span>
+            </div>
+            <div>
+                <p class="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                    {{ today_cash|format_money }} <span class="text-xs font-bold text-slate-400">{{ base_currency_symbol }}</span>
+                </p>
+                <div class="mt-2.5 flex items-center justify-between text-[11px] font-semibold text-slate-400">
+                    <span>Gerçekleşen Likidite</span>
+                    <span class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Anlık
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 7 Günlük Tahmin -->
+        <div class="dash-card p-5 border-l-4 border-l-amber-500 flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ _('dashboard_7day_forecast') }}</h3>
+                </div>
+                <span class="info-tip" title="{{ _('ui_auto_83bcce7d34ca') }}">?</span>
+            </div>
+            <div>
+                <p class="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                    {{ week_cash|format_money }} <span class="text-xs font-bold text-slate-400">{{ base_currency_symbol }}</span>
+                </p>
+                <div class="mt-2.5 flex items-center justify-between text-[11px] font-semibold text-slate-400">
+                    <span>7 Günlük Projeksiyon</span>
+                    <span class="inline-flex items-center gap-1 font-bold {% if week_cash >= today_cash %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
+                        {% if week_cash >= today_cash %}↑ Artış{% else %}↓ Çıkış{% endif %} (T+7)
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Ay Sonu Tahmin -->
+        <div class="dash-card p-5 border-l-4 border-l-orange-500 flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center border border-orange-500/20">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    </div>
+                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ _('dashboard_month_forecast') }}</h3>
+                </div>
+                <span class="info-tip" title="{{ _('ui_auto_07c85961a0fd') }}">?</span>
+            </div>
+            <div>
+                <p class="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                    {{ month_cash|format_money }} <span class="text-xs font-bold text-slate-400">{{ base_currency_symbol }}</span>
+                </p>
+                <div class="mt-2.5 flex items-center justify-between text-[11px] font-semibold text-slate-400">
+                    <span>Dönem Kapanışı</span>
+                    <span class="inline-flex items-center gap-1 font-bold {% if month_cash >= today_cash %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
+                        {% if month_cash >= today_cash %}↑{% else %}↓{% endif %} Ay Sonu
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Yıl Sonu Kasa -->
+        <div class="dash-card p-5 border-l-4 border-l-indigo-500 flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/20">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                    </div>
+                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ _('dashboard_year_forecast') }}</h3>
+                </div>
+                <span class="info-tip" title="{{ _('ui_auto_1628960fba42') }}">?</span>
+            </div>
+            <div>
+                <p class="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                    {{ year_end_cash|format_money }} <span class="text-xs font-bold text-slate-400">{{ base_currency_symbol }}</span>
+                </p>
+                <div class="mt-2.5 flex items-center justify-between text-[11px] font-semibold text-slate-400">
+                    <span>Yıllık Hedef</span>
+                    <span class="inline-flex items-center gap-1 font-bold text-indigo-600 dark:text-indigo-400">
+                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> 31 Aralık
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ 5. İKİNCİL TELEMETRİ KARTLARI ═════════════════════════════════════ -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Card 1: Yıl içi gerçekleşen nakit -->
+        <div class="dash-card p-4">
+            <div class="flex items-center justify-between mb-1.5">
+                <h3 class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ _('ui_auto_f56ff94fd347') }}</h3>
+                <span class="info-tip" title="{{ _('ui_auto_4f3c5b56d16f') }}">?</span>
+            </div>
+            <p class="text-lg font-black tracking-tight {% if year_paid_cash >= 0 %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
+                {{ year_paid_cash|format_money }} <span class="text-xs font-bold text-slate-400">{{ base_currency_symbol }}</span>
+            </p>
+        </div>
+
+        <!-- Card 2: Ödenmiş yatırım transferi -->
+        <div class="dash-card p-4">
+            <div class="flex items-center justify-between mb-1.5">
+                <h3 class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ _('ui_auto_57117158a1d5') }}</h3>
+                <span class="info-tip" title="{{ _('ui_auto_1d78a2044fed') }}">?</span>
+            </div>
+            <p class="text-lg font-black tracking-tight text-blue-600 dark:text-blue-400">
+                {{ paid_investment_transfers|format_money }} <span class="text-xs font-bold text-slate-400">{{ base_currency_symbol }}</span>
+            </p>
+        </div>
+
+        <!-- Card 3: Yatırım / Gelir Oranı -->
+        <div class="dash-card p-4">
+            <div class="flex items-center justify-between mb-1.5">
+                <h3 class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ _('ui_auto_d2a074d8a2e0') }}</h3>
+                <span class="info-tip" title="{{ _('ui_auto_a552dff813df') }}">?</span>
+            </div>
+            <div class="flex items-baseline gap-2">
+                <p class="text-lg font-black tracking-tight text-sky-600 dark:text-sky-400">%{{ investment_ratio }}</p>
+                <span class="text-[10px] font-semibold text-slate-400">Tasarruf Oranı</span>
+            </div>
+        </div>
+
+        <!-- Card 4: Bekleyen yıl etkisi -->
+        <div class="dash-card p-4">
+            <div class="flex items-center justify-between mb-1.5">
+                <h3 class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ _('ui_auto_f36eca03ef93') }}</h3>
+                <span class="info-tip" title="{{ _('ui_auto_aa5c94745742') }}">?</span>
+            </div>
+            <p class="text-lg font-black tracking-tight text-amber-600 dark:text-amber-400">
+                {{ pending_year_cash|format_money }} <span class="text-xs font-bold text-slate-400">{{ base_currency_symbol }}</span>
+            </p>
+            <div class="mt-1 text-[10px] text-slate-400 font-bold uppercase truncate">
+                {{ _('dashboard_pending_investment') }}: {{ pending_investment_transfers|format_money }} {{ base_currency_symbol }}
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ 6. İNTERAKTİF GRAFİKLER (7 GÜNLÜK & AYLIK PROJEKSİYONLAR) ═══════════ -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- 7 Günlük Nakit Akışı Projeksiyonu -->
+        <div class="dash-card p-6 md:p-7">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div>
+                    <h3 class="text-sm font-black uppercase text-slate-800 dark:text-white tracking-wider flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                        {{ _('dashboard_trend_title') }}
+                    </h3>
+                    <p class="text-[11px] font-medium text-slate-400 mt-0.5">Kısa vadeli 7 günlük kümülatif likidite tahmini</p>
+                </div>
+                <div class="flex items-center gap-3 text-[11px] font-bold">
+                    <span class="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> {{ _('dashboard_positive') }}
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
+                        <span class="w-2 h-2 rounded-full bg-rose-500"></span> {{ _('dashboard_negative') }}
+                    </span>
+                </div>
+            </div>
+            <div class="dash-chart-container">
+                <canvas id="weekChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Aylık Nakit Akışı Projeksiyonu -->
+        <div class="dash-card p-6 md:p-7">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div>
+                    <h3 class="text-sm font-black uppercase text-slate-800 dark:text-white tracking-wider flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+                        {{ _('dashboard_monthly_trend') }}
+                    </h3>
+                    <p class="text-[11px] font-medium text-slate-400 mt-0.5">Ay sonuna kadar kümülatif nakit akış seyrinin projeksiyonu</p>
+                </div>
+                <div class="flex items-center gap-3 text-[11px] font-bold">
+                    <span class="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> {{ _('dashboard_positive') }}
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
+                        <span class="w-2 h-2 rounded-full bg-rose-500"></span> {{ _('dashboard_negative') }}
+                    </span>
+                </div>
+            </div>
+            <div class="dash-chart-container">
+                <canvas id="monthChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ 7. VARLIK TİPİ DAĞILIMI DONUT GRAFİĞİ ══════════════════════════════ -->
+    <div class="dash-card p-6 md:p-8">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
+            <div>
+                <h3 class="text-sm font-black uppercase text-slate-800 dark:text-white tracking-wider flex items-center gap-2">
+                    <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+                    {{ _('ui_auto_db06c635ca41') }}
+                </h3>
+                <p class="text-[11px] font-medium text-slate-400 mt-0.5">{{ _('ui_auto_1343b6f50994') }}</p>
+            </div>
+            <a href="/assets" data-macro="button_secondary" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
+                {{ _('ui_auto_9759993e082c') }} →
+            </a>
+        </div>
+        {% if open_asset_count > 0 %}
+        <div class="relative flex items-center justify-center min-h-[260px] max-h-[300px]">
+            <canvas id="assetDistChart"></canvas>
+        </div>
+        {% else %}
+        <div class="flex flex-col items-center justify-center text-slate-400 min-h-[180px] py-6">
+            <svg class="w-12 h-12 mb-3 opacity-40 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/>
+            </svg>
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">{{ _('ui_auto_f6b194fce62d') }}</p>
+            <a href="/assets" data-macro="button_secondary" class="mt-2 text-xs text-indigo-600 dark:text-indigo-400 font-bold uppercase hover:underline">{{ _('ui_auto_9759993e082c') }}</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ═══ 8. SON FİNANSAL HAREKETLER ════════════════════════════════════════ -->
+    <div class="dash-card p-6 md:p-8">
+        <!-- Başlık & Aksiyon -->
+        <div class="flex flex-wrap justify-between items-center mb-6 border-b border-slate-100 dark:border-slate-800 pb-4 gap-4">
+            <div>
+                <h3 class="text-base font-black text-slate-800 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                    <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    {{ _('ui_auto_2dacf5515901') }}
+                </h3>
+                <p class="text-[11px] text-slate-400 font-medium mt-0.5">{{ _('ui_auto_458f26782123') }}</p>
+            </div>
+            <div>
+                <a href="/transactions" data-macro="button_secondary" class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-indigo-500/25 transition transform hover:scale-[1.02]">
+                    <span>{{ _('ui_auto_e1fc2a0aa93d') }}</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+        </div>
+
+        <!-- İşlem Akışı -->
+        <div class="space-y-3">
+            {% for t in last_t[:6] %}
+            <div class="tx-item flex items-center justify-between p-4 bg-slate-50/70 dark:bg-slate-800/50 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 transition duration-200 shadow-sm">
+                <div class="flex items-center gap-3.5 min-w-0">
+                    <div class="w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center {% if t.type == 'Gelir' %}bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20{% elif t.type == 'Yatırım' %}bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20{% elif t.type == 'Transfer' %}bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20{% else %}bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20{% endif %}">
+                        <span class="text-base font-black">
+                            {% if t.type == 'Gelir' %}↑{% elif t.type == 'Yatırım' %}◆{% elif t.type == 'Transfer' %}⇄{% else %}↓{% endif %}
+                        </span>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="font-bold text-slate-800 dark:text-slate-100 text-sm truncate">{{ t.description }}</div>
+                        <div class="text-[11px] text-slate-400 font-medium mt-0.5 flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded-md bg-slate-200/60 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 font-semibold text-[10px]">{{ t.category }}</span>
+                            <span>•</span>
+                            <span>{{ t.date|format_date }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 flex-shrink-0 ml-4">
+                    <div class="text-right">
+                        <div class="font-black text-sm md:text-base {% if t.type == 'Gelir' %}text-emerald-600 dark:text-emerald-400{% elif t.type == 'Yatırım' %}text-sky-600 dark:text-sky-400{% elif t.type == 'Transfer' %}text-violet-600 dark:text-violet-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
+                            {% if t.type == 'Gelir' %}+{% elif t.type == 'Yatırım' %}◆ {% elif t.type == 'Transfer' %}⇄ {% else %}−{% endif %}{{ t.amount|format_money }} <span class="text-xs font-bold">{{ base_currency_symbol }}</span>
+                        </div>
+                        <div class="mt-0.5">
+                            {% if t.status == 'Ödendi' %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                                {{ _('tx_status_paid') }}
+                            </span>
+                            {% else %}
+                            <button data-macro="button_secondary" type="button" 
+                                    onclick="quickPayTransaction({{ t.id }}, this)" 
+                                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-500/10 hover:bg-emerald-500/20 text-amber-700 dark:text-amber-300 hover:text-emerald-600 dark:hover:text-emerald-400 border border-amber-500/20 hover:border-emerald-500/30 transition cursor-pointer" 
+                                    title="Tek tıkla ödendi olarak işaretle">
+                                <span>{{ _('tx_status_pending') }}</span>
+                                <span class="font-bold text-[10px]">✓</span>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <!-- Hızlı İşlem Menüsü -->
+                    <div class="flex items-center gap-1">
+                        <button data-macro="button_secondary" type="button" 
+                                onclick="openEditModal(this)"
+                                data-id="{{ t.id }}"
+                                data-date="{{ t.date }}"
+                                data-category="{{ t.category }}"
+                                data-amount="{{ t.amount }}"
+                                data-description="{{ t.description }}"
+                                data-note="{{ t.note or '' }}"
+                                data-status="{{ t.status }}"
+                                class="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition" 
+                                title="Düzenle">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        </button>
+                        <button data-macro="button_secondary" type="button" 
+                                onclick="deleteTransaction('{{ t.id }}')"
+                                class="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition" 
+                                title="Sil">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-8 text-slate-400 text-xs">
+                Henüz kayıtlı finansal hareket bulunmuyor.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
 </div>
 
-<!-- Modal Templates & Scripts -->
-{% include 'macros/modals.html' %}
-
-<!-- Edit Transaction Modal -->
+<!-- ═══ 9. İŞLEM DÜZENLEME MODALI (SAFEGUARD) ══════════════════════════════ -->
 <div id="editTransactionModal" class="edit-modal hidden">
     <div class="edit-modal-backdrop" onclick="closeModal()"></div>
     <div class="edit-modal-content">
         <div class="edit-modal-card">
-            <div class="edit-modal-header">
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <div style="display: flex; align-items: center;">
-                        <div style="background: #fef3c7; padding: 0.5rem; border-radius: 0.75rem; margin-right: 0.75rem;">
-                            <svg style="width: 1.25rem; height: 1.25rem; color: #d97706;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                        </div>
-                        <div>
-                            <h3 style="font-size: 1.125rem; font-weight: 900; color: #1e293b; text-transform: uppercase; letter-spacing: -0.025em;">İşlemi Düzenle</h3>
-                            <p style="font-size: 0.625rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">İşlem detaylarını güncelle</p>
-                        </div>
+            <div class="edit-modal-header flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                     </div>
-                    <button type="button" onclick="closeModal()" style="color: #94a3b8; background: none; border: none; cursor: pointer; transition: color 0.2s;">
-                        <svg style="width: 1.5rem; height: 1.5rem;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
+                    <div>
+                        <h3 class="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">{{ _('ui_auto_2fafb819d70d') }}</h3>
+                        <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">{{ _('ui_auto_88ab1d5a2b3c') }}</p>
+                    </div>
                 </div>
+                <button data-macro="button_secondary" type="button" onclick="closeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
             </div>
             
             <form id="editModalForm" class="edit-modal-body">
@@ -333,44 +589,44 @@
                 <input type="hidden" name="transaction_id" id="modalTransactionId">
                 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Tarih</label>
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">{{ _('dashboard_edit_date') }}</label>
                     <input type="text" name="date" id="modalDate" class="edit-modal-input" required>
                 </div>
                 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Kategori</label>
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">{{ _('dashboard_edit_category') }}</label>
                     <input type="text" name="category" id="modalCategory" class="edit-modal-input" required>
                 </div>
                 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Tutar</label>
-                    <input type="number" step="0.01" name="amount" id="modalAmount" placeholder="0.00" class="edit-modal-input" style="font-size: 1.25rem; font-weight: 900;" required>
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">{{ _('dashboard_edit_amount') }}</label>
+                    <input type="number" step="0.01" name="amount" id="modalAmount" placeholder="0.00" class="edit-modal-input edit-modal-input-amount" required>
                 </div>
                 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Açıklama</label>
-                    <input type="text" name="description" id="modalDescription" placeholder="Açıklama" class="edit-modal-input" style="font-weight: 400;">
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">{{ _('dashboard_edit_description') }}</label>
+                    <input type="text" name="description" id="modalDescription" placeholder="{{ _('dashboard_edit_description') }}" class="edit-modal-input">
                 </div>
                 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Not</label>
-                    <input type="text" name="note" id="modalNote" placeholder="Not" class="edit-modal-input" style="font-style: italic; color: #64748b;">
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">{{ _('dashboard_edit_note') }}</label>
+                    <input type="text" name="note" id="modalNote" placeholder="{{ _('dashboard_edit_note') }}" class="edit-modal-input italic">
                 </div>
                 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Durum</label>
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">{{ _('dashboard_edit_status') }}</label>
                     <select name="status" id="modalStatus" class="edit-modal-input">
-                        <option value="Bekliyor">Bekliyor</option>
-                        <option value="Ödendi">Ödendi</option>
+                        <option value="Bekliyor">{{ _('tx_status_pending') }}</option>
+                        <option value="Ödendi">{{ _('tx_status_paid') }}</option>
                     </select>
                 </div>
                 
-                <div class="flex space-x-2 pt-2" style="display: flex; gap: 0.5rem;">
-                    <button type="submit" style="flex: 1; background: linear-gradient(to right, #fbbf24, #f59e0b); color: #0f172a; font-weight: 900; padding: 1rem; border-radius: 0.75rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); text-transform: uppercase; font-size: 0.625rem; letter-spacing: 0.05em; border: none; cursor: pointer; transition: box-shadow 0.2s;">
-                        İŞLEMİ GÜNCELLE
+                <div class="flex gap-3 pt-3">
+                    <button data-macro="button_primary" type="submit" class="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-slate-900 font-black rounded-xl text-xs uppercase tracking-wider transition shadow-md">
+                        {{ _('ui_auto_dc890208ae7f') }}
                     </button>
-                    <button type="button" onclick="closeModal()" style="padding: 1rem; background: #e2e8f0; color: #334155; border-radius: 0.75rem; font-weight: 900; font-size: 0.625rem; text-transform: uppercase; letter-spacing: 0.05em; border: none; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); transition: background 0.2s;">
-                        İPTAL
+                    <button data-macro="button_secondary" type="button" onclick="closeModal()" class="flex-1 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+                        {{ _('ui_auto_571a2b59da0f') }}
                     </button>
                 </div>
             </form>
@@ -378,236 +634,189 @@
     </div>
 </div>
 
-<script>
-    function openEditModal(btn) {
-        console.log('openEditModal called');
-        const d = btn.dataset;
-        console.log('Button dataset:', d);
-        
-        document.getElementById('modalTransactionId').value = d.id;
-        document.getElementById('modalDate').value = d.date;
-        document.getElementById('modalCategory').value = d.category;
-        document.getElementById('modalAmount').value = d.amount;
-        document.getElementById('modalDescription').value = d.description;
-        document.getElementById('modalNote').value = d.note;
-        document.getElementById('modalStatus').value = d.status;
-        
-        console.log('Opening modal editTransactionModal');
-        window.openModal('editTransactionModal');
-    }
+<!-- ═══ 10. HIZLI İŞLEM EKLEME MODALI ══════════════════════════════════════ -->
+<div id="quickTransactionModal" class="edit-modal hidden">
+    <div class="edit-modal-backdrop" onclick="closeQuickModal('quickTransactionModal')"></div>
+    <div class="edit-modal-content">
+        <div class="edit-modal-card">
+            <div class="edit-modal-header flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div id="quickModalTypeIcon" class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20">
+                        <span class="text-lg font-black" id="quickModalIconText">↑</span>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight" id="quickModalTitle">Hızlı Gelir Ekle</h3>
+                        <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Anlık Nakit Akışı Hareketi</p>
+                    </div>
+                </div>
+                <button data-macro="button_secondary" type="button" onclick="closeQuickModal('quickTransactionModal')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <form id="quickTransactionForm" class="edit-modal-body">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="type" id="quickTxType" value="Gelir">
+                <input type="hidden" name="origin" value="Hızlı Giriş">
 
-    function closeModal() {
-        window.closeModal('editTransactionModal');
-    }
+                <!-- Tip Seçim Sekmeleri (Gelir / Gider / Yatırım) -->
+                <div class="grid grid-cols-3 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                    <button data-macro="button_secondary" type="button" onclick="switchQuickTxType('Gelir')" id="tabQuickGelir" class="py-2 text-xs font-black rounded-lg transition bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm cursor-pointer">
+                        ↑ Gelir
+                    </button>
+                    <button data-macro="button_secondary" type="button" onclick="switchQuickTxType('Gider')" id="tabQuickGider" class="py-2 text-xs font-black rounded-lg transition text-slate-600 dark:text-slate-400 hover:text-rose-500 cursor-pointer">
+                        ↓ Gider
+                    </button>
+                    <button data-macro="button_secondary" type="button" onclick="switchQuickTxType('Yatırım')" id="tabQuickYatirim" class="py-2 text-xs font-black rounded-lg transition text-slate-600 dark:text-slate-400 hover:text-sky-500 cursor-pointer">
+                        ◆ Yatırım
+                    </button>
+                </div>
 
-    // AJAX Form Submissions (Keeping existing logic)
-    document.getElementById('editModalForm')?.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const form = this;
-        const formData = new FormData(form);
-        const transactionId = document.getElementById('modalTransactionId').value;
-        
-        fetch('/edit_t/' + transactionId, {
-            method: 'POST',
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
-            body: formData
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                showToast(data.message, 'success');
-                setTimeout(() => window.location.reload(), 1000);
-            } else {
-                showToast(data.message, 'error');
-            }
-        });
-    });
+                <!-- Tutar -->
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">
+                        Tutar ({{ base_currency_symbol }}) <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="number" step="0.01" min="0.01" name="amount" id="quickTxAmount" placeholder="0.00" class="edit-modal-input edit-modal-input-amount" required>
+                </div>
 
-    $(document).ready(function(){
-        const table = $('#transTable').DataTable({
-            order: [[0, 'desc']],
-            pageLength: 25,
-            dom: '<"flex justify-between mb-4"i>rt<"flex justify-between mt-4"lp>',
-            language: {
-                url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/tr.json'
-            }
-        });
+                <!-- Kategori & Tarih -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">
+                            Kategori <span class="text-rose-500">*</span>
+                        </label>
+                        <select name="category" id="quickTxCategory" class="edit-modal-input" required>
+                            {% for c in global_income_cats %}
+                            <option value="{{ c }}">{{ c }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">
+                            Tarih <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="date" name="date" id="quickTxDate" class="edit-modal-input" required>
+                    </div>
+                </div>
 
-        $('#txSearch').on('keyup', function() { table.search(this.value).draw(); });
-        $('#txFilterOrigin').on('change', function() { table.column(1).search(this.value).draw(); });
-        $('#txFilterCategory').on('change', function() { table.column(2).search(this.value).draw(); });
-        $('#txFilterType').on('change', function() { table.column(5).search(this.value).draw(); });
-        $('#txFilterStatus').on('change', function() { table.column(6).search(this.value).draw(); });
+                <!-- Açıklama -->
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">Açıklama</label>
+                    <input type="text" name="description" id="quickTxDescription" placeholder="Örn: Maaş, Market, Kira" class="edit-modal-input">
+                </div>
 
-        // Event delegation for edit and delete buttons (handles DataTables pagination)
-        $('#transTable tbody').on('click', '.edit-tx-btn', function(e) {
-            e.preventDefault();
-            console.log('Edit button clicked via delegation');
-            openEditModal(this);
-        });
+                <!-- Durum -->
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">Durum</label>
+                    <select name="status" id="quickTxStatus" class="edit-modal-input">
+                        <option value="Ödendi" selected>{{ _('tx_status_paid') }} (Anlık Bakiye Değişimi)</option>
+                        <option value="Bekliyor">{{ _('tx_status_pending') }} (Gelecek Nakit Akışı)</option>
+                    </select>
+                </div>
 
-        $('#transTable tbody').on('click', '.delete-tx-btn', function(e) {
-            e.preventDefault();
-            console.log('Delete button clicked via delegation');
-            const transactionId = parseInt(this.dataset.id);
-            deleteTransaction(transactionId);
-        });
-    });
+                <!-- Butonlar -->
+                <div class="flex gap-3 pt-2">
+                    <button data-macro="button_primary" type="submit" id="btnQuickTxSubmit" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs uppercase tracking-wider transition shadow-md flex items-center justify-center gap-2 cursor-pointer">
+                        <span>Kaydet</span>
+                    </button>
+                    <button data-macro="button_secondary" type="button" onclick="closeQuickModal('quickTransactionModal')" class="flex-1 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer">
+                        Vazgeç
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-    function deleteTransaction(transactionId) {
-        console.log('deleteTransaction called with id:', transactionId);
-        if (typeof window.showGlobalConfirm === 'function') {
-            window.showGlobalConfirm('İşlemi Sil', 'Bu işlemi silmek istediğinize emin misiniz?', () => {
-                performDelete(transactionId);
-            }, true);
-        } else if (confirm('Bu işlemi silmek istediğinize emin misiniz?')) {
-            performDelete(transactionId);
-        }
-    }
+<!-- ═══ 11. HIZLI YATIRIM TRANSFER MODALI (NAKİT -> VARLIK) ════════════════ -->
+<div id="quickTransferModal" class="edit-modal hidden">
+    <div class="edit-modal-backdrop" onclick="closeQuickModal('quickTransferModal')"></div>
+    <div class="edit-modal-content">
+        <div class="edit-modal-card">
+            <div class="edit-modal-header flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center border border-sky-500/20">
+                        <span class="text-lg font-black">⇄</span>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">Yatırım Transferi</h3>
+                        <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Nakit Kasasından Varlığa Transfer</p>
+                    </div>
+                </div>
+                <button data-macro="button_secondary" type="button" onclick="closeQuickModal('quickTransferModal')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <form id="quickTransferForm" class="edit-modal-body">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-    function performDelete(transactionId) {
-        console.log('performDelete called with id:', transactionId);
-        fetch('/delete_t/' + transactionId, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast(data.message || 'İşlem silindi', 'success');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
-            } else {
-                showToast(data.message || 'Bir hata oluştu', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
-        });
-    }
+                <!-- Bilgi Şeridi: Kullanılabilir Nakit -->
+                <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Kullanılabilir Nakit:</span>
+                    <span class="text-sm font-black text-emerald-600 dark:text-emerald-400">
+                        {{ today_cash|format_money }} {{ base_currency_symbol }}
+                    </span>
+                </div>
 
-    // Charts Logic
-    const CHART_GREEN = '#10b981';
-    const CHART_RED = '#ef4444';
-    function formatMoneyTr(value) { var val = value; if (typeof value === 'string') { val = parseFloat(value); if (isNaN(val)) val = 0; } return new Intl.NumberFormat('tr-TR').format(val) + ' ₺'; }
-    function segmentColor(y) { return y < 0 ? CHART_RED : CHART_GREEN; }
+                <!-- Hedef Varlık Seçimi -->
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">
+                        Hedef Yatırım Varlığı <span class="text-rose-500">*</span>
+                    </label>
+                    <select name="asset_id" id="quickTransferAssetSelect" class="edit-modal-input" required onchange="updateTransferAssetInfo()">
+                        <option value="" disabled selected>Lütfen bir varlık seçin...</option>
+                        {% for a in open_assets %}
+                        <option value="{{ a.id }}" data-unit-price="{{ a.unit_price }}" data-currency="{{ a.currency }}" data-type="{{ a.type }}">
+                            {{ a.name }} ({{ a.type }}{% if a.unit_price > 0 %} · Birim: {{ a.unit_price|format_ticker_price }} {{ a.currency }}{% endif %})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-    function createChart(id, labels, data) {
-        const ctx = document.getElementById(id).getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: data,
-                    fill: true,
-                    tension: 0.4,
-                    borderWidth: 3,
-                    pointRadius: 4,
-                    segment: {
-                        borderColor: c => segmentColor(c.p1.parsed.y),
-                        backgroundColor: c => c.p1.parsed.y < 0 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)'
-                    }
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { display: false }, ticks: { font: { size: 10 } } },
-                    y: { ticks: { callback: v => formatMoneyTr(v), font: { size: 10 } } }
-                }
-            }
-        });
-    }
+                <!-- Transfer Tutarı & Tahmini Adet Hesabı -->
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">
+                        Transfer Tutarı ({{ base_currency_symbol }}) <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="number" step="0.01" min="0.01" name="amount" id="quickTransferAmount" placeholder="0.00" class="edit-modal-input edit-modal-input-amount" required oninput="calcTransferQty()">
+                    <!-- Canlı Adet İpucu -->
+                    <div id="transferQtyPreview" class="mt-1.5 text-xs font-semibold text-sky-600 dark:text-sky-400 hidden">
+                        Tahmini Edinilecek Miktar: <span id="transferQtyVal" class="font-black">0</span> adet
+                    </div>
+                </div>
 
-    // Initialize charts after DOM and Chart.js are loaded
-    document.addEventListener('DOMContentLoaded', function() {
-        if (typeof Chart !== 'undefined') {
-            createChart('weekChart', {{ week_labels|safe }}, {{ week_data|safe }});
-            createChart('monthChart', {{ month_labels|safe }}, {{ month_data|safe }});
-        } else {
-            console.error('Chart.js is not loaded');
-        }
-    });
+                <!-- Tarih -->
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">
+                        Transfer Tarihi <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="date" name="date" id="quickTransferDate" class="edit-modal-input" required>
+                </div>
 
-    // --- FAZ 4: Varlık Tipi Dağılımı Doughnut Chart ---
-    {% if open_asset_count > 0 %}
-    document.addEventListener('DOMContentLoaded', function() {
-        if (typeof Chart !== 'undefined') {
-            const assetLabels = {{ asset_labels|safe }};
-            const assetValues = {{ asset_values|safe }};
-            const PALETTE = [
-                '#6366f1', '#3b82f6', '#10b981', '#f59e0b', '#ef4444',
-                '#8b5cf6', '#06b6d4', '#84cc16', '#f97316', '#ec4899'
-            ];
-            const ctx = document.getElementById('assetDistChart');
-            if (ctx && assetValues.length > 0) {
-                new Chart(ctx.getContext('2d'), {
-                    type: 'doughnut',
-                    data: {
-                        labels: assetLabels,
-                        datasets: [{
-                            data: assetValues,
-                            backgroundColor: assetLabels.map((_, i) => PALETTE[i % PALETTE.length]),
-                            borderColor: 'white',
-                            borderWidth: 2,
-                            hoverOffset: 8,
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '60%',
-                        animation: { animateRotate: true, duration: 800 },
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    font: { size: 10, weight: '700' },
-                                    padding: 8,
-                                    boxWidth: 12,
-                                }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(ctx) {
-                                        const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                                        const pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) : 0;
-                                        return ` ${new Intl.NumberFormat('tr-TR').format(ctx.raw)} ₺ (%${pct})`;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-    });
-    {% endif %}
+                <!-- Not -->
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">İşlem Notu</label>
+                    <input type="text" name="note" id="quickTransferNote" placeholder="Örn: Maaş sonrası alım, fon eklemesi" class="edit-modal-input">
+                </div>
 
-    function exportTxCSV() {
-        const rows = Array.from(document.querySelectorAll('#transTable tbody tr'));
-        let csv = 'Tarih,Kaynak,Kategori,Açıklama,Tutar,Tip,Durum\n';
-        rows.forEach(r => {
-            const cols = r.querySelectorAll('td');
-            csv += `${cols[0].innerText},${cols[1].innerText},${cols[2].innerText},"${cols[3].innerText}",${cols[4].innerText},${cols[5].innerText},${cols[6].innerText}\n`;
-        });
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.setAttribute('hidden', '');
-        a.setAttribute('href', url);
-        a.setAttribute('download', 'nakit_akis.csv');
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    }
-</script>
+                <!-- Butonlar -->
+                <div class="flex gap-3 pt-2">
+                    <button data-macro="button_primary" type="submit" id="btnQuickTransferSubmit" class="flex-1 py-3 bg-sky-600 hover:bg-sky-700 text-white font-black rounded-xl text-xs uppercase tracking-wider transition shadow-md flex items-center justify-center gap-2 cursor-pointer">
+                        <span>Transferi Onayla</span>
+                    </button>
+                    <button data-macro="button_secondary" type="button" onclick="closeQuickModal('quickTransferModal')" class="flex-1 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer">
+                        Vazgeç
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ static_asset_url('js/dashboard.js') }}" defer></script>
 {% endblock %}

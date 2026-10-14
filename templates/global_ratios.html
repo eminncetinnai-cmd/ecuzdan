@@ -1,0 +1,617 @@
+{% extends "layout.html" %}
+{% from "macros/buttons.html" import button_primary, button_secondary %}
+
+{% block title %}Küresel Finansal & Makro Rasyolar — E-Cüzdan{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static_asset_url('css/global_ratios.css') }}">
+{% endblock %}
+
+{% block content %}
+{% set kpis = data.kpis if (data is defined and data.kpis is defined) else {} %}
+{% set ratios_list = data.ratios if (data is defined and data.ratios is defined) else [] %}
+{% set pulse = data.pulse if (data is defined and data.pulse is defined) else {} %}
+{% set summaries = data.category_summaries if (data is defined and data.category_summaries is defined) else [] %}
+{% set total_count = kpis.total_ratios if (kpis.total_ratios is defined) else (ratios_list|length) %}
+{% set healthy_count = kpis.healthy_count if (kpis.healthy_count is defined) else 0 %}
+{% set neutral_count = kpis.neutral_count if (kpis.neutral_count is defined) else 0 %}
+{% set elevated_count = kpis.elevated_count if (kpis.elevated_count is defined) else 0 %}
+{% set latest_period = kpis.latest_period_display if (kpis.latest_period_display is defined) else 'Ağustos 2026' %}
+{% set corr_matrix = data.correlation_matrix if (data is defined and data.correlation_matrix is defined and data.correlation_matrix) else {} %}
+{% set briefing = data.executive_briefing if (data is defined and data.executive_briefing is defined and data.executive_briefing) else {} %}
+{% set vix = pulse.vix if (pulse is defined and pulse.vix is defined) else {} %}
+{% set yc = pulse.yield_curve if (pulse is defined and pulse.yield_curve is defined) else {} %}
+{% set gs = pulse.gold_silver if (pulse is defined and pulse.gold_silver is defined) else {} %}
+{% set buff = pulse.buffett if (pulse is defined and pulse.buffett is defined) else {} %}
+{% set cds = pulse.turkey_cds if (pulse is defined and pulse.turkey_cds is defined) else {} %}
+
+<div class="ratios-terminal-workspace">
+
+    <!-- ── 1. Header Section & Action Bar ────────────────────────────────── -->
+    <header class="workspace-header-ribbon">
+        <div class="workspace-title-group">
+            <div class="workspace-badge-bar">
+                <span class="live-pulse-badge">
+                    <span class="live-pulse-dot" aria-hidden="true"></span> Küresel Makro Terminali
+                </span>
+                <span class="workspace-source-tag">Son Dönem: {{ latest_period }} • Canlı Piyasa Entegre</span>
+            </div>
+            <h1 class="workspace-main-heading">
+                Küresel Finansal &amp; Makro Rasyolar
+            </h1>
+            <p class="workspace-sub-heading">
+                Dünya piyasalarında en çok takip edilen 20 makro değerleme, emtia, getiri eğrisi ve risk rasyosu
+            </p>
+        </div>
+        <div class="workspace-actions">
+            <button data-macro="button_secondary" type="button" id="btnOpenBriefing" class="filter-chip-btn active" title="Kurumsal Makro Bülteni & Rapor">
+                📄 Yönetici Brifingi
+            </button>
+            <button data-macro="button_secondary" type="button" id="btnOpenAlerts" class="filter-chip-btn" title="Makro Risk Alarmları">
+                🔔 Alarmlar
+            </button>
+            <button data-macro="button_secondary" type="button" id="btnToggleCorrelation" class="filter-chip-btn" title="Çapraz Varlık Korelasyon Matrisini Aç/Kapat">
+                📐 Korelasyon
+            </button>
+            <button data-macro="button_secondary" type="button" id="btnSyncLiveRatios" class="btn btn-secondary">
+                <span class="mr-1.5" aria-hidden="true">🔄</span> Canlı Senkronize
+            </button>
+            <div class="chart-pill-selector" role="group" aria-label="Zaman Dilimi">
+                <button data-macro="button_secondary" type="button" class="timeframe-pill-btn" data-range="6m">6 Ay</button>
+                <button data-macro="button_secondary" type="button" class="timeframe-pill-btn" data-range="1y">1 Yıl</button>
+                <button data-macro="button_secondary" type="button" class="timeframe-pill-btn" data-range="2y">2 Yıl</button>
+                <button data-macro="button_secondary" type="button" class="timeframe-pill-btn active" data-range="all">Tümü</button>
+            </div>
+            {{ button_secondary(text="CSV İndir", url="/global-ratios/api/export", icon="📥") }}
+        </div>
+    </header>
+
+    <!-- Segmented Navigation Hub -->
+    <div class="mb-6 flex flex-wrap items-center gap-2 border-b border-slate-200/80 pb-4 dark:border-slate-800">
+        <a href="{{ url_for('analysis.analysis_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'analysis.analysis_dashboard' or request.path.startswith('/analysis') %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            <span>Finansal Sağlık &amp; Karne</span>
+        </a>
+        <a href="{{ url_for('dashboard.financial_freedom') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'dashboard.financial_freedom' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <span>Finansal Özgürlük (FIRE)</span>
+        </a>
+        <a href="{{ url_for('strategy.strategy') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'strategy.strategy' or request.path.startswith('/strategy') %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            <span>Portföy Stratejisi</span>
+        </a>
+        <a href="{{ url_for('dashboard.financial_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'dashboard.financial_dashboard' or request.path.startswith('/financial_dashboard') %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <span>Piyasa &amp; Kantitatif Analiz</span>
+        </a>
+        <a href="{{ url_for('global_ratios.global_ratios_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'global_ratios.global_ratios_dashboard' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>Küresel Rasyolar (Makro)</span>
+        </a>
+        <a href="{{ url_for('central_bank_reserves.central_bank_reserves_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'central_bank_reserves.central_bank_reserves_dashboard' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            <span>TCMB Rezervleri &amp; Altın</span>
+        </a>
+    </div>
+
+    {% if elevated_count > 0 %}
+    <div class="macro-alert-banner" role="alert" id="macroElevatedBanner">
+        <div class="alert-banner-left">
+            <span class="alert-banner-icon">⚡</span>
+            <span class="alert-banner-text">
+                <strong>Makro Risk Sinyali:</strong> {{ elevated_count }} kritik gösterge eşik üstü risk bölgesinde seyrediyor (Örn. Buffett Indicator %{{ pulse.buffett.latest_value if (pulse.buffett is defined and pulse.buffett.latest_value is defined) else '195.8' }}).
+            </span>
+        </div>
+        <div class="alert-banner-actions">
+            <button data-macro="button_secondary" type="button" class="alert-banner-btn" id="btnBannerOpenAlerts">
+                Risk Detayları
+            </button>
+            <button data-macro="button_secondary" type="button" class="alert-banner-close" id="btnBannerCloseAlerts" aria-label="Kapat">✕</button>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ── 2. Market Pulse — 5 Key Macro Indicators (Decision-making) ───── -->
+    <section class="macro-pulse-grid" aria-label="Piyasa Nabzı — 5 Kritik Makro Gösterge">
+        <!-- Pulse 1: VIX Volatilite -->
+        {% set vix = pulse.vix if pulse.vix is defined else {} %}
+        <article class="pulse-card">
+            <div class="pulse-card-top">
+                <span class="pulse-card-title">VIX Volatilite (Korku)</span>
+                <span class="fin-pill {% if vix.signal_status == 'HEALTHY' %}positive{% elif vix.signal_status == 'NEUTRAL' %}neutral{% else %}negative{% endif %}">
+                    {{ vix.signal_label|default('Normal') }}
+                </span>
+            </div>
+            <div class="pulse-card-val">
+                {{ vix.latest_value|default('15.2') }}<span class="pulse-card-unit">Puan</span>
+            </div>
+            <div class="pulse-card-bottom">
+                <span class="pulse-card-sub">CBOE S&P 500 Opsiyonları</span>
+                <span class="pulse-card-change {% if vix.mom_change_pct|default(0) >= 0 %}text-rose-600 dark:text-rose-400{% else %}text-emerald-600 dark:text-emerald-400{% endif %}">
+                    {% if vix.mom_change_pct|default(0) > 0 %}+{% endif %}{{ vix.mom_change_pct|default(0) }}% MoM
+                </span>
+            </div>
+        </article>
+
+        <!-- Pulse 2: ABD 10Y-2Y Getiri Eğrisi -->
+        {% set yc = pulse.yield_curve if pulse.yield_curve is defined else {} %}
+        <article class="pulse-card">
+            <div class="pulse-card-top">
+                <span class="pulse-card-title">ABD 10Y - 2Y Getiri Eğrisi</span>
+                <span class="fin-pill {% if yc.signal_status == 'HEALTHY' %}positive{% elif yc.signal_status == 'NEUTRAL' %}neutral{% else %}negative{% endif %}">
+                    {{ yc.signal_label|default('Normal') }}
+                </span>
+            </div>
+            <div class="pulse-card-val">
+                {% if yc.latest_value|default(0.18) > 0 %}+{% endif %}{{ yc.latest_value|default('0.18') }}<span class="pulse-card-unit">%</span>
+            </div>
+            <div class="pulse-card-bottom">
+                <span class="pulse-card-sub">Resesyon Öncü Göstergesi</span>
+                <span class="pulse-card-change text-slate-500 dark:text-slate-400">Normalleşme Eğiliminde</span>
+            </div>
+        </article>
+
+        <!-- Pulse 3: Altın / Gümüş Rasyosu -->
+        {% set gs = pulse.gold_silver if pulse.gold_silver is defined else {} %}
+        <article class="pulse-card">
+            <div class="pulse-card-top">
+                <span class="pulse-card-title">Altın / Gümüş Rasyosu</span>
+                <span class="fin-pill gold">
+                    {{ gs.signal_label|default('Eşik Üstü') }}
+                </span>
+            </div>
+            <div class="pulse-card-val text-amber-600 dark:text-amber-400">
+                {{ gs.latest_value|default('84.2') }}<span class="pulse-card-unit">x</span>
+            </div>
+            <div class="pulse-card-bottom">
+                <span class="pulse-card-sub">Maden Güç Dengesi</span>
+                <span class="pulse-card-change {% if gs.mom_change_pct|default(0) >= 0 %}text-amber-600 dark:text-amber-400{% else %}text-emerald-600 dark:text-emerald-400{% endif %}">
+                    {% if gs.mom_change_pct|default(0) > 0 %}+{% endif %}{{ gs.mom_change_pct|default(0) }}% MoM
+                </span>
+            </div>
+        </article>
+
+        <!-- Pulse 4: Buffett Indicator -->
+        {% set buff = pulse.buffett if pulse.buffett is defined else {} %}
+        <article class="pulse-card">
+            <div class="pulse-card-top">
+                <span class="pulse-card-title">Buffett Indicator</span>
+                <span class="fin-pill negative">
+                    {{ buff.signal_label|default('Aşırı Değerli') }}
+                </span>
+            </div>
+            <div class="pulse-card-val text-rose-600 dark:text-rose-400">
+                %{{ buff.latest_value|default('195.8') }}
+            </div>
+            <div class="pulse-card-bottom">
+                <span class="pulse-card-sub">Piyasa Değeri / ABD GSYİH</span>
+                <span class="pulse-card-change text-rose-600 dark:text-rose-400">
+                    {% if buff.yoy_change_pct|default(0) > 0 %}+{% endif %}{{ buff.yoy_change_pct|default(0) }}% YoY
+                </span>
+            </div>
+        </article>
+
+        <!-- Pulse 5: Türkiye 5Y CDS -->
+        {% set cds = pulse.turkey_cds if pulse.turkey_cds is defined else {} %}
+        <article class="pulse-card">
+            <div class="pulse-card-top">
+                <span class="pulse-card-title">Türkiye 5Y CDS</span>
+                <span class="fin-pill {% if cds.signal_status == 'HEALTHY' %}positive{% elif cds.signal_status == 'NEUTRAL' %}neutral{% else %}negative{% endif %}">
+                    {{ cds.signal_label|default('Dengeli') }}
+                </span>
+            </div>
+            <div class="pulse-card-val text-sky-600 dark:text-sky-400">
+                {{ cds.latest_value|default('262') }}<span class="pulse-card-unit">bps</span>
+            </div>
+            <div class="pulse-card-bottom">
+                <span class="pulse-card-sub">Kredi Temerrüt Takası</span>
+                <span class="pulse-card-change text-emerald-600 dark:text-emerald-400">
+                    {{ cds.mom_change_pct|default(-3.2) }}% MoM
+                </span>
+            </div>
+        </article>
+    </section>
+
+    <!-- ── 3. Macro Climate Heatmap & Category Overview ──────────────────── -->
+    <section class="macro-heatmap-surface" aria-label="Makroekonomik İklim Isı Haritası">
+        <div class="heatmap-header">
+            <div>
+                <h2 class="heatmap-title">Makro İklim & Varlık Grupları Sağlık Haritası</h2>
+                <p class="heatmap-subtitle">20 makro rasyo üzerinden türetilmiş 5 temel risk kategorisi</p>
+            </div>
+            <div class="status-legend-bar">
+                <span class="legend-item"><span class="legend-dot bg-emerald-500"></span> Sağlıklı ({{ healthy_count }})</span>
+                <span class="legend-item"><span class="legend-dot bg-amber-500"></span> Eşik ({{ neutral_count }})</span>
+                <span class="legend-item"><span class="legend-dot bg-rose-500"></span> Aşırı Risk ({{ elevated_count }})</span>
+            </div>
+        </div>
+
+        <div class="heatmap-cards-grid">
+            {% for cat in summaries %}
+            <div class="heatmap-block" data-category="{{ cat.code }}" tabindex="0" role="button" aria-label="{{ cat.name }} kategorisini filtrele">
+                <div class="heatmap-block-header">
+                    <span class="heatmap-block-title">{{ cat.name }}</span>
+                    <span class="fin-pill {% if cat.climate == 'HEALTHY' %}positive{% elif cat.climate == 'NEUTRAL' %}neutral{% else %}negative{% endif %}">
+                        {{ cat.climate_label }}
+                    </span>
+                </div>
+                <div class="heatmap-progress-track">
+                    <div class="heatmap-progress-seg bg-emerald-500" style="width: {{ (cat.healthy_count / cat.total * 100)|round }}%;"></div>
+                    <div class="heatmap-progress-seg bg-amber-500" style="width: {{ (cat.neutral_count / cat.total * 100)|round }}%;"></div>
+                    <div class="heatmap-progress-seg bg-rose-500" style="width: {{ (cat.elevated_count / cat.total * 100)|round }}%;"></div>
+                </div>
+                <div class="heatmap-block-footer">
+                    <span>{{ cat.total }} Gösterge</span>
+                    <span class="heatmap-ratio-pills">
+                        {% for r in cat.ratios %}
+                        <span class="micro-dot-tag {% if r.signal_status == 'HEALTHY' %}dot-green{% elif r.signal_status == 'NEUTRAL' %}dot-amber{% else %}dot-red{% endif %}" title="{{ r.name }}: {{ r.latest_value }} {{ r.unit }} ({{ r.signal_label }})"></span>
+                        {% endfor %}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- ── 3.5 Cross-Asset Macro Correlation Heatmap ───────────────────── -->
+    <section class="macro-correlation-surface" id="macroCorrelationSection" aria-label="Çapraz Varlık Makro Korelasyon Matrisi">
+        <div class="correlation-header">
+            <div>
+                <h2 class="correlation-title">Makro Varlıklar Çapraz Korelasyon Matrisi</h2>
+                <p class="correlation-subtitle">
+                    Pearson Korelasyon Katsayısı (r) • {{ corr_matrix.period_range|default('2023 - 2026') }} ({{ corr_matrix.period_count|default(32) }} Aylık Seri)
+                </p>
+            </div>
+            <div class="correlation-legend-bar">
+                <span class="corr-legend-chip corr-pos-high">Güçlü Pozitif (+0.70+)</span>
+                <span class="corr-legend-chip corr-pos-mid">Ilımlı Pozitif (+0.30)</span>
+                <span class="corr-legend-chip corr-neutral">Nötr (-0.30 - +0.30)</span>
+                <span class="corr-legend-chip corr-neg-mid">Ilımlı Negatif (-0.30)</span>
+                <span class="corr-legend-chip corr-neg-high">Güçlü Negatif (-0.70-)</span>
+            </div>
+        </div>
+
+        <div class="correlation-table-wrapper">
+            <table class="correlation-matrix-table" id="corrMatrixTable">
+                <thead>
+                    <tr>
+                        <th class="corr-th-corner">Varlık / Rasyo</th>
+                        {% for lbl in corr_matrix.labels|default([]) %}
+                        <th class="corr-th-col" title="{{ lbl.name }}">{{ lbl.name }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in corr_matrix.grid|default([]) %}
+                    <tr>
+                        <th class="corr-th-row" title="{{ row[0].row_name }}">{{ row[0].row_name }}</th>
+                        {% for cell in row %}
+                        <td class="corr-td-cell {{ cell.color_class }}"
+                            data-r="{{ cell.coefficient }}"
+                            data-pair="{{ cell.row_name }} ↔ {{ cell.col_name }}"
+                            data-desc="{{ cell.description }}"
+                            tabindex="0"
+                            role="gridcell"
+                            aria-label="{{ cell.row_name }} ile {{ cell.col_name }} korelasyonu {{ cell.coefficient }}">
+                            <span class="corr-val">{{ "%.2f"|format(cell.coefficient) }}</span>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div id="corrInsightBox" class="corr-insight-box" aria-live="polite">
+            <span class="corr-insight-icon">💡</span>
+            <span id="corrInsightText" class="corr-insight-text">
+                Herhangi bir korelasyon hücresine tıklayarak veya üzerine gelerek finansal ilişki yorumunu okuyabilirsiniz.
+            </span>
+        </div>
+    </section>
+
+    <!-- ── 4. Compact 20-Ratios Terminal Workspace ───────────────────────── -->
+    <section class="ratios-workspace-surface" aria-label="20 Makro Rasyo Detay Terminali">
+        <div class="workspace-filter-toolbar">
+            <div class="search-input-wrapper">
+                <svg class="search-icon-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <input type="text" id="ratiosLiveSearch" class="search-input-field" placeholder="Rasyo adı veya kategori ara..." aria-label="Rasyo ara">
+            </div>
+
+            <div class="category-chips-row" role="group" aria-label="Kategori Filtreleri">
+                <button data-macro="button_secondary" type="button" class="filter-chip-btn active" data-category-filter="all">Tümü (20)</button>
+                <button data-macro="button_secondary" type="button" class="filter-chip-btn" id="chipFilterPinned" data-category-filter="pinned">★ Sabitlenenler (<span id="pinnedCountDisplay">0</span>)</button>
+                <button data-macro="button_secondary" type="button" class="filter-chip-btn" data-category-filter="VALUATION_MACRO">Değerleme & Makro</button>
+                <button data-macro="button_secondary" type="button" class="filter-chip-btn" data-category-filter="COMMODITIES">Emtialar & Altın</button>
+                <button data-macro="button_secondary" type="button" class="filter-chip-btn" data-category-filter="YIELD_CURVE_CREDIT">Tahvil & Kredi</button>
+                <button data-macro="button_secondary" type="button" class="filter-chip-btn" data-category-filter="VOLATILITY_SENTIMENT">Risk & Volatilite</button>
+                <button data-macro="button_secondary" type="button" class="filter-chip-btn" data-category-filter="TURKEY_EM">Türkiye & EM</button>
+            </div>
+        </div>
+
+        <div class="ratios-terminal-grid" id="ratiosGrid">
+            {% for r in ratios_list %}
+            <article class="ratio-terminal-card"
+                     data-code="{{ r.code }}"
+                     data-name="{{ r.name|lower }}"
+                     data-category="{{ r.category }}"
+                     data-signal="{{ r.signal_status }}"
+                     data-val="{{ r.latest_value }}"
+                     data-mom="{{ r.mom_change_pct }}"
+                     data-yoy="{{ r.yoy_change_pct }}">
+                <div class="ratio-card-top">
+                    <div class="ratio-card-header-left">
+                        <span class="ratio-category-tag">{{ r.category_name }}</span>
+                        <h3 class="ratio-card-name" title="{{ r.name }}">{{ r.name }}</h3>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button data-macro="button_secondary" type="button" class="btn-pin-ratio" data-ratio-code="{{ r.code }}" title="Göstergeyi Panoya Sabitle" aria-label="{{ r.name }} Sabitle">
+                            <span class="pin-star" aria-hidden="true">★</span>
+                        </button>
+                        <span class="fin-pill {% if r.signal_status == 'HEALTHY' %}positive{% elif r.signal_status == 'NEUTRAL' %}neutral{% else %}negative{% endif %}">
+                            {{ r.signal_label }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="ratio-card-values-row">
+                    <div class="ratio-card-big-val">
+                        {{ r.latest_value }}<span class="ratio-card-unit">{{ r.unit }}</span>
+                    </div>
+                    <div class="ratio-card-deltas">
+                        <span class="ratio-delta-pill {% if r.mom_change_pct > 0 %}positive{% elif r.mom_change_pct < 0 %}negative{% else %}neutral{% endif %}">
+                            {% if r.mom_change_pct > 0 %}▲ +{% elif r.mom_change_pct < 0 %}▼ {% endif %}{{ r.mom_change_pct }}% MoM
+                        </span>
+                        <span class="ratio-delta-sub">
+                            1Y: {% if r.yoy_change_pct > 0 %}+{% endif %}{{ r.yoy_change_pct }}%
+                        </span>
+                    </div>
+                </div>
+
+                <div class="ratio-card-chart-wrap">
+                    <canvas id="ratioChart_{{ r.code }}" aria-label="{{ r.name }} Grafiği" role="img"></canvas>
+                </div>
+
+                <div class="ratio-card-footer">
+                    <span class="ratio-corridor-guide">
+                        Normal Eşik: {{ r.normal_min }} – {{ r.normal_max }} {{ r.unit }}
+                    </span>
+                    <span class="ratio-date-tag">{{ r.latest_display_date }}</span>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- ── 5. Institutional Comparison Matrix Table ──────────────────────── -->
+    <section class="modern-table-surface" aria-label="20 Rasyo Karşılaştırma Matrisi">
+        <div class="table-surface-header">
+            <div>
+                <h2 class="table-surface-title">20 Makro Rasyo Karşılaştırma ve Analiz Matrisi</h2>
+                <p class="table-surface-subtitle">Sütun başlıklarına tıklayarak artan veya azalan sıralayabilirsiniz</p>
+            </div>
+            <span class="matrix-filter-count" id="tableRowCountDisplay">20 Rasyo Listelendi</span>
+        </div>
+
+        <div class="fin-table-scroll">
+            <table class="fin-matrix-table" id="ratiosMatrixTable">
+                <thead>
+                    <tr>
+                        <th class="th-left sortable sticky-col-1" data-sort="name">
+                            Rasyo Adı <span class="sort-icon">↕</span>
+                        </th>
+                        <th class="th-left sortable" data-sort="category">
+                            Kategori <span class="sort-icon">↕</span>
+                        </th>
+                        <th class="th-right sortable" data-sort="val">
+                            Son Değer <span class="sort-icon">↕</span>
+                        </th>
+                        <th class="th-center sortable" data-sort="unit">
+                            Birim <span class="sort-icon">↕</span>
+                        </th>
+                        <th class="th-center">
+                            Normal Koridor
+                        </th>
+                        <th class="th-right sortable" data-sort="mom">
+                            Aylık (MoM) <span class="sort-icon">↕</span>
+                        </th>
+                        <th class="th-right sortable" data-sort="yoy">
+                            Yıllık (YoY) <span class="sort-icon">↕</span>
+                        </th>
+                        <th class="th-center sortable" data-sort="signal">
+                            Sinyal Durumu <span class="sort-icon">↕</span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="ratiosMatrixTableBody">
+                    {% for r in ratios_list %}
+                    <tr data-name="{{ r.name|lower }}"
+                        data-category="{{ r.category }}"
+                        data-val="{{ r.latest_value }}"
+                        data-unit="{{ r.unit }}"
+                        data-mom="{{ r.mom_change_pct }}"
+                        data-yoy="{{ r.yoy_change_pct }}"
+                        data-signal="{{ r.signal_status }}">
+                        <td class="td-left sticky-col-1">
+                            <div class="flex flex-col">
+                                <span class="font-bold text-slate-900 dark:text-slate-100">{{ r.name }}</span>
+                                <span class="text-[10px] text-slate-400 font-mono">{{ r.code }}</span>
+                            </div>
+                        </td>
+                        <td class="td-left text-slate-600 dark:text-slate-300 font-medium">{{ r.category_name }}</td>
+                        <td class="td-right font-extrabold text-slate-900 dark:text-slate-100 text-sm">{{ r.latest_value }}</td>
+                        <td class="td-center text-slate-500 dark:text-slate-400 font-semibold">{{ r.unit }}</td>
+                        <td class="td-center text-xs text-slate-600 dark:text-slate-300">{{ r.normal_min }} – {{ r.normal_max }}</td>
+                        <td class="td-right">
+                            <span class="fin-pill {% if r.mom_change_pct > 0 %}positive{% elif r.mom_change_pct < 0 %}negative{% else %}neutral{% endif %}">
+                                {% if r.mom_change_pct > 0 %}▲ +{% elif r.mom_change_pct < 0 %}▼ {% endif %}{{ r.mom_change_pct }}%
+                            </span>
+                        </td>
+                        <td class="td-right">
+                            <span class="fin-pill {% if r.yoy_change_pct > 0 %}positive{% elif r.yoy_change_pct < 0 %}negative{% else %}neutral{% endif %}">
+                                {% if r.yoy_change_pct > 0 %}▲ +{% elif r.yoy_change_pct < 0 %}▼ {% endif %}{{ r.yoy_change_pct }}%
+                            </span>
+                        </td>
+                        <td class="td-center">
+                            <span class="fin-pill {% if r.signal_status == 'HEALTHY' %}positive{% elif r.signal_status == 'NEUTRAL' %}neutral{% else %}negative{% endif %}">
+                                {{ r.signal_label }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ── 6. Executive Briefing Modal (Printable & Copyable) ────────────── -->
+    <div id="executiveBriefingModal" class="fin-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="briefingModalTitle">
+        <div class="fin-modal-card briefing-modal-card">
+            <div class="briefing-modal-header no-print">
+                <div class="flex items-center gap-2">
+                    <span class="briefing-badge">BLOOMBERG-GRADE MACRO SNAPSHOT</span>
+                    <span class="briefing-date">{{ briefing.period|default(latest_period) }} Raporu</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button data-macro="button_secondary" type="button" id="btnPrintBriefing" class="modal-btn-action" title="Yazdır veya PDF Kaydet">
+                        🖨️ PDF / Yazdır
+                    </button>
+                    <button data-macro="button_secondary" type="button" id="btnCopyBriefing" class="modal-btn-action" title="Metni Panoya Kopyala">
+                        📋 Metni Kopyala
+                    </button>
+                    <button data-macro="button_secondary" type="button" id="btnCloseBriefing" class="modal-btn-close" aria-label="Kapat">✕</button>
+                </div>
+            </div>
+
+            <div class="briefing-sheet-content" id="briefingPrintArea">
+                <div class="briefing-sheet-top">
+                    <div class="briefing-brand">
+                        <div class="brand-title" id="briefingModalTitle">E-CÜZDAN FINTECH TERMINAL</div>
+                        <div class="brand-subtitle">Haftalık Küresel Makro & Piyasa İklimi Yönetici Bülteni</div>
+                    </div>
+                    <div class="briefing-meta-right">
+                        <div><strong>Dönem:</strong> {{ briefing.period|default(latest_period) }}</div>
+                        <div><strong>Kapsam:</strong> 20 Küresel Makro Rasyo & Gösterge</div>
+                    </div>
+                </div>
+
+                <div class="briefing-headline-box">
+                    <div class="briefing-headline-title">{{ briefing.headline|default('Küresel Varlık Piyasaları Makro İklim & Risk Değerlendirmesi') }}</div>
+                    <div class="briefing-stance-pill">{{ briefing.market_stance|default('Dengeli / Seçici İyimserlik') }}</div>
+                </div>
+
+                <div class="briefing-grid-2col">
+                    <div class="briefing-section">
+                        <h3 class="briefing-section-title">1. PİYASA NABZI (MARKET PULSE)</h3>
+                        <table class="briefing-mini-table">
+                            <tr><td>VIX Volatilite Endeksi</td><td class="font-bold text-right">{{ vix.latest_value|default('15.2') }} Puan ({{ vix.signal_label|default('Normal') }})</td></tr>
+                            <tr><td>ABD 10Y - 2Y Getiri Eğrisi</td><td class="font-bold text-right">{{ yc.latest_value|default('+0.18') }}% ({{ yc.signal_label|default('Normal') }})</td></tr>
+                            <tr><td>Altın / Gümüş Rasyosu</td><td class="font-bold text-right">{{ gs.latest_value|default('84.2') }}x ({{ gs.signal_label|default('Normal') }})</td></tr>
+                            <tr><td>Buffett Indicator (Piyasa/GSYİH)</td><td class="font-bold text-right">{{ buff.latest_value|default('195.8') }}% ({{ buff.signal_label|default('Aşırı') }})</td></tr>
+                            <tr><td>Türkiye 5Y CDS Primi</td><td class="font-bold text-right">{{ cds.latest_value|default('262') }} bps ({{ cds.signal_label|default('İyileşiyor') }})</td></tr>
+                        </table>
+                    </div>
+
+                    <div class="briefing-section">
+                        <h3 class="briefing-section-title">2. MAKRO İKLİM DAĞILIMI</h3>
+                        <div class="briefing-climate-row">
+                            <div class="climate-metric"><span class="climate-count text-emerald-600 dark:text-emerald-400">{{ briefing.healthy_count|default(healthy_count) }}</span> Sağlıklı</div>
+                            <div class="climate-metric"><span class="climate-count text-amber-600 dark:text-amber-400">{{ briefing.neutral_count|default(neutral_count) }}</span> Eşik / İzlenmeli</div>
+                            <div class="climate-metric"><span class="climate-count text-rose-600 dark:text-rose-400">{{ briefing.elevated_count|default(elevated_count) }}</span> Yüksek Risk</div>
+                        </div>
+                        <div class="briefing-bullets mt-3">
+                            <div><strong>🚨 Temel Risk Unsurları:</strong> {{ briefing.key_risks|default([])|join(', ') }}</div>
+                            <div class="mt-1"><strong>🛡️ Dengeleyici Çapalar:</strong> {{ briefing.key_anchors|default([])|join(', ') }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="briefing-takeaway-box">
+                    <h3 class="takeaway-title">3. YÖNETİCİ STRATEJİK DEĞERLENDİRMESİ</h3>
+                    <p class="takeaway-text">
+                        Küresel makro göstergeler genel olarak düşük volatilite (VIX: {{ vix.latest_value|default('15.2') }}) eşliğinde ılımlı bir büyüme zeminine işaret ederken; hisse senedi değerleme çarpanları (Buffett: %{{ buff.latest_value|default('195.8') }}) tarihsel tavan bölgelerinde seyretmektedir. Türkiye CDS priminin 262 bps seviyesine çekilmesi, yerel varlıklar üzerindeki dış kırılganlık baskısını hafifletmektedir. Yatırımcıların değerleme riskine karşı altın ve likit enstrümanlarla dengelenmiş bir portföy kompozisyonunu koruması rasyonel görünmektedir.
+                    </p>
+                </div>
+
+                <div class="briefing-sheet-footer">
+                    <span>E-Cüzdan Finansal Veri Motoru • Bu belge kişisel portföy ve makro analiz amaçlı otomatik üretilmiştir. Yatırım tavsiyesi değildir.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── 7. Macro Alert Center Modal ───────────────────────────────────── -->
+    <div id="macroAlertModal" class="fin-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="alertModalTitle">
+        <div class="fin-modal-card alert-modal-card">
+            <div class="alert-modal-header">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">🔔</span>
+                    <h3 id="alertModalTitle" class="font-bold text-base text-slate-900 dark:text-slate-100">Makro Risk & Alarm Merkezi</h3>
+                </div>
+                <button data-macro="button_secondary" type="button" id="btnCloseAlerts" class="modal-btn-close" aria-label="Kapat">✕</button>
+            </div>
+            <div class="alert-modal-body">
+                <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">
+                    Aşağıdaki kritik piyasa eşikleri aşıldığında sistem bildirim merkezine otomatik risk sinyali iletilir.
+                </p>
+                <div class="alert-rules-list">
+                    <div class="alert-rule-item">
+                        <div class="rule-left">
+                            <span class="rule-dot {% if buff.signal_status|default('HEALTHY') == 'ELEVATED' %}bg-rose-500{% else %}bg-emerald-500{% endif %}"></span>
+                            <div>
+                                <div class="rule-title">Buffett Indicator Aşırı Değerleme ( > %115 )</div>
+                                <div class="rule-sub">Mevcut: %{{ buff.latest_value|default('195.8') }} • {% if buff.signal_status|default('HEALTHY') == 'ELEVATED' %}AKTİF SİNYAL{% else %}Normal{% endif %}</div>
+                            </div>
+                        </div>
+                        <span class="fin-pill {% if buff.signal_status|default('HEALTHY') == 'ELEVATED' %}negative{% else %}positive{% endif %}">
+                            {% if buff.signal_status|default('HEALTHY') == 'ELEVATED' %}Tetiklendi{% else %}Güvenli{% endif %}
+                        </span>
+                    </div>
+
+                    <div class="alert-rule-item">
+                        <div class="rule-left">
+                            <span class="rule-dot {% if vix.latest_value|default(0)|float > 25 %}bg-rose-500{% else %}bg-emerald-500{% endif %}"></span>
+                            <div>
+                                <div class="rule-title">VIX Volatilite Şoku ( > 25 Puan )</div>
+                                <div class="rule-sub">Mevcut: {{ vix.latest_value|default('15.2') }} Puan • Sakin Seviye</div>
+                            </div>
+                        </div>
+                        <span class="fin-pill positive">Güvenli</span>
+                    </div>
+
+                    <div class="alert-rule-item">
+                        <div class="rule-left">
+                            <span class="rule-dot {% if cds.latest_value|default(0)|float > 400 %}bg-rose-500{% else %}bg-emerald-500{% endif %}"></span>
+                            <div>
+                                <div class="rule-title">Türkiye CDS Kredi Riski Eşiği ( > 400 bps )</div>
+                                <div class="rule-sub">Mevcut: {{ cds.latest_value|default('262') }} bps • Dengeli Aralık</div>
+                            </div>
+                        </div>
+                        <span class="fin-pill positive">Güvenli</span>
+                    </div>
+                </div>
+
+                <div class="alert-channel-prefs mt-4 pt-3 border-t border-slate-200 dark:border-slate-800">
+                    <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        <input type="checkbox" id="chkInAppAlerts" checked class="rounded text-indigo-600 focus:ring-indigo-500">
+                        <span>Sistem Bildirim Merkezinde (Çan Simgesi) Anlık Göster</span>
+                    </label>
+                </div>
+            </div>
+            <div class="alert-modal-footer">
+                <button data-macro="button_secondary" type="button" id="btnSaveAlerts" class="filter-chip-btn active text-xs py-1.5 px-3">
+                    Tercihleri Kaydet
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Pass ratios JSON payload to client script -->
+<script>
+    window.__GLOBAL_RATIOS_INITIAL_DATA__ = {{ data|tojson|safe }};
+</script>
+<script src="{{ static_asset_url('js/global_ratios.js') }}"></script>
+{% endblock %}

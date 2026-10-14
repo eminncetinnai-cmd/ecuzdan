@@ -4,7 +4,7 @@ import logging
 
 from flask import redirect, render_template, request, session, url_for
 
-from bootstrap.container import get_container
+from bootstrap import get_container  # noqa: F401
 from utils.auth_helpers import tenant_admin_required
 from utils.log_redaction import mask_email
 from utils.notification_helpers import flash_error, flash_info, flash_success, flash_warning
@@ -13,12 +13,17 @@ logger = logging.getLogger(__name__)
 
 
 def _get_tenant_service():
-    from bootstrap.container import get_container
-    return get_container().applications.tenant()
+    from bootstrap.container import get_container as current_get_container
+    return current_get_container().applications.tenant()
 
 
 def register_tenant_routes(bp):
     tenant_service = _get_tenant_service()
+
+    @bp.route('/')
+    @tenant_admin_required
+    def tenant_index():
+        return redirect(url_for('tenant.users'))
 
     @bp.route('/users')
     @tenant_admin_required

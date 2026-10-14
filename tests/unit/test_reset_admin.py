@@ -3,7 +3,11 @@ Unit Tests - Reset Admin
 Admin password reset utility tests
 """
 
+from unittest.mock import Mock, patch
+
 import pytest
+from werkzeug.security import check_password_hash
+
 from utils.reset_admin import validate_password
 
 
@@ -99,7 +103,7 @@ def test_validate_password_turkish_chars():
 @pytest.mark.unit
 def test_reset_admin_module_imports():
     """Test reset_admin module can be imported"""
-    from utils.reset_admin import validate_password, reset_admin_password
+    from utils.reset_admin import reset_admin_password, validate_password
     assert validate_password is not None
     assert reset_admin_password is not None
 
@@ -108,11 +112,11 @@ def test_reset_admin_module_imports():
 def test_reset_admin_module_structure():
     """Test reset_admin module structure"""
     import utils.reset_admin as reset_admin_module
-    
+
     # Check for expected functions
     assert hasattr(reset_admin_module, 'validate_password')
     assert hasattr(reset_admin_module, 'reset_admin_password')
-    
+
     # Check for expected imports
     assert hasattr(reset_admin_module, 'getpass')
     assert hasattr(reset_admin_module, 're')
@@ -123,7 +127,7 @@ def test_reset_admin_module_structure():
 def test_reset_admin_imports():
     """Test reset_admin has required imports"""
     import utils.reset_admin as reset_admin_module
-    
+
     assert hasattr(reset_admin_module, 'getpass')
     assert hasattr(reset_admin_module, 're')
     assert hasattr(reset_admin_module, 'generate_password_hash')
@@ -140,9 +144,22 @@ def test_reset_admin_password_function():
 
 
 @pytest.mark.unit
-def test_reset_admin_reset_password():
-    """Test reset_admin_password - skipped due to DB dependency"""
-    pytest.skip("Requires Flask app context and database")
+def test_reset_admin_reset_password(app):
+    """Password reset updates a selected admin without touching a real database."""
+    from utils.reset_admin import reset_admin_password
+
+    admin_user = Mock(username='emin', role='admin', tenant_id='default')
+    admin_user.password_changed_at = None
+    with patch('utils.reset_admin.app', app), \
+         patch('utils.reset_admin.User') as user_model, \
+         patch('utils.reset_admin.db') as db_mock, \
+         patch('utils.reset_admin.getpass.getpass', side_effect=['ValidPass1', 'ValidPass1']):
+        user_model.query.filter_by.return_value.first.return_value = admin_user
+
+        assert reset_admin_password() is True
+
+    assert check_password_hash(admin_user.password, 'ValidPass1')
+    db_mock.session.commit.assert_called_once()
 
 
 @pytest.mark.unit

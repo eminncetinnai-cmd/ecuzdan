@@ -5,12 +5,10 @@ Yıllık getiri analizi, enflasyon ayarlaması ve performans metrikleri
 
 import logging
 from datetime import datetime
-
-from flask import g, has_app_context, has_request_context
+from decimal import Decimal
 
 from models import Asset, AssetUpdate
 from shared.decimal_precision import to_decimal
-from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -28,9 +26,8 @@ TURKEY_INFLATION_DATA = {
 def _resolve_tenant_id(tenant_id=None):
     if tenant_id:
         return tenant_id
-    if has_request_context():
-        return g.get('tenant_id')
-    return None
+    from domain.tenant.context import TenantContext
+    return TenantContext.optional()
 
 
 def _get_current_macro_inflation_context():
@@ -83,11 +80,6 @@ def get_yearly_performance(tenant_id=None):
         dict: Yıllık getiri verileri, enflasyon ayarlı getiriler ve özet metrikler
     """
     try:
-        # Application context kontrolü
-        if not has_app_context():
-            logger.warning("get_yearly_performance called outside application context, returning empty data")
-            return _empty_performance_data()
-
         tenant_id = _resolve_tenant_id(tenant_id)
         query = Asset.query
         if tenant_id:
@@ -138,7 +130,7 @@ def get_yearly_performance(tenant_id=None):
             if isinstance(value, Decimal):
                 return float(value)
             return value
- 
+
         serial_yearly = {}
         for y, d in yearly_data.items():
             serial_assets = []
@@ -156,7 +148,7 @@ def get_yearly_performance(tenant_id=None):
                 'roi': _to_python_number(d['roi']),
                 'assets': serial_assets
             }
- 
+
         serial_inflation_adjusted = {}
         for y, ia in inflation_adjusted.items():
             serial_inflation_adjusted[y] = {
@@ -165,11 +157,11 @@ def get_yearly_performance(tenant_id=None):
                 'nominal_roi': _to_python_number(ia['nominal_roi']),
                 'inflation_source': ia.get('inflation_source')
             }
- 
+
         serial_summary = {}
         for k, v in summary.items():
             serial_summary[k] = _to_python_number(v)
- 
+
         return {
             'yearly_data': serial_yearly,
             'inflation_adjusted': serial_inflation_adjusted,
@@ -178,6 +170,12 @@ def get_yearly_performance(tenant_id=None):
             'inflation_sources': inflation_sources,
         }
 
+    except RuntimeError as e:
+        if "Working outside of application context" in str(e):
+            logger.debug(f"Yearly performance calculation outside context: {e}")
+            return _empty_performance_data()
+        logger.error(f"Yearly performance calculation error: {e}")
+        return _empty_performance_data()
     except Exception as e:
         logger.error(f"Yearly performance calculation error: {e}")
         return _empty_performance_data()

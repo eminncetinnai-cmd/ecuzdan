@@ -1,1 +1,1 @@
-﻿# application package
+# application package

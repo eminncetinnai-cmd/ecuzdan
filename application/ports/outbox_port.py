@@ -6,6 +6,7 @@ an infrastructure adapter injected at composition time.
 """
 
 import abc
+
 from domain.common.events import DomainEvent
 
 

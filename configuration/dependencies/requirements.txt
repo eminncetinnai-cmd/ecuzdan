@@ -1,0 +1,35 @@
+flask
+flask-sqlalchemy
+requests
+beautifulsoup4
+xhtml2pdf
+reportlab
+werkzeug
+python-dotenv
+PyYAML>=6.0,<7.0
+alembic
+pytest
+pytest-flask
+pytest-cov
+pytest-xdist
+pytest-benchmark
+psutil
+yfinance
+scipy
+pandas
+numpy
+
+# Optional observability packages (install only when needed):
+# opentelemetry-api
+# opentelemetry-sdk
+# opentelemetry-instrumentation-flask
+# opentelemetry-exporter-otlp-proto-grpc
+
+# Production rate limiting
+Flask-Limiter>=4.0,<5.0
+redis>=5,<6
+
+
+psycopg[binary]>=3.1,<4.0
+pytest-timeout
+gunicorn>=21.2.0,<24.0.0

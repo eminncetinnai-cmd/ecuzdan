@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, asdict
+from collections import deque
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Iterable, List, Optional
-
+from typing import Dict, Iterable, Iterator, List, Optional
 
 STRUCTURED_LOG_SUFFIX = '_structured.log'
 
@@ -22,6 +23,7 @@ class LogEntry:
     trace_id: Optional[str] = None
     span_id: Optional[str] = None
     module: Optional[str] = None
+    fields: Dict[str, object] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -55,9 +57,15 @@ def _parse_json_line(line: str) -> Optional[LogEntry]:
     if request_id in (None, '-', ''):
         request_id = None
 
+    known_fields = {
+        'timestamp', 'level', 'message', 'logger', 'request_id',
+        'trace_id', 'span_id', 'module',
+    }
+    fields = {key: value for key, value in data.items() if key not in known_fields}
+
     return LogEntry(
         timestamp=str(data.get('timestamp', '')),
-        level=str(data.get('level', 'INFO')),
+        level=str(data.get('level', 'INFO')).upper(),
         message=str(data.get('message', '')),
         raw=line,
         logger=data.get('logger'),
@@ -65,6 +73,7 @@ def _parse_json_line(line: str) -> Optional[LogEntry]:
         trace_id=trace_id,
         span_id=data.get('span_id'),
         module=data.get('module'),
+        fields=fields,
     )
 
 
@@ -121,6 +130,32 @@ def _parse_text_line(line: str) -> Optional[LogEntry]:
     )
 
 
+def iter_log_entries(file_path: str, *, structured: bool) -> Iterator[LogEntry]:
+    """Yield parsed entries from a log file with bounded per-entry memory."""
+    path = Path(file_path)
+    if not path.exists() or not path.is_file():
+        return
+
+    try:
+        with path.open('r', encoding='utf-8', errors='replace') as handle:
+            for line in handle:
+                parsed = parse_log_line(line, structured=structured)
+                if parsed:
+                    yield parsed
+    except OSError:
+        return
+
+
+def _parse_timestamp(value: str) -> Optional[datetime]:
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace('Z', '+00:00'))
+        return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
 def filter_log_entries(
     entries: Iterable[LogEntry],
     *,
@@ -128,13 +163,20 @@ def filter_log_entries(
     search: Optional[str] = None,
     request_id: Optional[str] = None,
     trace_id: Optional[str] = None,
+    since: Optional[str] = None,
 ) -> List[LogEntry]:
     result: List[LogEntry] = []
+    normalized_level = level.upper() if level else None
     search_lower = search.lower() if search else None
+    since_timestamp = _parse_timestamp(since) if since else None
 
     for entry in entries:
-        if level and entry.level != level:
+        if normalized_level and entry.level.upper() != normalized_level:
             continue
+        if since:
+            entry_timestamp = _parse_timestamp(entry.timestamp)
+            if not since_timestamp or not entry_timestamp or entry_timestamp < since_timestamp:
+                continue
         if request_id and (not entry.request_id or request_id not in entry.request_id):
             if request_id not in entry.raw:
                 continue
@@ -142,8 +184,20 @@ def filter_log_entries(
             if trace_id not in entry.raw:
                 continue
         if search_lower:
+            field_values = [str(value) for value in entry.fields.values()]
             haystack = ' '.join(
-                filter(None, [entry.message, entry.logger, entry.raw, entry.request_id, entry.trace_id])
+                filter(
+                    None,
+                    [
+                        entry.message,
+                        entry.logger,
+                        entry.raw,
+                        entry.request_id,
+                        entry.trace_id,
+                        entry.module,
+                        *field_values,
+                    ],
+                )
             ).lower()
             if search_lower not in haystack:
                 continue
@@ -161,31 +215,35 @@ def read_log_entries(
     search: Optional[str] = None,
     request_id: Optional[str] = None,
     trace_id: Optional[str] = None,
+    since: Optional[str] = None,
 ) -> List[LogEntry]:
-    lines = _tail_lines(file_path, line_count * 5)
+    """Read the latest matching entries without losing matches before the raw tail.
 
-    entries: List[LogEntry] = []
-    for line in lines:
-        parsed = parse_log_line(line, structured=structured)
-        if parsed:
-            entries.append(parsed)
+    The old implementation only parsed ``line_count * 5`` physical lines and
+    filtered afterwards. A selective ERROR/request-id query could therefore
+    return an empty result even when a matching entry existed earlier in a
+    large file. This implementation scans incrementally and keeps only the
+    requested number of matches in memory.
+    """
+    if line_count <= 0:
+        return []
 
-    filtered = filter_log_entries(
-        entries,
-        level=level,
-        search=search,
-        request_id=request_id,
-        trace_id=trace_id,
-    )
-    return filtered[-line_count:]
+    matched: deque[LogEntry] = deque(maxlen=line_count)
+    for entry in iter_log_entries(file_path, structured=structured):
+        if filter_log_entries(
+            [entry],
+            level=level,
+            search=search,
+            request_id=request_id,
+            trace_id=trace_id,
+            since=since,
+        ):
+            matched.append(entry)
+    return list(matched)
 
 
 def _tail_lines(file_path: str, max_lines: int, *, max_bytes: int = 2 * 1024 * 1024) -> List[str]:
-    """Return last N lines from a file without reading the whole file.
-
-    - Bounded by `max_bytes` to avoid memory spikes on huge logs.
-    - Best-effort: returns fewer lines if file is smaller or unreadable.
-    """
+    """Return last N lines from a log file without reading the whole file."""
     if max_lines <= 0:
         return []
 
@@ -204,16 +262,13 @@ def _tail_lines(file_path: str, max_lines: int, *, max_bytes: int = 2 * 1024 * 1
             pos = file_size
             buf = b''
 
-            # Read backwards until we have enough newlines or hit bounds.
             while pos > 0 and buf.count(b'\n') <= max_lines and len(buf) < max_bytes:
                 read_size = min(chunk_size, pos)
                 pos -= read_size
                 handle.seek(pos)
                 buf = handle.read(read_size) + buf
 
-        # Decode once (replace invalid bytes) and split.
         text = buf.decode('utf-8', errors='replace')
-        lines = text.splitlines()
-        return lines[-max_lines:]
+        return text.splitlines()[-max_lines:]
     except OSError:
         return []

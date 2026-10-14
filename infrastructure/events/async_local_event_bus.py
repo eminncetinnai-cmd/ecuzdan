@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 class AsyncLocalEventBus(EventBus):
     """In-memory event bus for asynchronous event dispatching using a thread pool.
-    
+
     Simulates a message broker like RabbitMQ by dispatching handlers in the background.
     """
 

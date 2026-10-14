@@ -3,8 +3,10 @@ Unit Tests - Export Service
 Export service layer for data export/import operations
 """
 
+from unittest.mock import Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+
 from infrastructure.export.export_service import ExportService
 
 
@@ -13,12 +15,12 @@ def test_export_service_init():
     """Test ExportService initialization"""
     mock_financial_repo = Mock()
     mock_user_repo = Mock()
-    
+
     service = ExportService(
         financial_repository=mock_financial_repo,
         user_repository=mock_user_repo
     )
-    
+
     assert service.financial_repository == mock_financial_repo
     assert service.user_repository == mock_user_repo
 
@@ -32,9 +34,9 @@ def test_export_service_init_default_repos():
             mock_user_repo = Mock()
             mock_financial_repo_class.return_value = mock_financial_repo
             mock_user_repo_class.return_value = mock_user_repo
-            
+
             service = ExportService()
-            
+
             assert service.financial_repository == mock_financial_repo
             assert service.user_repository == mock_user_repo
 
@@ -43,7 +45,7 @@ def test_export_service_init_default_repos():
 def test_export_service_imports():
     """Test that ExportService can be imported"""
     from infrastructure.export.export_service import ExportService
-    
+
     assert ExportService is not None
 
 
@@ -51,10 +53,10 @@ def test_export_service_imports():
 def test_export_service_module_structure():
     """Test export_service module structure"""
     import infrastructure.export.export_service as export_service_module
-    
+
     # Check for expected class
     assert hasattr(export_service_module, 'ExportService')
-    
+
     # Check for expected imports
     assert hasattr(export_service_module, 'calendar')
     assert hasattr(export_service_module, 'datetime')
@@ -68,10 +70,10 @@ def test_require_admin_success():
     mock_user = Mock()
     mock_user.has_admin_access = True
     mock_user_repo.get_user.return_value = mock_user
-    
+
     service = ExportService(user_repository=mock_user_repo)
     result = service.require_admin(1)
-    
+
     assert result == mock_user
 
 
@@ -80,9 +82,9 @@ def test_require_admin_no_user():
     """Test require_admin with non-existent user"""
     mock_user_repo = Mock()
     mock_user_repo.get_user.return_value = None
-    
+
     service = ExportService(user_repository=mock_user_repo)
-    
+
     with pytest.raises(PermissionError):
         service.require_admin(1)
 
@@ -94,9 +96,9 @@ def test_require_admin_not_admin():
     mock_user = Mock()
     mock_user.has_admin_access = False
     mock_user_repo.get_user.return_value = mock_user
-    
+
     service = ExportService(user_repository=mock_user_repo)
-    
+
     with pytest.raises(PermissionError):
         service.require_admin(1)
 
@@ -108,10 +110,10 @@ def test_require_platform_owner_success():
     mock_user = Mock()
     mock_user.is_super_admin = True
     mock_user_repo.get_user.return_value = mock_user
-    
+
     service = ExportService(user_repository=mock_user_repo)
     result = service.require_platform_owner(1)
-    
+
     assert result == mock_user
 
 
@@ -120,9 +122,9 @@ def test_require_platform_owner_no_user():
     """Test require_platform_owner with non-existent user"""
     mock_user_repo = Mock()
     mock_user_repo.get_user.return_value = None
-    
+
     service = ExportService(user_repository=mock_user_repo)
-    
+
     with pytest.raises(PermissionError):
         service.require_platform_owner(1)
 
@@ -134,9 +136,9 @@ def test_require_platform_owner_not_super_admin():
     mock_user = Mock()
     mock_user.is_super_admin = False
     mock_user_repo.get_user.return_value = mock_user
-    
+
     service = ExportService(user_repository=mock_user_repo)
-    
+
     with pytest.raises(PermissionError):
         service.require_platform_owner(1)
 
@@ -150,17 +152,17 @@ def test_pdf_report_context_week_period():
     mock_user.tenant_id = 'test_tenant'
     mock_user_repo.get_user.return_value = mock_user
     mock_financial_repo.pending_transactions_between.return_value = []
-    
+
     service = ExportService(
         financial_repository=mock_financial_repo,
         user_repository=mock_user_repo
     )
-    
+
     title, transactions, today = service.pdf_report_context(
         period='week',
         user_id=1
     )
-    
+
     assert title == "Haftalık Bekleyen Ödemeler Raporu"
     assert transactions == []
     assert today is not None
@@ -175,17 +177,17 @@ def test_pdf_report_context_month_period():
     mock_user.tenant_id = 'test_tenant'
     mock_user_repo.get_user.return_value = mock_user
     mock_financial_repo.pending_transactions_between.return_value = []
-    
+
     service = ExportService(
         financial_repository=mock_financial_repo,
         user_repository=mock_user_repo
     )
-    
+
     title, transactions, today = service.pdf_report_context(
         period='month',
         user_id=1
     )
-    
+
     assert title == "Aylık Bekleyen Ödemeler Raporu"
     assert transactions == []
 
@@ -199,17 +201,17 @@ def test_pdf_report_context_all_period():
     mock_user.tenant_id = 'test_tenant'
     mock_user_repo.get_user.return_value = mock_user
     mock_financial_repo.list_transactions.return_value = []
-    
+
     service = ExportService(
         financial_repository=mock_financial_repo,
         user_repository=mock_user_repo
     )
-    
+
     title, transactions, today = service.pdf_report_context(
         period='all',
         user_id=1
     )
-    
+
     assert title == "Nakit Akış Hareketleri Raporu"
     assert transactions == []
 
@@ -220,12 +222,12 @@ def test_pdf_report_context_no_tenant_id():
     mock_financial_repo = Mock()
     mock_user_repo = Mock()
     mock_user_repo.get_user.return_value = None
-    
+
     service = ExportService(
         financial_repository=mock_financial_repo,
         user_repository=mock_user_repo
     )
-    
+
     with pytest.raises(RuntimeError):
         service.pdf_report_context(period='week', user_id=1)
 
@@ -236,17 +238,17 @@ def test_pdf_report_context_with_tenant_id():
     mock_financial_repo = Mock()
     mock_user_repo = Mock()
     mock_financial_repo.pending_transactions_between.return_value = []
-    
+
     service = ExportService(
         financial_repository=mock_financial_repo,
         user_repository=mock_user_repo
     )
-    
+
     title, transactions, today = service.pdf_report_context(
         period='week',
         tenant_id='test_tenant'
     )
-    
+
     assert title == "Haftalık Bekleyen Ödemeler Raporu"
 
 
@@ -257,17 +259,17 @@ def test_export_tenant_json():
     mock_user = Mock()
     mock_user.tenant_id = 'test_tenant'
     mock_user_repo.get_user.return_value = mock_user
-    
+
     with patch('models.Transaction') as mock_transaction:
         with patch('models.RecurringPlan') as mock_recurring:
             with patch('domain.portfolio.models.portfolio_models.Asset') as mock_asset:
                 mock_transaction.query.filter_by.return_value.all.return_value = []
                 mock_recurring.query.filter_by.return_value.all.return_value = []
                 mock_asset.query.filter_by.return_value.all.return_value = []
-                
+
                 service = ExportService(user_repository=mock_user_repo)
                 result = service.export_tenant_json(user_id=1)
-                
+
                 assert result is not None
                 assert isinstance(result, str)
 
@@ -277,9 +279,9 @@ def test_export_tenant_json_no_user():
     """Test export_tenant_json with non-existent user"""
     mock_user_repo = Mock()
     mock_user_repo.get_user.return_value = None
-    
+
     service = ExportService(user_repository=mock_user_repo)
-    
+
     with pytest.raises(PermissionError):
         service.export_tenant_json(user_id=1)
 
@@ -291,13 +293,13 @@ def test_export_database_json():
     mock_user = Mock()
     mock_user.is_super_admin = True
     mock_user_repo.get_user.return_value = mock_user
-    
+
     with patch('infrastructure.export.export_service.export_database_to_json') as mock_export:
         mock_export.return_value = '{"data": "test"}'
-        
+
         service = ExportService(user_repository=mock_user_repo)
         result = service.export_database_json(user_id=1)
-        
+
         assert result == '{"data": "test"}'
 
 
@@ -308,9 +310,9 @@ def test_export_database_json_not_super_admin():
     mock_user = Mock()
     mock_user.is_super_admin = False
     mock_user_repo.get_user.return_value = mock_user
-    
+
     service = ExportService(user_repository=mock_user_repo)
-    
+
     with pytest.raises(PermissionError):
         service.export_database_json(user_id=1)
 
@@ -322,13 +324,13 @@ def test_import_database_json():
     mock_user = Mock()
     mock_user.is_super_admin = True
     mock_user_repo.get_user.return_value = mock_user
-    
+
     with patch('infrastructure.export.export_service.import_database_from_json') as mock_import:
         mock_import.return_value = {'success': True}
-        
+
         service = ExportService(user_repository=mock_user_repo)
         result = service.import_database_json(user_id=1, content='{"data": "test"}')
-        
+
         assert result == {'success': True}
 
 
@@ -339,9 +341,9 @@ def test_import_database_json_not_super_admin():
     mock_user = Mock()
     mock_user.is_super_admin = False
     mock_user_repo.get_user.return_value = mock_user
-    
+
     service = ExportService(user_repository=mock_user_repo)
-    
+
     with pytest.raises(PermissionError):
         service.import_database_json(user_id=1, content='{"data": "test"}')
 
@@ -352,12 +354,12 @@ def test_import_database_json_not_super_admin():
 def test_export_service_module_has_required_imports():
     """Test export_service module has required imports"""
     import infrastructure.export.export_service as export_service_module
-    
+
     # Standard library imports
     assert hasattr(export_service_module, 'calendar')
     assert hasattr(export_service_module, 'datetime')
     assert hasattr(export_service_module, 'timedelta')
-    
+
     # Custom imports
     assert hasattr(export_service_module, 'FinancialRepository')
     assert hasattr(export_service_module, 'UserRepository')
@@ -372,19 +374,19 @@ def test_pdf_report_context_custom_datetime():
     mock_user.tenant_id = 'test_tenant'
     mock_user_repo.get_user.return_value = mock_user
     mock_financial_repo.pending_transactions_between.return_value = []
-    
+
     service = ExportService(
         financial_repository=mock_financial_repo,
         user_repository=mock_user_repo
     )
-    
+
     from datetime import datetime
     custom_dt = datetime(2024, 1, 15)
-    
+
     title, transactions, today = service.pdf_report_context(
         period='week',
         now_dt=custom_dt,
         tenant_id='test_tenant'
     )
-    
+
     assert today == '2024-01-15'

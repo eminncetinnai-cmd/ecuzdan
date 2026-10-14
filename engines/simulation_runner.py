@@ -3,6 +3,7 @@ E-Cüzdan v15 - Kapsamlı Simülasyon Testi
 Tüm sayfaları ve veri girişlerini test eden otomatik test scripti
 """
 import json
+import re
 from datetime import datetime
 
 import requests
@@ -114,11 +115,10 @@ def get_csrf_token(url):
         response = session.get(url)
         if response.status_code == 200:
             # Basit CSRF token extraction - HTML'den ara
-            import re
             match = re.search(r'name="csrf_token"\s+value="([^"]+)"', response.text)
             if match:
                 return match.group(1)
-    except (requests.RequestException, re.error) as e:
+    except (requests.RequestException, re.error):
         pass
     return None
 

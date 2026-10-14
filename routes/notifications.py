@@ -2,9 +2,10 @@
 
 import logging
 
-from flask import jsonify, session, render_template
+from flask import jsonify, render_template, session
 
 from bootstrap.container import get_container
+from infrastructure.i18n import i18n
 from utils.db_session import rollback_session
 from utils.decorators import login_required
 
@@ -58,9 +59,9 @@ def register_notification_routes(bp):
             preferences = settings_app.get_preferences(user_id)
             notification_app.refresh(user, preferences)
             items = notification_app.list_for_user(user_id)
-            
+
             logger.info(f"Notifications loaded for user {user_id}: {len(items)} items")
-            
+
             return jsonify({
                 'success': True,
                 'unread': notification_app.unread_count(user_id),
@@ -69,7 +70,7 @@ def register_notification_routes(bp):
         except Exception as e:
             logger.exception(f"Notification list error: {e}")
             rollback_session()
-            return jsonify({'success': False, 'message': 'Bildirimler yüklenemedi.'}), 500
+            return jsonify({'success': False, 'message': i18n.gettext('notifications_load_failed')}), 500
 
     @bp.route('/unread_count')
     @login_required
@@ -94,7 +95,7 @@ def register_notification_routes(bp):
         except Exception as e:
             logger.exception(f"Notification mark read error: {e}")
             rollback_session()
-            return jsonify({'success': False, 'message': 'Bildirim güncellenemedi.'}), 500
+            return jsonify({'success': False, 'message': i18n.gettext('notifications_update_failed')}), 500
 
     @bp.route('/read_all', methods=['POST'])
     @login_required
@@ -106,4 +107,29 @@ def register_notification_routes(bp):
         except Exception as e:
             logger.exception(f"Notification mark all read error: {e}")
             rollback_session()
-            return jsonify({'success': False, 'message': 'Bildirimler güncellenemedi.'}), 500
+            return jsonify({'success': False, 'message': i18n.gettext('notifications_update_failed')}), 500
+    @bp.route('/delete_read', methods=['POST'])
+    @login_required
+    def delete_read():
+        try:
+            notification_app = _get_notification_app()
+            count = notification_app.delete_read(session['user_id'])
+            return jsonify({'success': True, 'deleted': count, 'unread': notification_app.unread_count(session['user_id'])})
+        except Exception as e:
+            logger.exception(f'Notification delete read error: {e}')
+            rollback_session()
+            return jsonify({'success': False, 'message': i18n.gettext('notifications_delete_all_failed')}), 500
+    @bp.route('/<int:notification_id>/delete', methods=['POST'])
+    @login_required
+    def delete_notification(notification_id):
+        try:
+            notification_app = _get_notification_app()
+            notification_app.delete(session['user_id'], notification_id)
+            return jsonify({'success': True, 'deleted': notification_id})
+        except PermissionError as e:
+            rollback_session()
+            return jsonify({'success': False, 'message': str(e)}), 403
+        except Exception as e:
+            logger.exception(f'Notification delete error: {e}')
+            rollback_session()
+            return jsonify({'success': False, 'message': i18n.gettext('notifications_delete_failed')}), 500

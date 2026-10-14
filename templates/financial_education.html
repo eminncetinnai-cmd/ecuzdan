@@ -20,12 +20,12 @@
         <a href="/financial_education?view=quiz"
            class="px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all
            {% if view_type == 'quiz' %}bg-emerald-600 text-white shadow-lg shadow-emerald-200{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
-            🎯 Quiz
+            🎯 {{ _('fe_tab_quiz') }}
         </a>
         <a href="/financial_education?view=progress"
            class="px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all
            {% if view_type == 'progress' %}bg-emerald-600 text-white shadow-lg shadow-emerald-200{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
-            📊 Progress
+            📊 {{ _('fe_tab_progress') }}
         </a>
         <a href="/financial_education?view=calculations"
            class="px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all
@@ -49,51 +49,51 @@
     <div class="space-y-8">
         <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
             <div class="bg-gradient-to-r from-emerald-600 to-teal-600 p-6">
-                <h2 class="text-2xl font-black text-white uppercase tracking-tight">🎯 Financial Literacy Quiz</h2>
-                <p class="text-emerald-100 mt-2">Test your knowledge and track your progress</p>
+                <h2 class="text-2xl font-black text-white uppercase tracking-tight">🎯 {{ _('fe_quiz_title') }}</h2>
+                <p class="text-emerald-100 mt-2">{{ _('fe_quiz_subtitle') }}</p>
             </div>
             <div class="p-8">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <div class="bg-slate-50 rounded-xl p-6 border border-slate-200 text-center">
                         <div class="text-4xl font-black text-emerald-600 mb-2">15</div>
-                        <div class="text-slate-600 text-sm font-semibold">Questions</div>
+                        <div class="text-slate-600 text-sm font-semibold">{{ _('fe_quiz_questions') }}</div>
                     </div>
                     <div class="bg-slate-50 rounded-xl p-6 border border-slate-200 text-center">
                         <div class="text-4xl font-black text-blue-600 mb-2">10</div>
-                        <div class="text-slate-600 text-sm font-semibold">Minutes</div>
+                        <div class="text-slate-600 text-sm font-semibold">{{ _('fe_quiz_minutes') }}</div>
                     </div>
                     <div class="bg-slate-50 rounded-xl p-6 border border-slate-200 text-center">
                         <div class="text-4xl font-black text-purple-600 mb-2">3</div>
-                        <div class="text-slate-600 text-sm font-semibold">Difficulty Levels</div>
+                        <div class="text-slate-600 text-sm font-semibold">{{ _('fe_quiz_difficulty_levels') }}</div>
                     </div>
                 </div>
 
                 <div class="space-y-6">
                     <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-6 border border-emerald-200">
                         <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-black text-slate-800">Beginner Quiz</h3>
-                            <span class="bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full">Easy</span>
+                            <h3 class="text-lg font-black text-slate-800">{{ _('fe_quiz_beginner') }}</h3>
+                            <span class="bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full">{{ _('fe_quiz_easy') }}</span>
                         </div>
-                        <p class="text-slate-600 mb-4">Test your basic financial knowledge</p>
-                        <button onclick="startQuiz('beginner')" class="bg-emerald-600 text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-emerald-700 transition">Start Quiz</button>
+                        <p class="text-slate-600 mb-4">{{ _('fe_quiz_beginner_description') }}</p>
+                        <button data-macro="button_secondary" type="button" onclick="startQuiz('beginner')" class="bg-emerald-600 text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-emerald-700 transition">{{ _('fe_quiz_start') }}</button>
                     </div>
 
                     <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
                         <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-black text-slate-800">Intermediate Quiz</h3>
-                            <span class="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">Medium</span>
+                            <h3 class="text-lg font-black text-slate-800">{{ _('fe_quiz_intermediate') }}</h3>
+                            <span class="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">{{ _('fe_quiz_medium') }}</span>
                         </div>
-                        <p class="text-slate-600 mb-4">Challenge yourself with investment concepts</p>
-                        <button onclick="startQuiz('intermediate')" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-blue-700 transition">Start Quiz</button>
+                        <p class="text-slate-600 mb-4">{{ _('fe_quiz_intermediate_description') }}</p>
+                        <button data-macro="button_secondary" type="button" onclick="startQuiz('intermediate')" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-blue-700 transition">{{ _('fe_quiz_start') }}</button>
                     </div>
 
                     <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-200">
                         <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-black text-slate-800">Advanced Quiz</h3>
-                            <span class="bg-purple-100 text-purple-700 text-xs font-bold px-3 py-1 rounded-full">Hard</span>
+                            <h3 class="text-lg font-black text-slate-800">{{ _('fe_quiz_advanced') }}</h3>
+                            <span class="bg-purple-100 text-purple-700 text-xs font-bold px-3 py-1 rounded-full">{{ _('fe_quiz_hard') }}</span>
                         </div>
-                        <p class="text-slate-600 mb-4">Master complex financial strategies</p>
-                        <button onclick="startQuiz('advanced')" class="bg-purple-600 text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-purple-700 transition">Start Quiz</button>
+                        <p class="text-slate-600 mb-4">{{ _('fe_quiz_advanced_description') }}</p>
+                        <button data-macro="button_secondary" type="button" onclick="startQuiz('advanced')" class="bg-purple-600 text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-purple-700 transition">{{ _('fe_quiz_start') }}</button>
                     </div>
                 </div>
             </div>
@@ -104,61 +104,61 @@
     <div class="space-y-8">
         <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
             <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-6">
-                <h2 class="text-2xl font-black text-white uppercase tracking-tight">📊 Your Learning Progress</h2>
-                <p class="text-blue-100 mt-2">Track your financial education journey</p>
+                <h2 class="text-2xl font-black text-white uppercase tracking-tight">📊 {{ _('fe_progress_heading') }}</h2>
+                <p class="text-blue-100 mt-2">{{ _('fe_progress_subtitle') }}</p>
             </div>
             <div class="p-8">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                     <div class="bg-slate-50 rounded-xl p-6 border border-slate-200 text-center">
                         <div class="text-4xl font-black text-emerald-600 mb-2 progress-stats" data-type="completed">0</div>
-                        <div class="text-slate-600 text-sm font-semibold">Topics Completed</div>
+                        <div class="text-slate-600 text-sm font-semibold">{{ _('fe_progress_topics_completed') }}</div>
                     </div>
                     <div class="bg-slate-50 rounded-xl p-6 border border-slate-200 text-center">
                         <div class="text-4xl font-black text-blue-600 mb-2 progress-stats" data-type="average">0%</div>
-                        <div class="text-slate-600 text-sm font-semibold">Quiz Average</div>
+                        <div class="text-slate-600 text-sm font-semibold">{{ _('fe_progress_quiz_average') }}</div>
                     </div>
                     <div class="bg-slate-50 rounded-xl p-6 border border-slate-200 text-center">
-                        <div class="text-4xl font-black text-purple-600 mb-2">0</div>
-                        <div class="text-slate-600 text-sm font-semibold">Day Streak</div>
+                        <div class="text-4xl font-black text-purple-600 mb-2 progress-stats" data-type="streak">0</div>
+                        <div class="text-slate-600 text-sm font-semibold">{{ _('fe_progress_day_streak') }}</div>
                     </div>
                     <div class="bg-slate-50 rounded-xl p-6 border border-slate-200 text-center">
                         <div class="text-4xl font-black text-amber-600 mb-2 achievement-count">0</div>
-                        <div class="text-slate-600 text-sm font-semibold">Badges Earned</div>
+                        <div class="text-slate-600 text-sm font-semibold">{{ _('fe_progress_badges_earned') }}</div>
                     </div>
                 </div>
 
                 <div class="mb-8">
-                    <h3 class="text-lg font-black text-slate-800 mb-4">Topic Progress</h3>
-                    <div class="space-y-4" id="topic-progress-container">
+                    <h3 class="text-lg font-black text-slate-800 mb-4">{{ _('fe_progress_topic_progress') }}</h3>
+                    <div class="space-y-4" id="topic-progress-container" data-progress-empty="{{ _('fe_progress_empty') }}" data-progress-error="{{ _('fe_progress_load_error') }}">
                         <!-- Dynamic content will be loaded here -->
                         <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
-                            <p class="text-slate-500 text-center">Loading progress...</p>
+                            <p class="text-slate-500 text-center">{{ _('fe_progress_loading') }}</p>
                         </div>
                     </div>
                 </div>
 
                 <div>
-                    <h3 class="text-lg font-black text-slate-800 mb-4">Achievements</h3>
+                    <h3 class="text-lg font-black text-slate-800 mb-4">{{ _('fe_achievements') }}</h3>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div class="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl p-4 border border-amber-200 text-center achievement-badge opacity-50" data-type="first_steps">
-                            <div class="text-3xl mb-2">🏆</div>
-                            <div class="font-bold text-slate-800 text-sm">First Steps</div>
-                            <div class="text-slate-500 text-xs">Complete first topic</div>
+            <div class="text-3xl mb-2">•</div>
+                            <div class="font-bold text-slate-800 text-sm">{{ _('fe_achievement_first_steps') }}</div>
+                            <div class="text-slate-500 text-xs">{{ _('fe_achievement_first_topic') }}</div>
                         </div>
                         <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-200 text-center achievement-badge opacity-50" data-type="quiz_learner">
-                            <div class="text-3xl mb-2">🎯</div>
-                            <div class="font-bold text-slate-800 text-sm">Quiz Learner</div>
-                            <div class="text-slate-500 text-xs">Score 60%+ on quiz</div>
+            <div class="text-3xl mb-2">🎯</div>
+                            <div class="font-bold text-slate-800 text-sm">{{ _('fe_achievement_quiz_learner') }}</div>
+                            <div class="text-slate-500 text-xs">{{ _('fe_achievement_score_60') }}</div>
                         </div>
                         <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-200 text-center achievement-badge opacity-50" data-type="quiz_master">
-                            <div class="text-3xl mb-2">🎯</div>
-                            <div class="font-bold text-slate-800 text-sm">Quiz Master</div>
-                            <div class="text-slate-500 text-xs">Score 80%+ on quiz</div>
+            <div class="text-3xl mb-2">🎯</div>
+                            <div class="font-bold text-slate-800 text-sm">{{ _('fe_achievement_quiz_master') }}</div>
+                            <div class="text-slate-500 text-xs">{{ _('fe_achievement_score_80') }}</div>
                         </div>
                         <div class="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200 text-center achievement-badge opacity-50" data-type="graduate">
-                            <div class="text-3xl mb-2">🎓</div>
-                            <div class="font-bold text-slate-800 text-sm">Graduate</div>
-                            <div class="text-slate-500 text-xs">Complete all topics</div>
+            <div class="text-3xl mb-2">•</div>
+                            <div class="font-bold text-slate-800 text-sm">{{ _('fe_achievement_graduate') }}</div>
+                            <div class="text-slate-500 text-xs">{{ _('fe_achievement_all_topics') }}</div>
                         </div>
                     </div>
                 </div>
@@ -167,9 +167,16 @@
     </div>
     {% elif view_type == 'dictionary' %}
     <!-- Dictionary View -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="relative w-full sm:w-80">
+            <input type="text" id="dictionary-search" oninput="filterDictionaryTerms(this.value)" placeholder="Terim veya tanım ara…" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 pl-10 text-xs font-bold text-slate-800 placeholder-slate-400 focus:border-emerald-500 focus:outline-none dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100" />
+            <svg class="absolute left-3 top-3 h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </div>
+        <span id="dictionary-count" class="text-xs font-bold text-slate-400">{{ technical_terms|length }} terim listelendi</span>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="dictionary-grid">
         {% for term in technical_terms %}
-        <div class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden hover:shadow-xl transition-shadow">
+        <div class="dictionary-card bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden hover:shadow-xl transition-shadow" data-term="{{ term.term|lower }}" data-desc="{{ term.definition|lower }} {{ term.context|lower }}">
             <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-4">
                 <h3 class="text-lg font-black text-white uppercase tracking-tight">{{ term.term }}</h3>
             </div>
@@ -204,7 +211,7 @@
                         </div>
                         <p class="text-slate-600 text-sm leading-relaxed mb-2">{{ calc.description }}</p>
                         <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                            Program Function: <code class="bg-slate-100 px-2 py-1 rounded text-purple-700">{{ calc.program_function }}</code>
+                            {{ _('fe_program_function') }}: <code class="bg-slate-100 px-2 py-1 rounded text-purple-700">{{ calc.program_function }}</code>
                         </p>
                     </div>
                     {% endfor %}
@@ -227,7 +234,7 @@
                 <div>
                     <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight mb-4 flex items-center gap-2">
                         <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                        Metrics
+                        {{ _('ui_auto_ddf6a1f0ce8c') }}
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {% for metric in analysis.metrics %}
@@ -242,7 +249,7 @@
                 <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-200">
                     <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight mb-3 flex items-center gap-2">
                         <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                        Actionable Insights
+                        {{ _('ui_auto_9816fd0aaa5f') }}
                     </h3>
                     <p class="text-slate-700 leading-relaxed">{{ analysis.actionable_insights }}</p>
                 </div>
@@ -278,6 +285,34 @@
 
     <!-- Content Card -->
     {% if guide_data %}
+    <section id="topic-progress-panel"
+             data-topic-progress
+             data-topic="{{ current_topic }}"
+             data-phase="{{ current_phase }}"
+             data-step-count="4"
+             data-saved-label="{{ _('fe_progress_started') }}"
+             data-saving-label="{{ _('fe_progress_saving') }}"
+             data-error-label="{{ _('fe_progress_save_error') }}"
+             data-completed-label="{{ _('fe_progress_completed') }}"
+             class="mb-6 rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 p-5 shadow-sm">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+                <p class="text-xs font-black uppercase tracking-[0.18em] text-emerald-700">{{ _('fe_progress_topic_progress') }}</p>
+                <p class="mt-1 text-sm font-semibold text-slate-600">{{ _('fe_progress_topic_hint') }}</p>
+            </div>
+            <button data-macro="button_secondary" id="topic-complete-btn" type="button"
+                    class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-black text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">
+                {{ _('fe_progress_mark_complete') }}
+            </button>
+        </div>
+        <div class="mt-4 flex items-center justify-between text-xs font-bold text-slate-600">
+            <span id="topic-progress-status" role="status" aria-live="polite"></span>
+            <span><strong id="topic-progress-percent">0%</strong> · <span id="topic-progress-step">0/4</span> {{ _('fe_progress_steps') }}</span>
+        </div>
+        <div class="mt-2 h-2 overflow-hidden rounded-full bg-emerald-100" role="progressbar" aria-label="{{ _('fe_progress_topic_progress') }}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div id="topic-progress-bar" class="h-full rounded-full bg-emerald-600 transition-all duration-500 w-0"></div>
+        </div>
+    </section>
     <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
         <!-- Title -->
         <div class="bg-gradient-to-r from-emerald-600 to-teal-600 p-6">
@@ -287,7 +322,7 @@
         <!-- Content -->
         <div class="p-8 space-y-8">
             <!-- Concept Definition -->
-            <div>
+            <div data-progress-step="concept">
                 <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight mb-3 flex items-center gap-2">
                     <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     {{ _('fe_concept_definition') }}
@@ -296,7 +331,7 @@
             </div>
 
             <!-- Practical Example -->
-            <div class="bg-slate-50 rounded-xl p-6 border border-slate-200">
+            <div data-progress-step="practical" class="bg-slate-50 rounded-xl p-6 border border-slate-200">
                 <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight mb-3 flex items-center gap-2">
                     <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     {{ _('fe_practical_example') }}
@@ -305,7 +340,7 @@
             </div>
 
             <!-- Mathematical Formula -->
-            <div>
+            <div data-progress-step="formula">
                 <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight mb-3 flex items-center gap-2">
                     <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                     {{ _('fe_mathematical_formula') }}
@@ -319,7 +354,7 @@
             </div>
 
             <!-- Literary Insights -->
-            <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-200">
+            <div data-progress-step="literary" class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-200">
                 <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight mb-3 flex items-center gap-2">
                     <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
                     {{ _('fe_literary_insights') }}
@@ -338,45 +373,54 @@
 </div>
 
 <script>
+const feI18n = window.ECuzdanI18n || {};
+
 // Quiz functionality
 let currentQuiz = null;
+let currentQuizDifficulty = 'beginner';
 let currentAnswers = {};
 
 async function startQuiz(difficulty) {
     try {
-        const response = await fetch('/api/quiz/start', {
+        const response = await fetch(ECuzdanEndpoints.education.quizStart, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || '',
             },
             body: JSON.stringify({ difficulty })
         });
         
         const data = await response.json();
         
+                ECuzdanApi.dto.achievements(data);
         if (data.success) {
             currentQuiz = data.quiz_id;
+            currentQuizDifficulty = difficulty;
             currentAnswers = {};
             displayQuizQuestions(data.questions);
         } else {
-            alert(data.error || 'Quiz başlatılamadı');
+            alert(data.error || feI18n.fe_quiz_start_error);
         }
     } catch (error) {
         console.error('Quiz başlatma hatası:', error);
-        alert('Quiz başlatılırken bir hata oluştu');
+        alert(feI18n.fe_quiz_start_request_error);
     }
 }
 
 function displayQuizQuestions(questions) {
     const quizContainer = document.createElement('div');
-    quizContainer.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+    quizContainer.className = 'fixed inset-0 bg-black/50 flex items-start justify-center z-50 overflow-y-auto p-4';
     quizContainer.id = 'quiz-modal';
+    quizContainer.setAttribute('role', 'dialog');
+    quizContainer.setAttribute('aria-modal', 'true');
+    quizContainer.setAttribute('aria-labelledby', 'quizModalTitle');
     
     quizContainer.innerHTML = `
-        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[calc(100vh-2rem)] overflow-y-auto">
             <div class="bg-gradient-to-r from-emerald-600 to-teal-600 p-6">
-                <h2 class="text-2xl font-black text-white uppercase tracking-tight">Quiz</h2>
-                <p class="text-emerald-100 mt-2">${questions.length} soru</p>
+                <h2 id="quizModalTitle" class="text-2xl font-black text-white uppercase tracking-tight">{{ _('fe_tab_quiz') }}</h2>
+                <p class="text-emerald-100 mt-2">${questions.length} ${feI18n.fe_quiz_question_count}</p>
             </div>
             <div class="p-8">
                 ${questions.map((q, index) => `
@@ -392,13 +436,21 @@ function displayQuizQuestions(questions) {
                         </div>
                     </div>
                 `).join('')}
-                <button onclick="submitQuiz()" class="w-full bg-emerald-600 text-white px-6 py-3 rounded-lg font-bold text-sm hover:bg-emerald-700 transition">Submit Quiz</button>
-                <button onclick="closeQuizModal()" class="w-full mt-3 bg-slate-200 text-slate-700 px-6 py-3 rounded-lg font-bold text-sm hover:bg-slate-300 transition">Cancel</button>
+                <button data-macro="button_secondary" type="button" onclick="submitQuiz()" class="w-full bg-emerald-600 text-white px-6 py-3 rounded-lg font-bold text-sm hover:bg-emerald-700 transition">{{ _('fe_quiz_submit') }}</button>
+                <button data-macro="button_secondary" type="button" onclick="closeQuizModal()" class="w-full mt-3 bg-slate-200 text-slate-700 px-6 py-3 rounded-lg font-bold text-sm hover:bg-slate-300 transition">{{ _('tx_cancel_btn') }}</button>
             </div>
         </div>
     `;
     
     document.body.appendChild(quizContainer);
+    document.body.classList.add('overflow-hidden');
+    quizContainer.addEventListener('click', (event) => {
+        if (event.target === quizContainer) closeQuizModal();
+    });
+    const firstInput = quizContainer.querySelector('input[type="radio"]');
+    if (firstInput) {
+        setTimeout(() => firstInput.focus(), 50);
+    }
 }
 
 function selectAnswer(questionId, answer) {
@@ -407,19 +459,20 @@ function selectAnswer(questionId, answer) {
 
 async function submitQuiz() {
     if (Object.keys(currentAnswers).length === 0) {
-        alert('Lütfen en az bir soruyu cevaplayın');
+        alert(feI18n.fe_quiz_empty_answer);
         return;
     }
     
     try {
-        const response = await fetch('/api/quiz/submit', {
+        const response = await fetch(ECuzdanEndpoints.education.quizSubmit, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || '',
             },
             body: JSON.stringify({ 
                 answers: currentAnswers,
-                difficulty: 'beginner' // This should be stored when quiz starts
+                difficulty: currentQuizDifficulty
             })
         });
         
@@ -428,11 +481,11 @@ async function submitQuiz() {
         if (data.success) {
             displayQuizResults(data);
         } else {
-            alert(data.error || 'Quiz sonuçları gönderilemedi');
+            alert(data.error || feI18n.fe_quiz_submit_error);
         }
     } catch (error) {
         console.error('Quiz gönderme hatası:', error);
-        alert('Quiz sonuçları gönderilirken bir hata oluştu');
+        alert(feI18n.fe_quiz_submit_request_error);
     }
 }
 
@@ -441,13 +494,13 @@ function displayQuizResults(data) {
     const scoreColor = data.score >= 80 ? 'text-emerald-600' : (data.score >= 60 ? 'text-blue-600' : 'text-amber-600');
     
     quizModal.innerHTML = `
-        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[calc(100vh-2rem)] overflow-y-auto">
             <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-6">
-                <h2 class="text-2xl font-black text-white uppercase tracking-tight">Quiz Results</h2>
+                <h2 class="text-2xl font-black text-white uppercase tracking-tight">{{ _('fe_quiz_results_title') }}</h2>
             </div>
             <div class="p-8 text-center">
                 <div class="text-6xl font-black ${scoreColor} mb-4">${data.score}%</div>
-                <p class="text-slate-600 mb-6">${data.correct_count} / ${data.total_count} doğru cevap</p>
+                <p class="text-slate-600 mb-6">${data.correct_count} / ${data.total_count} {{ _('fe_quiz_correct_answer') }}</p>
                 
                 <div class="space-y-4 mb-8 text-left">
                     ${data.results.map(r => `
@@ -456,14 +509,14 @@ function displayQuizResults(data) {
                                 ${r.is_correct ? '✓' : '✗'} Soru ${r.question_id}
                             </p>
                             ${!r.is_correct ? `
-                                <p class="text-sm text-slate-600 mt-2">Doğru cevap: ${r.correct_answer}</p>
+                                <p class="text-sm text-slate-600 mt-2">{{ _('fe_quiz_correct_answer') }}: ${r.correct_answer}</p>
                                 ${r.explanation ? `<p class="text-sm text-slate-500 mt-1">${r.explanation}</p>` : ''}
                             ` : ''}
                         </div>
                     `).join('')}
                 </div>
                 
-                <button onclick="closeQuizModal()" class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-bold text-sm hover:bg-blue-700 transition">Close</button>
+                <button data-macro="button_secondary" type="button" onclick="closeQuizModal()" class="w-full sticky bottom-0 bg-blue-600 text-white px-6 py-3 rounded-lg font-bold text-sm hover:bg-blue-700 transition shadow-lg">{{ _('fe_quiz_close') }}</button>
             </div>
         </div>
     `;
@@ -474,40 +527,111 @@ function closeQuizModal() {
     if (quizModal) {
         quizModal.remove();
     }
+    document.body.classList.remove('overflow-hidden');
     currentQuiz = null;
     currentAnswers = {};
 }
 
-// Progress tracking
-async function loadProgress() {
-    try {
-        const response = await fetch('/api/progress');
-        const data = await response.json();
-        
-        if (data.success) {
-            updateProgressUI(data.progress);
+function filterDictionaryTerms(query) {
+    const q = (query || '').toLowerCase().trim();
+    const cards = document.querySelectorAll('#dictionary-grid .dictionary-card');
+    let visible = 0;
+    cards.forEach(card => {
+        const term = card.dataset.term || '';
+        const desc = card.dataset.desc || '';
+        const show = !q || term.includes(q) || desc.includes(q);
+        card.style.display = show ? '' : 'none';
+        if (show) visible++;
+    });
+    const countEl = document.getElementById('dictionary-count');
+    if (countEl) countEl.textContent = `${visible} terim listelendi`;
+}
+
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        const quizModal = document.getElementById('quiz-modal');
+        if (quizModal) {
+            closeQuizModal();
+            return;
         }
-    } catch (error) {
-        console.error('İlerleme yükleme hatası:', error);
+        const dictSearch = document.getElementById('dictionary-search');
+        if (dictSearch && document.activeElement === dictSearch && dictSearch.value) {
+            dictSearch.value = '';
+            filterDictionaryTerms('');
+        }
+    }
+});
+
+// Progress tracking
+function showProgressMessage(message) {
+    const topicContainer = document.getElementById('topic-progress-container');
+    if (topicContainer) {
+        topicContainer.innerHTML = `<p class="text-slate-500 text-center">${message}</p>`;
     }
 }
 
-function updateProgressUI(progress) {
+async function loadProgress() {
+    try {
+        const response = await fetch(ECuzdanEndpoints.education.progress);
+        const data = await response.json();
+        if (data.success) {
+            updateProgressUI(Array.isArray(data.progress) ? data.progress : [], data.stats || {});
+        } else {
+            const container = document.getElementById('topic-progress-container');
+            showProgressMessage(data.error || container?.dataset.progressError || {{ _('fe_progress_load_error')|tojson }});
+        }
+    } catch (error) {
+        console.error('İlerleme yükleme hatası:', error);
+        const container = document.getElementById('topic-progress-container');
+        showProgressMessage(container?.dataset.progressError || {{ _('fe_progress_load_error')|tojson }});
+    }
+}
+
+function updateProgressUI(progress, stats = {}) {
+    const topicLabels = {
+        income_expenses: {{ _('fe_topic_income_expenses')|tojson }},
+        compound_interest: {{ _('fe_topic_compound_interest')|tojson }},
+        assets: {{ _('fe_topic_assets')|tojson }},
+        financial_freedom: {{ _('fe_topic_financial_freedom')|tojson }},
+        investing: {{ _('fe_topic_investing')|tojson }},
+        risk_management: {{ _('fe_topic_risk_management')|tojson }},
+        portfolio_optimization: {{ _('fe_topic_portfolio_optimization')|tojson }},
+        behavioral_finance: {{ _('fe_topic_behavioral_finance')|tojson }},
+        tax_planning: {{ _('fe_topic_tax_planning')|tojson }},
+        retirement_planning: {{ _('fe_topic_retirement_planning')|tojson }},
+        international_investing: {{ _('fe_topic_international_investing')|tojson }},
+        derivatives: {{ _('fe_topic_derivatives')|tojson }},
+        alternative_investments: {{ _('fe_topic_alternative_investments')|tojson }},
+        quantitative_finance: {{ _('fe_topic_quantitative_finance')|tojson }},
+        algorithmic_trading: {{ _('fe_topic_algorithmic_trading')|tojson }},
+        machine_learning_finance: {{ _('fe_topic_machine_learning_finance')|tojson }},
+        blockchain_crypto: {{ _('fe_topic_blockchain_crypto')|tojson }},
+        esg_investing: {{ _('fe_topic_esg_investing')|tojson }}
+    };
     // Update progress bars and stats
-    const completedCount = progress.filter(p => p.completed).length;
-    const avgProgress = progress.length > 0 
-        ? Math.round(progress.reduce((sum, p) => sum + p.progress_percent, 0) / progress.length)
-        : 0;
+    const completedCount = Number.isFinite(stats.completed_topics)
+        ? stats.completed_topics
+        : progress.filter(p => p.completed).length;
+    const avgProgress = Number.isFinite(stats.quiz_average)
+        ? stats.quiz_average
+        : (progress.length > 0
+            ? Math.round(progress.reduce((sum, p) => sum + p.progress_percent, 0) / progress.length)
+            : 0);
+    const dayStreak = Number.isFinite(stats.day_streak) ? stats.day_streak : 0;
     
     // Update stats elements
     const completedElement = document.querySelector('.progress-stats[data-type="completed"]');
     const averageElement = document.querySelector('.progress-stats[data-type="average"]');
+    const streakElement = document.querySelector('.progress-stats[data-type="streak"]');
     
     if (completedElement) {
         completedElement.textContent = completedCount;
     }
     if (averageElement) {
         averageElement.textContent = avgProgress + '%';
+    }
+    if (streakElement) {
+        streakElement.textContent = dayStreak;
     }
     
     // Update topic progress bars
@@ -524,7 +648,7 @@ function updateProgressUI(progress) {
             return `
                 <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
                     <div class="flex items-center justify-between mb-2">
-                        <span class="font-bold text-slate-700">${p.topic}</span>
+                        <span class="font-bold text-slate-700">${topicLabels[p.topic] || p.topic}</span>
                         <span class="${textColorClass} font-bold">${p.progress_percent}%</span>
                     </div>
                     <div class="w-full bg-slate-200 rounded-full h-2">
@@ -536,23 +660,142 @@ function updateProgressUI(progress) {
     } else if (topicContainer) {
         topicContainer.innerHTML = `
             <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
-                <p class="text-slate-500 text-center">No progress data available</p>
+                <p class="text-slate-500 text-center">${topicContainer.dataset.progressEmpty || 'No progress data available'}</p>
             </div>
         `;
     }
 }
 
+// Topic progress lifecycle: start on entry, autosave observed sections, and allow explicit completion.
+async function loadTopicProgress() {
+    const panel = document.querySelector('[data-topic-progress]');
+    if (!panel) return;
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    const topic = panel.dataset.topic;
+    const phase = panel.dataset.phase;
+    const stepNodes = Array.from(panel.closest('main, body').querySelectorAll('[data-progress-step]'));
+    const state = {
+        completedSteps: new Set(),
+        progressPercent: 0,
+        completed: false,
+        lastPersisted: -1,
+        inFlight: null,
+        pending: null,
+    };
+
+    const statusElement = document.getElementById('topic-progress-status');
+    const percentElement = document.getElementById('topic-progress-percent');
+    const stepElement = document.getElementById('topic-progress-step');
+    const barElement = document.getElementById('topic-progress-bar');
+    const completeButton = document.getElementById('topic-complete-btn');
+    const progressbar = panel.querySelector('[role="progressbar"]');
+
+    const render = () => {
+        const percent = state.completed ? 100 : state.progressPercent;
+        if (percentElement) percentElement.textContent = `${percent}%`;
+        if (stepElement) stepElement.textContent = `${state.completed ? stepNodes.length : state.completedSteps.size}/${stepNodes.length}`;
+        if (barElement) barElement.style.width = `${percent}%`;
+        if (progressbar) progressbar.setAttribute('aria-valuenow', String(percent));
+        if (completeButton) {
+            completeButton.disabled = state.completed;
+            completeButton.textContent = state.completed ? panel.dataset.completedLabel : '{{ _('fe_progress_mark_complete') }}';
+            completeButton.classList.toggle('opacity-60', state.completed);
+            completeButton.classList.toggle('cursor-not-allowed', state.completed);
+        }
+    };
+
+    const persist = async (percent, completed = false) => {
+        if (state.inFlight) {
+            const queued = state.pending;
+            if (!queued || completed || percent > queued.percent) {
+                state.pending = { percent, completed };
+            }
+            return state.inFlight;
+        }
+        if (!completed && percent <= state.lastPersisted) return true;
+        if (statusElement) statusElement.textContent = panel.dataset.savingLabel;
+        state.inFlight = fetch(ECuzdanEndpoints.education.progressUpdate, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrfToken,
+                'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify({ topic, phase, progress_percent: percent, completed }),
+        }).then(async response => {
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !data.success) throw new Error(data.error || panel.dataset.errorLabel);
+            state.lastPersisted = Math.max(state.lastPersisted, data.progress.progress_percent || 0);
+            state.progressPercent = Math.max(state.progressPercent, data.progress.progress_percent || 0);
+            state.completed = Boolean(data.progress.completed);
+            if (statusElement) statusElement.textContent = state.completed ? panel.dataset.completedLabel : panel.dataset.savedLabel;
+            render();
+            return true;
+        }).catch(error => {
+            if (statusElement) statusElement.textContent = panel.dataset.errorLabel;
+            console.error('Konu ilerlemesi kaydedilemedi:', error);
+            return false;
+        }).finally(() => {
+            state.inFlight = null;
+            const next = state.pending;
+            state.pending = null;
+            if (next && (next.completed || next.percent > state.lastPersisted)) {
+                persist(next.percent, next.completed);
+            }
+        });
+        return state.inFlight;
+    };
+
+    try {
+        const response = await fetch(ECuzdanEndpoints.education.progress);
+        const data = await response.json();
+        const record = (data.progress || []).find(item => item.topic === topic);
+        if (record) {
+            state.progressPercent = Number(record.progress_percent) || 0;
+            state.completed = Boolean(record.completed);
+            state.lastPersisted = state.progressPercent;
+        }
+    } catch (error) {
+        console.error('Konu ilerlemesi yüklenemedi:', error);
+    }
+    render();
+
+    if (!state.completed && state.progressPercent === 0) await persist(5, false);
+
+    if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting || state.completed) return;
+                state.completedSteps.add(entry.target.dataset.progressStep);
+                const percent = Math.round((state.completedSteps.size / stepNodes.length) * 100);
+                state.progressPercent = Math.max(state.progressPercent, percent);
+                render();
+                persist(percent, percent >= 100);
+            });
+        }, { threshold: 0.55 });
+        stepNodes.forEach(node => observer.observe(node));
+    }
+
+    completeButton?.addEventListener('click', () => {
+        state.completed = true;
+        state.progressPercent = 100;
+        render();
+        persist(100, true);
+    });
+}
+
 // Load achievements
 async function loadAchievements() {
     try {
-        const response = await fetch('/api/achievements');
+        const response = await fetch(ECuzdanEndpoints.education.achievements);
         const data = await response.json();
         
         if (data.success) {
             updateAchievementsUI(data.achievements);
         }
     } catch (error) {
-        console.error('Başarılar yükleme hatası:', error);
+        console.error('Başarilar yükleme hatası:', error);
     }
 }
 
@@ -583,6 +826,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (window.location.search.includes('view=progress')) {
         loadProgress();
         loadAchievements();
+    }
+    if (document.querySelector('[data-topic-progress]')) {
+        loadTopicProgress();
     }
 });
 </script>

@@ -286,7 +286,9 @@ class ApplicationProvider:
 
     def transaction_commands(self, outbox_port):
         from application.transactions.commands import (
-            CreateTransactionCommand, UpdateTransactionCommand, DeleteTransactionCommand
+            CreateTransactionCommand,
+            DeleteTransactionCommand,
+            UpdateTransactionCommand,
         )
         def _factory():
             return {
@@ -371,8 +373,7 @@ class ApplicationProvider:
     def oauth(self):
         from application.users.oauth_application_service import OAuthApplicationService
         def _factory():
-            providers = self.infrastructure.oauth_providers() if self.infrastructure else {}
-            outbox_port = self.infrastructure.outbox() if self.infrastructure else None
+            # OAuth provider catalog is resolved lazily by oauth_provider(); avoid unused eager lookup.
             # Note: OAuthApplicationService now takes a single provider instance
             # This factory will need to be called with a specific provider
             return OAuthApplicationService
@@ -428,10 +429,10 @@ class InfrastructureProvider:
 
     def oauth_providers(self):
         """Provide OAuth providers."""
-        from infrastructure.auth.google_provider import GoogleOAuthProvider
         from config import Config
+        from infrastructure.auth.google_provider import GoogleOAuthProvider
         config = Config.from_env()
-        
+
         def _factory():
             providers = {}
             if config.GOOGLE_CLIENT_ID and config.GOOGLE_CLIENT_SECRET:
@@ -441,20 +442,20 @@ class InfrastructureProvider:
                 )
             return providers
         return self._get_or_create('oauth_providers', _factory)
-    
+
     def oauth_provider(self, provider_name: str = 'google'):
         """Provide a specific OAuth provider instance.
-        
+
         Args:
             provider_name: Name of the provider (e.g., 'google')
-            
+
         Returns:
             OAuthProvider instance or None if not configured
         """
-        from infrastructure.auth.google_provider import GoogleOAuthProvider
         from config import Config
+        from infrastructure.auth.google_provider import GoogleOAuthProvider
         config = Config.from_env()
-        
+
         def _factory():
             if provider_name == 'google' and config.GOOGLE_CLIENT_ID and config.GOOGLE_CLIENT_SECRET:
                 return GoogleOAuthProvider(

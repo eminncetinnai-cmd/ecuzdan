@@ -3,11 +3,12 @@ Unit Tests - Log Retention
 Log retention policy and cleanup utilities
 """
 
-import pytest
 import os
 import tempfile
-import shutil
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import patch
+
+import pytest
+
 from utils.log_retention import (
     LogRetentionConfig,
     LogRetentionManager,
@@ -22,12 +23,14 @@ def test_log_retention_config_defaults():
     config = LogRetentionConfig()
     assert config.detailed_logs_retention_days == 30
     assert config.error_logs_retention_days == 90
-    assert config.security_logs_retention_days == 365
+    assert config.security_logs_retention_days is None
     assert config.max_log_size_mb == 100
     assert config.max_total_log_size_mb == 500
     assert config.enable_compression is True
     assert config.archive_dir == 'logs/archive'
-    assert config.auto_cleanup_enabled is True
+    assert config.auto_cleanup_enabled is False
+    assert config.security_logs_retention_hold is True
+    assert config.require_explicit_approval is True
 
 
 @pytest.mark.unit
@@ -54,9 +57,27 @@ def test_cleanup_old_logs_disabled():
     config = LogRetentionConfig()
     config.auto_cleanup_enabled = False
     manager = LogRetentionManager(config)
-    
+
     # Should not raise exception
     manager.cleanup_old_logs()
+
+
+@pytest.mark.unit
+def test_security_log_retention_hold_skips_cleanup_even_if_auto_enabled():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        config = LogRetentionConfig()
+        config.auto_cleanup_enabled = True
+        config.security_logs_retention_hold = True
+        manager = LogRetentionManager(config)
+        manager.log_dir = temp_dir
+        security_file = os.path.join(temp_dir, 'e_cuzdan_security.log')
+        with open(security_file, 'w') as handle:
+            handle.write('fixture')
+        with patch.object(manager, '_get_file_age_days', return_value=1000):
+            with patch.object(manager, '_archive_or_delete') as mock_archive:
+                manager.cleanup_old_logs()
+                mock_archive.assert_not_called()
+        assert os.path.exists(security_file)
 
 
 @pytest.mark.unit
@@ -65,7 +86,7 @@ def test_get_retention_days():
     manager = LogRetentionManager()
     assert manager._get_retention_days('detailed') == 30
     assert manager._get_retention_days('error') == 90
-    assert manager._get_retention_days('security') == 365
+    assert manager._get_retention_days('security') is None
     assert manager._get_retention_days('unknown') == 30
 
 
@@ -75,7 +96,7 @@ def test_get_log_stats_empty_directory():
     with tempfile.TemporaryDirectory() as temp_dir:
         manager = LogRetentionManager()
         manager.log_dir = temp_dir
-        
+
         stats = manager.get_log_stats()
         assert stats['total_files'] == 0
         assert stats['total_size_mb'] == 0
@@ -98,7 +119,7 @@ def test_setup_log_retention():
     """Test setup_log_retention with custom config"""
     config = LogRetentionConfig()
     config.detailed_logs_retention_days = 45
-    
+
     manager = setup_log_retention(config)
     assert manager.config.detailed_logs_retention_days == 45
 
@@ -115,6 +136,8 @@ def test_log_retention_config_attributes():
     assert hasattr(config, 'enable_compression')
     assert hasattr(config, 'archive_dir')
     assert hasattr(config, 'auto_cleanup_enabled')
+    assert hasattr(config, 'security_logs_retention_hold')
+    assert hasattr(config, 'require_explicit_approval')
 
 
 @pytest.mark.unit
@@ -140,7 +163,7 @@ def test_log_retention_imports():
         get_log_retention_manager,
         setup_log_retention,
     )
-    
+
     assert LogRetentionConfig is not None
     assert LogRetentionManager is not None
     assert callable(get_log_retention_manager)
@@ -159,9 +182,10 @@ def test_log_retention_config_custom_values():
     config.enable_compression = False
     config.archive_dir = 'custom/archive'
     config.auto_cleanup_enabled = False
-    
+
     assert config.detailed_logs_retention_days == 15
     assert config.error_logs_retention_days == 45
+    config.security_logs_retention_days = 180
     assert config.security_logs_retention_days == 180
     assert config.max_log_size_mb == 50
     assert config.max_total_log_size_mb == 250
@@ -227,14 +251,16 @@ def test_log_retention_manager_logger():
 def test_cleanup_old_logs_with_files():
     """Test cleanup_old_logs with log files"""
     with tempfile.TemporaryDirectory() as temp_dir:
-        manager = LogRetentionManager()
+        config = LogRetentionConfig()
+        config.auto_cleanup_enabled = True
+        manager = LogRetentionManager(config)
         manager.log_dir = temp_dir
-        
+
         # Create a test log file
         test_file = os.path.join(temp_dir, 'e_cuzdan.log')
         with open(test_file, 'w') as f:
             f.write('test log content')
-        
+
         # Mock _get_file_age_days to return old age
         with patch.object(manager, '_get_file_age_days', return_value=100):
             with patch.object(manager, '_archive_or_delete') as mock_archive:
@@ -246,7 +272,7 @@ def test_cleanup_old_logs_with_files():
 def test_cleanup_old_logs_exception_handling():
     """Test cleanup_old_logs exception handling"""
     manager = LogRetentionManager()
-    
+
     with patch.object(manager, '_get_log_files', side_effect=Exception("Test error")):
         # Should not raise exception
         manager.cleanup_old_logs()
@@ -258,13 +284,13 @@ def test_get_log_files_with_rotation_files():
     with tempfile.TemporaryDirectory() as temp_dir:
         manager = LogRetentionManager()
         manager.log_dir = temp_dir
-        
+
         # Create rotation files
         for ext in ['.1', '.2', '.gz']:
             test_file = os.path.join(temp_dir, f'e_cuzdan{ext}')
             with open(test_file, 'w') as f:
                 f.write('test')
-        
+
         log_files = manager._get_log_files()
         assert len(log_files) == 3
 
@@ -274,11 +300,11 @@ def test_get_file_age_days():
     """Test _get_file_age_days method"""
     with tempfile.TemporaryDirectory() as temp_dir:
         manager = LogRetentionManager()
-        
+
         test_file = os.path.join(temp_dir, 'test.log')
         with open(test_file, 'w') as f:
             f.write('test')
-        
+
         age = manager._get_file_age_days(test_file)
         assert age >= 0
 
@@ -291,11 +317,11 @@ def test_archive_or_delete_with_compression():
         config.enable_compression = True
         manager = LogRetentionManager(config)
         manager.log_dir = temp_dir
-        
+
         test_file = os.path.join(temp_dir, 'test.log')
         with open(test_file, 'w') as f:
             f.write('test content')
-        
+
         with patch.object(manager, '_compress_and_archive') as mock_compress:
             manager._archive_or_delete(test_file, 10)
             mock_compress.assert_called()
@@ -309,11 +335,11 @@ def test_archive_or_delete_without_compression():
         config.enable_compression = False
         manager = LogRetentionManager(config)
         manager.log_dir = temp_dir
-        
+
         test_file = os.path.join(temp_dir, 'test.log')
         with open(test_file, 'w') as f:
             f.write('test content')
-        
+
         manager._archive_or_delete(test_file, 5)
         assert not os.path.exists(test_file)
 
@@ -324,17 +350,17 @@ def test_compress_and_archive():
     with tempfile.TemporaryDirectory() as temp_dir:
         manager = LogRetentionManager()
         manager.log_dir = temp_dir
-        
+
         test_file = os.path.join(temp_dir, 'test.log')
         with open(test_file, 'w') as f:
             f.write('test content')
-        
+
         manager._compress_and_archive(test_file)
-        
+
         # Check archive directory was created
         archive_dir = os.path.join(temp_dir, manager.config.archive_dir)
         assert os.path.exists(archive_dir)
-        
+
         # Check original file was deleted
         assert not os.path.exists(test_file)
 
@@ -343,7 +369,7 @@ def test_compress_and_archive():
 def test_compress_and_archive_exception_handling():
     """Test _compress_and_archive exception handling"""
     manager = LogRetentionManager()
-    
+
     with patch('os.makedirs', side_effect=Exception("Test error")):
         # Should not raise exception
         manager._compress_and_archive('/nonexistent/file.log')
@@ -355,12 +381,12 @@ def test_check_disk_space_within_limit():
     with tempfile.TemporaryDirectory() as temp_dir:
         manager = LogRetentionManager()
         manager.log_dir = temp_dir
-        
+
         # Create a small file
         test_file = os.path.join(temp_dir, 'test.log')
         with open(test_file, 'w') as f:
             f.write('test')
-        
+
         with patch.object(manager, 'cleanup_old_logs') as mock_cleanup:
             manager.check_disk_space()
             mock_cleanup.assert_not_called()
@@ -374,12 +400,12 @@ def test_check_disk_space_exceeds_limit():
         config.max_total_log_size_mb = 0.001  # Very small limit
         manager = LogRetentionManager(config)
         manager.log_dir = temp_dir
-        
+
         # Create a file with enough content to exceed limit
         test_file = os.path.join(temp_dir, 'test.log')
         with open(test_file, 'w') as f:
             f.write('test' * 10000)  # Create larger file
-        
+
         with patch.object(manager, 'cleanup_old_logs') as mock_cleanup:
             manager.check_disk_space()
             mock_cleanup.assert_called()
@@ -389,7 +415,7 @@ def test_check_disk_space_exceeds_limit():
 def test_check_disk_space_exception_handling():
     """Test check_disk_space exception handling"""
     manager = LogRetentionManager()
-    
+
     with patch('os.listdir', side_effect=Exception("Test error")):
         # Should not raise exception
         manager.check_disk_space()
@@ -401,7 +427,7 @@ def test_get_log_stats_with_files():
     with tempfile.TemporaryDirectory() as temp_dir:
         manager = LogRetentionManager()
         manager.log_dir = temp_dir
-        
+
         # Create test files
         with open(os.path.join(temp_dir, 'e_cuzdan.log'), 'w') as f:
             f.write('test')
@@ -409,7 +435,7 @@ def test_get_log_stats_with_files():
             f.write('test')
         with open(os.path.join(temp_dir, 'e_cuzdan_security.log'), 'w') as f:
             f.write('test')
-        
+
         stats = manager.get_log_stats()
         assert stats['total_files'] == 3
         assert stats['files_by_type']['detailed']['count'] == 1
@@ -423,11 +449,11 @@ def test_get_log_stats_with_archive_files():
     with tempfile.TemporaryDirectory() as temp_dir:
         manager = LogRetentionManager()
         manager.log_dir = temp_dir
-        
+
         # Create archive file
         with open(os.path.join(temp_dir, 'archive.log.gz'), 'w') as f:
             f.write('test')
-        
+
         stats = manager.get_log_stats()
         assert stats['files_by_type']['archive']['count'] == 1
 
@@ -436,7 +462,7 @@ def test_get_log_stats_with_archive_files():
 def test_get_log_stats_exception_handling():
     """Test get_log_stats exception handling"""
     manager = LogRetentionManager()
-    
+
     with patch('os.listdir', side_effect=Exception("Test error")):
         stats = manager.get_log_stats()
         assert stats == {}

@@ -36,10 +36,12 @@ export function initLazyCharts() {
             if (entry.isIntersecting) {
                 const container = entry.target;
                 const chartId = container.dataset.lazyChart;
-                const chartType = container.dataset.chartType;
-                const chartData = JSON.parse(container.dataset.chartData || '{}');
-                
-                // Initialize chart (would call appropriate chart function)
+                let chartData = {};
+                try {
+                    chartData = JSON.parse(container.dataset.chartData || '{}');
+                } catch (e) {
+                    console.error('[lazyload] Failed to parse chartData for', chartId, e);
+                }
                 if (window.ECuzdanCharts && window.ECuzdanCharts[chartType]) {
                     const ctx = document.getElementById(chartId);
                     if (ctx) {
@@ -117,7 +119,7 @@ export function initLazyData(loadMoreCallback, containerId, initialItems = 20, i
     // Load more button
     const loadMoreBtn = document.createElement('button');
     loadMoreBtn.className = 'w-full mt-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition';
-    loadMoreBtn.textContent = 'Daha Fazla Göster';
+    loadMoreBtn.textContent = (window.ECuzdanI18n && window.ECuzdanI18n['ui_auto_17a41349037a'] || "Daha Fazla Göster");
     
     loadMoreBtn.addEventListener('click', async () => {
         if (isLoading || !hasMore) return;
@@ -141,20 +143,20 @@ export function initLazyData(loadMoreCallback, containerId, initialItems = 20, i
                 
                 if (newItems.length < itemsPerLoad) {
                     hasMore = false;
-                    loadMoreBtn.textContent = 'Tüm öğeler yüklendi';
+                    loadMoreBtn.textContent = (window.ECuzdanI18n && window.ECuzdanI18n['ui_auto_9792f0920af8'] || "Tüm öğeler yüklendi");
                     loadMoreBtn.disabled = true;
                 } else {
-                    loadMoreBtn.textContent = 'Daha Fazla Göster';
+                    loadMoreBtn.textContent = (window.ECuzdanI18n && window.ECuzdanI18n['ui_auto_17a41349037a'] || "Daha Fazla Göster");
                     loadMoreBtn.disabled = false;
                 }
             } else {
                 hasMore = false;
-                loadMoreBtn.textContent = 'Tüm öğeler yüklendi';
+                loadMoreBtn.textContent = (window.ECuzdanI18n && window.ECuzdanI18n['ui_auto_9792f0920af8'] || "Tüm öğeler yüklendi");
                 loadMoreBtn.disabled = true;
             }
         } catch (error) {
             console.error('Failed to load more items:', error);
-            loadMoreBtn.textContent = 'Yükleme Hatası';
+            loadMoreBtn.textContent = (window.ECuzdanI18n && window.ECuzdanI18n['ui_auto_ce3b7a0ce97b'] || "Yükleme Hatası");
             loadMoreBtn.disabled = false;
         }
         

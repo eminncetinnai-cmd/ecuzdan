@@ -1,92 +1,108 @@
 {% extends "layout.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static_asset_url('css/assets.css') }}">
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.__assetDeleteEndpointBridge = window.ECuzdanEndpoints ? window.ECuzdanEndpoints.assets.delete : null;
+</script>
+<script src="{{ static_asset_url('js/assets_view.js') }}" defer></script>
+{% endblock %}
+
 {% block content %}
-<div id="assets-view-page" 
-     data-type-labels="{{ type_labels | tojson if type_labels else '[]' }}"
-     data-type-values="{{ type_values | tojson if type_values else '[]' }}"
-     data-risk-analysis="{{ analysis.by_risk | tojson if analysis and analysis.by_risk else '{}' }}">
-<style>
-    .premium-card {
-        background: rgba(255, 255, 255, 0.75);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.4);
-        border-radius: 1.5rem;
-        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .premium-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.08);
-        border-color: rgba(255, 255, 255, 0.6);
-    }
-    .chart-container {
-        position: relative;
-        width: 100%;
-        height: 280px;
-    }
-    .chart-container canvas {
-        max-height: 280px !important;
-    }
-</style>
+<div id="assets-view-page"
+     data-type-labels='{{ type_labels | tojson if type_labels else "[]" }}'
+     data-type-values='{{ type_values | tojson if type_values else "[]" }}'
+     data-risk-analysis='{{ analysis.by_risk | tojson if analysis and analysis.by_risk else "{}" }}'>
 
 <!-- Header -->
 <div class="mb-10 flex flex-wrap justify-between items-end gap-4">
     <div>
-        <h2 class="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none bg-gradient-to-r from-slate-900 to-indigo-900 bg-clip-text text-transparent">Profesyonel Varlık Portföyü</h2>
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Yatırım Performansı, Risk Analizi ve Diversification</p>
+        <h2 class="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-none bg-gradient-to-r from-slate-900 to-indigo-900 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">{{ _('ui_auto_b5630992c5ab') }}</h2>
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">{{ _('ui_auto_5bfcbacd3cf1') }}</p>
     </div>
     <div class="flex gap-3">
-        <a href="{{ url_for('assets.investment_performance') }}" class="bg-gradient-to-tr from-emerald-600 to-emerald-500 text-white px-6 py-3 rounded-3xl shadow-lg font-black text-[10px] uppercase hover:from-emerald-700 hover:to-emerald-600 transition">
-            📊 Yatırım Performansı
+        <a href="{{ url_for('assets.investment_performance') }}" class="bg-gradient-to-tr from-emerald-600 to-emerald-500 text-white px-6 py-3 rounded-2xl shadow-lg font-black text-[10px] uppercase hover:from-emerald-700 hover:to-emerald-600 transition">
+            {{ _('ui_auto_b65eb5ea71ae') }}
         </a>
-        <div class="bg-gradient-to-tr from-slate-900 to-indigo-950 text-white p-6 rounded-3xl shadow-xl">
-            <h3 class="text-[9px] font-black uppercase opacity-70 tracking-tighter">Toplam Portföy Değeri</h3>
-            <p class="text-3xl font-black">{{ analysis.total_value|format_money }} ₺</p>
+        <div class="bg-gradient-to-tr from-slate-900 to-indigo-950 dark:from-slate-800 dark:to-indigo-900 text-white p-6 rounded-2xl shadow-xl">
+            <h3 class="text-[9px] font-black uppercase opacity-70 tracking-tighter">{{ _('ui_auto_8429fe807ee9') }}</h3>
+            <p class="text-3xl font-black">{{ analysis.total_value|format_money }} {{ base_currency_symbol }}</p>
         </div>
     </div>
+</div>
+
+<!-- Segmented Navigation Bar -->
+<div class="border-b border-slate-200 dark:border-slate-800 flex gap-2 sm:gap-4 overflow-x-auto pb-1 mb-8" role="tablist">
+    <a href="{{ url_for('assets.assets') }}" class="tx-tab-btn" role="tab" aria-selected="false">
+        <span class="inline-flex items-center gap-1.5">
+            <span>🏛️</span>
+            <span>Varlık Merkezi</span>
+        </span>
+    </a>
+    <a href="{{ url_for('assets.assets_view') }}" class="tx-tab-btn active" role="tab" aria-selected="true">
+        <span class="inline-flex items-center gap-1.5">
+            <span>📊</span>
+            <span>Analitik & Risk</span>
+        </span>
+    </a>
+    <a href="{{ url_for('assets.assets_management') }}" class="tx-tab-btn" role="tab" aria-selected="false">
+        <span class="inline-flex items-center gap-1.5">
+            <span>⚙️</span>
+            <span>Yönetim Tablosu</span>
+        </span>
+    </a>
+    <a href="{{ url_for('assets.investment_performance') }}" class="tx-tab-btn" role="tab" aria-selected="false">
+        <span class="inline-flex items-center gap-1.5">
+            <span>📈</span>
+            <span>Performans</span>
+        </span>
+    </a>
 </div>
 
 {% if analysis.total_value > 0 %}
 <!-- Performance Summary Cards -->
 <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
-    <div class="premium-card p-6 border-b-4 border-emerald-500 bg-white/60">
-        <h3 class="text-slate-400 text-[10px] font-black uppercase mb-1.5 tracking-wider">Toplam Maliyet</h3>
-        <p class="text-2xl font-black text-slate-800">{{ analysis.total_cost|format_money }} ₺</p>
+    <div class="premium-card p-6 border-b-4 border-emerald-500 bg-white/80 dark:bg-slate-900/80">
+        <h3 class="text-slate-400 text-[10px] font-black uppercase mb-1.5 tracking-wider">{{ _('ui_auto_19f5af81416f') }}</h3>
+        <p class="text-2xl font-black text-slate-800 dark:text-white">{{ analysis.total_cost|format_money }} {{ base_currency_symbol }}</p>
     </div>
-    <div class="premium-card p-6 border-b-4 {% if analysis.total_gain_loss >= 0 %}border-emerald-500{% else %}border-rose-500{% endif %} bg-white/60">
-        <h3 class="text-slate-400 text-[10px] font-black uppercase mb-1.5 tracking-wider">Toplam Getiri/Kayıp</h3>
-        <p class="text-2xl font-black {% if analysis.total_gain_loss >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">{{ analysis.total_gain_loss|format_money }} ₺</p>
+    <div class="premium-card p-6 border-b-4 {% if analysis.total_gain_loss >= 0 %}border-emerald-500{% else %}border-rose-500{% endif %} bg-white/80 dark:bg-slate-900/80">
+        <h3 class="text-slate-400 text-[10px] font-black uppercase mb-1.5 tracking-wider">{{ _('ui_auto_7d5b0016f0f3') }}</h3>
+        <p class="text-2xl font-black {% if analysis.total_gain_loss >= 0 %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">{{ analysis.total_gain_loss|format_money }} {{ base_currency_symbol }}</p>
     </div>
-    <div class="premium-card p-6 border-b-4 {% if analysis.overall_roi >= 0 %}border-blue-500{% else %}border-rose-500{% endif %} bg-white/60">
-        <h3 class="text-slate-400 text-[10px] font-black uppercase mb-1.5 tracking-wider">Genel ROI</h3>
-        <p class="text-2xl font-black {% if analysis.overall_roi >= 0 %}text-blue-600{% else %}text-rose-600{% endif %}">%{{ analysis.overall_roi|round(2) }}</p>
+    <div class="premium-card p-6 border-b-4 {% if analysis.overall_roi >= 0 %}border-blue-500{% else %}border-rose-500{% endif %} bg-white/80 dark:bg-slate-900/80">
+        <h3 class="text-slate-400 text-[10px] font-black uppercase mb-1.5 tracking-wider">{{ _('ui_auto_6bd93a58d1bb') }}</h3>
+        <p class="text-2xl font-black {% if analysis.overall_roi >= 0 %}text-blue-600 dark:text-blue-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">%{{ analysis.overall_roi|round(2) }}</p>
     </div>
-    <div class="premium-card p-6 border-b-4 border-indigo-500 bg-white/60">
-        <h3 class="text-slate-400 text-[10px] font-black uppercase mb-1.5 tracking-wider">Varlık Sayısı</h3>
-        <p class="text-2xl font-black text-indigo-600">{{ analysis.asset_count }}</p>
+    <div class="premium-card p-6 border-b-4 border-indigo-500 bg-white/80 dark:bg-slate-900/80">
+        <h3 class="text-slate-400 text-[10px] font-black uppercase mb-1.5 tracking-wider">{{ _('ui_auto_c12a033a3137') }}</h3>
+        <p class="text-2xl font-black text-indigo-600 dark:text-indigo-400">{{ analysis.asset_count }}</p>
     </div>
 </div>
 
 <!-- Realized/Unrealized Gain Summary -->
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-    <div class="premium-card p-6 border-b-4 border-emerald-500 bg-white/60">
-        <h3 class="text-slate-400 text-[10px] font-black uppercase mb-1.5 tracking-wider">Gerçekleşmiş Kar</h3>
-        <p class="text-2xl font-black text-emerald-600">{{ analysis.total_realized_gain|format_money if analysis.total_realized_gain else '0'|format_money }} ₺</p>
-        <p class="text-[9px] text-slate-400 mt-1">Satış işlemlerinden elde edilen toplam kar</p>
+    <div class="premium-card p-6 border-b-4 border-emerald-500 bg-white/80 dark:bg-slate-900/80">
+        <h3 class="text-slate-400 text-[10px] font-black uppercase mb-1.5 tracking-wider">{{ _('ui_auto_1296af6f0dd2') }}</h3>
+        <p class="text-2xl font-black text-emerald-600 dark:text-emerald-400">{{ analysis.total_realized_gain|format_money if analysis.total_realized_gain else '0'|format_money }} {{ base_currency_symbol }}</p>
+        <p class="text-[9px] text-slate-400 mt-1">{{ _('ui_auto_d7a09f284c48') }}</p>
     </div>
-    <div class="premium-card p-6 border-b-4 border-blue-500 bg-white/60">
-        <h3 class="text-slate-400 text-[10px] font-black uppercase mb-1.5 tracking-wider">Gerçekleşmemiş Kar</h3>
-        <p class="text-2xl font-black text-blue-600">{{ analysis.total_unrealized_gain|format_money if analysis.total_unrealized_gain else '0'|format_money }} ₺</p>
-        <p class="text-[9px] text-slate-400 mt-1">Mevcut varlıkların değer artışı</p>
+    <div class="premium-card p-6 border-b-4 border-blue-500 bg-white/80 dark:bg-slate-900/80">
+        <h3 class="text-slate-400 text-[10px] font-black uppercase mb-1.5 tracking-wider">{{ _('ui_auto_9f3f45a0e348') }}</h3>
+        <p class="text-2xl font-black text-blue-600 dark:text-blue-400">{{ analysis.total_unrealized_gain|format_money if analysis.total_unrealized_gain else '0'|format_money }} {{ base_currency_symbol }}</p>
+        <p class="text-[9px] text-slate-400 mt-1">{{ _('ui_auto_5339d408a4ab') }}</p>
     </div>
 </div>
 
 <!-- Risk and Liquidity Scores -->
 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-    <div class="premium-card p-8 bg-white/80 border-t-8 {% if analysis.risk_score < 30 %}border-emerald-500{% elif analysis.risk_score < 60 %}border-amber-400{% else %}border-rose-500{% endif %}">
+    <div class="premium-card p-8 bg-white/80 dark:bg-slate-900/80 border-t-8 {% if analysis.risk_score < 30 %}border-emerald-500{% elif analysis.risk_score < 60 %}border-amber-400{% else %}border-rose-500{% endif %}">
         <div class="flex justify-between items-start mb-4">
-            <h3 class="font-black text-sm text-slate-800 uppercase tracking-wider">Portföy Risk Skoru</h3>
-            <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase {% if analysis.risk_score < 30 %}bg-emerald-100 text-emerald-700{% elif analysis.risk_score < 60 %}bg-amber-100 text-amber-700{% else %}bg-rose-100 text-rose-700{% endif %}">
+            <h3 class="font-black text-sm text-slate-800 dark:text-white uppercase tracking-wider">{{ _('ui_auto_f708eb2d27c3') }}</h3>
+            <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase {% if analysis.risk_score < 30 %}bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300{% elif analysis.risk_score < 60 %}bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300{% else %}bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300{% endif %}">
                 {% if analysis.risk_score < 30 %}Düşük Risk{% elif analysis.risk_score < 60 %}Orta Risk{% else %}Yüksek Risk{% endif %}
             </span>
         </div>
@@ -94,23 +110,24 @@
             <div class="relative w-24 h-24">
                 <svg class="w-24 h-24 transform -rotate-90">
                     <circle cx="48" cy="48" r="40" stroke="rgba(0,0,0,0.1)" stroke-width="8" fill="transparent" />
-                    <circle cx="48" cy="48" r="40" stroke="{% if analysis.risk_score < 30 %}'#10b981'{% elif analysis.risk_score < 60 %}'#f59e0b'{% else %}'#ef4444'{% endif %}" stroke-width="8" fill="transparent" 
+                    <circle cx="48" cy="48" r="40" stroke="currentColor" stroke-width="8" fill="transparent" 
+                            class="{% if analysis.risk_score < 30 %}text-emerald-500{% elif analysis.risk_score < 60 %}text-amber-500{% else %}text-rose-500{% endif %}"
                             stroke-dasharray="251" stroke-dashoffset="{{ 251 - (251 * analysis.risk_score) / 100 }}" />
                 </svg>
-                <span class="absolute inset-0 flex items-center justify-center text-xl font-black text-slate-800">{{ analysis.risk_score }}</span>
+                <span class="absolute inset-0 flex items-center justify-center text-xl font-black text-slate-800 dark:text-white">{{ analysis.risk_score }}</span>
             </div>
             <div class="flex-1">
-                <p class="text-[9px] text-slate-500 font-semibold leading-relaxed">
+                <p class="text-[9px] text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
                     {% if analysis.risk_score < 30 %}Portföyünüz düşük risk profiline sahip. Diversification seviyeniz sağlıklı.{% elif analysis.risk_score < 60 %}Portföyünüz orta risk seviyesinde. Bazı konsantrasyon riskleri mevcut.{% else %}Portföyünüz yüksek risk altında. Diversification eksikliği tespit edildi.{% endif %}
                 </p>
             </div>
         </div>
     </div>
     
-    <div class="premium-card p-8 bg-white/80 border-t-8 {% if analysis.liquidity_score > 70 %}border-emerald-500{% elif analysis.liquidity_score > 40 %}border-amber-400{% else %}border-rose-500{% endif %}">
+    <div class="premium-card p-8 bg-white/80 dark:bg-slate-900/80 border-t-8 {% if analysis.liquidity_score > 70 %}border-emerald-500{% elif analysis.liquidity_score > 40 %}border-amber-400{% else %}border-rose-500{% endif %}">
         <div class="flex justify-between items-start mb-4">
-            <h3 class="font-black text-sm text-slate-800 uppercase tracking-wider">Likidite Skoru</h3>
-            <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase {% if analysis.liquidity_score > 70 %}bg-emerald-100 text-emerald-700{% elif analysis.liquidity_score > 40 %}bg-amber-100 text-amber-700{% else %}bg-rose-100 text-rose-700{% endif %}">
+            <h3 class="font-black text-sm text-slate-800 dark:text-white uppercase tracking-wider">{{ _('ui_auto_9ff4cd991510') }}</h3>
+            <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase {% if analysis.liquidity_score > 70 %}bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300{% elif analysis.liquidity_score > 40 %}bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300{% else %}bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300{% endif %}">
                 {% if analysis.liquidity_score > 70 %}Yüksek Likidite{% elif analysis.liquidity_score > 40 %}Orta Likidite{% else %}Düşük Likidite{% endif %}
             </span>
         </div>
@@ -118,13 +135,14 @@
             <div class="relative w-24 h-24">
                 <svg class="w-24 h-24 transform -rotate-90">
                     <circle cx="48" cy="48" r="40" stroke="rgba(0,0,0,0.1)" stroke-width="8" fill="transparent" />
-                    <circle cx="48" cy="48" r="40" stroke="{% if analysis.liquidity_score > 70 %}'#10b981'{% elif analysis.liquidity_score > 40 %}'#f59e0b'{% else %}'#ef4444'{% endif %}" stroke-width="8" fill="transparent" 
+                    <circle cx="48" cy="48" r="40" stroke="currentColor" stroke-width="8" fill="transparent" 
+                            class="{% if analysis.liquidity_score > 70 %}text-emerald-500{% elif analysis.liquidity_score > 40 %}text-amber-500{% else %}text-rose-500{% endif %}"
                             stroke-dasharray="251" stroke-dashoffset="{{ 251 - (251 * analysis.liquidity_score) / 100 }}" />
                 </svg>
-                <span class="absolute inset-0 flex items-center justify-center text-xl font-black text-slate-800">{{ analysis.liquidity_score|round(0) }}</span>
+                <span class="absolute inset-0 flex items-center justify-center text-xl font-black text-slate-800 dark:text-white">{{ analysis.liquidity_score|round(0) }}</span>
             </div>
             <div class="flex-1">
-                <p class="text-[9px] text-slate-500 font-semibold leading-relaxed">
+                <p class="text-[9px] text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
                     {% if analysis.liquidity_score > 70 %}Portföyünüzün büyük kısmı likit varlıklardan oluşuyor. Acil nakit ihtiyacınız için güvenli.{% elif analysis.liquidity_score > 40 %}Portföyünüzde likit ve i-likit varlıklar dengeli dağılmış.{% else %}Portföyünüz çoğunlukla i-likit varlıklardan oluşuyor. Nakit dönüşüm süresi uzun olabilir.{% endif %}
                 </p>
             </div>
@@ -135,13 +153,13 @@
 <!-- Allocation Charts -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
     <div class="premium-card p-8 bg-white/80">
-        <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-6">Varlık Tipi Dağılımı</h4>
+        <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-6">{{ _('ui_auto_db06c635ca41') }}</h4>
         <div class="chart-container">
             <canvas id="typePieChart"></canvas>
         </div>
     </div>
     <div class="premium-card p-8 bg-white/80">
-        <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-6">Risk Seviyesi Dağılımı</h4>
+        <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-6">{{ _('ui_auto_6deb318456c3') }}</h4>
         <div class="chart-container">
             <canvas id="riskPieChart"></canvas>
         </div>
@@ -151,7 +169,7 @@
 <!-- Top and Worst Performers -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
     <div class="premium-card p-8 bg-white/80 border-l-4 border-emerald-500">
-        <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-4">🏆 En İyi Performanslar</h4>
+        <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-4">{{ _('ui_auto_d843a84bc30f') }}</h4>
         {% if analysis.top_performers %}
         <div class="space-y-3">
             {% for perf in analysis.top_performers %}
@@ -161,19 +179,19 @@
                     <p class="text-[9px] text-slate-400">{{ perf.type }}</p>
                 </div>
                 <div class="text-right">
-                    <p class="font-black text-emerald-600">{{ perf.gain_loss|format_money }} ₺</p>
+                    <p class="font-black text-emerald-600">{{ perf.gain_loss|format_money }} {{ base_currency_symbol }}</p>
                     <p class="text-[9px] text-slate-400">%{{ perf.roi|round(2) }} ROI</p>
                 </div>
             </div>
             {% endfor %}
         </div>
         {% else %}
-        <p class="text-[10px] text-slate-400 italic">Veri yok</p>
+        <p class="text-[10px] text-slate-400 italic">{{ _('ui_auto_84eb31eee4f1') }}</p>
         {% endif %}
     </div>
     
     <div class="premium-card p-8 bg-white/80 border-l-4 border-rose-500">
-        <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-4">📉 En Kötü Performanslar</h4>
+        <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-4">{{ _('ui_auto_2d70d185dad0') }}</h4>
         {% if analysis.worst_performers %}
         <div class="space-y-3">
             {% for perf in analysis.worst_performers %}
@@ -183,14 +201,14 @@
                     <p class="text-[9px] text-slate-400">{{ perf.type }}</p>
                 </div>
                 <div class="text-right">
-                    <p class="font-black text-rose-600">{{ perf.gain_loss|format_money }} ₺</p>
+                    <p class="font-black text-rose-600">{{ perf.gain_loss|format_money }} {{ base_currency_symbol }}</p>
                     <p class="text-[9px] text-slate-400">%{{ perf.roi|round(2) }} ROI</p>
                 </div>
             </div>
             {% endfor %}
         </div>
         {% else %}
-        <p class="text-[10px] text-slate-400 italic">Veri yok</p>
+        <p class="text-[10px] text-slate-400 italic">{{ _('ui_auto_84eb31eee4f1') }}</p>
         {% endif %}
     </div>
 </div>
@@ -200,9 +218,9 @@
 <div class="premium-card p-8 bg-rose-50/80 border-l-4 border-rose-500 mb-10">
     <h4 class="font-black text-sm uppercase text-rose-800 tracking-tight mb-4 flex items-center">
         <svg class="w-5 h-5 text-rose-500 mr-2" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-        Portföy Konsantrasyon Uyarısı
+        {{ _('ui_auto_bf0422cff393') }}
     </h4>
-    <p class="text-[10px] text-slate-600 font-semibold mb-3">Aşağıdaki varlıklar portföyünüzün %20'sinden fazlasını oluşturuyor. Bu, diversification riski oluşturabilir:</p>
+    <p class="text-[10px] text-slate-600 font-semibold mb-3">{{ _('ui_auto_0e9706b6d88e') }}</p>
     <div class="flex flex-wrap gap-2">
         {% for asset in analysis.portfolio_concentration.high_concentration_assets %}
         <span class="px-3 py-1 rounded-full bg-rose-100 text-rose-700 text-[10px] font-bold">{{ asset.name }} (%{{ asset.weight|round(1) }})</span>
@@ -214,25 +232,25 @@
 <!-- Detailed Asset Table -->
 <div class="premium-card p-8 bg-white/80 overflow-hidden">
     <div class="flex flex-wrap justify-between items-start mb-6 gap-4">
-        <h3 class="font-black text-sm text-slate-800 uppercase tracking-wider">Detaylı Varlık Envanteri</h3>
-        <a href="/assets_management" class="px-4 py-2 rounded-xl font-black text-[10px] uppercase bg-slate-900 text-white hover:bg-emerald-600 transition">Yeni Varlık Ekle</a>
+        <h3 class="font-black text-sm text-slate-800 uppercase tracking-wider">{{ _('ui_auto_fb12369c2925') }}</h3>
+        <a href="/assets_management" class="px-4 py-2 rounded-xl font-black text-[10px] uppercase bg-slate-900 text-white hover:bg-emerald-600 transition">{{ _('ui_auto_732175d30c35') }}</a>
     </div>
     <div class="overflow-x-auto">
-        <table class="w-full text-xs text-left">
+        <table id="assetsViewTable" class="w-full text-xs text-left">
             <thead class="text-slate-400 uppercase text-[9px] border-b border-slate-200">
                 <tr>
-                    <th class="py-3 px-2">Tür</th>
-                    <th>Varlık Adı</th>
-                    <th>Sektör</th>
-                    <th>Sembol</th>
-                    <th class="text-right">Güncel Değer</th>
-                    <th class="text-right">Maliyet</th>
-                    <th class="text-right">Kar/Zarar</th>
-                    <th class="text-right">ROI</th>
-                    <th class="text-right">Portföy Ağırlığı</th>
-                    <th>Kaynak</th>
-                    <th>Defter</th>
-                    <th class="text-right px-2">İşlem</th>
+                    <th class="py-2.5 px-2">Tür</th>
+                    <th class="py-2.5 px-2">{{ _('ui_auto_dedda719fe3d') }}</th>
+                    <th class="py-2.5 px-2">{{ _('ui_auto_19da5231f860') }}</th>
+                    <th class="py-2.5 px-2">{{ _('ui_auto_3b6b32d9f985') }}</th>
+                    <th class="py-2.5 px-2 text-right">{{ _('ui_auto_873dc8b6acb2') }}</th>
+                    <th class="py-2.5 px-2 text-right">{{ _('ui_auto_f70629d412fd') }}</th>
+                    <th class="py-2.5 px-2 text-right">{{ _('ui_auto_76d33e512f50') }}</th>
+                    <th class="py-2.5 px-2 text-right">ROI</th>
+                    <th class="py-2.5 px-2 text-right">{{ _('ui_auto_919b58854329') }}</th>
+                    <th class="py-2.5 px-2">Kaynak</th>
+                    <th class="py-2.5 px-2">{{ _('ui_auto_669906f2817a') }}</th>
+                    <th class="py-2.5 px-2 text-right">İşlem</th>
                 </tr>
             </thead>
             <tbody>
@@ -256,30 +274,32 @@
                         "sector_id": a.sector_id,
                         "notes": a.notes or ""
                     }|tojson }}'>
-                    <td class="py-4 px-2 font-bold text-slate-400 uppercase tracking-tighter text-[9px]">{{ a.type }}</td>
-                    <td class="font-black text-slate-800">
-                        {{ a.name }}
-                        {% if a.is_closed %}
-                        <span class="ml-2 px-1.5 py-0.5 rounded text-[8px] font-bold bg-slate-200 text-slate-500 uppercase">Kapatılmış</span>
-                        {% endif %}
+                    <td class="py-2.5 px-2 font-bold text-slate-400 uppercase tracking-tighter text-[9px]">{{ a.type }}</td>
+                    <td class="py-2.5 px-2 font-black text-slate-800">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span>{{ a.name }}</span>
+                            {% if a.is_closed %}
+                            <span class="ml-1.5 px-1 py-0.2 rounded text-[8px] font-bold bg-slate-200 text-slate-500 uppercase">{{ _('ui_auto_2d33b29a25c7') }}</span>
+                            {% endif %}
+                        </div>
                     </td>
-                    <td class="text-[10px] text-slate-500">{{ a.sector.name if a.sector else '-' }}</td>
-                    <td class="text-[10px] text-slate-500">{{ a.symbol or '-' }}</td>
-                    <td class="text-right font-black text-emerald-600">{{ a.value|format_money }} ₺</td>
-                    <td class="text-right font-bold text-slate-500">{{ (a.purchase_cost or 0)|format_money }} ₺</td>
-                    <td class="text-right font-black {% if a.total_gain_loss >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">{{ a.total_gain_loss|format_money }} ₺</td>
-                    <td class="text-right font-black {% if a.roi >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">%{{ a.roi|round(2) }}</td>
-                    <td class="text-right font-bold text-slate-500">%{{ a.portfolio_weight|round(1) }}</td>
-                    <td>
-                        <span class="px-2 py-0.5 rounded-lg text-[9px] font-black uppercase {{ 'bg-amber-100 text-amber-700' if a.origin == 'Otomatik' else 'bg-slate-100 text-slate-600' }}">{{ a.origin }}</span>
+                    <td class="py-2.5 px-2 text-[10px] text-slate-500">{{ a.sector.name if a.sector else '-' }}</td>
+                    <td class="py-2.5 px-2 text-[10px] text-slate-500">{{ a.symbol or '-' }}</td>
+                    <td class="py-2.5 px-2 text-right font-black text-emerald-600">{{ a.value|format_money }} {{ a.currency|currency_symbol or base_currency_symbol }}</td>
+                    <td class="py-2.5 px-2 text-right font-bold text-slate-500">{{ (a.purchase_cost or 0)|format_money }} {{ a.currency|currency_symbol or base_currency_symbol }}</td>
+                    <td class="py-2.5 px-2 text-right font-black {% if a.total_gain_loss >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">{{ a.total_gain_loss|format_money }} {{ a.currency|currency_symbol or base_currency_symbol }}</td>
+                    <td class="py-2.5 px-2 text-right font-black {% if a.roi >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">%{{ a.roi|round(2) }}</td>
+                    <td class="py-2.5 px-2 text-right font-bold text-slate-500">%{{ a.portfolio_weight|round(1) }}</td>
+                    <td class="py-2.5 px-2">
+                        <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase {{ 'bg-amber-100 text-amber-700' if a.origin == 'Otomatik' else 'bg-slate-100 text-slate-600' }}">{{ a.origin }}</span>
                     </td>
-                    <td class="text-[9px] font-bold text-slate-500">
+                    <td class="py-2.5 px-2 text-[9px] font-bold text-slate-500">
                         {% set ls = ledger_summaries.get(a.id) %}
-                        {% if ls and ls.has_cash_link %}<span class="text-emerald-600">Nakit ✓</span>{% else %}<span class="text-slate-400">Nakit —</span>{% endif %}
-                        · {{ ls.valuation_count if ls else 0 }} değerleme
+                        {% if ls and ls.has_cash_link %}<span class="text-emerald-600">{{ _('ui_auto_980584f7a0b1') }}</span>{% else %}<span class="text-slate-400">{{ _('ui_auto_c30928f7767d') }}</span>{% endif %}
+                        · {{ ls.valuation_count if ls else 0 }} değ.
                     </td>
-                    <td class="text-right px-2 whitespace-nowrap">
-                          <button type="button" onclick="openEditAssetModal(this)"
+                    <td class="py-2.5 px-2 text-right whitespace-nowrap">
+                          <button data-macro="button_secondary" type="button" onclick="openEditAssetModal(this)"
                                   data-id="{{ a.id }}"
                                   data-type="{{ a.type }}"
                                   data-name="{{ a.name }}"
@@ -295,24 +315,29 @@
                                   data-liquidity="{{ a.liquidity }}"
                                   data-sector-id="{{ a.sector_id }}"
                                   data-notes="{{ a.notes or '' }}"
-                                  class="inline-block bg-indigo-50 text-indigo-600 border border-indigo-200 px-2.5 py-1.5 rounded-xl text-[9px] font-black hover:bg-indigo-600 hover:text-white transition mr-1 uppercase cursor-pointer">
-                              DÜZENLE
+                                  class="inline-block bg-indigo-50 text-indigo-600 border border-indigo-200 px-2 py-1 rounded-lg text-[9px] font-black hover:bg-indigo-600 hover:text-white transition mr-1 uppercase cursor-pointer"
+                                  title="Düzenle">
+                              Düzenle
                           </button>
                           
                         {% if not a.is_closed %}
-                        <button type="button" onclick="openSellAssetModal(this)"
+                        <button data-macro="button_secondary" type="button" onclick="openSellAssetModal(this)"
                                 data-id="{{ a.id }}"
                                 data-name="{{ a.name }}"
                                 data-quantity="{{ a.quantity }}"
                                 data-unit-price="{{ a.unit_price }}"
-                                class="inline-block bg-emerald-50 text-emerald-600 border border-emerald-200 px-2.5 py-1.5 rounded-xl text-[9px] font-black hover:bg-emerald-600 hover:text-white transition mr-1 uppercase cursor-pointer">
-                            SAT
+                                data-cost-price="{{ a.weighted_average_cost or a.unit_price or 0 }}"
+                                data-currency="{{ a.currency or 'TRY' }}"
+                                class="inline-block bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-1 rounded-lg text-[9px] font-black hover:bg-emerald-600 hover:text-white transition mr-1 uppercase cursor-pointer"
+                                title="Sat">
+                            Sat
                         </button>
                         {% endif %}
                           
-                        <button type="button" onclick="confirmDeleteAsset('{{ a.id }}', '{{ a.name|e }}'); return false;"
-                                class="inline-block bg-rose-50 text-rose-600 border border-rose-200 px-2.5 py-1.5 rounded-xl text-[9px] font-bold hover:bg-rose-600 hover:text-white transition">
-                            SİL
+                        <button data-macro="button_secondary" type="button" onclick="confirmDeleteAsset('{{ a.id }}', '{{ a.name|e }}'); return false;"
+                                class="inline-block bg-rose-50 text-rose-600 border border-rose-200 px-2 py-1 rounded-lg text-[9px] font-bold hover:bg-rose-600 hover:text-white transition cursor-pointer"
+                                title="Sil">
+                            Sil
                         </button>
                     </td>
                 </tr>
@@ -333,22 +358,22 @@
                 </svg>
             </div>
             <div>
-                <h3 class="font-black text-slate-900 text-base uppercase tracking-tight">Varlığı Sil</h3>
-                <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Bu işlem geri alınamaz</p>
+                <h3 class="font-black text-slate-900 text-base uppercase tracking-tight">{{ _('ui_auto_abe88469bfd8') }}</h3>
+                <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">{{ _('ui_auto_3e5586f5655a') }}</p>
             </div>
         </div>
-        <p class="text-sm text-slate-600 font-medium mb-2">Aşağıdaki varlığı silmek istediğinize emin misiniz?</p>
+        <p class="text-sm text-slate-600 font-medium mb-2">{{ _('ui_auto_a036e116d692') }}</p>
         <div class="bg-rose-50 border border-rose-200 rounded-xl px-4 py-3 mb-6">
             <p id="deleteAssetName" class="font-black text-rose-700 text-sm">—</p>
-            <p class="text-[10px] text-rose-500 mt-0.5">Bağlı nakit işlemleri ve değerleme geçmişi de silinecektir.</p>
+            <p class="text-[10px] text-rose-500 mt-0.5">{{ _('ui_auto_fc6e5fa95f15') }}</p>
         </div>
         <div class="flex gap-3">
-            <button type="button" onclick="closeDeleteModal()" class="flex-1 px-4 py-3 rounded-xl font-bold text-[11px] uppercase bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">
+            <button data-macro="button_secondary" type="button" onclick="closeDeleteModal()" class="flex-1 px-4 py-3 rounded-xl font-bold text-[11px] uppercase bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">
                 İptal
             </button>
-            <button type="button" id="deleteAssetConfirmBtn"
+            <button data-macro="button_danger" type="button" id="deleteAssetConfirmBtn"
                class="flex-1 px-4 py-3 rounded-xl font-black text-[11px] uppercase bg-rose-600 text-white hover:bg-rose-700 transition shadow-lg cursor-pointer">
-                Evet, Sil
+                {{ _('ui_auto_b3f37835376a') }}
             </button>
         </div>
     </div>
@@ -370,7 +395,7 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </div>
                     <div>
-                        <h3 class="font-black text-slate-900 text-sm uppercase tracking-tight">Varlık Satışı</h3>
+                        <h3 class="font-black text-slate-900 text-sm uppercase tracking-tight">{{ _('ui_auto_18832a7009d8') }}</h3>
                         <p id="sellAssetName" class="text-[10px] text-slate-500 font-bold uppercase">—</p>
                     </div>
                 </div>
@@ -378,16 +403,16 @@
 
             <div class="space-y-4 mb-6">
                 <div>
-                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Satılacak Miktar</label>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">{{ _('ui_auto_ed89452a68c5') }}</label>
                     <div class="relative">
                         <input type="number" id="sellQuantity" name="quantity" step="any" min="0.0001" class="w-full p-2.5 border border-slate-200 rounded-xl text-sm font-black focus:ring-2 focus:ring-emerald-500 outline-none text-slate-800" required>
                         <span id="sellMaxQty" class="absolute right-3 top-2.5 text-[10px] text-slate-400 font-bold uppercase cursor-pointer hover:text-emerald-600" onclick="setMaxSellQty()">Tümü</span>
                     </div>
-                    <p class="text-[9px] text-slate-400 mt-1 font-semibold">Mevcut: <span id="sellCurrentQtyLabel">0</span></p>
+                    <p class="text-[9px] text-slate-400 mt-1 font-semibold">{{ _('ui_auto_6a456ef0cd95') }} <span id="sellCurrentQtyLabel">0</span></p>
                 </div>
                 
                 <div>
-                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Birim Satış Fiyatı (₺)</label>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">{{ _('ui_auto_ff984c745399') }}</label>
                     <input type="number" id="sellUnitPrice" name="sale_unit_price" step="0.01" min="0" class="w-full p-2.5 border border-slate-200 rounded-xl text-sm font-black focus:ring-2 focus:ring-emerald-500 outline-none text-slate-800" required>
                 </div>
                 
@@ -397,24 +422,40 @@
                 </div>
                 
                 <div>
-                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Not (Opsiyonel)</label>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">{{ _('ui_auto_33482d453373') }}</label>
                     <input type="text" name="note" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 outline-none italic text-slate-500">
                 </div>
                 
-                <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-3">
-                    <p class="text-[9px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Kasaya Aktarılacak Nakit</p>
-                    <p id="sellTotalPreview" class="text-lg font-black text-emerald-700">0.00 ₺</p>
+                <div class="bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 rounded-2xl p-3.5 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{{ _('ui_auto_b6cef04e5636') }}</span>
+                        <span id="sellTotalPreview" class="text-base font-black text-slate-800 dark:text-white">0,00 {{ base_currency_symbol }}</span>
+                    </div>
+                    <div class="flex items-center justify-between text-[11px] pt-1.5 border-t border-slate-200/60 dark:border-slate-700/60">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Maliyet Bedeli</span>
+                        <span id="sellCostPreview" class="font-bold text-slate-600 dark:text-slate-300">0,00 {{ base_currency_symbol }}</span>
+                    </div>
+                    <div class="flex items-center justify-between text-[11px] pt-1.5 border-t border-slate-200/60 dark:border-slate-700/60">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Satış Sonrası Kalan</span>
+                        <span id="sellRemainingQtyPreview" class="font-bold text-slate-600 dark:text-slate-300">0 Adet</span>
+                    </div>
+                    <div class="flex items-center justify-between pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
+                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-500">Tahmini Kâr / Zarar</span>
+                        <span id="sellPnlBadge" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-black bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
+                            0,00 {{ base_currency_symbol }}
+                        </span>
+                    </div>
                 </div>
             </div>
 
             <div id="sellError" class="hidden bg-rose-50 border border-rose-200 rounded-xl px-4 py-3 mb-4 text-xs text-rose-600 font-bold"></div>
 
             <div class="flex gap-3">
-                <button type="button" onclick="closeSellModal()" class="flex-1 px-4 py-3 rounded-xl font-bold text-[11px] uppercase bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">
+                <button data-macro="button_secondary" type="button" onclick="closeSellModal()" class="flex-1 px-4 py-3 rounded-xl font-bold text-[11px] uppercase bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">
                     İptal
                 </button>
-                <button type="submit" id="sellConfirmBtn" class="flex-1 px-4 py-3 rounded-xl font-black text-[11px] uppercase bg-emerald-600 text-white hover:bg-emerald-700 transition shadow-lg cursor-pointer flex items-center justify-center gap-2">
-                    Satışı Onayla
+                <button data-macro="button_secondary" type="submit" id="sellConfirmBtn" class="flex-1 px-4 py-3 rounded-xl font-black text-[11px] uppercase bg-emerald-600 text-white hover:bg-emerald-700 transition shadow-lg cursor-pointer flex items-center justify-center gap-2">
+                    {{ _('ui_auto_7dd6ecb46e77') }}
                 </button>
             </div>
         </form>
@@ -424,18 +465,18 @@
 <!-- Edit Asset Modal -->
         <div class="edit-modal-card">
             <div class="edit-modal-header">
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <div style="display: flex; align-items: center;">
-                        <div style="background: #d1fae5; padding: 0.5rem; border-radius: 0.75rem; margin-right: 0.75rem;">
-                            <svg style="width: 1.25rem; height: 1.25rem; color: #059669;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="bg-emerald-100 p-2 rounded-xl mr-3">
+                            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         </div>
                         <div>
-                            <h3 style="font-size: 1.125rem; font-weight: 900; color: #1e293b; text-transform: uppercase; letter-spacing: -0.025em;">Varlığı Düzenle</h3>
-                            <p style="font-size: 0.625rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Varlık detaylarını güncelle</p>
+                            <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">{{ _('ui_auto_53798b646b4c') }}</h3>
+                            <p class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">{{ _('ui_auto_1fd56792d851') }}</p>
                         </div>
                     </div>
-                    <button type="button" onclick="closeAssetModal()" style="color: #94a3b8; background: none; border: none; cursor: pointer; transition: color 0.2s;">
-                        <svg style="width: 1.5rem; height: 1.5rem;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <button data-macro="button_secondary" type="button" onclick="closeAssetModal()" class="text-slate-400 hover:text-slate-600 transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
             </div>
@@ -447,24 +488,24 @@
                 <input type="hidden" name="preserve_purchase_cost" value="true">
 
                 <div class="full-width">
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Varlık Türü</label>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('ui_auto_b7dd2050e1f4') }}</label>
                     <select name="type" id="modalType" class="edit-modal-input">
                         {% for t in asset_types %}<option value="{{ t.name }}">{{ t.name }}</option>{% endfor %}
                     </select>
                 </div>
 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Varlık Adı</label>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('ui_auto_dedda719fe3d') }}</label>
                     <input type="text" name="name" id="modalName" class="edit-modal-input">
                 </div>
 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Sembol</label>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('ui_auto_3b6b32d9f985') }}</label>
                     <input type="text" name="symbol" id="modalSymbol" class="edit-modal-input">
                 </div>
 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Para Birimi</label>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('ui_auto_62567fd1c207') }}</label>
                     <select name="currency" id="modalCurrency" class="edit-modal-input">
                         <option value="TRY">TRY</option>
                         <option value="USD">USD</option>
@@ -474,71 +515,71 @@
                 </div>
 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Miktar</label>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('ui_auto_3921fdd6f870') }}</label>
                     <input type="number" step="0.01" name="quantity" id="modalQuantity" class="edit-modal-input" oninput="calculateModalValue()">
                 </div>
 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Birim Fiyat (₺)</label>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('ui_auto_53434476d432') }}</label>
                     <input type="number" step="0.01" name="unit_price" id="modalUnitPrice" class="edit-modal-input" oninput="calculateModalValue()">
                 </div>
 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Güncel Değer</label>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('ui_auto_873dc8b6acb2') }}</label>
                     <input type="number" step="0.01" name="value" id="modalValue" class="edit-modal-input" readonly>
                 </div>
 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Alış Tarihi</label>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('ui_auto_74a65b147c81') }}</label>
                     <input type="text" name="purchase_date" id="modalPurchaseDate" class="edit-modal-input">
                 </div>
 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Alış Maliyeti (₺)</label>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('ui_auto_a10e10a30840') }}</label>
                     <input type="number" step="0.01" name="purchase_cost" id="modalPurchaseCost" class="edit-modal-input" readonly>
                 </div>
 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Risk</label>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('ui_auto_5a8f23f567cd') }}</label>
                     <select name="risk_level" id="modalRiskLevel" class="edit-modal-input">
-                        <option value="Düşük">Düşük</option>
+                        <option value="Düşük">{{ _('ui_auto_c496d50ceabd') }}</option>
                         <option value="Orta">Orta</option>
-                        <option value="Yüksek">Yüksek</option>
+                        <option value="Yüksek">{{ _('ui_auto_978d3b149759') }}</option>
                     </select>
                 </div>
 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Likidite</label>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('ui_auto_ac20de26d4ac') }}</label>
                     <select name="liquidity" id="modalLiquidity" class="edit-modal-input">
-                        <option value="Likit">Likit</option>
-                        <option value="Yarı-Likit">Yarı-Likit</option>
-                        <option value="İ-Likit">İ-Likit</option>
+                        <option value="Likit">{{ _('ui_auto_f0ace6de9fe4') }}</option>
+                        <option value="Yarı-Likit">{{ _('ui_auto_d298a3d7c984') }}</option>
+                        <option value="İ-Likit">{{ _('ui_auto_eee74dddc45c') }}</option>
                     </select>
                 </div>
 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Sektör</label>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('ui_auto_19da5231f860') }}</label>
                     <select name="sector_id" id="modalSectorId" class="edit-modal-input">
                         {% for s in asset_sectors %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
                     </select>
                 </div>
 
                 <div class="full-width">
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Açıklama</label>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">Açıklama</label>
                     <input type="text" name="description" id="modalDescription" class="edit-modal-input">
                 </div>
 
                 <div class="full-width">
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Not</label>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">Not</label>
                     <input type="text" name="notes" id="modalNotes" class="edit-modal-input">
                 </div>
 
-                <div class="full-width" style="display: flex; gap: 0.75rem; margin-top: 1rem;">
-                    <button type="submit" style="flex: 1; background: linear-gradient(to right, #10b981, #059669); color: white; font-weight: 900; padding: 1rem; border-radius: 0.75rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; border: none; cursor: pointer; transition: all 0.2s;">
-                        VARLIĞI GÜNCELLE
+                <div class="full-width flex gap-3 mt-4">
+                    <button data-macro="button_secondary" type="submit" class="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-black p-4 rounded-xl shadow-lg uppercase text-xs tracking-wider hover:shadow-xl transition cursor-pointer">
+                        {{ _('ui_auto_d98bde61422b') }}
                     </button>
-                    <button type="button" onclick="closeAssetModal()" style="flex: 0 0 auto; padding: 1rem 2rem; background: #e2e8f0; color: #334155; border-radius: 0.75rem; font-weight: 900; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border: none; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); transition: all 0.2s;">
-                        İPTAL
+                    <button data-macro="button_secondary" type="button" onclick="closeAssetModal()" class="flex-none px-8 py-4 bg-slate-200 text-slate-700 rounded-xl font-black text-xs uppercase tracking-wider shadow-md hover:bg-slate-300 transition cursor-pointer">
+                        {{ _('ui_auto_571a2b59da0f') }}
                     </button>
                 </div>
             </form>
@@ -546,347 +587,13 @@
     </div>
 </div>
 
-<script>
-    // ─── Silme Modal Fonksiyonları ─────────────────────────────────────────────
-    let currentDeleteAssetId = null;
-
-    function confirmDeleteAsset(assetId, assetName) {
-        document.getElementById('deleteAssetName').textContent = assetName;
-        currentDeleteAssetId = assetId;
-        window.openModal('deleteAssetModal');
-        return false;
-    }
-
-    // Delete confirm button click handler
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('deleteAssetConfirmBtn').addEventListener('click', function(e) {
-            e.preventDefault();
-            if (!currentDeleteAssetId) return;
-
-            const formData = new FormData();
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
-                || document.querySelector('input[name="csrf_token"]')?.value;
-            if (csrfToken) {
-                formData.append('csrf_token', csrfToken);
-            }
-
-            fetch(`/del_asset/${currentDeleteAssetId}`, {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                },
-                body: formData,
-            })
-            .then(async response => {
-                const data = await response.json().catch(() => null);
-                if (!data) {
-                    throw new Error('Sunucu yanıtı okunamadı');
-                }
-                return data;
-            })
-            .then(data => {
-                if (data.success) {
-                    window.location.reload();
-                } else {
-                    showToast('Silme başarısız: ' + (data.message || 'Bilinmeyen hata'), 'error');
-                    closeDeleteModal();
-                }
-            })
-            .catch(error => {
-                console.error('Silme hatası:', error);
-                showToast('Silme sırasında bir hata oluştu.', 'error');
-                closeDeleteModal();
-            });
-        });
-    });
-
-    function closeDeleteModal() {
-        window.closeModal('deleteAssetModal');
-        currentDeleteAssetId = null;
-    }
-
-    // Asset Modal Functions
-    function openEditAssetModal(btn) {
-        const form = document.getElementById('editAssetModalForm');
-
-        const id = btn.dataset.id;
-        const type = btn.dataset.type;
-        const name = btn.dataset.name;
-        const symbol = btn.dataset.symbol;
-        const currency = btn.dataset.currency;
-        const description = btn.dataset.description;
-        const quantity = btn.dataset.quantity;
-        const unit_price = btn.dataset.unitPrice;
-        const value = btn.dataset.value;
-        const purchase_date = btn.dataset.purchaseDate;
-        const purchase_cost = btn.dataset.purchaseCost;
-        const risk_level = btn.dataset.riskLevel;
-        const liquidity = btn.dataset.liquidity;
-        const sector_id = btn.dataset.sectorId;
-        const notes = btn.dataset.notes;
-
-        document.getElementById('modalAssetId').value = id;
-        document.getElementById('modalType').value = type;
-        document.getElementById('modalName').value = name;
-        document.getElementById('modalSymbol').value = symbol;
-        document.getElementById('modalCurrency').value = currency;
-        document.getElementById('modalDescription').value = description;
-        document.getElementById('modalQuantity').value = quantity;
-        document.getElementById('modalUnitPrice').value = unit_price;
-        document.getElementById('modalValue').value = value;
-        document.getElementById('modalPurchaseDate').value = purchase_date;
-        document.getElementById('modalPurchaseCost').value = purchase_cost;
-        document.getElementById('modalRiskLevel').value = risk_level;
-        document.getElementById('modalLiquidity').value = liquidity;
-        document.getElementById('modalSectorId').value = sector_id;
-        document.getElementById('modalNotes').value = notes;
-
-        document.getElementById('modalAssetError').classList.remove('active');
-        window.openModal('editAssetModal');
-    }
-
-    function closeAssetModal() {
-        window.closeModal('editAssetModal');
-
-        document.getElementById('editAssetModalForm').reset();
-        document.getElementById('modalAssetError').classList.remove('active');
-    }
-
-    function calculateModalValue() {
-        const q = parseFloat(document.getElementById('modalQuantity').value) || 0;
-        const p = parseFloat(document.getElementById('modalUnitPrice').value) || 0;
-        const v = q * p;
-        document.getElementById('modalValue').value = v.toFixed(2);
-    }
-
-    // AJAX Form Submission
-    document.getElementById('editAssetModalForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        const form = this;
-        const formData = new FormData(form);
-        const assetId = document.getElementById('modalAssetId').value;
-        const errorDiv = document.getElementById('modalAssetError');
-
-        fetch('/edit_asset/' + assetId, {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                closeAssetModal();
-                window.location.reload();
-            } else {
-                errorDiv.textContent = data.message || 'Bir hata oluştu';
-                errorDiv.classList.add('active');
-            }
-        })
-        .catch(error => {
-            console.error('Update error:', error);
-            errorDiv.textContent = 'Güncelleme sırasında bir hata oluştu.';
-            errorDiv.classList.add('active');
-        });
-    });
-    
-    // --- Satış (Sell) Modal Logic ---
-    let currentSellAssetId = null;
-    let currentSellMaxQty = 0;
-    
-    function openSellAssetModal(btn) {
-        currentSellAssetId = btn.dataset.id;
-        const name = btn.dataset.name;
-        currentSellMaxQty = parseFloat(btn.dataset.quantity) || 0;
-        const unitPrice = parseFloat(btn.dataset.unitPrice) || 0;
-        
-        document.getElementById('sellAssetName').textContent = name;
-        document.getElementById('sellCurrentQtyLabel').textContent = currentSellMaxQty.toString();
-        
-        const qtyInput = document.getElementById('sellQuantity');
-        qtyInput.value = currentSellMaxQty;
-        qtyInput.max = currentSellMaxQty;
-        
-        document.getElementById('sellUnitPrice').value = unitPrice.toFixed(2);
-        
-        updateSellPreview();
-        
-        document.getElementById('sellError').classList.add('hidden');
-        document.getElementById('sellAssetModal').classList.remove('hidden');
-    }
-    
-    function closeSellModal() {
-        document.getElementById('sellAssetModal').classList.add('hidden');
-        document.getElementById('sellAssetForm').reset();
-        currentSellAssetId = null;
-    }
-    
-    function setMaxSellQty() {
-        document.getElementById('sellQuantity').value = currentSellMaxQty;
-        updateSellPreview();
-    }
-    
-    function updateSellPreview() {
-        const qty = parseFloat(document.getElementById('sellQuantity').value) || 0;
-        const p = parseFloat(document.getElementById('sellUnitPrice').value) || 0;
-        const total = qty * p;
-        document.getElementById('sellTotalPreview').textContent = new Intl.NumberFormat('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(total) + ' ₺';
-    }
-    
-    document.getElementById('sellQuantity').addEventListener('input', updateSellPreview);
-    document.getElementById('sellUnitPrice').addEventListener('input', updateSellPreview);
-    
-    function submitSellAsset(e) {
-        e.preventDefault();
-        const form = document.getElementById('sellAssetForm');
-        const formData = new FormData(form);
-        const errorDiv = document.getElementById('sellError');
-        const btn = document.getElementById('sellConfirmBtn');
-        
-        errorDiv.classList.add('hidden');
-        btn.disabled = true;
-        btn.style.opacity = '0.7';
-        
-        fetch(`/sell_asset/${currentSellAssetId}`, {
-            method: 'POST',
-            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                closeSellModal();
-                if(window.showToast) window.showToast(data.message, 'success');
-                setTimeout(() => window.location.reload(), 800);
-            } else {
-                errorDiv.textContent = data.message || 'Satış başarısız.';
-                errorDiv.classList.remove('hidden');
-                btn.disabled = false;
-                btn.style.opacity = '1';
-            }
-        })
-        .catch(err => {
-            errorDiv.textContent = 'Bağlantı hatası, lütfen tekrar deneyin.';
-            errorDiv.classList.remove('hidden');
-            btn.disabled = false;
-            btn.style.opacity = '1';
-        });
-    }
-
-    const CHART_COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#64748b', '#06b6d4', '#84cc16', '#f97316'];
-    
-    function formatMoneyTr(value) {
-        var val = value;
-        if (typeof value === 'string') {
-            val = parseFloat(value);
-            if (isNaN(val)) val = 0;
-        }
-        return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val) + ' ₺';
-    }
-
-    // ── Varlık Tipi Dağılımı ──────────────────────────────────────────────
-    const pageData = document.getElementById('assets-view-page');
-    try {
-        const typeLabels = pageData ? JSON.parse(pageData.getAttribute('data-type-labels') || '[]') : [];
-        const typeValues = pageData ? JSON.parse(pageData.getAttribute('data-type-values') || '[]') : [];
-
-        if (typeLabels.length > 0) {
-        new Chart(document.getElementById('typePieChart'), {
-            type: 'doughnut',
-            data: {
-                labels: typeLabels,
-                datasets: [{
-                                data: typeValues.map(v => Number(v) || 0),
-                    backgroundColor: CHART_COLORS,
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '70%',
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { boxWidth: 12, font: { size: 10, weight: 'bold' }, padding: 15 }
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(15, 23, 42, 0.92)',
-                        titleFont: { size: 11, weight: 'bold' },
-                        bodyFont: { size: 12 },
-                        padding: 12,
-                        callbacks: {
-                            label: function(ctx) {
-                                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                                const pct = ((ctx.parsed / total) * 100).toFixed(1);
-                                return ctx.label + ': ' + formatMoneyTr(ctx.parsed) + ' (' + pct + '%)';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    // ── Risk Seviyesi Dağılımı ────────────────────────────────────────────
-    const riskDataRaw = pageData ? JSON.parse(pageData.getAttribute('data-risk-analysis') || '{}') : {};
-    const riskLabels  = Object.keys(riskDataRaw);
-    const riskValues  = riskLabels.map(k => riskDataRaw[k].value || 0);
-    const riskColors  = { 'Düşük': '#10b981', 'Orta': '#f59e0b', 'Yüksek': '#ef4444' };
-    const riskBgColors = riskLabels.map(k => riskColors[k] || '#64748b');
-
-    if (riskValues.some(v => v > 0)) {
-        new Chart(document.getElementById('riskPieChart'), {
-            type: 'doughnut',
-            data: {
-                labels: riskLabels,
-                datasets: [{
-                    data: riskValues,
-                    backgroundColor: riskBgColors,
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '70%',
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { boxWidth: 12, font: { size: 10, weight: 'bold' }, padding: 15 }
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(15, 23, 42, 0.92)',
-                        titleFont: { size: 11, weight: 'bold' },
-                        bodyFont: { size: 12 },
-                        padding: 12,
-                        callbacks: {
-                            label: function(ctx) {
-                                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                                const pct = ((ctx.parsed / total) * 100).toFixed(1);
-                                return ctx.label + ': ' + formatMoneyTr(ctx.parsed) + ' (' + pct + '%)';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-    } catch(e) {
-        console.error('Error parsing assets view data:', e);
-    }
-</script>
 </div>
 {% else %}
 <div class="premium-card p-20 text-center">
     <div class="text-5xl mb-4">🏜️</div>
-    <h3 class="text-lg font-black text-slate-400 uppercase">Henüz varlık verisi girilmemiş</h3>
-    <p class="text-sm text-slate-400 mt-2 mb-6">Portföyünüzü oluşturmak için ilk varlığınızı ekleyin</p>
-    <a href="/assets_management" class="inline-block bg-slate-900 text-white px-8 py-3 rounded-xl font-bold text-[10px] uppercase transition hover:bg-emerald-600">Varlık Girişi Yap</a>
+    <h3 class="text-lg font-black text-slate-400 uppercase">{{ _('ui_auto_202c5a2d9a7c') }}</h3>
+    <p class="text-sm text-slate-400 mt-2 mb-6">{{ _('ui_auto_c6de5a65f1a2') }}</p>
+    <a href="/assets_management" class="inline-block bg-slate-900 text-white px-8 py-3 rounded-xl font-bold text-[10px] uppercase transition hover:bg-emerald-600">{{ _('ui_auto_cc088c793771') }}</a>
 </div>
 {% endif %}
 {% endblock %}

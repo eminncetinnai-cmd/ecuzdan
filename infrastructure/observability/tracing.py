@@ -85,7 +85,7 @@ def setup_tracing(
     if not _OTEL_AVAILABLE:  # pragma: no cover (depends on installed packages)
         logger.info(
             "OpenTelemetry packages not installed — tracing is disabled (no-op). "
-            "Install requirements-observability.txt to enable."
+            "Install configuration/dependencies/requirements-observability.txt to enable."
         )
         _TRACER_PROVIDER = TracerProvider()  # type: ignore[call-arg]
         return _TRACER_PROVIDER

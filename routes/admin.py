@@ -1,4 +1,4 @@
-﻿"""
+"""
 Admin Routes - Sistem Admin Paneli
 Tenant yÃ¶netimi ve sistem yÃ¶neticisi iÅŸlemleri
 """
@@ -7,14 +7,17 @@ import logging
 
 from flask import flash, redirect, render_template, request, session, url_for
 
-from bootstrap.container import get_container
 from utils.auth_helpers import login_required, require_role, superadmin_required
 
 logger = logging.getLogger(__name__)
 
 
+def get_container():
+    from bootstrap.container import get_container as _gc
+    return _gc()
+
+
 def _get_admin_service():
-    from bootstrap.container import get_container
     return get_container().applications.admin()
 
 
@@ -291,6 +294,7 @@ def register_admin_routes(bp):
 
     # â”€â”€â”€ SÄ°STEM DURUMU â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
+    @bp.route('/', methods=['GET'])
     @bp.route('/dashboard', methods=['GET'])
     @login_required
     @require_role('sistem_yoneticisi', 'tenant_yoneticisi')
@@ -307,4 +311,108 @@ def register_admin_routes(bp):
             logger.error("Admin dashboard error: %s", e)
             flash('Dashboard yÃ¼klenirken hata oluÅŸtu.', 'error')
             return redirect(url_for('dashboard.index'))
+
+    @bp.route('/design_system', methods=['GET'])
+    @login_required
+    @require_role('sistem_yoneticisi', 'tenant_yoneticisi')
+    def design_system():
+        """
+        Tasarım sistemi ve UI bileşen kataloğu
+        """
+        return render_template('admin_design_system.html')
+
+    # ─── CANLI DENETİM & DEFTER BÜTÜNLÜĞÜ ─────────────────────────
+
+    @bp.route('/audit', methods=['GET'])
+    @bp.route('/integrity', methods=['GET'])
+    @login_required
+    @require_role('sistem_yoneticisi', 'tenant_yoneticisi')
+    def audit_dashboard():
+        """Canlı Denetim, Kriptografik Defter Bütünlüğü ve Sistem Güvenliği Paneli."""
+        try:
+            current_user = admin_service.get_current_user(session['user_id'])
+            is_superadmin = (getattr(current_user, 'role', '') == 'sistem_yoneticisi')
+            tenant_id = None if is_superadmin else getattr(current_user, 'tenant_id', None)
+
+            from sqlalchemy import text
+
+            from domain.ledger.services.ledger_watchdog_service import RuntimeLedgerWatchdog
+            from models import AuditLog, db
+
+            watchdog = RuntimeLedgerWatchdog()
+            if is_superadmin or not tenant_id:
+                audit_result = watchdog.audit_all_tenants()
+            else:
+                audit_result = watchdog.audit_tenant(tenant_id)
+
+            pragma_integrity = "ok"
+            pragma_journal = "wal"
+            try:
+                res = db.session.execute(text("PRAGMA integrity_check")).scalar()
+                pragma_integrity = str(res) if res else "unknown"
+                j_mode = db.session.execute(text("PRAGMA journal_mode")).scalar()
+                pragma_journal = str(j_mode) if j_mode else "unknown"
+            except Exception as pe:
+                logger.warning("PRAGMA check warning: %s", pe)
+
+            query = AuditLog.query
+            if not is_superadmin and tenant_id:
+                query = query.filter_by(tenant_id=tenant_id)
+            recent_logs = query.order_by(AuditLog.id.desc()).limit(20).all()
+
+            context = {
+                'current_user': current_user,
+                'is_superadmin': is_superadmin,
+                'audit_result': audit_result,
+                'pragma_integrity': pragma_integrity,
+                'pragma_journal': pragma_journal,
+                'recent_logs': recent_logs,
+            }
+            return render_template('admin_audit.html', **context)
+        except Exception as e:
+            logger.error("Audit dashboard error: %s", e)
+            flash(f'Denetim paneli yüklenirken hata oluştu: {str(e)}', 'error')
+            return redirect(url_for('admin.admin_dashboard'))
+
+    @bp.route('/audit/run-watchdog', methods=['POST'])
+    @login_required
+    @require_role('sistem_yoneticisi', 'tenant_yoneticisi')
+    def run_watchdog_scan():
+        """Tetiklenen anlık derin defter ve kriptografik zincir denetimi."""
+        try:
+            current_user = admin_service.get_current_user(session['user_id'])
+            is_superadmin = (getattr(current_user, 'role', '') == 'sistem_yoneticisi')
+            tenant_id = None if is_superadmin else getattr(current_user, 'tenant_id', None)
+
+            from domain.ledger.services.ledger_watchdog_service import RuntimeLedgerWatchdog
+            watchdog = RuntimeLedgerWatchdog()
+            report = watchdog.audit_all_tenants() if (is_superadmin or not tenant_id) else watchdog.audit_tenant(tenant_id)
+
+            from utils.audit import audit_log
+            audit_log(
+                "LEDGER_AUDIT_ON_DEMAND",
+                user_id=session.get('user_id'),
+                username=getattr(current_user, 'username', 'admin'),
+                tenant_id=getattr(current_user, 'tenant_id', None),
+                details={
+                    'healthy': report.healthy,
+                    'error_count': report.error_count,
+                    'total_journal_entries': report.total_journal_entries,
+                    'total_ledger_lines': report.total_ledger_lines,
+                    'total_paid_transactions': report.total_paid_transactions,
+                }
+            )
+            from models import db
+            db.session.commit()
+
+            if report.healthy:
+                flash(f"Bütünlük Taraması Başarılı: {report.total_journal_entries} yevmiye kaydı, {report.total_ledger_lines} defter satırı ve kriptografik zincir doğrulandı. 0 hata.", 'success')
+            else:
+                flash(f"Bütünlük Uyarısı: {report.error_count} adet uyumsuzluk tespit edildi!", 'error')
+        except Exception as e:
+            logger.error("Run watchdog scan error: %s", e)
+            flash(f"Tarama sırasında hata oluştu: {str(e)}", 'error')
+
+        return redirect(url_for('admin.audit_dashboard'))
+
 

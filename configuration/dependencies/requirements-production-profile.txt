@@ -1,0 +1,6 @@
+# E-Cüzdan production/release image profile.
+# Runtime dependencies are included; development/test and browser-only packages stay separate.
+-r requirements-runtime.txt
+gunicorn>=23,<24
+psycopg[binary]>=3.2,<4
+redis>=5,<6

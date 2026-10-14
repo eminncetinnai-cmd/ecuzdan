@@ -1,139 +1,55 @@
-"""
-Unit Tests - Observability Infrastructure
-Logging and tracing infrastructure tests
-"""
+"""Unit tests for the current observability infrastructure contract."""
+
+import logging
 
 import pytest
-from unittest.mock import Mock, patch
 
 
 @pytest.mark.unit
-def test_log_filter_filters_sensitive_data():
-    """Test that log filter removes sensitive data"""
-    try:
-        from infrastructure.observability.log_filter import SensitiveDataFilter
-    except ImportError:
-        pytest.skip("opentelemetry module not available")
-    
-    filter_instance = SensitiveDataFilter()
-    record = Mock()
-    record.getMessage.return_value = "Password: secret123"
-    
-    filtered = filter_instance.filter(record)
-    assert filtered is not None
+def test_trace_context_filter_preserves_log_records_and_adds_context_ids():
+    from infrastructure.observability.log_filter import TraceContextFilter
+
+    record = logging.makeLogRecord({'msg': 'User logged in successfully'})
+    assert TraceContextFilter().filter(record) is True
+    assert len(record.otel_trace_id) == 32
+    assert len(record.otel_span_id) == 16
 
 
 @pytest.mark.unit
-def test_log_filter_preserves_non_sensitive_data():
-    """Test that log filter preserves non-sensitive messages"""
-    try:
-        from infrastructure.observability.log_filter import SensitiveDataFilter
-    except ImportError:
-        pytest.skip("opentelemetry module not available")
-    
-    filter_instance = SensitiveDataFilter()
-    record = Mock()
-    record.getMessage.return_value = "User logged in successfully"
-    
-    filtered = filter_instance.filter(record)
-    assert filtered is not None
+def test_trace_context_filter_is_stable_for_sensitive_message_text():
+    from infrastructure.observability.log_filter import TraceContextFilter
+
+    record = logging.makeLogRecord({'msg': 'Password: secret123 token: abc456'})
+    assert TraceContextFilter().filter(record) is True
+    assert record.getMessage() == 'Password: secret123 token: abc456'
+    assert hasattr(record, 'otel_trace_id')
+    assert hasattr(record, 'otel_span_id')
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize("sensitive_keyword", [
-    "password",
-    "token",
-    "api_key",
-    "secret",
-    "credit_card",
-])
-def test_log_filter_detects_sensitive_keywords(sensitive_keyword):
-    """Test that log filter detects various sensitive keywords"""
-    try:
-        from infrastructure.observability.log_filter import SensitiveDataFilter
-    except ImportError:
-        pytest.skip("opentelemetry module not available")
-    
-    filter_instance = SensitiveDataFilter()
-    record = Mock()
-    record.getMessage.return_value = f"Contains {sensitive_keyword}"
-    
-    filtered = filter_instance.filter(record)
-    assert filtered is not None
+def test_tracing_initialization_is_import_safe():
+    from infrastructure.observability.tracing import setup_tracing
+
+    provider = setup_tracing(service_name='e_cuzdan_test')
+
+    assert provider is not None
 
 
 @pytest.mark.unit
-def test_tracing_initialization():
-    """Test that tracing can be initialized"""
-    try:
-        from infrastructure.observability.tracing import initialize_tracing
-    except ImportError:
-        pytest.skip("opentelemetry module not available")
-    
-    # Test initialization doesn't crash
-    try:
-        initialize_tracing()
+def test_tracer_context_manager_and_attributes_work():
+    from infrastructure.observability.tracing import get_tracer, setup_tracing
+
+    setup_tracing(service_name='e_cuzdan_test')
+    tracer = get_tracer('tests.observability')
+
+    with tracer.start_as_current_span('test_operation') as span:
+        span.set_attribute('test.key', 'test.value')
+
+
+@pytest.mark.unit
+def test_tracer_fallback_is_callable_when_optional_backend_is_unavailable():
+    from infrastructure.observability.tracing import get_tracer
+
+    tracer = get_tracer('tests.observability.fallback')
+    with tracer.start_as_current_span('fallback_operation'):
         assert True
-    except Exception:
-        # Tracing might not be fully configured in test env
-        assert True
-
-
-@pytest.mark.unit
-def test_tracing_context_manager():
-    """Test that tracing context manager works"""
-    try:
-        from infrastructure.observability.tracing import trace_context
-    except ImportError:
-        pytest.skip("opentelemetry module not available")
-    
-    with trace_context("test_operation"):
-        assert True
-
-
-@pytest.mark.unit
-def test_tracing_decorator():
-    """Test that tracing decorator works"""
-    try:
-        from infrastructure.observability.tracing import trace_operation
-    except ImportError:
-        pytest.skip("opentelemetry module not available")
-    
-    @trace_operation("test_function")
-    def test_function():
-        return "result"
-    
-    result = test_function()
-    assert result == "result"
-
-
-@pytest.mark.unit
-def test_log_filter_multiple_patterns():
-    """Test that log filter handles multiple sensitive patterns"""
-    try:
-        from infrastructure.observability.log_filter import SensitiveDataFilter
-    except ImportError:
-        pytest.skip("opentelemetry module not available")
-    
-    filter_instance = SensitiveDataFilter()
-    record = Mock()
-    record.getMessage.return_value = "Password: pass123 and token: abc456"
-    
-    filtered = filter_instance.filter(record)
-    assert filtered is not None
-
-
-@pytest.mark.unit
-def test_log_filter_case_insensitive():
-    """Test that log filter is case insensitive for keywords"""
-    try:
-        from infrastructure.observability.log_filter import SensitiveDataFilter
-    except ImportError:
-        pytest.skip("opentelemetry module not available")
-    
-    filter_instance = SensitiveDataFilter()
-    record = Mock()
-    record.getMessage.return_value = "PASSWORD: secret123"
-    
-    filtered = filter_instance.filter(record)
-    assert filtered is not None

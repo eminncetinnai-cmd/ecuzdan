@@ -1,6 +1,9 @@
 from datetime import datetime, timezone
+
+from sqlalchemy import Index, Numeric
+
 from shared.db import db
-from sqlalchemy import Numeric, Index
+
 
 def utcnow_naive():
     return datetime.now(timezone.utc).replace(tzinfo=None)
@@ -21,11 +24,11 @@ class Account(db.Model):
     name = db.Column(db.String(100), nullable=False)
     type = db.Column(db.String(20), nullable=False) # 'Asset', 'Liability', 'Equity', 'Revenue', 'Expense'
     currency = db.Column(db.String(3), default='TRY', nullable=False)
-    
+
     # Hierarchical chart of accounts
     parent_id = db.Column(db.Integer, db.ForeignKey('account.id'), nullable=True)
     parent = db.relationship('Account', remote_side=[id], backref='children')
-    
+
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     created_at = db.Column(db.DateTime, default=utcnow_naive)
 
@@ -49,17 +52,17 @@ class JournalEntry(db.Model):
     tenant_id = db.Column(db.String(50), db.ForeignKey('tenant.id'), nullable=False)
     date = db.Column(db.String(10), nullable=False) # YYYY-MM-DD
     description = db.Column(db.String(200), nullable=True)
-    
+
     # Hashing for Immutable Ledger
     hash = db.Column(db.String(64), nullable=False, unique=True)
     previous_hash = db.Column(db.String(64), nullable=True) # None for the genesis block
 
     created_at = db.Column(db.DateTime, default=utcnow_naive)
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
-    
+
     # Status (e.g. 'Posted', 'Reversed')
     status = db.Column(db.String(20), default='Posted', nullable=False)
-    
+
     tenant = db.relationship('Tenant', backref='journal_entries')
 
     def __repr__(self):
@@ -79,7 +82,7 @@ class LedgerLine(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     journal_entry_id = db.Column(db.Integer, db.ForeignKey('journal_entry.id'), nullable=False)
     account_id = db.Column(db.Integer, db.ForeignKey('account.id'), nullable=False)
-    
+
     # Financial Fields
     debit = db.Column(Numeric(19, 4), default=0.0000, nullable=False)
     credit = db.Column(Numeric(19, 4), default=0.0000, nullable=False)

@@ -1,0 +1,32 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# E-CÜZDAN FORBIDDEN PATTERNS REGISTRY
+# Filename patterns, extensions, and anti-patterns strictly forbidden.
+# ═══════════════════════════════════════════════════════════════════════════════
+version: "1.0.0"
+
+forbidden_filename_patterns:
+  - pattern: ".*_final\\..*"
+    reason: "Use git version control instead of final tags"
+  - pattern: ".*_final[0-9]*\\..*"
+    reason: "Use git version control instead of final tags"
+  - pattern: ".*_v[0-9]+\\..*"
+    reason: "Use git history or formal module refactor instead of v2/v3 in filenames"
+  - pattern: ".*_new\\..*"
+    reason: "Rename or edit the existing file directly"
+  - pattern: ".*_old\\..*"
+    reason: "Use git history instead of old files"
+  - pattern: ".*_backup\\..*"
+    reason: "Backup files must not reside in source code directories"
+  - pattern: ".*_copy\\..*"
+    reason: "Copy files indicate duplicate logic and clutter"
+  - pattern: ".*_temp\\..*"
+    reason: "Temporary work must reside in .work/"
+  - pattern: ".*_tmp\\..*"
+    reason: "Temporary work must reside in .work/"
+  - pattern: "^fix[0-9]*\\..*"
+    reason: "Probe and fix scripts must reside in .work/"
+  - pattern: "^debug[0-9]*\\..*"
+    reason: "Debug scripts must reside in .work/"
+  - pattern: ".*_probe\\..*"
+    location_exception: ".work/**"
+    reason: "Probes must reside in .work/probes/"

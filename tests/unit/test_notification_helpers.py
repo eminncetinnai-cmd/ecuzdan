@@ -1,19 +1,21 @@
 """
+
 Unit Tests - Notification Helpers
 Flash message and notification utility functions
 """
 
 import pytest
 from flask import Flask, flash, get_flashed_messages
+
 from utils.notification_helpers import (
-    flash_success,
+    NOTIFICATION_CATEGORIES,
     flash_error,
-    flash_warning,
     flash_info,
     flash_notification,
+    flash_success,
+    flash_warning,
     get_notifications,
     with_notifications,
-    NOTIFICATION_CATEGORIES,
 )
 
 
@@ -47,7 +49,7 @@ def test_flash_success():
     """Test flash_success flashes success message"""
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'test'
-    
+
     with app.test_request_context():
         flash_success('Test success message')
         messages = get_flashed_messages(with_categories=True)
@@ -60,7 +62,7 @@ def test_flash_error():
     """Test flash_error flashes error message"""
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'test'
-    
+
     with app.test_request_context():
         flash_error('Test error message')
         messages = get_flashed_messages(with_categories=True)
@@ -73,7 +75,7 @@ def test_flash_warning():
     """Test flash_warning flashes warning message"""
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'test'
-    
+
     with app.test_request_context():
         flash_warning('Test warning message')
         messages = get_flashed_messages(with_categories=True)
@@ -86,7 +88,7 @@ def test_flash_info():
     """Test flash_info flashes info message"""
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'test'
-    
+
     with app.test_request_context():
         flash_info('Test info message')
         messages = get_flashed_messages(with_categories=True)
@@ -99,7 +101,7 @@ def test_flash_notification_valid_category():
     """Test flash_notification with valid category"""
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'test'
-    
+
     with app.test_request_context():
         flash_notification('Test message', 'success')
         messages = get_flashed_messages(with_categories=True)
@@ -112,7 +114,7 @@ def test_flash_notification_invalid_category():
     """Test flash_notification with invalid category defaults to info"""
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'test'
-    
+
     with app.test_request_context():
         flash_notification('Test message', 'invalid_category')
         messages = get_flashed_messages(with_categories=True)
@@ -125,7 +127,7 @@ def test_flash_notification_default_category():
     """Test flash_notification with default category"""
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'test'
-    
+
     with app.test_request_context():
         flash_notification('Test message')
         messages = get_flashed_messages(with_categories=True)
@@ -138,7 +140,7 @@ def test_get_notifications_empty():
     """Test get_notifications with no messages"""
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'test'
-    
+
     with app.test_request_context():
         notifications = get_notifications()
         assert notifications == []
@@ -149,7 +151,7 @@ def test_get_notifications_success():
     """Test get_notifications with success message"""
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'test'
-    
+
     with app.test_request_context():
         flash('Test success', 'success')
         notifications = get_notifications()
@@ -166,7 +168,7 @@ def test_get_notifications_error():
     """Test get_notifications with error message"""
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'test'
-    
+
     with app.test_request_context():
         flash('Test error', 'error')
         notifications = get_notifications()
@@ -183,7 +185,7 @@ def test_get_notifications_warning():
     """Test get_notifications with warning message"""
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'test'
-    
+
     with app.test_request_context():
         flash('Test warning', 'warning')
         notifications = get_notifications()
@@ -200,7 +202,7 @@ def test_get_notifications_info():
     """Test get_notifications with info message"""
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'test'
-    
+
     with app.test_request_context():
         flash('Test info', 'info')
         notifications = get_notifications()
@@ -217,11 +219,11 @@ def test_get_notifications_multiple():
     """Test get_notifications with multiple messages"""
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'test'
-    
+
     with app.test_request_context():
-        flash('First message', 'success')
-        flash('Second message', 'error')
-        flash('Third message', 'info')
+        flash('Test success', 'success')
+        flash('Test error', 'error')
+        flash('Test info', 'info')
         notifications = get_notifications()
         assert len(notifications) == 3
         assert notifications[0]['category'] == 'success'
@@ -234,7 +236,7 @@ def test_get_notifications_invalid_category():
     """Test get_notifications with invalid category defaults to info"""
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'test'
-    
+
     with app.test_request_context():
         flash('Test message', 'invalid_category')
         notifications = get_notifications()
@@ -250,11 +252,11 @@ def test_with_notifications_decorator():
     """Test with_notifications decorator adds notifications to kwargs"""
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'test'
-    
+
     @with_notifications
     def template_func(**kwargs):
         return kwargs
-    
+
     with app.test_request_context():
         flash('Test message', 'success')
         result = template_func()
@@ -268,11 +270,11 @@ def test_with_notifications_preserves_args():
     """Test with_notifications preserves original args and kwargs"""
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'test'
-    
+
     @with_notifications
     def template_func(arg1, arg2=None, **kwargs):
         return {'arg1': arg1, 'arg2': arg2, **kwargs}
-    
+
     with app.test_request_context():
         flash('Test message', 'success')
         result = template_func('value1', arg2='value2')
@@ -286,11 +288,11 @@ def test_with_notifications_empty_notifications():
     """Test with_notifications with no flash messages"""
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'test'
-    
+
     @with_notifications
     def template_func(**kwargs):
         return kwargs
-    
+
     with app.test_request_context():
         result = template_func()
         assert 'notifications' in result
@@ -304,7 +306,7 @@ def test_with_notifications_preserves_function_metadata():
     def template_func():
         """Template function docstring"""
         return {}
-    
+
     assert template_func.__name__ == 'template_func'
     assert template_func.__doc__ == 'Template function docstring'
 
@@ -313,7 +315,7 @@ def test_with_notifications_preserves_function_metadata():
 def test_notification_helpers_module_structure():
     """Test notification_helpers module structure"""
     import utils.notification_helpers as notification_module
-    
+
     # Check for expected functions
     assert hasattr(notification_module, 'flash_success')
     assert hasattr(notification_module, 'flash_error')

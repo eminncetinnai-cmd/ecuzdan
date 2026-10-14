@@ -9,7 +9,7 @@ from logging.handlers import RotatingFileHandler
 
 # Structured logging import
 try:
-    from utils.structured_logging import setup_structured_logging, JSONFormatter
+    from utils.structured_logging import setup_structured_logging
     STRUCTURED_LOGGING_AVAILABLE = True
 except ImportError:
     STRUCTURED_LOGGING_AVAILABLE = False
@@ -20,6 +20,54 @@ try:
     LOG_SAMPLING_AVAILABLE = True
 except ImportError:
     LOG_SAMPLING_AVAILABLE = False
+
+
+class NonDeletingRotatingFileHandler(RotatingFileHandler):
+    """
+    A RotatingFileHandler that never deletes old log files on rotation.
+    Instead, it archives files with incrementing indexes without deleting backups.
+    """
+    def __init__(self, filename, maxBytes=0, encoding=None, delay=False, **kwargs):
+        super().__init__(filename, maxBytes=maxBytes, backupCount=0, encoding=encoding, delay=delay)
+
+    def shouldRollover(self, record):
+        """Determine if rollover should occur across all Python versions."""
+        if self.stream is None:
+            self.stream = self._open()
+        if self.maxBytes > 0:
+            try:
+                self.stream.seek(0, 2)
+                pos = self.stream.tell()
+            except Exception:
+                pos = 0
+            msg = "%s\n" % self.format(record)
+            if pos + len(msg) >= self.maxBytes:
+                return True
+        return False
+
+    def doRollover(self):
+        if self.stream:
+            self.stream.close()
+            self.stream = None
+
+        if not os.path.exists(self.baseFilename):
+            try:
+                open(self.baseFilename, 'a', encoding=self.encoding or 'utf-8').close()
+            except Exception:
+                pass
+
+        i = 1
+        while True:
+            dfn = f"{self.baseFilename}.{i}"
+            if not os.path.exists(dfn):
+                break
+            i += 1
+
+        if os.path.exists(self.baseFilename):
+            os.rename(self.baseFilename, dfn)
+
+        if not self.delay:
+            self.stream = self._open()
 
 
 def setup_logging(app=None, level=logging.INFO):
@@ -85,22 +133,21 @@ def setup_logging(app=None, level=logging.INFO):
     _attach_common_filters(error_handler)
 
     # SECURITY log file handler (separate file)
-    security_handler = RotatingFileHandler(
+    security_handler = NonDeletingRotatingFileHandler(
         os.path.join(log_dir, 'e_cuzdan_security.log'),
         maxBytes=5 * 1024 * 1024,
-        backupCount=5,
         encoding='utf-8'
     )
     security_handler.setFormatter(formatter)
     security_handler.setLevel(logging.INFO)
-    
+
     # Security filter to only log security-related messages
     class SecurityFilter(logging.Filter):
         def filter(self, record):
             security_keywords = ['authentication', 'unauthorized', 'security', 'login', 'logout', 'permission', 'access']
             message = record.getMessage().lower()
             return any(keyword in message for keyword in security_keywords)
-    
+
     security_handler.addFilter(SecurityFilter())
     _attach_common_filters(security_handler)
 
@@ -131,6 +178,14 @@ def setup_logging(app=None, level=logging.INFO):
         except Exception as e:
             logging.getLogger(__name__).warning(f"Log sampling setup failed: {e}")
 
+    try:
+        from utils.monitoring_stream import MonitoringSSEHandler
+        sse_handler = MonitoringSSEHandler()
+        sse_handler.setLevel(logging.INFO)
+        root_logger.addHandler(sse_handler)
+    except Exception as e:
+        logging.getLogger(__name__).warning(f"Monitoring SSE handler setup failed: {e}")
+
     # Set specific log levels for external libraries
     logging.getLogger('werkzeug').setLevel(logging.WARNING)
     logging.getLogger('urllib3').setLevel(logging.WARNING)
@@ -139,6 +194,9 @@ def setup_logging(app=None, level=logging.INFO):
     logging.getLogger('hpack').setLevel(logging.WARNING)
     logging.getLogger('httpcore').setLevel(logging.WARNING)
     logging.getLogger('httpx').setLevel(logging.WARNING)
+    logging.getLogger('routes.monitoring').setLevel(logging.WARNING)
+    logging.getLogger('QuizQuestionsSeed').setLevel(logging.WARNING)
+    logging.getLogger('domain.demo.startup_validation').setLevel(logging.WARNING)
 
     if app:
         app.logger.handlers = root_logger.handlers

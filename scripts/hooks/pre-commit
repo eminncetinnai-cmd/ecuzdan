@@ -1,0 +1,46 @@
+#!/bin/sh
+# E-Cüzdan — Pre-Commit Kalite ve Mimari Kapısı Hook'u
+# Bu hook her git commit öncesi tasarım sistemi, mimari kurallarını ve tip doğruluğunu otomatik denetler.
+
+echo "========================================================"
+echo "E-Cuzdan Git Pre-Commit Kalite Kapilari Calisiyor..."
+echo "========================================================"
+
+# 1. Tasarım Sistemi Kontrolü (Ratchet)
+echo "--> [1/3] Tasarim sistemi linter'i calistiriliyor..."
+python scripts/check_design_system.py --ratchet
+if [ $? -ne 0 ]; then
+    echo "HATA: Tasarim sistemi kural ihlali tespit edildi! Commit engellendi."
+    echo "Duzeltme icin: docs/AI_AGENT_DESIGN_SYSTEM.md veya ecuzdan-visual-fix skill'ine bakin."
+    exit 1
+fi
+
+# 2. Mimari Kapısı (BLOCK Modu)
+echo "--> [2/3] EAFGS Mimari Kapisi calistiriliyor..."
+powershell -ExecutionPolicy Bypass -File scripts/governance/run_architecture_gate.ps1 -Mode BLOCK
+if [ $? -ne 0 ]; then
+    echo "HATA: EAFGS mimari kural ihlali tespit edildi! Commit engellendi."
+    echo "Duzeltme icin: AGENTS.md dosyasina bakin."
+    exit 1
+fi
+
+# 3. Statik Tip Kontrolü (Mypy)
+echo "--> [3/4] Statik tip kontrolu (Mypy) calistiriliyor..."
+python scripts/check_type_annotations.py
+if [ $? -ne 0 ]; then
+    echo "HATA: Mypy tip kontrolunde hata bulundu! Commit engellendi."
+    exit 1
+fi
+
+# 4. Canlı Defter ve Bakiye Sapma Bekçisi
+echo "--> [4/4] Canli Defter ve Bakiye Sapma Bekcisi calistiriliyor..."
+python scripts/run_ledger_watchdog.py
+if [ $? -ne 0 ]; then
+    echo "HATA: Defter dengesinde, SHA-256 zincirinde veya nakit bakiye mutabakatinda sapma bulundu! Commit engellendi."
+    exit 1
+fi
+
+echo "========================================================"
+echo "Tum kalite kapilari basariyla gecildi. Commit yapiliyor."
+echo "========================================================"
+exit 0

@@ -6,6 +6,7 @@ from application.base import Command
 from application.ports.outbox_port import OutboxPort
 from domain.transactions.events import TransactionDeletedEvent
 from domain.transactions.services import delete_one_time_transaction
+from utils.audit import audit_log
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,8 @@ class DeleteTransactionCommand(Command):
     def execute(self, tx_id, tenant_id=None):
         # Domain logic
         result = delete_one_time_transaction(tx_id, tenant_id=tenant_id)
+
+        audit_log('TRANSACTION_DELETED', user_id=None, username=None, tenant_id=tenant_id, entity_type='transaction', entity_id=tx_id, details={'result': str(result)})
 
         # Outbox event
         event = TransactionDeletedEvent(

@@ -14,8 +14,10 @@ class SettingsApplicationService(ApplicationService):
     def update_profile_image(self, user_id, image_path):
         return self.execute(lambda: self.settings_service.update_profile_image(user_id, image_path))
 
-    def change_password(self, user_id, new_password):
-        return self.execute(lambda: self.settings_service.change_password(user_id, new_password))
+    def change_password(self, user_id, new_password, current_password=None):
+        return self.execute(
+            lambda: self.settings_service.change_password(user_id, new_password, current_password=current_password)
+        )
 
     def change_language(self, user_id, language):
         from infrastructure.i18n import i18n  # utility — lives in application layer, not domain
@@ -60,3 +62,12 @@ class SettingsApplicationService(ApplicationService):
 
     def reset_data(self, current_user_id, password):
         return self.execute(lambda: self.settings_service.reset_data(current_user_id, password))
+
+    def apply_special_code(self, user_id, new_role, code_fingerprint):
+        return self.execute(
+            lambda: self.settings_service.apply_special_code(user_id, new_role, code_fingerprint)
+        )
+
+    def commit(self):
+        return self.execute(lambda: self.settings_service.commit())
+

@@ -6,6 +6,7 @@ Phase 10: Benchmark comparison (BIST100, S&P500, Gold, USD, etc.)
 """
 
 import logging
+import math
 from datetime import datetime
 from typing import Dict, List
 
@@ -395,6 +396,3 @@ class BenchmarkComparator:
             }
             for code in BenchmarkComparator.BENCHMARKS
         ]
-
-
-import math

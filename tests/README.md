@@ -198,7 +198,7 @@ def test_turkey_macro_constants():
 ## Troubleshooting
 
 ### Tests Fail with Import Errors
-- Ensure all dependencies are installed: `pip install -r requirements.txt`
+- Ensure all dependencies are installed: `pip install -r configuration/dependencies/requirements.txt`
 - Check that the Python path includes the project root
 
 ### Tests Fail with Database Errors

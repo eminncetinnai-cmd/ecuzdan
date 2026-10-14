@@ -3,16 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hesap Oluştur - E-Cüzdan</title>
+<title>{{ _('ui_auto_d4cf37faa46c') }}</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --night:#030712;--deep:#080d1a;--accent:#7c3aed;--accent2:#6366f1;
-  --emerald:#10b981;--gold:#f59e0b;
-  --surface:rgba(255,255,255,.04);--border:rgba(255,255,255,.08);
-}
-html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--night);color:#fff;}
+:root {
+            --night: #030712;
+            --deep: #080d1a;
+            --accent: #7c3aed;
+            --accent2: #6366f1;
+            --gold: #f59e0b;
+            --emerald: #10b981;
+            --surface: rgba(255,255,255,0.04);
+            --border: rgba(255,255,255,0.08);
+            --text-main: #f8fafc;
+            --color-white: #ffffff;
+        }
+html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--night);color:var(--color-surface);}
 body{overflow-x:hidden;}
 #particle-canvas{position:fixed;inset:0;pointer-events:none;z-index:0;}
 .shell{position:relative;z-index:1;display:flex;min-height:100vh;width:100vw;}
@@ -20,7 +27,7 @@ body{overflow-x:hidden;}
 /* LEFT */
 .left-panel{
   display:none;flex:0 0 50%;position:relative;overflow:hidden;
-  background:linear-gradient(135deg,#080d1a 0%,#0d1129 50%,#0a0d1f 100%);
+  background:linear-gradient(135deg,var(--color-night-900) 0%,var(--color-night-850) 50%,var(--color-night-800) 100%);
   border-right:1px solid rgba(124,58,237,.15);flex-direction:column;
 }
 @media(min-width:1024px){.left-panel{display:flex;}}
@@ -41,51 +48,51 @@ body{overflow-x:hidden;}
 /* Brand */
 .brand{display:flex;align-items:center;gap:14px;}
 .brand-icon{
-  width:46px;height:46px;border-radius:14px;
-  background:linear-gradient(135deg,#7c3aed 0%,#4f46e5 60%,var(--gold) 160%);
+  width:46px;height:46px;border-radius: var(--border-radius-14, 14px);
+  background:linear-gradient(135deg,var(--color-violet-600) 0%,var(--color-indigo-600) 60%,var(--gold) 160%);
   display:flex;align-items:center;justify-content:center;
-  font-size:18px;font-weight:900;color:#fff;
+  font-size: var(--font-size-18, 18px);font-weight:900;color:var(--c, var(--color-white, #ffffff)f);
   box-shadow:0 8px 24px rgba(124,58,237,.4);border:1px solid rgba(255,255,255,.15);
 }
-.brand-name{font-size:18px;font-weight:900;color:#fff;}
-.brand-sub{font-size:9px;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:.25em;margin-top:2px;}
+.brand-name{font-size: var(--font-size-18, 18px);font-weight:900;color:var(--c, var(--color-white, #ffffff)f);}
+.brand-sub{font-size: var(--font-size-9, 9px);font-weight:700;color:var(--color-violet-600);text-transform:uppercase;letter-spacing:.25em;margin-top:2px;}
 
 /* Hero */
 .hero-section{flex:1;display:flex;flex-direction:column;justify-content:center;gap:2rem;}
 .badge-pill{
   display:inline-flex;align-items:center;gap:8px;
-  padding:6px 14px;border-radius:999px;
+  padding: var(--space-pad-6, 6px) 14px;border-radius: var(--border-radius-999, 999px);
   background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.25);
   width:fit-content;
 }
 .badge-dot{
-  width:7px;height:7px;border-radius:50%;background:#10b981;
+  width:7px;height:7px;border-radius:50%;background:var(--emerald);
   box-shadow:0 0 8px rgba(16,185,129,.8);
   animation:pulse-dot 2s ease-in-out infinite;
 }
 @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.7)}}
-.badge-text{font-size:10px;font-weight:700;color:#6ee7b7;letter-spacing:.15em;text-transform:uppercase;}
-.hero-title{font-size:clamp(2rem,3vw,2.8rem);font-weight:900;line-height:1.08;letter-spacing:-.04em;color:#fff;}
+.badge-text{font-size: var(--font-size-10, 10px);font-weight:700;color:var(--emerald-300);letter-spacing:.15em;text-transform:uppercase;}
+.hero-title{font-size:clamp(2rem,3vw,2.8rem);font-weight:900;line-height:1.08;letter-spacing:-.04em;color:var(--color-surface);}
 .hero-title span{
-  background:linear-gradient(135deg,#a78bfa 0%,#818cf8 40%,#10b981 100%);
+  background:linear-gradient(135deg,var(--color-violet-400) 0%,var(--color-indigo-400) 40%,var(--emerald) 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
 }
-.hero-sub{font-size:13px;color:rgba(255,255,255,.4);line-height:1.7;max-width:380px;margin-top:.8rem;}
+.hero-sub{font-size: var(--font-size-13, 13px);color:rgba(255,255,255,.4);line-height:1.7;max-width:380px;margin-top:.8rem;}
 .feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .feature-card{
-  background:var(--surface);border:1px solid var(--border);border-radius:16px;
-  padding:16px;position:relative;overflow:hidden;
+  background:var(--surface);border:1px solid var(--border);border-radius: var(--border-radius-16, 16px);
+  padding: var(--space-pad-16, 16px);position:relative;overflow:hidden;
 }
 .feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--stripe);}
-.feat-icon{font-size:20px;margin-bottom:6px;}
-.feat-title{font-size:11px;font-weight:700;color:#fff;}
-.feat-sub{font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;}
-.left-footer{font-size:10px;font-weight:600;color:rgba(255,255,255,.18);letter-spacing:.1em;text-transform:uppercase;}
+.feat-icon{font-size: var(--font-size-20, 20px);margin-bottom:6px;}
+.feat-title{font-size: var(--font-size-11, 11px);font-weight:700;color:var(--color-surface);}
+.feat-sub{font-size: var(--font-size-10, 10px);color:rgba(255,255,255,.4);margin-top:2px;}
+.left-footer{font-size: var(--font-size-10, 10px);font-weight:600;color:rgba(255,255,255,.18);letter-spacing:.1em;text-transform:uppercase;}
 
 /* RIGHT */
 .right-panel{
   flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;
-  background:#050a14;padding:2rem;overflow-y:auto;position:relative;
+  background:var(--deep);padding:2rem;overflow-y:auto;position:relative;
 }
 .right-panel::before{
   content:'';position:absolute;width:600px;height:600px;border-radius:50%;
@@ -95,25 +102,25 @@ body{overflow-x:hidden;}
 .form-shell{width:100%;max-width:420px;position:relative;z-index:2;}
 .mobile-brand{display:flex;align-items:center;gap:12px;margin-bottom:2rem;}
 @media(min-width:1024px){.mobile-brand{display:none;}}
-.form-eyebrow{font-size:10px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:.2em;margin-bottom:8px;}
-.form-title{font-size:2rem;font-weight:900;letter-spacing:-.04em;color:#fff;line-height:1;margin-bottom:6px;}
-.form-subtitle{font-size:13px;color:rgba(255,255,255,.35);margin-bottom:1.5rem;}
+.form-eyebrow{font-size: var(--font-size-10, 10px);font-weight:700;color:var(--color-emerald-500);text-transform:uppercase;letter-spacing:.2em;margin-bottom:8px;}
+.form-title{font-size:2rem;font-weight:900;letter-spacing:-.04em;color:var(--c, var(--color-white, #ffffff)f);line-height:1;margin-bottom:6px;}
+.form-subtitle{font-size: var(--font-size-13, 13px);color:rgba(255,255,255,.35);margin-bottom:1.5rem;}
 .divider{height:1px;background:linear-gradient(90deg,transparent,rgba(16,185,129,.25) 50%,transparent);margin-bottom:1.5rem;}
 
 /* Flash */
 .flash-msg{
-  border-radius:12px;padding:12px 16px;margin-bottom:1rem;
-  font-size:12px;font-weight:700;display:flex;align-items:center;gap:8px;
+  border-radius: var(--border-radius-12, 12px);padding: var(--space-pad-12, 12px) 16px;margin-bottom:1rem;
+  font-size: var(--font-size-12, 12px);font-weight:700;display:flex;align-items:center;gap:8px;
 }
-.flash-error{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#f87171;}
-.flash-success{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);color:#6ee7b7;}
+.flash-error{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:var(--color-rose-400);}
+.flash-success{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);color:var(--color-emerald-300);}
 
 /* Fields */
 .field{position:relative;margin-bottom:12px;}
 .field input{
   width:100%;background:var(--surface);border:1px solid var(--border);
-  border-radius:14px;padding:16px 48px 16px 50px;
-  font-family:'Outfit',sans-serif;font-size:14px;font-weight:500;color:#fff;
+  border-radius: var(--border-radius-14, 14px);padding: var(--space-pad-16, 16px) 48px 16px 50px;
+  font-family:'Outfit',sans-serif;font-size: var(--font-size-14, 14px);font-weight:500;color:var(--c, var(--color-white, #ffffff)f);
   outline:none;transition:all .3s;
 }
 .field input::placeholder{color:transparent;}
@@ -124,35 +131,35 @@ body{overflow-x:hidden;}
 }
 .field-prefix{
   position:absolute;left:17px;top:50%;transform:translateY(-50%);
-  color:rgba(255,255,255,.28);font-size:16px;pointer-events:none;
+  color:rgba(255,255,255,.28);font-size: var(--font-size-16, 16px);pointer-events:none;
 }
 .field-suffix{
   position:absolute;right:14px;top:50%;transform:translateY(-50%);
-  background:none;border:none;cursor:pointer;color:rgba(255,255,255,.28);font-size:16px;
+  background:none;border:none;cursor:pointer;color:rgba(255,255,255,.28);font-size: var(--font-size-16, 16px);
 }
 .field-label{
   position:absolute;left:50px;top:50%;transform:translateY(-50%);
-  font-size:14px;font-weight:500;color:rgba(255,255,255,.28);
+  font-size: var(--font-size-14, 14px);font-weight:500;color:rgba(255,255,255,.28);
   pointer-events:none;transition:all .22s;
 }
 .field input:focus ~ .field-label,
 .field input:not(:placeholder-shown) ~ .field-label{
-  top:-9px;left:14px;font-size:9px;padding:0 6px;
-  background:#050a14;color:#6ee7b7;border-radius:4px;
+  top:-9px;left:14px;font-size: var(--font-size-9, 9px);padding:0 6px;
+  background:var(--night);color:var(--color-emerald-300);border-radius: var(--border-radius-4, 4px);
 }
 
 /* Strength bars */
-.strength-bars{display:flex;gap:4px;margin:4px 0 2px;}
-.strength-bar{height:3px;flex:1;border-radius:2px;background:var(--border);transition:background .3s;}
-.strength-label{font-size:10px;color:rgba(255,255,255,.3);min-height:14px;}
-.match-msg{font-size:11px;margin-top:-8px;margin-bottom:10px;min-height:16px;}
+.strength-bars{display:flex;gap:4px;margin: var(--space-mar-4, 4px) 0 2px;}
+.strength-bar{height:3px;flex:1;border-radius: var(--border-radius-2, 2px);background:var(--border);transition:background .3s;}
+.strength-label{font-size: var(--font-size-10, 10px);color:rgba(255,255,255,.3);min-height:14px;}
+.match-msg{font-size: var(--font-size-11, 11px);margin-top:-8px;margin-bottom:10px;min-height:16px;}
 
 /* Submit */
 .btn-submit{
-  width:100%;padding:16px;border-radius:14px;border:none;cursor:pointer;
-  font-family:'Outfit',sans-serif;font-size:12px;font-weight:900;
-  text-transform:uppercase;letter-spacing:.18em;color:#fff;
-  background:linear-gradient(135deg,#10b981 0%,#059669 60%,#047857 100%);
+  width:100%;padding: var(--space-pad-16, 16px);border-radius: var(--border-radius-14, 14px);border:none;cursor:pointer;
+  font-family:'Outfit',sans-serif;font-size: var(--font-size-12, 12px);font-weight:900;
+  text-transform:uppercase;letter-spacing:.18em;color:var(--color-surface);
+  background:linear-gradient(135deg,var(--emerald) 0%,var(--color-emerald-600) 60%,var(--color-emerald-700) 100%);
   box-shadow:0 8px 24px rgba(16,185,129,.35);
   transition:all .3s;margin-top:4px;
 }
@@ -162,18 +169,18 @@ body{overflow-x:hidden;}
 /* Callout */
 .callout{
   margin-top:1.2rem;background:rgba(124,58,237,.06);
-  border:1px solid rgba(124,58,237,.15);border-radius:14px;
-  padding:14px 16px;display:flex;gap:12px;align-items:flex-start;
+  border:1px solid rgba(124,58,237,.15);border-radius: var(--border-radius-14, 14px);
+  padding: var(--space-pad-14, 14px) 16px;display:flex;gap:12px;align-items:flex-start;
 }
-.callout-icon{font-size:18px;flex-shrink:0;}
-.callout-title{font-size:11px;font-weight:700;color:#a78bfa;margin-bottom:3px;}
-.callout-body{font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;}
+.callout-icon{font-size: var(--font-size-18, 18px);flex-shrink:0;}
+.callout-title{font-size: var(--font-size-11, 11px);font-weight:700;color:var(--color-violet-400);margin-bottom:3px;}
+.callout-body{font-size: var(--font-size-11, 11px);color:rgba(255,255,255,.4);line-height:1.5;}
 
 /* Footer links */
 .footer-link{text-align:center;margin-top:1.5rem;}
-.footer-link span{font-size:13px;color:rgba(255,255,255,.3);}
-.footer-link a{font-size:13px;font-weight:700;color:#a78bfa;text-decoration:none;margin-left:6px;}
-.copyright{text-align:center;margin-top:1.5rem;font-size:9px;font-weight:600;color:rgba(255,255,255,.1);letter-spacing:.15em;text-transform:uppercase;}
+.footer-link span{font-size: var(--font-size-13, 13px);color:rgba(255,255,255,.3);}
+.footer-link a{font-size: var(--font-size-13, 13px);font-weight:700;color:var(--color-violet-400);text-decoration:none;margin-left:6px;}
+.copyright{text-align:center;margin-top:1.5rem;font-size: var(--font-size-9, 9px);font-weight:600;color:rgba(255,255,255,.1);letter-spacing:.15em;text-transform:uppercase;}
 </style>
 </head>
 <body>
@@ -187,7 +194,7 @@ body{overflow-x:hidden;}
         <div class="brand-icon">₺</div>
         <div>
           <div class="brand-name">E-Cüzdan</div>
-          <div class="brand-sub">Wealth System v15</div>
+          <div class="brand-sub">{{ _('ui_auto_385373bdc571') }}</div>
         </div>
       </div>
 
@@ -195,38 +202,38 @@ body{overflow-x:hidden;}
         <div>
           <div class="badge-pill">
             <div class="badge-dot"></div>
-            <span class="badge-text">Ücretsiz · Kredi Kartı Gerekmez</span>
+            <span class="badge-text">{{ _('ui_auto_07219d26ffd2') }}</span>
           </div>
           <br>
-          <h1 class="hero-title">Kendi Finansal<br><span>Workspace'ini</span><br>Oluştur.</h1>
-          <p class="hero-sub">Kaydolduğunda e-postana özel izole bir tenant alanı otomatik kurulur. Tüm verin yalnızca sana ait; başka kullanıcılarla asla karışmaz.</p>
+          <h1 class="hero-title">{{ _('ui_auto_e7739675956d') }}<br><span>{{ _('ui_auto_7a2566a2c524') }}</span><br>{{ _('ui_auto_c9f7b5246ff7') }}</h1>
+          <p class="hero-sub">{{ _('ui_auto_8f20ef11c368') }}</p>
         </div>
 
         <div class="feature-grid">
-          <div class="feature-card" style="--stripe:linear-gradient(90deg,#7c3aed,#6366f1)">
+          <div class="feature-card" style="--stripe:linear-gradient(90deg,var(--color-violet-600),var(--c, var(--color-indigo-500, #6366f1)1))">
             <div class="feat-icon">🔒</div>
-            <div class="feat-title">Tam İzolasyon</div>
-            <div class="feat-sub">Verilerin başkalarından ayrı</div>
+            <div class="feat-title">{{ _('ui_auto_9d56aa17d126') }}</div>
+            <div class="feat-sub">{{ _('ui_auto_756a452f1240') }}</div>
           </div>
-          <div class="feature-card" style="--stripe:linear-gradient(90deg,#10b981,#059669)">
+          <div class="feature-card" style="--stripe:linear-gradient(90deg,var(--color-emerald-500),var(--c, var(--color-emerald-600, #059669)9))">
             <div class="feat-icon">👥</div>
-            <div class="feat-title">Ekip Daveti</div>
-            <div class="feat-sub">İstersen üye ekle</div>
+            <div class="feat-title">{{ _('ui_auto_e580e7f6f36b') }}</div>
+            <div class="feat-sub">{{ _('ui_auto_cc35dcac7904') }}</div>
           </div>
-          <div class="feature-card" style="--stripe:linear-gradient(90deg,#f59e0b,#f97316)">
+          <div class="feature-card" style="--stripe:linear-gradient(90deg,var(--color-amber-500),var(--c, #f97316))">
             <div class="feat-icon">📊</div>
-            <div class="feat-title">Gelişmiş Analiz</div>
-            <div class="feat-sub">Monte Carlo &amp; AI içgörüleri</div>
+            <div class="feat-title">{{ _('ui_auto_f1dc4f3528ad') }}</div>
+            <div class="feat-sub">{{ _('ui_auto_6cf9245052d0') }}</div>
           </div>
-          <div class="feature-card" style="--stripe:linear-gradient(90deg,#6366f1,#818cf8)">
+          <div class="feature-card" style="--stripe:linear-gradient(90deg,var(--color-indigo-500),var(--c, var(--color-indigo-400, #818cf8)8))">
             <div class="feat-icon">💾</div>
-            <div class="feat-title">Tenant Yedek</div>
-            <div class="feat-sub">Verini her an dışa aktar</div>
+            <div class="feat-title">{{ _('ui_auto_e26c7ebd3561') }}</div>
+            <div class="feat-sub">{{ _('ui_auto_162ac34dd961') }}</div>
           </div>
         </div>
       </div>
 
-      <div class="left-footer">© 2025 E-Cüzdan · Emin Çetin · Tüm hakları saklıdır</div>
+      <div class="left-footer">{{ _('ui_auto_4f9919de82fa') }}</div>
     </div>
   </div>
 
@@ -235,16 +242,16 @@ body{overflow-x:hidden;}
     <div class="form-shell">
       <!-- Mobile brand -->
       <div class="mobile-brand">
-        <div class="brand-icon" style="width:38px;height:38px;font-size:15px;border-radius:11px;">₺</div>
+        <div class="brand-icon" class="w-[38px] h-[38px] text-[15px] rounded-[11px]">₺</div>
         <div>
-          <div class="brand-name" style="font-size:15px;">E-Cüzdan</div>
-          <div class="brand-sub">Wealth System</div>
+          <div class="brand-name" class="text-[15px]">E-Cüzdan</div>
+          <div class="brand-sub">{{ _('ui_auto_1de11af8e1d7') }}</div>
         </div>
       </div>
 
-      <div class="form-eyebrow">Yeni Hesap</div>
-      <h2 class="form-title">Workspace Kur</h2>
-      <p class="form-subtitle">Finansal verilerine özel izole alan oluştur.</p>
+      <div class="form-eyebrow">{{ _('ui_auto_d7232dde149a') }}</div>
+      <h2 class="form-title">{{ _('ui_auto_0fb473a5e538') }}</h2>
+      <p class="form-subtitle">{{ _('ui_auto_b42398220dfa') }}</p>
       <div class="divider"></div>
 
       <!-- Flash messages -->
@@ -265,23 +272,23 @@ body{overflow-x:hidden;}
         <div class="field">
           <input id="full_name" type="text" name="full_name" placeholder=" " required autocomplete="name">
           <span class="field-prefix">👤</span>
-          <label class="field-label" for="full_name">Ad Soyad</label>
+          <label class="field-label" for="full_name">{{ _('ui_auto_e5f443596bf3') }}</label>
         </div>
         <!-- E-posta -->
         <div class="field">
           <input id="email" type="email" name="email" placeholder=" " required autocomplete="email">
           <span class="field-prefix">✉</span>
-          <label class="field-label" for="email">E-posta adresi</label>
+          <label class="field-label" for="email">{{ _('ui_auto_1ffe6ef95feb') }}</label>
         </div>
         <!-- Şifre -->
         <div class="field">
           <input id="password" type="password" name="password" placeholder=" " required autocomplete="new-password" minlength="8" oninput="updateStrength(this.value)">
           <span class="field-prefix">🔑</span>
-          <button type="button" class="field-suffix" onclick="togglePwd('password','eyeP')" id="eyeP">👁</button>
-          <label class="field-label" for="password">Şifre (en az 8 karakter)</label>
+          <button data-macro="button_secondary" type="button" class="field-suffix" onclick="togglePwd('password','eyeP')" id="eyeP">👁</button>
+          <label class="field-label" for="password">{{ _('ui_auto_f7b7f0f1c370') }}</label>
         </div>
         <!-- Güç göstergesi -->
-        <div style="padding:0 2px;margin-bottom:10px;">
+        <div class="px-0.5 mb-2.5">
           <div class="strength-bars">
             <div class="strength-bar" id="s1"></div>
             <div class="strength-bar" id="s2"></div>
@@ -294,28 +301,28 @@ body{overflow-x:hidden;}
         <div class="field">
           <input id="confirm_password" type="password" name="confirm_password" placeholder=" " required autocomplete="new-password" minlength="8" oninput="checkMatch()">
           <span class="field-prefix">🔒</span>
-          <button type="button" class="field-suffix" onclick="togglePwd('confirm_password','eyeC')" id="eyeC">👁</button>
-          <label class="field-label" for="confirm_password">Şifre tekrar</label>
+          <button data-macro="button_secondary" type="button" class="field-suffix" onclick="togglePwd('confirm_password','eyeC')" id="eyeC">👁</button>
+          <label class="field-label" for="confirm_password">{{ _('ui_auto_656f23385bac') }}</label>
         </div>
         <div class="match-msg" id="matchMsg"></div>
 
-        <button type="submit" id="regBtn" class="btn-submit">Workspace Oluştur &amp; Başla →</button>
+        <button data-macro="button_secondary" type="submit" id="regBtn" class="btn-submit">{{ _('ui_auto_18e74482967d') }}</button>
       </form>
 
       <!-- Callout -->
       <div class="callout">
         <span class="callout-icon">🏢</span>
         <div>
-          <div class="callout-title">Otomatik Tenant Kurulumu</div>
-          <div class="callout-body">Kaydolduğunda e-posta adresine özel izole bir alan oluşturulur. Tüm finansal verin yalnızca sana ait; başka kullanıcılarla kesinlikle karışmaz.</div>
+          <div class="callout-title">{{ _('ui_auto_d5e72ba62f88') }}</div>
+          <div class="callout-body">{{ _('ui_auto_c32a10c6e7fe') }}</div>
         </div>
       </div>
 
       <div class="footer-link">
-        <span>Zaten hesabın var mı?</span>
+        <span>{{ _('ui_auto_3dfabd0806cd') }}</span>
         <a href="{{ url_for('auth.login') }}">Giriş Yap</a>
       </div>
-      <div class="copyright">Designed &amp; Developed by <strong style="color:rgba(255,255,255,.25)">Emin Çetin</strong></div>
+      <div class="copyright">{{ _('ui_auto_0fecbfb8ddaa') }} <strong class="text-white/25">{{ _('ui_auto_30423ad33865') }}</strong></div>
     </div>
   </div>
 </div>
@@ -356,7 +363,7 @@ function updateStrength(v){
   if(v.length>=12)score++;
   if(/[A-Z]/.test(v)&&/[0-9]/.test(v))score++;
   if(/[^A-Za-z0-9]/.test(v))score++;
-  const colors=['#ef4444','#f97316','#eab308','#10b981'];
+  const colors=['var(--color-rose-500)','var(--c, #f97316)','var(--c, #eab308)','var(--color-emerald-500)'];
   const labels=['Çok Zayıf','Zayıf','Orta','Güçlü'];
   bars.forEach((b,i)=>{b.style.background=i<score?colors[score-1]:'rgba(255,255,255,.08)';});
   lbl.textContent=v.length?(labels[score-1]||''):'';
@@ -369,8 +376,8 @@ function checkMatch(){
   const c2=document.getElementById('confirm_password').value;
   const m=document.getElementById('matchMsg');
   if(!c2){m.textContent='';return;}
-  if(p===c2){m.textContent='✓ Şifreler eşleşiyor';m.style.color='#10b981';}
-  else{m.textContent='✗ Şifreler eşleşmiyor';m.style.color='#f87171';}
+  if(p===c2){m.textContent='✓ Şifreler eşleşiyor';m.style.color='var(--color-emerald-500)';}
+  else{m.textContent='✗ Şifreler eşleşmiyor';m.style.color='var(--color-rose-400)';}
 }
 
 /* ── Toggle password visibility ─────────────────────────────── */
@@ -385,7 +392,7 @@ function togglePwd(id,eyeId){
 document.getElementById('regForm').addEventListener('submit',function(e){
   const p=document.getElementById('password').value;
   const c2=document.getElementById('confirm_password').value;
-  if(p!==c2){e.preventDefault();document.getElementById('matchMsg').textContent='✗ Şifreler eşleşmiyor';document.getElementById('matchMsg').style.color='#f87171';return;}
+  if(p!==c2){e.preventDefault();document.getElementById('matchMsg').textContent='✗ Şifreler eşleşmiyor';document.getElementById('matchMsg').style.color='var(--color-rose-400)';return;}
   const btn=document.getElementById('regBtn');
   btn.textContent='Oluşturuluyor…';btn.style.opacity='.75';btn.disabled=true;
 });

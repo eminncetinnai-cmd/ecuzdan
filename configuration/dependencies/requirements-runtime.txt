@@ -1,0 +1,19 @@
+# E-Cüzdan runtime/local-staging application profile.
+# Direct runtime dependencies only; test, benchmark, E2E and deployment-only packages are separate.
+flask
+flask-sqlalchemy
+requests
+beautifulsoup4
+xhtml2pdf
+reportlab
+werkzeug
+python-dotenv
+PyYAML>=6.0,<7.0
+alembic
+psutil
+yfinance
+scipy
+pandas
+numpy
+Flask-Limiter>=4.0,<5.0
+redis>=5,<6

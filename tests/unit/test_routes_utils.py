@@ -3,15 +3,15 @@ Unit Tests - Routes Utilities
 Routes ve utilities için unit testleri
 """
 
+
 import pytest
-from unittest.mock import Mock, patch
 
 
 @pytest.mark.unit
 def test_format_utils_format_money():
     """Para formatlama testi"""
     from utils.format_utils import format_money
-    
+
     result = format_money(1000.50)
     assert '1000.50' in result or '1.000,50' in result
 
@@ -20,7 +20,7 @@ def test_format_utils_format_money():
 def test_format_utils_format_date():
     """Tarih formatlama testi"""
     from utils.format_utils import format_date
-    
+
     result = format_date('2025-01-15')
     assert '15' in result or '01' in result or '2025' in result
 
@@ -29,7 +29,7 @@ def test_format_utils_format_date():
 def test_format_utils_parse_date_input():
     """Tarih parse testi"""
     from utils.format_utils import parse_date_input
-    
+
     result = parse_date_input('15/01/2025')
     assert result == '2025-01-15'
 
@@ -38,7 +38,7 @@ def test_format_utils_parse_date_input():
 def test_format_utils_today_storage():
     """Bugünün tarihi storage formatında testi"""
     from utils.format_utils import today_storage
-    
+
     result = today_storage()
     assert len(result) == 10  # yyyy-mm-dd format
     assert '-' in result
@@ -48,7 +48,7 @@ def test_format_utils_today_storage():
 def test_format_utils_today_display():
     """Bugünün tarihi display formatında testi"""
     from utils.format_utils import today_display
-    
+
     result = today_display()
     assert '/' in result  # gg/aa/yyyy format
 
@@ -57,7 +57,7 @@ def test_format_utils_today_display():
 def test_format_utils_format_money_zero():
     """Sıfır para formatlama testi"""
     from utils.format_utils import format_money
-    
+
     result = format_money(0)
     assert '0,00' in result or '0.00' in result
 
@@ -66,7 +66,7 @@ def test_format_utils_format_money_zero():
 def test_format_utils_format_money_none():
     """None para formatlama testi"""
     from utils.format_utils import format_money
-    
+
     result = format_money(None)
     assert '0,00' in result or '0.00' in result
 
@@ -75,7 +75,7 @@ def test_format_utils_format_money_none():
 def test_format_utils_format_date_none():
     """None tarih formatlama testi"""
     from utils.format_utils import format_date
-    
+
     result = format_date(None)
     assert result == ''
 
@@ -84,9 +84,37 @@ def test_format_utils_format_date_none():
 def test_format_utils_parse_date_invalid():
     """Geçersiz tarih parse testi"""
     from utils.format_utils import parse_date_input
-    
+
     try:
         parse_date_input('invalid_date')
         assert False  # Should raise ValueError
     except ValueError:
         assert True  # Expected to raise ValueError
+
+
+@pytest.mark.unit
+def test_format_ticker_price_filter(app):
+    """Canlı ticker fiyat formatlama filtresi testi"""
+    from decimal import Decimal
+    filter_func = app.jinja_env.filters['format_ticker_price']
+
+    # Standart float ve string
+    assert filter_func(53.7) == '53,70'
+    assert filter_func('53.70') == '53,70'
+    assert filter_func(Decimal('53.70')) == '53,70'
+
+    # Virgüllü girdi (Türkçe ondalık)
+    assert filter_func('53,70') == '53,70'
+
+    # Binlik ayraçlı girdiler
+    assert filter_func('6.894,70') == '6.894,70'
+    assert filter_func('6,894.70') == '6.894,70'
+    assert filter_func(6894.7) == '6.894,70'
+
+    # Boş / Geçersiz / Özel durumlar
+    assert filter_func('--') == '--'
+    assert filter_func('nan') == '--'
+    assert filter_func(None) == '--'
+    assert filter_func('') == '--'
+    assert filter_func(0) == '0,00'
+

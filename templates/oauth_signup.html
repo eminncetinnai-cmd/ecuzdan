@@ -3,21 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hesap Oluştur - E-Cüzdan</title>
+    <title>{{ _('ui_auto_d4cf37faa46c') }}</title>
     <meta name="description" content="E-Cüzdan — Google ile hesap oluşturun. Kullanıcı adı ve şifre belirleyin.">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --night:    #030712;
-            --deep:     #080d1a;
-            --accent:   #7c3aed;
-            --accent2:  #6366f1;
-            --gold:     #f59e0b;
-            --emerald:  #10b981;
-            --surface:  rgba(255,255,255,0.04);
-            --border:   rgba(255,255,255,0.08);
+            --night: #030712;
+            --deep: #080d1a;
+            --accent: #7c3aed;
+            --accent2: #6366f1;
+            --gold: #f59e0b;
+            --emerald: #10b981;
+            --surface: rgba(255,255,255,0.04);
+            --border: rgba(255,255,255,0.08);
+            --text-main: #f8fafc;
+            --color-white: #ffffff;
         }
 
         html, body { height: 100%; }
@@ -25,7 +27,7 @@
         body {
             font-family: 'Outfit', sans-serif;
             background: var(--night);
-            color: #fff;
+            color: var(--c, var(--color-white, #ffffff)f);
             overflow: hidden;
         }
 
@@ -50,7 +52,7 @@
             flex: 0 0 50%;
             position: relative;
             overflow: hidden;
-            background: linear-gradient(135deg, #080d1a 0%, #0d1129 50%, #0a0d1f 100%);
+            background: linear-gradient(135deg, var(--color-night-900) 0%, var(--color-night-850) 50%, var(--color-night-800) 100%);
             border-right: 1px solid rgba(124,58,237,0.15);
         }
 
@@ -82,16 +84,16 @@
         }
         .brand-icon {
             width: 46px; height: 46px;
-            border-radius: 14px;
-            background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 60%, #f59e0b 160%);
+            border-radius: var(--border-radius-14, 14px);
+            background: linear-gradient(135deg, var(--color-violet-600) 0%, var(--color-indigo-600) 60%, var(--color-amber-500) 160%);
             display: flex; align-items: center; justify-content: center;
-            font-size: 18px; font-weight: 900; color: #fff;
+            font-size: var(--font-size-18, 18px); font-weight: 900; color: var(--c, var(--color-white, #ffffff)f);
             box-shadow: 0 8px 24px rgba(124,58,237,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
             border: 1px solid rgba(255,255,255,0.15);
         }
         .brand-text { line-height: 1; }
-        .brand-name { font-size: 18px; font-weight: 900; color: #fff; }
-        .brand-sub  { font-size: 9px; font-weight: 700; color: #7c3aed; text-transform: uppercase; letter-spacing: 0.25em; margin-top: 2px; }
+        .brand-name { font-size: var(--font-size-18, 18px); font-weight: 900; color: var(--c, var(--color-white, #ffffff)f); }
+        .brand-sub  { font-size: var(--font-size-9, 9px); font-weight: 700; color: var(--color-violet-600); text-transform: uppercase; letter-spacing: 0.25em; margin-top: 2px; }
 
         .hero-section {
             flex: 1;
@@ -106,17 +108,17 @@
             font-weight: 900;
             line-height: 1.08;
             letter-spacing: -0.04em;
-            color: #fff;
+            color: var(--c, var(--color-white, #ffffff)f);
         }
         .hero-headline span {
-            background: linear-gradient(135deg, #a78bfa 0%, #818cf8 40%, #f59e0b 100%);
+            background: linear-gradient(135deg, var(--color-violet-400) 0%, var(--color-indigo-400) 40%, var(--color-amber-500) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
 
         .hero-sub {
-            font-size: 14px;
+            font-size: var(--font-size-14, 14px);
             font-weight: 400;
             color: rgba(255,255,255,0.45);
             line-height: 1.7;
@@ -124,7 +126,7 @@
         }
 
         .left-footer {
-            font-size: 10px; font-weight: 600;
+            font-size: var(--font-size-10, 10px); font-weight: 600;
             color: rgba(255,255,255,0.2);
             letter-spacing: 0.1em;
             text-transform: uppercase;
@@ -137,7 +139,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: #050a14;
+            background: var(--color-night-700);
             padding: 2rem;
             position: relative;
             overflow: hidden;
@@ -168,20 +170,20 @@
         @media (min-width: 1024px) { .mobile-brand { display: none; } }
 
         .form-eyebrow {
-            font-size: 10px; font-weight: 700;
-            color: #7c3aed;
+            font-size: var(--font-size-10, 10px); font-weight: 700;
+            color: var(--color-violet-600);
             text-transform: uppercase; letter-spacing: 0.2em;
             margin-bottom: 8px;
         }
         .form-title {
             font-size: 2rem; font-weight: 900;
             letter-spacing: -0.04em;
-            color: #fff;
+            color: var(--c, var(--color-white, #ffffff)f);
             line-height: 1;
             margin-bottom: 6px;
         }
         .form-subtitle {
-            font-size: 13px; font-weight: 400;
+            font-size: var(--font-size-13, 13px); font-weight: 400;
             color: rgba(255,255,255,0.35);
             margin-bottom: 2rem;
         }
@@ -196,11 +198,11 @@
         .flash-error {
             background: rgba(239,68,68,0.08);
             border: 1px solid rgba(239,68,68,0.2);
-            border-radius: 14px;
-            padding: 12px 16px;
+            border-radius: var(--border-radius-14, 14px);
+            padding: var(--space-pad-12, 12px) 16px;
             margin-bottom: 1.5rem;
             display: flex; align-items: center; gap: 10px;
-            font-size: 12px; font-weight: 700; color: #f87171;
+            font-size: var(--font-size-12, 12px); font-weight: 700; color: var(--color-rose-400);
         }
 
         /* Input field */
@@ -212,11 +214,11 @@
             width: 100%;
             background: rgba(255,255,255,0.04);
             border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 16px;
-            padding: 16px 18px 16px 50px;
+            border-radius: var(--border-radius-16, 16px);
+            padding: var(--space-pad-16, 16px) 18px 16px 50px;
             font-family: 'Outfit', sans-serif;
-            font-size: 14px; font-weight: 500;
-            color: #fff;
+            font-size: var(--font-size-14, 14px); font-weight: 500;
+            color: var(--c, var(--color-white, #ffffff)f);
             outline: none;
             transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
         }
@@ -237,7 +239,7 @@
             position: absolute;
             left: 50px; top: 50%;
             transform: translateY(-50%);
-            font-size: 14px; font-weight: 500;
+            font-size: var(--font-size-14, 14px); font-weight: 500;
             color: rgba(255,255,255,0.22);
             pointer-events: none;
             transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
@@ -245,32 +247,32 @@
         .field input:focus ~ .field-label,
         .field input:not(:placeholder-shown) ~ .field-label {
             top: -9px; left: 14px;
-            font-size: 9px; padding: 0 6px;
-            background: #050a14;
-            color: #a78bfa;
-            border-radius: 4px;
+            font-size: var(--font-size-9, 9px); padding: 0 6px;
+            background: var(--color-night-700);
+            color: var(--color-violet-400);
+            border-radius: var(--border-radius-4, 4px);
         }
 
         /* Password strength */
         .strength-bars {
             display: flex;
             gap: 4px;
-            margin: 4px 0 2px;
+            margin: var(--space-mar-4, 4px) 0 2px;
         }
         .strength-bar {
             height: 3px;
             flex: 1;
-            border-radius: 2px;
+            border-radius: var(--border-radius-2, 2px);
             background: var(--border);
             transition: background 0.3s;
         }
         .strength-label {
-            font-size: 10px;
+            font-size: var(--font-size-10, 10px);
             color: rgba(255,255,255,0.3);
             min-height: 14px;
         }
         .match-msg {
-            font-size: 11px;
+            font-size: var(--font-size-11, 11px);
             margin-top: -8px;
             margin-bottom: 10px;
             min-height: 16px;
@@ -280,15 +282,15 @@
         .btn-submit {
             width: 100%;
             margin-top: 6px;
-            padding: 16px;
-            border-radius: 16px;
+            padding: var(--space-pad-16, 16px);
+            border-radius: var(--border-radius-16, 16px);
             border: none;
             cursor: pointer;
             font-family: 'Outfit', sans-serif;
-            font-size: 12px; font-weight: 900;
+            font-size: var(--font-size-12, 12px); font-weight: 900;
             text-transform: uppercase; letter-spacing: 0.18em;
-            color: #fff;
-            background: linear-gradient(135deg, #7c3aed 0%, #6366f1 60%, #4f46e5 100%);
+            color: var(--c, var(--color-white, #ffffff)f);
+            background: linear-gradient(135deg, var(--color-violet-600) 0%, var(--color-indigo-500) 60%, var(--color-indigo-600) 100%);
             box-shadow: 0 8px 24px rgba(124,58,237,0.35), 0 0 0 1px rgba(255,255,255,0.08) inset;
             position: relative; overflow: hidden;
             transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
@@ -305,10 +307,10 @@
             align-items: center;
             gap: 16px;
             margin-bottom: 1.5rem;
-            padding: 16px;
+            padding: var(--space-pad-16, 16px);
             background: rgba(255,255,255,0.04);
             border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 16px;
+            border-radius: var(--border-radius-16, 16px);
         }
         .profile-avatar {
             width: 64px; height: 64px;
@@ -317,17 +319,17 @@
             border: 2px solid rgba(124,58,237,0.3);
         }
         .profile-info h4 {
-            font-size: 14px; font-weight: 700; color: #fff;
+            font-size: var(--font-size-14, 14px); font-weight: 700; color: var(--c, var(--color-white, #ffffff)f);
             margin-bottom: 4px;
         }
         .profile-info p {
-            font-size: 12px; color: rgba(255,255,255,0.4);
+            font-size: var(--font-size-12, 12px); color: rgba(255,255,255,0.4);
         }
 
         .copyright {
             margin-top: 2rem;
             text-align: center;
-            font-size: 9px; font-weight: 600;
+            font-size: var(--font-size-9, 9px); font-weight: 600;
             color: rgba(255,255,255,0.12);
             letter-spacing: 0.15em;
             text-transform: uppercase;
@@ -347,21 +349,21 @@
                 <div class="brand-icon">₺</div>
                 <div class="brand-text">
                     <div class="brand-name">E-Cüzdan</div>
-                    <div class="brand-sub">Wealth System v15</div>
+                    <div class="brand-sub">{{ _('ui_auto_385373bdc571') }}</div>
                 </div>
             </div>
 
             <div class="hero-section">
                 <h1 class="hero-headline">
-                    Hesabını<br>
-                    <span>Tamamla</span>
+                    {{ _('ui_auto_49482d83dace') }}<br>
+                    <span>{{ _('ui_auto_1133f332a935') }}</span>
                 </h1>
-                <p class="hero-sub" style="margin-top:1rem;">
-                    Google ile giriş yaptınız. Şimdi kullanıcı adınızı ve şifrenizi belirleyerek hesabınızı tamamlayın.
+                <p class="hero-sub" class="mt-4">
+                    {{ _('ui_auto_171dcda47427') }}
                 </p>
             </div>
 
-            <div class="left-footer">© 2025 E-Cüzdan · Emin Çetin · Tüm hakları saklıdır</div>
+            <div class="left-footer">{{ _('ui_auto_4f9919de82fa') }}</div>
         </div>
     </div>
 
@@ -369,16 +371,16 @@
     <div class="right-panel">
         <div class="form-shell">
             <div class="mobile-brand">
-                <div class="brand-icon" style="width:38px;height:38px;font-size:15px;border-radius:11px;">₺</div>
+                <div class="brand-icon" class="w-[38px] h-[38px] text-[15px] rounded-[11px]">₺</div>
                 <div class="brand-text">
-                    <div class="brand-name" style="font-size:15px;">E-Cüzdan</div>
-                    <div class="brand-sub">Wealth System</div>
+                    <div class="brand-name" class="text-[15px]">E-Cüzdan</div>
+                    <div class="brand-sub">{{ _('ui_auto_1de11af8e1d7') }}</div>
                 </div>
             </div>
 
-            <div class="form-eyebrow">Google ile Kayıt</div>
-            <h2 class="form-title">Hesabı Tamamla</h2>
-            <p class="form-subtitle">Kullanıcı adı ve şifre belirleyin.</p>
+            <div class="form-eyebrow">{{ _('ui_auto_b9b3ec473921') }}</div>
+            <h2 class="form-title">{{ _('ui_auto_ebdeaf381a0b') }}</h2>
+            <p class="form-subtitle">{{ _('ui_auto_2e4233687a2b') }}</p>
             <div class="form-divider"></div>
 
             <!-- Flash messages -->
@@ -395,7 +397,7 @@
 
             <!-- Profile Preview -->
             <div class="profile-preview">
-                <img src="{{ profile_picture or url_for('static', filename='img/default-avatar.png') }}" alt="Profile" class="profile-avatar" id="profile-avatar">
+                <img src="{{ profile_picture or static_asset_url('img/default-avatar.png') }}" alt="{{ _('ui_auto_ff4fc0276e96') }}" class="profile-avatar" id="profile-avatar">
                 <div class="profile-info">
                     <h4>{{ name }}</h4>
                     <p>{{ email }}</p>
@@ -418,7 +420,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                         </svg>
                     </div>
-                    <label class="field-label" for="username">Kullanıcı adı</label>
+                    <label class="field-label" for="username">{{ _('ui_auto_ebd38790a7e1') }}</label>
                 </div>
 
                 <div class="field">
@@ -428,10 +430,10 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                         </svg>
                     </div>
-                    <label class="field-label" for="password">Şifre (en az 8 karakter)</label>
+                    <label class="field-label" for="password">{{ _('ui_auto_f7b7f0f1c370') }}</label>
                 </div>
 
-                <div style="padding:0 2px;margin-bottom:10px;">
+                <div class="px-0.5 mb-2.5">
                     <div class="strength-bars">
                         <div class="strength-bar" id="s1"></div>
                         <div class="strength-bar" id="s2"></div>
@@ -448,71 +450,71 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                         </svg>
                     </div>
-                    <label class="field-label" for="confirm_password">Şifre tekrar</label>
+                    <label class="field-label" for="confirm_password">{{ _('ui_auto_656f23385bac') }}</label>
                 </div>
                 <div class="match-msg" id="matchMsg"></div>
 
                 <div class="field">
-                    <select id="gender" name="gender" required style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 16px 18px; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 500; color: #fff; outline: none; cursor: pointer;">
-                        <option value="" style="background: #050a14;">Cinsiyet seçiniz</option>
-                        <option value="male" style="background: #050a14;">Erkek</option>
-                        <option value="female" style="background: #050a14;">Kadın</option>
-                        <option value="other" style="background: #050a14;">Diğer</option>
-                        <option value="prefer_not_to_say" style="background: #050a14;">Belirtmek istemiyorum</option>
+                    <select id="gender" name="gender" required class="w-full bg-white/[0.04] border border-white/[0.08] rounded-2xl p-4"Outfit', sans-serif; font-size: var(--font-size-14, 14px); font-weight: 500; color: var(--c, var(--color-white, #ffffff)f); outline: none; cursor: pointer;">
+                        <option value="" class="bg-slate-900">{{ _('ui_auto_12fad598864f') }}</option>
+                        <option value="male" class="bg-slate-900">Erkek</option>
+                        <option value="female" class="bg-slate-900">Kadın</option>
+                        <option value="other" class="bg-slate-900">Diğer</option>
+                        <option value="prefer_not_to_say" class="bg-slate-900">{{ _('ui_auto_1b55e86dd260') }}</option>
                     </select>
                 </div>
 
                 <div class="field">
                     <input id="birthdate" type="date" name="birthdate" placeholder=" " required>
-                    <label class="field-label" for="birthdate">Doğum tarihi</label>
+                    <label class="field-label" for="birthdate">{{ _('ui_auto_17c2513b42d1') }}</label>
                 </div>
 
                 <div class="field">
-                    <select id="country" name="country" required style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 16px 18px; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 500; color: #fff; outline: none; cursor: pointer;" onchange="updateCities()">
-                        <option value="" style="background: #050a14;">Ülke seçiniz</option>
-                        <option value="TR" style="background: #050a14;">Türkiye</option>
-                        <option value="US" style="background: #050a14;">United States</option>
-                        <option value="GB" style="background: #050a14;">United Kingdom</option>
-                        <option value="DE" style="background: #050a14;">Germany</option>
-                        <option value="FR" style="background: #050a14;">France</option>
-                        <option value="NL" style="background: #050a14;">Netherlands</option>
-                        <option value="IT" style="background: #050a14;">Italy</option>
-                        <option value="ES" style="background: #050a14;">Spain</option>
-                        <option value="CA" style="background: #050a14;">Canada</option>
-                        <option value="AU" style="background: #050a14;">Australia</option>
-                        <option value="JP" style="background: #050a14;">Japan</option>
-                        <option value="KR" style="background: #050a14;">South Korea</option>
-                        <option value="CN" style="background: #050a14;">China</option>
-                        <option value="IN" style="background: #050a14;">India</option>
-                        <option value="BR" style="background: #050a14;">Brazil</option>
-                        <option value="RU" style="background: #050a14;">Russia</option>
-                        <option value="SA" style="background: #050a14;">Saudi Arabia</option>
-                        <option value="AE" style="background: #050a14;">United Arab Emirates</option>
-                        <option value="EG" style="background: #050a14;">Egypt</option>
-                        <option value="ZA" style="background: #050a14;">South Africa</option>
+                    <select id="country" name="country" required class="w-full bg-white/[0.04] border border-white/[0.08] rounded-2xl p-4"Outfit', sans-serif; font-size: var(--font-size-14, 14px); font-weight: 500; color: var(--c, var(--color-white, #ffffff)f); outline: none; cursor: pointer;" onchange="updateCities()">
+                        <option value="" class="bg-slate-900">{{ _('ui_auto_f2fa9e5a9d85') }}</option>
+                        <option value="TR" class="bg-slate-900">{{ _('ui_auto_88f5f1ee27ee') }}</option>
+                        <option value="US" class="bg-slate-900">{{ _('ui_auto_768685ca582a') }}</option>
+                        <option value="GB" class="bg-slate-900">{{ _('ui_auto_9769121f10f7') }}</option>
+                        <option value="DE" class="bg-slate-900">{{ _('ui_auto_17d53e0e6a68') }}</option>
+                        <option value="FR" class="bg-slate-900">{{ _('ui_auto_e3772ac4b4db') }}</option>
+                        <option value="NL" class="bg-slate-900">{{ _('ui_auto_fb61c8a8eba2') }}</option>
+                        <option value="IT" class="bg-slate-900">{{ _('ui_auto_ad79ef0f076d') }}</option>
+                        <option value="ES" class="bg-slate-900">{{ _('ui_auto_20a8df9b7603') }}</option>
+                        <option value="CA" class="bg-slate-900">{{ _('ui_auto_cd6a7b876852') }}</option>
+                        <option value="AU" class="bg-slate-900">{{ _('ui_auto_ceafb51e2b07') }}</option>
+                        <option value="JP" class="bg-slate-900">{{ _('ui_auto_fcf29f6cad32') }}</option>
+                        <option value="KR" class="bg-slate-900">{{ _('ui_auto_04653e650280') }}</option>
+                        <option value="CN" class="bg-slate-900">{{ _('ui_auto_d2eaf2aa1512') }}</option>
+                        <option value="IN" class="bg-slate-900">{{ _('ui_auto_967ce367d89d') }}</option>
+                        <option value="BR" class="bg-slate-900">{{ _('ui_auto_37497aa5a227') }}</option>
+                        <option value="RU" class="bg-slate-900">{{ _('ui_auto_6754fe3cd831') }}</option>
+                        <option value="SA" class="bg-slate-900">{{ _('ui_auto_6f49c31192f5') }}</option>
+                        <option value="AE" class="bg-slate-900">{{ _('ui_auto_d115b8d5acb8') }}</option>
+                        <option value="EG" class="bg-slate-900">{{ _('ui_auto_1c39abf68e93') }}</option>
+                        <option value="ZA" class="bg-slate-900">{{ _('ui_auto_35fda17ff05f') }}</option>
                     </select>
                 </div>
 
                 <div class="field">
-                    <select id="city" name="city" required style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 16px 18px; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 500; color: #fff; outline: none; cursor: pointer;" disabled>
-                        <option value="" style="background: #050a14;">Önce ülke seçiniz</option>
+                    <select id="city" name="city" required class="w-full bg-white/[0.04] border border-white/[0.08] rounded-2xl p-4"Outfit', sans-serif; font-size: var(--font-size-14, 14px); font-weight: 500; color: var(--c, var(--color-white, #ffffff)f); outline: none; cursor: pointer;" disabled>
+                        <option value="" class="bg-slate-900">{{ _('ui_auto_181b5b9cf58f') }}</option>
                     </select>
                 </div>
 
                 <div class="field">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span id="phone-code" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 16px 18px; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 500; color: #fff; white-space: nowrap;">+90</span>
-                        <input id="phone" type="tel" name="phone" placeholder=" " required autocomplete="tel" style="flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 16px 18px; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 500; color: #fff; outline: none;">
+                    <div class="flex items-center gap-2">
+                        <span id="phone-code" class="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-4"Outfit', sans-serif; font-size: var(--font-size-14, 14px); font-weight: 500; color: var(--c, var(--color-white, #ffffff)f); white-space: nowrap;">+90</span>
+                        <input id="phone" type="tel" name="phone" placeholder=" " required autocomplete="tel" class="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-2xl p-4"Outfit', sans-serif; font-size: var(--font-size-14, 14px); font-weight: 500; color: var(--c, var(--color-white, #ffffff)f); outline: none;">
                     </div>
-                    <label class="field-label" for="phone" style="margin-top: 8px;">Cep telefonu</label>
+                    <label class="field-label" for="phone" class="mt-2">{{ _('ui_auto_d5b11ebbfc1c') }}</label>
                 </div>
 
-                <button type="submit" id="submit-btn" class="btn-submit">
-                    Hesabı Oluştur →
+                <button data-macro="button_secondary" type="submit" id="submit-btn" class="btn-submit">
+                    {{ _('ui_auto_b158c43a991d') }}
                 </button>
             </form>
 
-            <div class="copyright">Designed &amp; Developed by <strong style="color:rgba(255,255,255,0.3)">Emin Çetin</strong></div>
+            <div class="copyright">{{ _('ui_auto_0fecbfb8ddaa') }} <strong class="text-white/30">{{ _('ui_auto_30423ad33865') }}</strong></div>
         </div>
     </div>
 
@@ -557,7 +559,7 @@ function updateCities() {
     }
 
     // Update cities
-    citySelect.innerHTML = '<option value="" style="background: #050a14;">Şehir seçiniz</option>';
+    citySelect.innerHTML = '<option value="" class="bg-slate-900">Şehir seçiniz</option>';
 
     if (selectedCountry && countriesData[selectedCountry]) {
         const cities = countriesData[selectedCountry].cities;
@@ -565,12 +567,12 @@ function updateCities() {
             const option = document.createElement('option');
             option.value = city;
             option.textContent = city;
-            option.style.background = '#050a14';
+            option.style.background = 'var(--color-night-700)';
             citySelect.appendChild(option);
         });
         citySelect.disabled = false;
     } else {
-        citySelect.innerHTML = '<option value="" style="background: #050a14;">Önce ülke seçiniz</option>';
+        citySelect.innerHTML = '<option value="" class="bg-slate-900">{{ _('ui_auto_181b5b9cf58f') }}</option>';
         citySelect.disabled = true;
     }
 }
@@ -628,7 +630,7 @@ function updateStrength(v) {
     if (v.length >= 12) score++;
     if (/[A-Z]/.test(v) && /[0-9]/.test(v)) score++;
     if (/[^A-Za-z0-9]/.test(v)) score++;
-    const colors = ['#ef4444','#f97316','#eab308','#10b981'];
+    const colors = ['var(--color-rose-500)','var(--c, #f97316)','var(--c, #eab308)','var(--color-emerald-500)'];
     const labels = ['Çok Zayıf','Zayıf','Orta','Güçlü'];
     bars.forEach((b, i) => { b.style.background = i < score ? colors[score-1] : 'rgba(255,255,255,0.08)'; });
     lbl.textContent = v.length ? (labels[score-1] || '') : '';
@@ -641,8 +643,8 @@ function checkMatch() {
     const c2 = document.getElementById('confirm_password').value;
     const m = document.getElementById('matchMsg');
     if (!c2) { m.textContent = ''; return; }
-    if (p === c2) { m.textContent = '✓ Şifreler eşleşiyor'; m.style.color = '#10b981'; }
-    else { m.textContent = '✗ Şifreler eşleşmiyor'; m.style.color = '#f87171'; }
+    if (p === c2) { m.textContent = '✓ Şifreler eşleşiyor'; m.style.color = 'var(--color-emerald-500)'; }
+    else { m.textContent = '✗ Şifreler eşleşmiyor'; m.style.color = 'var(--color-rose-400)'; }
 }
 
 /* ── Submit loading state ────────────────────────────────────── */
@@ -652,7 +654,7 @@ document.querySelector('form').addEventListener('submit', function(e) {
     if (p !== c2) {
         e.preventDefault();
         document.getElementById('matchMsg').textContent = '✗ Şifreler eşleşmiyor';
-        document.getElementById('matchMsg').style.color = '#f87171';
+        document.getElementById('matchMsg').style.color = 'var(--color-rose-400)';
         return;
     }
     const btn = document.getElementById('submit-btn');

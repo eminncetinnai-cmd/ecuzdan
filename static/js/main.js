@@ -41,24 +41,9 @@ export function formatDateTime(date) {
     }).format(new Date(date));
 }
 
-// Toast Notifications
-export function showToast(message, type = 'success', duration = 4000) {
-    const container = document.getElementById('toast-container');
-    if (!container) return;
-
-    const toast = document.createElement('div');
-    const bgColor = type === 'success' ? 'bg-emerald-600' :
-                   type === 'error' ? 'bg-rose-600' :
-                   type === 'warning' ? 'bg-amber-600' : 'bg-blue-600';
-
-    toast.className = `toast-item ${bgColor}`;
-    toast.textContent = message;
-    container.appendChild(toast);
-
-    setTimeout(() => {
-        toast.remove();
-    }, duration);
-}
+// Toast Notifications (re-exported from utils.js)
+import { showToast } from './utils.js';
+export { showToast };
 
 // Global access for inline scripts
 window.showToast = showToast;
@@ -115,14 +100,21 @@ export function closeModal(modalId = null) {
 
 export function toggleMobileMenu() {
     const mobileSidebar = document.getElementById('mobile-sidebar');
-    if (!mobileSidebar) return;
-
-    const isHidden = mobileSidebar.classList.toggle('hidden');
-    document.body.style.overflow = isHidden ? '' : 'hidden';
-
+    const sidebar = document.querySelector('.sidebar-premium');
     const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-    if (mobileMenuBtn) {
-        mobileMenuBtn.setAttribute('aria-expanded', (!isHidden).toString());
+
+    if (mobileSidebar) {
+        const isHidden = mobileSidebar.classList.toggle('hidden');
+        document.body.style.overflow = isHidden ? '' : 'hidden';
+        if (mobileMenuBtn) {
+            mobileMenuBtn.setAttribute('aria-expanded', (!isHidden).toString());
+        }
+    } else if (sidebar) {
+        const isOpen = sidebar.classList.toggle('open');
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+        if (mobileMenuBtn) {
+            mobileMenuBtn.setAttribute('aria-expanded', isOpen.toString());
+        }
     }
 }
 
@@ -133,9 +125,13 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// Close modal on Escape key
+// Close modal & mobile menu on Escape key
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
+        const mobileSidebar = document.getElementById('mobile-sidebar');
+        if (mobileSidebar && !mobileSidebar.classList.contains('hidden')) {
+            toggleMobileMenu();
+        }
         document.querySelectorAll('.edit-modal.active, .delete-modal.active, .modal-overlay.active').forEach(modal => {
             closeModal(modal.id);
         });

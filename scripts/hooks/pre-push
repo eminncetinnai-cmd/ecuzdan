@@ -1,0 +1,24 @@
+#!/bin/sh
+# E-Cüzdan — Pre-Push Master Kalite, Kapsama ve Sıfır-Regresyon Hook'u
+# Bu hook her git push öncesinde tüm kurumsal kalite kapılarını, birim testleri ve
+# katmanlı test kapsama denetleyicisini (audit_coverage.py --enforce) çalıştırır.
+
+echo "======================================================================"
+echo "  E-Cüzdan Pre-Push Master Doğrulama ve Sıfır-Regresyon Kapısı"
+echo "======================================================================"
+
+python scripts/verify_all.py
+STATUS=$?
+
+if [ $STATUS -ne 0 ]; then
+    echo ""
+    echo "❌ HATA: Pre-push doğrulaması başarısız oldu! Git push engellendi."
+    echo "👉 Lütfen yukarıdaki başarısız kapı hatalarını ve testleri düzeltin."
+    echo "======================================================================"
+    exit 1
+fi
+
+echo ""
+echo "✅ TEBRİKLER: Tüm testler ve kalite kapıları başarıyla geçildi. Push yapılıyor."
+echo "======================================================================"
+exit 0

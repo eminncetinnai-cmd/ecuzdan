@@ -388,26 +388,52 @@ label {
 }
 
 /* Form Error States */
+.form-input-error,
 input.error,
 select.error,
 textarea.error {
-    border-color: rgba(239, 68, 68, 0.4);
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    border-color: var(--red-500) !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
 }
 
 input.error:focus,
 select.error:focus,
-textarea.error:focus {
-    border-color: rgba(239, 68, 68, 0.6);
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+textarea.error:focus,
+.form-input-error:focus {
+    border-color: var(--red-600) !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25) !important;
 }
 
-.error-message {
-    display: block;
-    font-size: 0.75rem;
+.error-message,
+.form-error,
+.field-error-message {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
     font-weight: 600;
     color: var(--red-600);
     margin-top: 0.375rem;
+    transition: all 0.2s ease;
+}
+
+/* Form Shake Animation */
+@keyframes formFieldShake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-4px); }
+    40%, 80% { transform: translateX(4px); }
+}
+
+.animate-shake {
+    animation: formFieldShake 0.35s ease-in-out;
+}
+
+/* Button Loading State */
+.btn-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.75;
+    cursor: not-allowed;
 }
 
 /* Form Success States */
@@ -535,6 +561,70 @@ td {
 
 .table-responsive table {
     margin: 0;
+}
+
+/* Mobile Stacked Card Table Standard */
+@media (max-width: 768px) {
+    .responsive-card-table thead,
+    .table-card-mobile thead {
+        display: none !important;
+    }
+
+    .responsive-card-table tbody,
+    .table-card-mobile tbody {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    .responsive-card-table tbody tr,
+    .table-card-mobile tbody tr {
+        display: block !important;
+        margin-bottom: 0.875rem !important;
+        padding: 0.875rem 1rem !important;
+        background: var(--color-surface, #ffffff) !important;
+        border: 1px solid var(--color-border, rgba(226, 232, 240, 0.9)) !important;
+        border-radius: 1rem !important;
+        box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.06) !important;
+        transform: none !important;
+    }
+
+    .responsive-card-table tbody tr:hover,
+    .table-card-mobile tbody tr:hover {
+        transform: none !important;
+        background: var(--color-surface, #ffffff) !important;
+    }
+
+    .responsive-card-table td,
+    .table-card-mobile td {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        padding: 0.45rem 0 !important;
+        border-bottom: 1px dashed rgba(226, 232, 240, 0.6) !important;
+        font-size: 0.8rem !important;
+        text-align: right !important;
+    }
+
+    .responsive-card-table td:last-child,
+    .table-card-mobile td:last-child {
+        border-bottom: none !important;
+        padding-top: 0.75rem !important;
+        margin-top: 0.25rem !important;
+        justify-content: flex-end !important;
+    }
+
+    .responsive-card-table td[data-label]::before,
+    .table-card-mobile td[data-label]::before {
+        content: attr(data-label);
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--slate-400);
+        margin-right: 1rem;
+        text-align: left;
+        flex-shrink: 0;
+    }
 }
 
 /* Table Sortable */
@@ -1200,4 +1290,77 @@ th.sortable.desc::after {
 
 .tag-remove:hover {
     opacity: 1;
+}
+
+
+/* Shared action button primitive */
+.action-btn {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.action-btn:hover {
+    transform: translateY(-1px) scale(1.08);
+}
+
+/* Universal Segmented Tab Navigation */
+.tx-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.tx-tab-btn:hover {
+    color: #0f172a;
+}
+
+[data-theme="dark"] .tx-tab-btn:hover {
+    color: #f8fafc;
+}
+
+.tx-tab-btn.active {
+    color: #6366f1;
+    border-bottom-color: #6366f1;
+}
+
+[data-theme="dark"] .tx-tab-btn.active {
+    color: #818cf8;
+    border-bottom-color: #818cf8;
+}
+
+.tab-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.15rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.tab-count-badge.badge-all {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+[data-theme="dark"] .tab-count-badge.badge-all {
+    background: #334155;
+    color: #cbd5e1;
 }

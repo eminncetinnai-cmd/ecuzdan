@@ -1,12 +1,12 @@
 """Asset page orchestration service."""
 
 from datetime import datetime
+from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from domain.transactions.services.financial_ledger import get_asset_ledger_summaries
 from engines.financial_engine import get_asset_analysis
 from shared.decimal_precision import to_decimal
-from decimal import Decimal
 
 if TYPE_CHECKING:
     pass
@@ -59,17 +59,55 @@ class AssetService:
         types = self.catalog_repository.list_asset_types()
         sectors = self.catalog_repository.list_asset_sectors()
         analysis = self._analysis_or_fallback(assets, tenant_id)
+        ledger_summaries = get_asset_ledger_summaries([a.id for a in assets], tenant_id)
 
         return {
             'assets': assets,
             'analysis': analysis,
             'asset_types': types,
             'asset_sectors': sectors,
+            'ledger_summaries': ledger_summaries,
+        }
+
+    def portfolio_snapshot_context(self, tenant_id=None):
+        """Return a tenant-scoped, persisted-value portfolio snapshot.
+
+        This is intentionally lighter than the full assets-view analysis. It
+        does not call market providers, calculate FX, or consolidate values
+        across currencies. The workspace must never present persisted manual
+        valuations as live market marks.
+        """
+        assets = self.financial_repository.list_assets(tenant_id)
+        open_assets = [asset for asset in assets if not getattr(asset, 'is_closed', False)]
+        currency_totals = {}
+        valuation_dates = []
+
+        for asset in open_assets:
+            currency = str(getattr(asset, 'currency', None) or 'TRY').upper()
+            value = to_decimal(getattr(asset, 'value', 0) or 0)
+            currency_totals[currency] = currency_totals.get(currency, to_decimal(0)) + value
+            last_updated = getattr(asset, 'last_updated', None)
+            if last_updated:
+                valuation_dates.append(str(last_updated))
+
+        return {
+            'asset_count': len(open_assets),
+            'closed_asset_count': len(assets) - len(open_assets),
+            'currency_count': len(currency_totals),
+            'currency_totals': {
+                currency: str(value.quantize(Decimal('1.00')))
+                for currency, value in sorted(currency_totals.items())
+            },
+            'last_valuation_date': max(valuation_dates, default=None),
+            'valuation_basis': 'persisted_asset_value',
+            'market_marked': False,
         }
 
     def _analysis_or_fallback(self, assets, tenant_id):
-        from shared.decimal_precision import to_decimal
+
         import logging
+
+        from shared.decimal_precision import to_decimal
         logger = logging.getLogger(__name__)
         try:
             analysis = get_asset_analysis(tenant_id)

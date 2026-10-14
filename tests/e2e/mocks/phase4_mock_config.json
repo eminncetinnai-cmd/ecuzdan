@@ -1,0 +1,100 @@
+{
+  "version": "phase4-mocks.v1",
+  "mode": "playwright-route-interception",
+  "base_url": "http://127.0.0.1:5000",
+  "default_headers": {
+    "content-type": "application/json",
+    "x-request-id": "e2e-phase4-request"
+  },
+  "tenant_headers": {
+    "x-e2e-tenant": "e2e_phase4_tenant_a"
+  },
+  "latency_ms": 0,
+  "replay_header": "x-e2e-idempotency-replay",
+  "routes": {
+    "occurrence_list": {
+      "method": "GET",
+      "path": "/api/plans/{plan_id}/occurrences",
+      "status": 200,
+      "fixture_collection": "occurrences"
+    },
+    "occurrence_pay": {
+      "method": "POST",
+      "path": "/api/occurrences/{occurrence_id}/pay",
+      "status": 200,
+      "success_message": "Ödeme başarıyla kaydedildi.",
+      "fixture_collection": "occurrences"
+    },
+    "occurrence_skip": {
+      "method": "POST",
+      "path": "/api/occurrences/{occurrence_id}/skip",
+      "status": 200,
+      "success_message": "Occurrence atlandı.",
+      "fixture_collection": "occurrences"
+    },
+    "transaction_lineage": {
+      "method": "GET",
+      "path": "/api/transactions/{transaction_id}/lineage",
+      "status": 200,
+      "fixture_collection": "transactions"
+    },
+    "create_adjustment": {
+      "method": "POST",
+      "path": "/api/transactions/{transaction_id}/adjustments",
+      "status": 201,
+      "success_message": "Düzeltme uygulandı.",
+      "fixture_collection": "ledger_adjustments"
+    },
+    "create_reversal": {
+      "method": "POST",
+      "path": "/api/transactions/{transaction_id}/reversal",
+      "status": 201,
+      "success_message": "Ters kayıt uygulandı.",
+      "fixture_collection": "ledger_adjustments"
+    },
+    "adjustment_audit": {
+      "method": "GET",
+      "path": "/api/ledger-adjustments/{adjustment_id}/audit",
+      "status": 200,
+      "fixture_collection": "audit_events"
+    }
+  },
+  "error_scenarios": {
+    "validation_zero_delta": {
+      "match": {"route": "create_adjustment", "body": {"amount_delta": "0"}},
+      "status": 400,
+      "error_code": "validation_error",
+      "message": "Adjustment tutarı sıfır olamaz."
+    },
+    "pending_original": {
+      "match": {"route": "create_adjustment", "path_id": "9702"},
+      "status": 422,
+      "error_code": "financial_invariant_violation",
+      "message": "Sadece ödenmiş işlemler adjustment/reversal ile değiştirilebilir."
+    },
+    "cross_tenant_resource": {
+      "match": {"route": "transaction_lineage", "path_id": "9704", "tenant": "e2e_phase4_tenant_a"},
+      "status": 404,
+      "error_code": "resource_not_found",
+      "message": "Kayıt bulunamadı."
+    },
+    "concurrency_conflict": {
+      "match": {"route": "create_adjustment", "header": {"if-match": "0"}},
+      "status": 409,
+      "error_code": "concurrency_conflict",
+      "message": "Kayıt başka bir oturumda değişti. Güncel veriyi yeniden yükleyin."
+    },
+    "capability_denied": {
+      "match": {"route": "create_reversal", "header": {"x-e2e-capability": "deny"}},
+      "status": 403,
+      "error_code": "capability_denied",
+      "message": "Bu işlem için gerekli yetkiniz bulunmuyor."
+    },
+    "idempotency_replay": {
+      "match": {"route": "create_adjustment", "header": {"x-e2e-replay": "true"}},
+      "status": 200,
+      "idempotency_replayed": true,
+      "message": "Bu işlem daha önce uygulanmış; mevcut kayıt döndürüldü."
+    }
+  }
+}

@@ -1,10 +1,15 @@
 """
 Financial Education Routes
 Finansal Eğitim Route'ları
+
+EAFGS mimarisine uygun olarak veritabanı operasyonları FinancialEducationRepository
+üzerinden yürütülür.
 """
 
 import logging
-import random
+import math
+import random  # noqa: F401
+from datetime import datetime, timedelta, timezone
 
 from flask import Blueprint, g, jsonify, render_template, request, session
 
@@ -18,10 +23,51 @@ from domain.analysis.services import (
     get_guide_data,
 )
 from infrastructure.i18n import i18n
-from models import QuizQuestion, QuizAttempt, UserProgress, UserAchievement
+from models import QuizAttempt, QuizQuestion, UserAchievement, UserProgress  # noqa: F401
+from repositories.financial_education_repository import FinancialEducationRepository
 from shared.db import db
 
 logger = logging.getLogger(__name__)
+
+
+def _calculate_day_streak(attempts):
+    dates = {attempt.completed_at.date() for attempt in attempts if attempt.completed_at}
+    if not dates:
+        return 0
+    today = datetime.now(timezone.utc).date()
+    cursor = today if today in dates else today - timedelta(days=1)
+    streak = 0
+    while cursor in dates:
+        streak += 1
+        cursor -= timedelta(days=1)
+    return streak
+
+
+def _check_and_award_achievement(user_id, achievement_type, tenant_id=None):
+    """Kullanıcıya başarı rozeti verir (eğer henüz yoksa)"""
+    resolved_tenant = tenant_id or g.get('tenant_id')
+    existing = UserAchievement.query.filter_by(
+        user_id=user_id,
+        tenant_id=resolved_tenant,
+        achievement_type=achievement_type
+    ).first()
+
+    if not existing:
+        achievement = UserAchievement(
+            user_id=user_id,
+            achievement_type=achievement_type,
+            tenant_id=resolved_tenant
+        )
+        db.session.add(achievement)
+        logger.info(f"Başarı rozeti verildi: {achievement_type} -> user {user_id}")
+        return achievement
+    return None
+
+
+def utcnow_naive():
+    """UTC zamanı naive datetime olarak döndürür"""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
 
 financial_education_bp = Blueprint('financial_education', __name__, url_prefix='/')
 
@@ -33,6 +79,7 @@ def register_financial_education_routes(bp):
     Args:
         bp: Blueprint objesi
     """
+    repo = FinancialEducationRepository(database=db)
 
     @bp.route('/financial_education')
     def financial_education():
@@ -129,33 +176,25 @@ def register_financial_education_routes(bp):
             except Exception as e:
                 return {'success': False, 'error': str(e)}
         else:
-            return {'success': False, 'error': 'Formula not found'}
+            return {'success': False, 'error': i18n.gettext('fe_formula_not_found')}
 
     @bp.route('/api/quiz/start', methods=['POST'])
     def start_quiz():
         """Yeni quiz başlatır"""
         try:
-            data = request.get_json()
+            data = request.get_json(silent=True) or {}
             difficulty = data.get('difficulty', 'beginner')
             topic = data.get('topic', None)
             user_id = session.get('user_id')
-            tenant_id = g.get('tenant_id')
 
             if not user_id:
-                return jsonify({'success': False, 'error': 'Oturum açmanız gerekli'}), 401
+                return jsonify({'success': False, 'error': i18n.gettext('fe_session_required')}), 401
 
-            # Rastgele soruları al
-            query = QuizQuestion.query.filter_by(difficulty=difficulty, is_active=True)
-            if topic:
-                query = query.filter_by(topic=topic)
-            
-            questions = query.all()
+            # Repository üzerinden rastgele soruları al (Global katalog)
+            questions = repo.get_random_questions(difficulty=difficulty, topic=topic, count=15)
             if not questions:
-                return jsonify({'success': False, 'error': 'Bu seviyede soru bulunamadı'}), 404
+                return jsonify({'success': False, 'error': i18n.gettext('fe_no_questions')}), 404
 
-            # 5 rastgele soru seç
-            selected_questions = random.sample(questions, min(5, len(questions)))
-            
             return jsonify({
                 'success': True,
                 'quiz_id': f"quiz_{user_id}_{int(session.get('quiz_counter', 0))}",
@@ -167,25 +206,29 @@ def register_financial_education_routes(bp):
                         'difficulty': q.difficulty,
                         'topic': q.topic
                     }
-                    for q in selected_questions
+                    for q in questions
                 ]
             })
         except Exception as e:
             logger.exception(f"Quiz başlatma hatası: {e}")
-            return jsonify({'success': False, 'error': 'Quiz başlatılamadı'}), 500
+            return jsonify({'success': False, 'error': i18n.gettext('fe_quiz_start_error')}), 500
 
     @bp.route('/api/quiz/submit', methods=['POST'])
     def submit_quiz():
         """Quiz sonuçlarını kaydeder"""
         try:
-            data = request.get_json()
+            data = request.get_json(silent=True)
+            if not isinstance(data, dict):
+                return jsonify({'success': False, 'error': i18n.gettext('fe_invalid_body')}), 400
             answers = data.get('answers', {})  # {question_id: selected_answer}
+            if not isinstance(answers, dict):
+                return jsonify({'success': False, 'error': i18n.gettext('fe_answers_dict_error')}), 400
             difficulty = data.get('difficulty', 'beginner')
             user_id = session.get('user_id')
             tenant_id = g.get('tenant_id')
 
             if not user_id:
-                return jsonify({'success': False, 'error': 'Oturum açmanız gerekli'}), 401
+                return jsonify({'success': False, 'error': i18n.gettext('fe_session_required')}), 401
 
             # Sonuçları hesapla
             correct_count = 0
@@ -193,7 +236,7 @@ def register_financial_education_routes(bp):
             results = []
 
             for question_id, selected_answer in answers.items():
-                question = QuizQuestion.query.get(int(question_id))
+                question = repo.get_question(int(question_id))
                 if question:
                     is_correct = question.correct_answer == selected_answer
                     if is_correct:
@@ -208,24 +251,23 @@ def register_financial_education_routes(bp):
 
             score = int((correct_count / total_count) * 100) if total_count > 0 else 0
 
-            # Quiz attempt kaydı oluştur
-            quiz_attempt = QuizAttempt(
+            # Quiz attempt kaydı oluştur (Repository üzerinden)
+            repo.record_quiz_attempt(
                 user_id=user_id,
+                tenant_id=tenant_id,
                 difficulty=difficulty,
                 score=score,
                 total_questions=total_count,
-                correct_answers=correct_count,
-                tenant_id=tenant_id
+                correct_answers=correct_count
             )
-            db.session.add(quiz_attempt)
 
             # Başarı kontrolü ve rozet verme
             if score >= 80:
-                _check_and_award_achievement(user_id, 'quiz_master', tenant_id)
+                repo.award_achievement_if_not_exists(user_id, tenant_id, 'quiz_master')
             elif score >= 60:
-                _check_and_award_achievement(user_id, 'quiz_learner', tenant_id)
+                repo.award_achievement_if_not_exists(user_id, tenant_id, 'quiz_learner')
 
-            db.session.commit()
+            repo.commit()
 
             return jsonify({
                 'success': True,
@@ -236,20 +278,19 @@ def register_financial_education_routes(bp):
             })
         except Exception as e:
             logger.exception(f"Quiz gönderme hatası: {e}")
-            db.session.rollback()
-            return jsonify({'success': False, 'error': 'Quiz sonuçları kaydedilemedi'}), 500
+            repo.rollback()
+            return jsonify({'success': False, 'error': i18n.gettext('fe_quiz_save_error')}), 500
 
     @bp.route('/api/quiz/history')
     def quiz_history():
         """Kullanıcının quiz geçmişini getirir"""
         try:
             user_id = session.get('user_id')
+            tenant_id = g.get('tenant_id')
             if not user_id:
-                return jsonify({'success': False, 'error': 'Oturum açmanız gerekli'}), 401
+                return jsonify({'success': False, 'error': i18n.gettext('fe_session_required')}), 401
 
-            attempts = QuizAttempt.query.filter_by(user_id=user_id).order_by(
-                QuizAttempt.completed_at.desc()
-            ).limit(20).all()
+            attempts = repo.get_quiz_history(user_id=user_id, tenant_id=tenant_id, limit=20)
 
             return jsonify({
                 'success': True,
@@ -267,17 +308,25 @@ def register_financial_education_routes(bp):
             })
         except Exception as e:
             logger.exception(f"Quiz geçmişi hatası: {e}")
-            return jsonify({'success': False, 'error': 'Quiz geçmişi alınamadı'}), 500
+            return jsonify({'success': False, 'error': i18n.gettext('fe_quiz_history_error')}), 500
 
     @bp.route('/api/progress')
     def get_progress():
         """Kullanıcının eğitim ilerlemesini getirir"""
         try:
             user_id = session.get('user_id')
+            tenant_id = g.get('tenant_id')
             if not user_id:
-                return jsonify({'success': False, 'error': 'Oturum açmanız gerekli'}), 401
+                return jsonify({'success': False, 'error': i18n.gettext('fe_session_required')}), 401
 
-            progress_records = UserProgress.query.filter_by(user_id=user_id).all()
+            progress_records = repo.get_user_progress_list(user_id=user_id, tenant_id=tenant_id)
+            attempts = repo.get_all_quiz_attempts(user_id=user_id, tenant_id=tenant_id)
+            quiz_average = round(sum(attempt.score for attempt in attempts) / len(attempts)) if attempts else 0
+            stats = {
+                'completed_topics': sum(1 for progress in progress_records if progress.completed),
+                'quiz_average': quiz_average,
+                'day_streak': _calculate_day_streak(attempts),
+            }
 
             return jsonify({
                 'success': True,
@@ -291,88 +340,85 @@ def register_financial_education_routes(bp):
                         'completed_at': p.completed_at.isoformat() if p.completed_at else None
                     }
                     for p in progress_records
-                ]
+                ],
+                'stats': stats
             })
         except Exception as e:
             logger.exception(f"İlerleme hatası: {e}")
-            return jsonify({'success': False, 'error': 'İlerleme alınamadı'}), 500
+            return jsonify({'success': False, 'error': i18n.gettext('fe_progress_error')}), 500
 
     @bp.route('/api/progress/update', methods=['POST'])
     def update_progress():
-        """Kullanıcının eğitim ilerlemesini günceller"""
+        """Konu ilerlemesini doğrulayarak idempotent biçimde kaydeder."""
         try:
-            data = request.get_json()
-            topic = data.get('topic')
-            phase = data.get('phase', 'beginner')
-            progress_percent = data.get('progress_percent', 0)
-            completed = data.get('completed', False)
+            data = request.get_json(silent=True) or {}
+            if not isinstance(data, dict):
+                return jsonify({'success': False, 'error': i18n.gettext('fe_invalid_body')}), 400
+
             user_id = session.get('user_id')
             tenant_id = g.get('tenant_id')
-
             if not user_id:
-                return jsonify({'success': False, 'error': 'Oturum açmanız gerekli'}), 401
+                return jsonify({'success': False, 'error': i18n.gettext('fe_session_required')}), 401
 
-            if not topic:
-                return jsonify({'success': False, 'error': 'Topic gerekli'}), 400
+            topic = data.get('topic')
+            phase = data.get('phase', 'beginner')
+            if not isinstance(topic, str) or not topic.strip():
+                return jsonify({'success': False, 'error': i18n.gettext('fe_topic_required')}), 400
+            if not isinstance(phase, str) or phase not in set(get_all_phases()):
+                return jsonify({'success': False, 'error': i18n.gettext('fe_invalid_level')}), 422
+            if topic not in set(get_all_topics(phase)):
+                return jsonify({'success': False, 'error': i18n.gettext('fe_invalid_topic')}), 422
 
-            # Mevcut kaydı bul veya yeni oluştur
-            progress = UserProgress.query.filter_by(
-                user_id=user_id,
-                topic=topic
-            ).first()
-
-            if progress:
-                progress.phase = phase
-                progress.progress_percent = progress_percent
-                progress.completed = completed
-                progress.last_accessed_at = utcnow_naive()
-                if completed and not progress.completed_at:
-                    progress.completed_at = utcnow_naive()
-            else:
-                progress = UserProgress(
-                    user_id=user_id,
-                    topic=topic,
-                    phase=phase,
-                    progress_percent=progress_percent,
-                    completed=completed,
-                    last_accessed_at=utcnow_naive(),
-                    completed_at=utcnow_naive() if completed else None,
-                    tenant_id=tenant_id
-                )
-                db.session.add(progress)
-
-            # Başarı kontrolü
+            try:
+                progress_percent = float(data.get('progress_percent', 0))
+            except (TypeError, ValueError):
+                return jsonify({'success': False, 'error': i18n.gettext('fe_progress_percent_number')}), 422
+            if not math.isfinite(progress_percent) or not 0 <= progress_percent <= 100:
+                return jsonify({'success': False, 'error': i18n.gettext('fe_progress_percent_range')}), 422
+            progress_percent = int(round(progress_percent))
+            completed = bool(data.get('completed', False)) or progress_percent >= 100
             if completed:
-                _check_and_award_achievement(user_id, 'first_steps', tenant_id)
-                total_completed = UserProgress.query.filter_by(
-                    user_id=user_id,
-                    completed=True
-                ).count()
+                progress_percent = 100
+
+            now = utcnow_naive()
+            repo.save_or_update_progress(
+                user_id=user_id,
+                tenant_id=tenant_id,
+                topic=topic,
+                phase=phase,
+                completed=completed,
+                progress_percent=progress_percent,
+                now=now
+            )
+
+            if completed:
+                repo.award_achievement_if_not_exists(user_id, tenant_id, 'first_steps')
+                total_completed = repo.count_completed_progress(user_id, tenant_id)
                 if total_completed >= 5:
-                    _check_and_award_achievement(user_id, 'graduate', tenant_id)
+                    repo.award_achievement_if_not_exists(user_id, tenant_id, 'graduate')
 
-            db.session.commit()
-
+            repo.commit()
             return jsonify({'success': True, 'progress': {
                 'topic': topic,
                 'phase': phase,
                 'progress_percent': progress_percent,
-                'completed': completed
+                'completed': completed,
             }})
         except Exception as e:
             logger.exception(f"İlerleme güncelleme hatası: {e}")
-            db.session.rollback()
-            return jsonify({'success': False, 'error': 'İlerleme güncellenemedi'}), 500
+            repo.rollback()
+            return jsonify({'success': False, 'error': i18n.gettext('fe_progress_update_error')}), 500
 
     @bp.route('/api/achievements')
     def get_achievements():
         """Kullanıcının başarılarını getirir"""
         try:
             user_id = session.get('user_id')
+            tenant_id = g.get('tenant_id')
             if not user_id:
-                return jsonify({'success': False, 'error': 'Oturum açmanız gerekli'}), 401
+                return jsonify({'success': False, 'error': i18n.gettext('fe_session_required')}), 401
 
-            achievements = UserAchievement.query.filter_by(user_id=user_id).all()
+            achievements = repo.get_user_achievements(user_id=user_id, tenant_id=tenant_id)
 
             return jsonify({
                 'success': True,
@@ -386,27 +432,4 @@ def register_financial_education_routes(bp):
             })
         except Exception as e:
             logger.exception(f"Başarılar hatası: {e}")
-            return jsonify({'success': False, 'error': 'Başarılar alınamadı'}), 500
-
-
-def _check_and_award_achievement(user_id, achievement_type, tenant_id):
-    """Kullanıcıya başarı rozeti verir (eğer henüz yoksa)"""
-    existing = UserAchievement.query.filter_by(
-        user_id=user_id,
-        achievement_type=achievement_type
-    ).first()
-
-    if not existing:
-        achievement = UserAchievement(
-            user_id=user_id,
-            achievement_type=achievement_type,
-            tenant_id=tenant_id
-        )
-        db.session.add(achievement)
-        logger.info(f"Başarı rozeti verildi: {achievement_type} -> user {user_id}")
-
-
-def utcnow_naive():
-    """UTC zamanı naive datetime olarak döndürür"""
-    from datetime import datetime, timezone
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+            return jsonify({'success': False, 'error': i18n.gettext('fe_achievements_error')}), 500

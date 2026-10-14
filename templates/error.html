@@ -5,10 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hata | {{ brand if brand else 'E-Cüzdan' }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-    <script src="{{ url_for('static', filename='js/tailwind-cdn.js') }}"></script>
-    <style>body{font-family:'Inter',sans-serif; background: #0f172a;}</style>
+    <link rel="stylesheet" href="{{ static_asset_url('css/tailwind.css') }}">
 </head>
-<body class="flex items-center justify-center h-screen relative overflow-hidden text-white">
+<body class="bg-slate-900 font-sans flex items-center justify-center min-h-screen relative overflow-hidden text-white">
     <!-- Blur backgrounds -->
     <div class="absolute w-96 h-96 bg-red-600 rounded-full blur-[120px] -top-20 -left-20 opacity-10"></div>
     <div class="absolute w-96 h-96 bg-amber-500 rounded-full blur-[120px] -bottom-20 -right-20 opacity-10"></div>
@@ -20,18 +19,18 @@
             </svg>
         </div>
         <h1 class="text-7xl font-black text-rose-500 tracking-tighter mb-2">{{ code }}</h1>
-        <h2 class="text-xl font-bold uppercase tracking-wide mb-6">İŞLEM BAŞARISIZ</h2>
+        <h2 class="text-xl font-bold uppercase tracking-wide mb-6">{{ _('ui_auto_4b21282498ea') }}</h2>
         <p class="text-slate-300 text-sm mb-4 font-medium leading-relaxed">{{ message }}</p>
         
         <div class="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-6 mb-8">
-            <p class="text-rose-400 text-xs font-bold uppercase tracking-wider mb-2">Destek Ekibi</p>
-            <p class="text-slate-300 text-sm font-medium">Bir hata ile karşılaşıldı</p>
-            <a href="mailto:eminncetinn@gmail.com" class="text-white font-bold text-sm hover:underline">eminncetinn@gmail.com</a>
-            <p class="text-slate-400 text-xs mt-2">adresiyle iletişime geçebilirsiniz</p>
+            <p class="text-rose-400 text-xs font-bold uppercase tracking-wider mb-2">{{ _('ui_auto_79bf430b18c8') }}</p>
+            <p class="text-slate-300 text-sm font-medium">{{ _('ui_auto_7a608fe5c850') }}</p>
+            <a href="mailto:eminncetinn@gmail.com" class="text-white font-bold text-sm hover:underline">{{ _('ui_auto_8dca02944991') }}</a>
+            <p class="text-slate-400 text-xs mt-2">{{ _('ui_auto_56cc9a029295') }}</p>
         </div>
         
         <a href="/" class="inline-block bg-white text-slate-900 px-8 py-4 rounded-2xl font-black uppercase tracking-wide hover:bg-slate-200 transform hover:scale-[1.02] transition shadow-xl shadow-white/10">
-            Ana Sayfaya Dön
+            {{ _('ui_auto_203b67059878') }}
         </a>
     </div>
 </body>

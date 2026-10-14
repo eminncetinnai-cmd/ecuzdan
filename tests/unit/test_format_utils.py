@@ -3,19 +3,20 @@ Unit Tests - Format Utils
 Format utility functions for money, date, and display formatting tests
 """
 
-import pytest
 from datetime import datetime
-from unittest.mock import patch
+
+import pytest
+
 from utils.format_utils import (
-    format_money,
-    format_date,
-    _validate_date_parts,
-    parse_date_input,
-    today_storage,
-    today_display,
     DATE_DISPLAY_FMT,
-    DATE_STORAGE_FMT,
     DATE_INPUT_FORMATS,
+    DATE_STORAGE_FMT,
+    _validate_date_parts,
+    format_date,
+    format_money,
+    parse_date_input,
+    today_display,
+    today_storage,
 )
 
 
@@ -30,7 +31,7 @@ def test_format_utils_module_imports():
 def test_format_utils_module_structure():
     """Test format_utils module structure"""
     import utils.format_utils as format_module
-    
+
     # Check for expected functions
     assert hasattr(format_module, 'format_money')
     assert hasattr(format_module, 'format_date')
@@ -266,7 +267,6 @@ def test_parse_date_input_invalid_month():
 
 
 @pytest.mark.unit
-@pytest.mark.skip(reason="Date validation happens after successful parsing, edge case behavior varies by format")
 def test_parse_date_input_too_early():
     """Test parse_date_input with date before 1990"""
     try:
@@ -277,7 +277,6 @@ def test_parse_date_input_too_early():
 
 
 @pytest.mark.unit
-@pytest.mark.skip(reason="Date validation happens after successful parsing, edge case behavior varies by format")
 def test_parse_date_input_too_late():
     """Test parse_date_input with date after 2100"""
     try:

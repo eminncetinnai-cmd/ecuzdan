@@ -1,0 +1,51 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# E-CÜZDAN LIFECYCLE & RETENTION POLICY
+# Defines artifact categories, retention rules, and promote-or-purge paths.
+# ═══════════════════════════════════════════════════════════════════════════════
+version: "1.0.0"
+
+lifecycle_classes:
+  permanent_source:
+    locations:
+      - "domain/"
+      - "application/"
+      - "routes/"
+      - "repositories/"
+      - "infrastructure/"
+      - "database/"
+      - "templates/"
+      - "static/"
+      - "governance/"
+    retention: "infinite"
+    disposal: "never"
+    requires_approval_to_delete: true
+
+  test_suite:
+    locations:
+      - "tests/"
+    retention: "infinite"
+    disposal: "never"
+    requires_approval_to_delete: true
+
+  operational_logs:
+    locations:
+      - "logs/"
+    retention_policy: "phgs_managed"
+    disposal: "size_and_time_bounded"
+    security_logs_rule: "HOLD_NEVER_AUTO_DELETE"
+
+  runtime_cache:
+    locations:
+      - "**/__pycache__/"
+      - "**/.pytest_cache/"
+    retention: "transient"
+    disposal: "SAFE_AUTO"
+    regenerable: true
+
+  temporary_workspace:
+    locations:
+      - ".work/"
+      - "tmp/"
+    retention: "session_bound"
+    disposal: "purge_after_review"
+    promotion_target: "permanent_source"

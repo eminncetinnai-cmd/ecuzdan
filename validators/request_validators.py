@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from dtos.financial import LogbookEntryDTO, PaymentFormDTO, PlanFormDTO, TransactionFormDTO
+from application.dtos.financial import LogbookEntryDTO, PaymentFormDTO, PlanFormDTO, TransactionFormDTO
 from shared.decimal_precision import to_decimal
 
 
@@ -14,6 +14,10 @@ def transaction_form_from_request(form):
         raise ValueError(f"Geçersiz tutar değeri: {amount_raw}. {str(e)}")
     if amount <= 0:
         raise ValueError("Tutar sıfırdan büyük olmalıdır.")
+    bank_account_raw = str(form.get('bank_account_id') or '').strip()
+    if bank_account_raw and not bank_account_raw.isdigit():
+        raise ValueError('Banka hesabı kimliği geçersiz.')
+    bank_account_id = int(bank_account_raw) if bank_account_raw else None
     return TransactionFormDTO(
         amount=amount,
         category=form.get('category', '').strip(),
@@ -21,11 +25,17 @@ def transaction_form_from_request(form):
         status=form.get('status', 'Ödendi'),
         date=form.get('date', ''),
         note=form.get('note', '').strip(),
+        idempotency_key=(form.get('idempotency_key') or '').strip() or None,
+        version=int(form.get('version')) if str(form.get('version') or '').strip().isdigit() else None,
+        bank_account_id=bank_account_id,
     )
 
 
 def plan_form_from_request(form):
     amount = to_decimal(form.get('amount', 0) or 0)
+    status_val = (form.get('status') or 'Aktif').strip()
+    if status_val not in {'Aktif', 'Duraklatıldı', 'Tamamlandı', 'İptal'}:
+        raise ValueError("Geçersiz plan durumu.")
     dto = PlanFormDTO(
         action=form.get('action'),
         name=form.get('name', '').strip(),
@@ -39,17 +49,35 @@ def plan_form_from_request(form):
         plan_type=form.get('plan_type', 'Taksit'),
         frequency=form.get('frequency', 'Aylık'),
         end_date=form.get('end_date') or None,
-        target_asset_id=int(form.get('target_asset_id')) if form.get('target_asset_id') else None
+        target_asset_id=int(form.get('target_asset_id')) if form.get('target_asset_id') else None,
+        version=int(form.get("version")) if str(form.get("version") or "").strip().isdigit() else None,
+        status=status_val,
     )
     if dto.amount <= 0 or dto.installments < 0 or dto.payment_day < 1 or dto.payment_day > 31:
         raise ValueError("Tutar ve gün değerleri geçerli olmalıdır. Süresiz için taksit sayısı 0 veya 9999 olmalıdır.")
-    if dto.action not in ['add_income_plan', 'add_expense_plan', 'add_investment_plan']:
+    if dto.action not in ['add_income_plan', 'add_expense_plan', 'add_investment_plan', 'update_plan', 'edit_plan']:
         raise ValueError("Geçersiz işlem.")
+    if dto.plan_type not in {'Taksit', 'Abonelik', 'DCA', 'Dönemsel'}:
+        raise ValueError("Geçersiz plan tipi.")
+    if dto.frequency not in {'Aylık', '3-Aylık', 'Yıllık', 'Haftalık'}:
+        raise ValueError("Geçersiz plan sıklığı.")
+
+    start_value = None
     if dto.start_date:
         try:
-            datetime.strptime(dto.start_date, '%Y-%m-%d')
+            start_value = datetime.strptime(dto.start_date, '%Y-%m-%d')
         except ValueError as exc:
             raise ValueError("Geçersiz başlangıç tarihi formatı. YYYY-AA-GG formatında girin.") from exc
+
+    end_value = None
+    if dto.end_date:
+        try:
+            end_value = datetime.strptime(dto.end_date, '%Y-%m-%d')
+        except ValueError as exc:
+            raise ValueError("Geçersiz bitiş tarihi formatı. YYYY-AA-GG formatında girin.") from exc
+
+    if start_value and end_value and end_value < start_value:
+        raise ValueError("Bitiş tarihi başlangıç tarihinden önce olamaz.")
     return dto
 
 
@@ -94,4 +122,3 @@ def logbook_entry_from_request(form):
     if not dto.entry_date:
         raise ValueError("Tarih zorunludur.")
     return dto
-

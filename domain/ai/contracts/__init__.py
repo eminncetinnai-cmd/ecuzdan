@@ -1,1 +1,1 @@
-﻿# domain.ai.contracts: AI domain contracts and interface definitions.\n
+# domain.ai.contracts: AI domain contracts and interface definitions.\n

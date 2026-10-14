@@ -3,818 +3,1018 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ _('btn_login') }} | E-Cüzdan</title>
-    <meta name="description" content="E-Cüzdan — Akıllı kişisel finans yönetim sistemi. Güvenle giriş yapın.">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <script src="{{ url_for('static', filename='js/tailwind-cdn.js') }}"></script>
+    <title>{{ _('btn_login') }} | E-Cüzdan — Intelligent Wealth Platform</title>
+    <meta name="description" content="E-Cüzdan — Akıllı kişisel finans ve varlık yönetim sistemi. Güvenle giriş yapın.">
+    <link rel="icon" type="image/svg+xml" href="{{ static_asset_url('favicon.svg') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ static_asset_url('css/tailwind.css') }}">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --night:    #030712;
-            --deep:     #080d1a;
-            --accent:   #7c3aed;
-            --accent2:  #6366f1;
-            --gold:     #f59e0b;
-            --emerald:  #10b981;
-            --surface:  rgba(255,255,255,0.04);
-            --border:   rgba(255,255,255,0.08);
+            --bg-base: #030712;
+            --bg-surface: rgba(15, 23, 42, 0.75);
+            --bg-card: rgba(15, 23, 42, 0.85);
+            --border-subtle: rgba(255, 255, 255, 0.10);
+            --border-glow: rgba(139, 92, 246, 0.35);
+            --primary: #8b5cf6;
+            --primary-glow: rgba(139, 92, 246, 0.4);
+            --indigo: #6366f1;
+            --gold: #f59e0b;
+            --emerald: #10b981;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --color-violet-500: #8b5cf6;
+            --color-violet-400: #a78bfa;
+            --color-violet-300: #c4b5fd;
+            --color-indigo-700: #4338ca;
+            --color-indigo-500: #6366f1;
+            --color-indigo-400: #818cf8;
+            --color-emerald-500: #10b981;
+            --color-emerald-400: #34d399;
+            --color-amber-500: #f59e0b;
+            --color-amber-400: #fbbf24;
+            --color-rose-300: #fca5a5;
+            --color-slate-600: #475569;
+            --color-slate-500: #64748b;
+            --color-slate-400: #94a3b8;
+            --color-slate-300: #cbd5e1;
+            --color-slate-200: #e2e8f0;
+            --color-slate-50: #f8fafc;
+            --color-white: #ffffff;
         }
 
-        html, body { height: 100%; }
-
-        body {
-            font-family: 'Outfit', sans-serif;
-            background: var(--night);
-            color: #fff;
+        html, body {
+            height: 100%;
+            width: 100%;
             overflow: hidden;
+            background-color: var(--bg-base);
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text-main);
+            user-select: none;
         }
 
-        /* ─── CANVAS PARTICLE LAYER ─── */
-        #particle-canvas {
+        /* ─── ANTIGRAVITY INTERACTIVE CANVAS ─── */
+        #antigravity-canvas {
             position: fixed;
             inset: 0;
-            pointer-events: none;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: auto;
             z-index: 0;
         }
 
-        /* ─── LAYOUT ─── */
-        .shell {
-            position: relative;
+        /* ─── AMBIENT LIGHT MESH ─── */
+        .ambient-mesh {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
             z-index: 1;
+            background:
+                radial-gradient(circle 800px at var(--mouse-x, 25%) var(--mouse-y, 30%), rgba(139, 92, 246, 0.12) 0%, transparent 70%),
+                radial-gradient(circle 600px at 85% 85%, rgba(245, 158, 11, 0.07) 0%, transparent 60%),
+                radial-gradient(circle 700px at 15% 80%, rgba(16, 185, 129, 0.06) 0%, transparent 65%);
+            transition: background 0.15s ease-out;
+        }
+
+        .grid-matrix {
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+            background-size: 54px 54px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* ─── MASTER CONTAINER SHELL ─── */
+        .viewport-shell {
+            position: relative;
+            z-index: 10;
             display: flex;
             height: 100vh;
             width: 100vw;
         }
 
-        /* ══ LEFT PANEL ══════════════════════════════════════════════════ */
-        .left-panel {
+        /* ══ LEFT HERO STAGE ══════════════════════════════════════════════ */
+        .hero-stage {
             display: none;
-            flex: 0 0 58%;
-            position: relative;
-            overflow: hidden;
-            background: linear-gradient(135deg, #080d1a 0%, #0d1129 50%, #0a0d1f 100%);
-            border-right: 1px solid rgba(124,58,237,0.15);
-        }
-
-        @media (min-width: 1024px) { .left-panel { display: flex; flex-direction: column; } }
-
-        /* Left panel: mesh gradient overlay */
-        .left-panel::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background:
-                radial-gradient(ellipse 60% 60% at 20% 15%, rgba(124,58,237,0.18) 0%, transparent 70%),
-                radial-gradient(ellipse 50% 50% at 80% 80%, rgba(245,158,11,0.10) 0%, transparent 70%),
-                radial-gradient(ellipse 40% 40% at 50% 50%, rgba(99,102,241,0.07) 0%, transparent 70%);
-            pointer-events: none;
-        }
-
-        /* Grid lines */
-        .left-panel::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background-image:
-                linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
-            background-size: 48px 48px;
-            pointer-events: none;
-        }
-
-        .left-content {
+            flex: 1 1 56%;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 3.5rem 4rem;
             position: relative;
             z-index: 2;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            padding: 3rem 3.5rem;
+        }
+        @media (min-width: 1024px) {
+            .hero-stage { display: flex; }
         }
 
-        /* Brand */
-        .brand-mark {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-        .brand-icon {
-            width: 46px; height: 46px;
-            border-radius: 14px;
-            background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 60%, #f59e0b 160%);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px; font-weight: 900; color: #fff;
-            box-shadow: 0 8px 24px rgba(124,58,237,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.15);
-            letter-spacing: -0.03em;
-        }
-        .brand-text { line-height: 1; }
-        .brand-name { font-size: 18px; font-weight: 900; color: #fff; letter-spacing: -0.02em; }
-        .brand-sub  { font-size: 9px; font-weight: 700; color: #7c3aed; text-transform: uppercase; letter-spacing: 0.25em; margin-top: 2px; }
-
-        /* Hero Section */
-        .hero-section {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 2.5rem;
-        }
-
-        .hero-eyebrow {
+        /* Brand Bar */
+        .brand-cluster {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 6px 14px;
-            border-radius: 999px;
-            background: rgba(124,58,237,0.12);
-            border: 1px solid rgba(124,58,237,0.25);
-            width: fit-content;
+            gap: 16px;
+            text-decoration: none;
         }
-        .hero-eyebrow-dot {
-            width: 7px; height: 7px;
-            border-radius: 50%;
-            background: #7c3aed;
-            box-shadow: 0 0 8px rgba(124,58,237,0.8);
-            animation: pulse-dot 2s ease-in-out infinite;
+        .brand-emblem-wrap {
+            width: 52px;
+            height: 52px;
+            position: relative;
+            filter: drop-shadow(0 10px 24px rgba(139, 92, 246, 0.45));
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        @keyframes pulse-dot {
-            0%,100% { opacity:1; transform: scale(1); }
-            50% { opacity:0.5; transform: scale(0.7); }
+        .brand-cluster:hover .brand-emblem-wrap {
+            transform: scale(1.08) rotate(4deg);
         }
-        .hero-eyebrow-text { font-size: 10px; font-weight: 700; color: #a78bfa; letter-spacing: 0.15em; text-transform: uppercase; }
-
-        .hero-headline {
-            font-size: clamp(2.4rem, 3.5vw, 3.2rem);
+        .brand-titles {
+            display: flex;
+            flex-direction: column;
+        }
+        .brand-name-text {
+            font-size: var(--font-size-24, 24px);
             font-weight: 900;
-            line-height: 1.08;
-            letter-spacing: -0.04em;
-            color: #fff;
-        }
-        .hero-headline span {
-            background: linear-gradient(135deg, #a78bfa 0%, #818cf8 40%, #f59e0b 100%);
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, #ffffff 0%, var(--color-slate-300) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
+        }
+        .brand-tag-text {
+            font-size: var(--font-size-10, 10px);
+            font-weight: 800;
+            letter-spacing: 0.25em;
+            color: var(--color-violet-500);
+            text-transform: uppercase;
         }
 
-        .hero-sub {
-            font-size: 14px;
+        /* Center Headline & Widgets */
+        .hero-center {
+            max-width: 540px;
+            margin: auto 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .eyebrow-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: var(--space-pad-6, 6px) 16px;
+            border-radius: var(--border-radius-999, 999px);
+            background: rgba(139, 92, 246, 0.12);
+            border: 1px solid rgba(139, 92, 246, 0.28);
+            width: fit-content;
+            backdrop-filter: blur(12px);
+        }
+        .pulse-core {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--color-violet-500);
+            box-shadow: 0 0 12px var(--color-violet-500);
+            animation: pulseGlow 2s infinite ease-in-out;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(0.7); opacity: 0.5; }
+        }
+        .eyebrow-caption {
+            font-size: var(--font-size-11, 11px);
+            font-weight: 800;
+            color: var(--color-violet-300);
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        .hero-title-main {
+            font-size: clamp(2.4rem, 3.8vw, 3.6rem);
+            font-weight: 900;
+            line-height: 1.06;
+            letter-spacing: -0.04em;
+            color: var(--text-main);
+        }
+        .hero-title-main span.gradient-text {
+            background: linear-gradient(135deg, var(--color-violet-300) 0%, var(--color-indigo-400) 45%, var(--color-amber-500) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-description {
+            font-size: var(--font-size-15, 15px);
             font-weight: 400;
-            color: rgba(255,255,255,0.45);
-            line-height: 1.7;
-            max-width: 400px;
+            line-height: 1.65;
+            color: var(--text-muted);
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
-        /* Live Metric Cards */
-        .metrics-grid {
+        /* Interactive Floating Live Stats Grid */
+        .live-stat-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
         }
-
-        .metric-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 18px 20px;
+        .stat-capsule {
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--border-radius-20, 20px);
+            padding: var(--space-pad-18, 18px) 22px;
             position: relative;
             overflow: hidden;
-            transition: all 0.3s ease;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .metric-card::before {
+        .stat-capsule::before {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0;
             height: 2px;
-            background: var(--stripe, linear-gradient(90deg, #7c3aed, #6366f1));
+            background: var(--stat-bar, linear-gradient(90deg, #8b5cf6, #6366f1));
         }
-        .metric-card:hover {
-            border-color: rgba(124,58,237,0.3);
-            transform: translateY(-2px);
-            background: rgba(255,255,255,0.06);
+        .stat-capsule:hover {
+            transform: translateY(-4px);
+            border-color: rgba(139, 92, 246, 0.35);
+            background: rgba(30, 41, 59, 0.6);
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4);
         }
-        .metric-label {
-            font-size: 9px; font-weight: 700;
-            color: rgba(255,255,255,0.35);
-            text-transform: uppercase; letter-spacing: 0.15em;
+        .stat-lbl {
+            font-size: var(--font-size-10, 10px);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--color-slate-500);
             margin-bottom: 6px;
         }
-        .metric-value {
-            font-size: 22px; font-weight: 900;
+        .stat-val {
+            font-size: var(--font-size-24, 24px);
+            font-weight: 900;
             letter-spacing: -0.03em;
-            color: #fff;
+            color: var(--text-main);
         }
-        .metric-badge {
-            display: inline-flex; align-items: center; gap: 4px;
-            margin-top: 4px;
-            font-size: 10px; font-weight: 700;
-            padding: 2px 8px; border-radius: 999px;
-        }
-        .badge-up   { background: rgba(16,185,129,0.12); color: #34d399; }
-        .badge-warn { background: rgba(245,158,11,0.12); color: #fbbf24; }
-
-        /* Animated SVG chart strip */
-        .chart-strip {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 16px 20px 12px;
-            position: relative;
-            overflow: hidden;
-        }
-        .chart-strip-label {
-            font-size: 9px; font-weight: 700;
-            color: rgba(255,255,255,0.3);
-            text-transform: uppercase; letter-spacing: 0.15em;
-            margin-bottom: 10px;
-        }
-        .chart-line {
-            stroke-dasharray: 1000;
-            stroke-dashoffset: 1000;
-            animation: draw-chart 3.5s cubic-bezier(0.4,0,0.2,1) forwards 0.5s;
-        }
-        @keyframes draw-chart {
-            to { stroke-dashoffset: 0; }
-        }
-
-        /* Floating badge absolutely positioned */
-        .float-chip {
-            position: absolute;
-            background: rgba(8,13,26,0.9);
-            backdrop-filter: blur(16px);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 10px 16px;
-            display: flex; align-items: center; gap: 10px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-            animation: chip-float 5s ease-in-out infinite;
-        }
-        @keyframes chip-float {
-            0%,100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
-        }
-        .float-chip-icon {
-            width: 32px; height: 32px;
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 14px;
-        }
-        .float-chip-title { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.4); letter-spacing: 0.1em; text-transform: uppercase; }
-        .float-chip-val   { font-size: 13px; font-weight: 900; color: #fff; }
-
-        /* Footer tagline */
-        .left-footer {
-            font-size: 10px; font-weight: 600;
-            color: rgba(255,255,255,0.2);
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-        }
-
-        /* ══ RIGHT PANEL ═════════════════════════════════════════════════ */
-        .right-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+        .stat-badge {
+            display: inline-flex;
             align-items: center;
-            background: #050a14;
+            gap: 4px;
+            margin-top: 6px;
+            font-size: var(--font-size-10, 10px);
+            font-weight: 800;
+            padding: var(--space-pad-2, 2px) 8px;
+            border-radius: var(--border-radius-999, 999px);
+        }
+        .stat-up { background: rgba(16, 185, 129, 0.12); color: var(--color-emerald-400); }
+        .stat-live { background: rgba(245, 158, 11, 0.12); color: var(--color-amber-400); }
+
+        /* Floating Info Chips */
+        .gravity-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: var(--space-pad-8, 8px) 16px;
+            border-radius: var(--border-radius-14, 14px);
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: var(--font-size-11, 11px);
+            font-weight: 700;
+            color: var(--color-slate-200);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        /* ══ RIGHT LOGIN STAGE ═════════════════════════════════════════════ */
+        .login-stage {
+            flex: 1 1 44%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 2rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* Subtle purple glow behind form */
-        .right-panel::before {
-            content: '';
-            position: absolute;
-            width: 600px; height: 600px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 70%);
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-        }
-
-        .form-shell {
-            width: 100%;
-            max-width: 400px;
             position: relative;
             z-index: 2;
         }
 
-        /* Mobile brand */
-        .mobile-brand {
-            display: flex; align-items: center; gap: 12px;
-            margin-bottom: 2.5rem;
+        /* 3D Parallax Glass Card */
+        .parallax-card-wrap {
+            perspective: 1200px;
+            width: 100%;
+            max-width: 440px;
         }
-        @media (min-width: 1024px) { .mobile-brand { display: none; } }
 
-        /* Heading */
-        .form-eyebrow {
-            font-size: 10px; font-weight: 700;
-            color: #7c3aed;
-            text-transform: uppercase; letter-spacing: 0.2em;
-            margin-bottom: 8px;
+        .login-card {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.90) 0%, rgba(10, 15, 30, 0.95) 100%);
+            backdrop-filter: blur(32px) saturate(180%);
+            -webkit-backdrop-filter: blur(32px) saturate(180%);
+            border: 1px solid rgba(139, 92, 246, 0.25);
+            border-radius: var(--border-radius-28, 28px);
+            padding: 2.75rem 2.5rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow:
+                0 30px 70px rgba(0, 0, 0, 0.7),
+                0 0 0 1px rgba(255, 255, 255, 0.06),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transition: transform 0.2s cubic-bezier(0.2, 0, 0.2, 1), box-shadow 0.2s ease;
+            transform-style: preserve-3d;
         }
-        .form-title {
-            font-size: 2rem; font-weight: 900;
-            letter-spacing: -0.04em;
-            color: #fff;
-            line-height: 1;
+
+        /* Light Refraction Glare */
+        .card-glare {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle 350px at var(--card-mouse-x, 50%) var(--card-mouse-y, 0%), rgba(255, 255, 255, 0.12) 0%, transparent 80%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .card-inner {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Header inside card */
+        .card-header-cluster {
+            margin-bottom: 2rem;
+        }
+        .card-eyebrow {
+            font-size: var(--font-size-11, 11px);
+            font-weight: 800;
+            letter-spacing: 0.2em;
+            color: var(--color-violet-500);
+            text-transform: uppercase;
             margin-bottom: 6px;
         }
-        .form-subtitle {
-            font-size: 13px; font-weight: 400;
-            color: rgba(255,255,255,0.35);
-            margin-bottom: 2rem;
+        .card-title {
+            font-size: var(--font-size-28, 28px);
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            color: var(--text-main);
+            line-height: 1.1;
+        }
+        .card-subtext {
+            font-size: var(--font-size-13, 13px);
+            color: var(--text-muted);
+            margin-top: 6px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
-        /* Divider */
-        .form-divider {
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(124,58,237,0.25) 50%, transparent);
-            margin-bottom: 2rem;
-        }
-
-        /* OAuth Divider */
-        .oauth-divider {
-            display: flex;
-            align-items: center;
-            margin: 1.5rem 0;
-            position: relative;
-        }
-        .oauth-divider::before,
-        .oauth-divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1) 50%, transparent);
-        }
-        .oauth-divider-text {
-            padding: 0 1rem;
-            font-size: 11px;
-            font-weight: 600;
-            color: rgba(255,255,255,0.3);
-            text-transform: uppercase;
-            letter-spacing: 0.15em;
-        }
-
-        /* Google OAuth Button */
-        .btn-google {
+        /* OAuth Google Button */
+        .btn-google-luxury {
             width: 100%;
-            padding: 14px 18px;
-            border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.04);
+            padding: var(--space-pad-14, 14px) 18px;
+            border-radius: var(--border-radius-16, 16px);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(15, 23, 42, 0.85);
             cursor: pointer;
             font-family: 'Outfit', sans-serif;
-            font-size: 13px;
-            font-weight: 600;
-            color: #fff;
+            font-size: var(--font-size-14, 14px);
+            font-weight: 700;
+            color: var(--color-white, #ffffff);
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 12px;
-            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
-            margin-bottom: 1.5rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
         }
-        .btn-google:hover {
-            background: rgba(255,255,255,0.08);
-            border-color: rgba(255,255,255,0.2);
+        .btn-google-luxury:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(139, 92, 246, 0.4);
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3), 0 0 20px rgba(139, 92, 246, 0.15);
         }
-        .btn-google:active {
-            transform: translateY(0);
+        .btn-google-luxury:active { transform: translateY(0); }
+
+        /* Divider */
+        .divider-lux {
+            display: flex;
+            align-items: center;
+            margin: 1.75rem 0;
+        }
+        .divider-lux::before, .divider-lux::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+        }
+        .divider-tag {
+            padding: 0 14px;
+            font-size: var(--font-size-10, 10px);
+            font-weight: 800;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--color-slate-500);
         }
 
-        /* Flash error */
-        .flash-error {
-            background: rgba(239,68,68,0.08);
-            border: 1px solid rgba(239,68,68,0.2);
-            border-radius: 14px;
-            padding: 12px 16px;
+        /* Input Controls */
+        .lux-field {
+            position: relative;
+            margin-bottom: 18px;
+        }
+        .lux-input {
+            width: 100%;
+            background: rgba(2, 6, 23, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: var(--border-radius-16, 16px);
+            padding: var(--space-pad-16, 16px) 48px 16px 48px;
+            font-family: 'Outfit', sans-serif;
+            font-size: var(--font-size-14, 14px);
+            font-weight: 600;
+            color: var(--color-white, #ffffff);
+            outline: none;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .lux-input::placeholder { color: transparent; }
+        .lux-input:focus {
+            background: rgba(15, 23, 42, 0.95);
+            border-color: var(--primary, #8b5cf6);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.22), 0 0 24px rgba(139, 92, 246, 0.28);
+        }
+        .lux-icon-left {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-slate-500);
+            pointer-events: none;
+            transition: color 0.3s ease;
+        }
+        .lux-input:focus ~ .lux-icon-left {
+            color: var(--color-violet-400);
+        }
+        .lux-label {
+            position: absolute;
+            left: 48px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: var(--font-size-14, 14px);
+            font-weight: 500;
+            color: var(--color-slate-500);
+            pointer-events: none;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            background: transparent;
+            padding: 0 4px;
+        }
+        .lux-input:focus ~ .lux-label,
+        .lux-input:not(:placeholder-shown) ~ .lux-label {
+            top: -9px;
+            left: 16px;
+            font-size: var(--font-size-10, 10px);
+            font-weight: 800;
+            color: var(--color-violet-300);
+            background: #0d1322; border: 1px solid rgba(139, 92, 246, 0.25);
+            border-radius: var(--border-radius-4, 4px);
+        }
+        .lux-icon-right {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-slate-500);
+            cursor: pointer;
+            transition: color 0.2s;
+            background: none;
+            border: none;
+            display: flex;
+            align-items: center;
+        }
+        .lux-icon-right:hover { color: var(--color-slate-50); }
+
+        /* Submit Button */
+        .btn-submit-quantum {
+            width: 100%;
+            margin-top: 8px;
+            padding: var(--space-pad-16, 16px);
+            border-radius: var(--border-radius-16, 16px);
+            border: none;
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            font-size: var(--font-size-13, 13px);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            color: var(--text-main);
+            background: linear-gradient(135deg, var(--color-violet-500) 0%, var(--color-indigo-500) 50%, var(--color-indigo-700) 100%);
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-submit-quantum::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s ease;
+        }
+        .btn-submit-quantum:hover::before { left: 100%; }
+        .btn-submit-quantum:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 40px rgba(139, 92, 246, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+        .btn-submit-quantum:active { transform: translateY(0); }
+
+        /* Error Banner */
+        .flash-badge {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: var(--border-radius-14, 14px);
+            padding: var(--space-pad-12, 12px) 16px;
             margin-bottom: 1.5rem;
-            display: flex; align-items: center; gap: 10px;
-            font-size: 12px; font-weight: 700; color: #f87171;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: var(--font-size-13, 13px);
+            font-weight: 700;
+            color: var(--color-rose-300);
             animation: shake 0.4s ease;
         }
         @keyframes shake {
-            0%,100% { transform: translateX(0); }
+            0%, 100% { transform: translateX(0); }
             20% { transform: translateX(-6px); }
             40% { transform: translateX(6px); }
             60% { transform: translateX(-4px); }
             80% { transform: translateX(4px); }
         }
 
-        /* Input field */
-        .field {
-            position: relative;
-            margin-bottom: 14px;
-        }
-        .field-icon {
-            position: absolute;
-            left: 18px; top: 50%;
-            transform: translateY(-50%);
-            color: rgba(255,255,255,0.22);
-            transition: color 0.3s;
-            pointer-events: none;
-        }
-        .field input {
-            width: 100%;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 16px;
-            padding: 16px 18px 16px 50px;
-            font-family: 'Outfit', sans-serif;
-            font-size: 14px; font-weight: 500;
-            color: #fff;
-            outline: none;
-            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
-        }
-        .field input::placeholder { color: rgba(255,255,255,0.22); }
-        .field input:focus {
-            background: rgba(124,58,237,0.08);
-            border-color: rgba(124,58,237,0.5);
-            box-shadow: 0 0 0 4px rgba(124,58,237,0.12), 0 0 20px rgba(124,58,237,0.08);
-        }
-        .field input:focus + .field-icon { color: #a78bfa; }
-        .field input:focus ~ .field-label,
-        .field input:not(:placeholder-shown) ~ .field-label {
-            top: -9px; left: 14px;
-            font-size: 9px; padding: 0 6px;
-            background: #050a14;
-            color: #a78bfa;
-            border-radius: 4px;
-        }
-        .field-label {
-            position: absolute;
-            left: 50px; top: 50%;
-            transform: translateY(-50%);
-            font-size: 14px; font-weight: 500;
-            color: rgba(255,255,255,0.22);
-            pointer-events: none;
-            transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
-            background: transparent;
-        }
-
-        /* Submit button */
-        .btn-login {
-            width: 100%;
-            margin-top: 6px;
-            padding: 16px;
-            border-radius: 16px;
-            border: none;
-            cursor: pointer;
-            font-family: 'Outfit', sans-serif;
-            font-size: 12px; font-weight: 900;
-            text-transform: uppercase; letter-spacing: 0.18em;
-            color: #fff;
-            background: linear-gradient(135deg, #7c3aed 0%, #6366f1 60%, #4f46e5 100%);
-            box-shadow: 0 8px 24px rgba(124,58,237,0.35), 0 0 0 1px rgba(255,255,255,0.08) inset;
-            position: relative; overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
-        }
-        .btn-login::before {
-            content: '';
-            position: absolute;
-            top: 0; left: -100%; width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
-            transition: left 0.5s ease;
-        }
-        .btn-login:hover::before { left: 100%; }
-        .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 14px 36px rgba(124,58,237,0.5), 0 0 0 1px rgba(255,255,255,0.1) inset;
-        }
-        .btn-login:active { transform: translateY(0); }
-
-        /* Security badges */
-        .security-row {
+        /* Footer Badges */
+        .security-footer {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 20px;
+            gap: 18px;
             margin-top: 1.75rem;
+            font-size: var(--font-size-11, 11px);
+            font-weight: 700;
+            color: var(--color-slate-500);
         }
-        .sec-badge {
-            display: flex; align-items: center; gap: 6px;
-            font-size: 10px; font-weight: 600;
-            color: rgba(255,255,255,0.25);
+        .sec-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        .sec-badge svg { opacity: 0.5; }
 
-        /* Daily insight card */
-        .insight-card {
-            margin-top: 1.5rem;
-            background: rgba(255,255,255,0.025);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 16px;
-            padding: 14px 18px;
-            position: relative;
-            overflow: hidden;
-        }
-        .insight-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; height: 2px;
-            background: linear-gradient(90deg, #7c3aed, #f59e0b);
-        }
-        .insight-tag {
-            display: inline-block;
-            padding: 2px 8px; border-radius: 999px;
-            background: rgba(245,158,11,0.1);
-            border: 1px solid rgba(245,158,11,0.2);
-            font-size: 8px; font-weight: 800;
-            color: #fbbf24; text-transform: uppercase; letter-spacing: 0.15em;
-            margin-bottom: 6px;
-        }
-        .insight-text { font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.55); line-height: 1.6; }
-
-        /* Copyright */
-        .copyright {
-            margin-top: 2rem;
+        .copyright-tag {
             text-align: center;
-            font-size: 9px; font-weight: 600;
-            color: rgba(255,255,255,0.12);
+            font-size: var(--font-size-10, 10px);
+            font-weight: 700;
             letter-spacing: 0.15em;
             text-transform: uppercase;
+            color: var(--color-slate-600);
+            margin-top: 1.75rem;
         }
     </style>
 </head>
 <body>
 
-<canvas id="particle-canvas"></canvas>
+    <!-- Interactive Antigravity Canvas -->
+    <canvas id="antigravity-canvas"></canvas>
+    <div class="ambient-mesh" id="ambient-mesh"></div>
+    <div class="grid-matrix"></div>
 
-<div class="shell">
+    <!-- Master Shell -->
+    <div class="viewport-shell">
 
-    <!-- ══ LEFT PANEL ══ -->
-    <div class="left-panel">
-        <div class="left-content">
-
+        <!-- ══ LEFT HERO SECTION ══ -->
+        <div class="hero-stage">
             <!-- Brand -->
-            <div class="brand-mark">
-                <div class="brand-icon">₺</div>
-                <div class="brand-text">
-                    <div class="brand-name">E-Cüzdan</div>
-                    <div class="brand-sub">Wealth System v15</div>
+            <a href="/" class="brand-cluster">
+                <div class="brand-emblem-wrap">
+                    <img src="{{ static_asset_url('img/logo-icon.svg') }}" alt="E-Cüzdan Logo" width="52" height="52">
+                </div>
+                <div class="brand-titles">
+                    <span class="brand-name-text">E-CÜZDAN</span>
+                    <span class="brand-tag-text">{{ _('ui_auto_385373bdc571') }}</span>
+                </div>
+            </a>
+
+            <!-- Central Hero Pitch -->
+            <div class="hero-center">
+                <div class="eyebrow-pill">
+                    <div class="pulse-core"></div>
+                    <span class="eyebrow-caption">{{ _('ui_auto_094fb0be6cca') }}</span>
+                </div>
+
+                <h1 class="hero-title-main">
+                    {{ _('ui_auto_0409c63b9c1b') }}<br>
+                    <span class="gradient-text">{{ _('ui_auto_477dfc1e7213') }}</span><br>
+                    {{ _('ui_auto_255c188614eb') }}
+                </h1>
+
+                <p class="hero-description">
+                    {{ _('ui_auto_74f297ae5f3c') }}
+                </p>
+
+                <!-- Live Dynamic Stats -->
+                <div class="live-stat-grid">
+                    <div class="stat-capsule" style="--stat-bar: linear-gradient(90deg, var(--color-violet-500), #6366f1);">
+                        <div class="stat-lbl">{{ _('ui_auto_4080dd5c2bf2') }}</div>
+                        <div class="stat-val" id="net-worth-counter">₺0</div>
+                        <div class="stat-badge stat-up">↑ 23.4%</div>
+                    </div>
+                    <div class="stat-capsule" style="--stat-bar: linear-gradient(90deg, var(--color-emerald-500), var(--c, var(--color-emerald-600, #059669)9));">
+                        <div class="stat-lbl">{{ _('ui_auto_2f5469e00d6b') }}</div>
+                        <div class="stat-val" id="savings-counter">₺0</div>
+                        <div class="stat-badge stat-up">↑ 8.1%</div>
+                    </div>
+                    <div class="stat-capsule" style="--stat-bar: linear-gradient(90deg, var(--color-amber-500), var(--c, var(--color-amber-600, #d97706)6));">
+                        <div class="stat-lbl">{{ _('ui_auto_6dc063370d6b') }}</div>
+                        <div class="stat-val">+41.2%</div>
+                        <div class="stat-badge stat-live">{{ _('ui_auto_65da0d8f00c3') }}</div>
+                    </div>
+                    <div class="stat-capsule" style="--stat-bar: linear-gradient(90deg, var(--color-indigo-500), var(--c, var(--color-blue-500, #3b82f6)6));">
+                        <div class="stat-lbl">{{ _('ui_auto_2fe00a2e3ea8') }}</div>
+                        <div class="stat-val">12</div>
+                        <div class="stat-badge stat-up">{{ _('ui_auto_f0ace6de9fe4') }}</div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Hero -->
-            <div class="hero-section">
-                <div>
-                    <div class="hero-eyebrow">
-                        <div class="hero-eyebrow-dot"></div>
-                        <span class="hero-eyebrow-text">Canlı Piyasa Verisi</span>
-                    </div>
-                    <br>
-                    <h1 class="hero-headline">
-                        Paranızı<br>
-                        <span>Akıllıca</span><br>
-                        Yönetin.
-                    </h1>
-                    <p class="hero-sub" style="margin-top:1rem;">
-                        Monte Carlo simülasyonları, anomali tespiti ve çok boyutlu portföy analizi ile finansal özgürlüğünüze giden yolu açın.
-                    </p>
+            <!-- Footer Badge -->
+            <div class="flex items-center gap-4">
+                <div class="gravity-chip">
+                    <span class="text-emerald-400">●</span>
+                    <span>256-Bit TLS & Encrypted Vault</span>
                 </div>
-
-                <!-- Metrics -->
-                <div class="metrics-grid">
-                    <div class="metric-card" style="--stripe: linear-gradient(90deg,#7c3aed,#6366f1);">
-                        <div class="metric-label">Net Varlık</div>
-                        <div class="metric-value" id="net-worth-counter">₺0</div>
-                        <div class="metric-badge badge-up">↑ 23.4%</div>
-                    </div>
-                    <div class="metric-card" style="--stripe: linear-gradient(90deg,#10b981,#059669);">
-                        <div class="metric-label">Aylık Tasarruf</div>
-                        <div class="metric-value" id="savings-counter">₺0</div>
-                        <div class="metric-badge badge-up">↑ 8.1%</div>
-                    </div>
-                    <div class="metric-card" style="--stripe: linear-gradient(90deg,#f59e0b,#f97316);">
-                        <div class="metric-label">Portföy Büyümesi</div>
-                        <div class="metric-value">+41.2%</div>
-                        <div class="metric-badge badge-warn">YTD 2025</div>
-                    </div>
-                    <div class="metric-card" style="--stripe: linear-gradient(90deg,#6366f1,#818cf8);">
-                        <div class="metric-label">Aktif Varlık</div>
-                        <div class="metric-value">12</div>
-                        <div class="metric-badge badge-up">Likit</div>
-                    </div>
-                </div>
-
-                <!-- Chart strip -->
-                <div class="chart-strip">
-                    <div class="chart-strip-label">Portföy performansı · Son 12 ay</div>
-                    <svg width="100%" height="60" viewBox="0 0 400 60" fill="none" preserveAspectRatio="none">
-                        <defs>
-                            <linearGradient id="line-g" x1="0" y1="0" x2="1" y2="0">
-                                <stop offset="0%" stop-color="#7c3aed"/>
-                                <stop offset="100%" stop-color="#f59e0b"/>
-                            </linearGradient>
-                            <linearGradient id="fill-g" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stop-color="rgba(124,58,237,0.2)"/>
-                                <stop offset="100%" stop-color="rgba(124,58,237,0)"/>
-                            </linearGradient>
-                        </defs>
-                        <path d="M0 55 C30 55 40 45 70 38 C100 30 120 45 150 32 C180 18 200 40 230 28 C260 16 280 35 310 20 C340 5 370 12 400 5 L400 60 L0 60Z" fill="url(#fill-g)"/>
-                        <path class="chart-line" d="M0 55 C30 55 40 45 70 38 C100 30 120 45 150 32 C180 18 200 40 230 28 C260 16 280 35 310 20 C340 5 370 12 400 5" stroke="url(#line-g)" stroke-width="2.5" stroke-linecap="round"/>
-                    </svg>
+                <div class="gravity-chip">
+                    <span class="text-violet-400">✦</span>
+                    <span>Real-time Financial Ledger</span>
                 </div>
             </div>
-
-            <!-- Footer -->
-            <div class="left-footer">© 2025 E-Cüzdan · Emin Çetin · Tüm hakları saklıdır</div>
         </div>
+
+        <!-- ══ RIGHT LOGIN SECTION ══ -->
+        <div class="login-stage">
+            <div class="parallax-card-wrap" id="card-wrapper">
+                <div class="login-card" id="login-card">
+                    <div class="card-glare"></div>
+                    <div class="card-inner">
+                        
+                        <!-- Header inside card -->
+                        <div class="card-header-cluster">
+                            <div class="card-eyebrow">{{ _('ui_auto_9975f2bf7f5f') }}</div>
+                            <h2 class="card-title">{{ _('btn_login') }}</h2>
+                            <p class="card-subtext">{{ _('ui_auto_85bc9b624e20') }}</p>
+                        </div>
+
+                        <!-- Flash Error Message -->
+                        {% with msgs = get_flashed_messages() %}
+                            {% if msgs %}
+                            <div class="flash-badge">
+                                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                                </svg>
+                                <span>{{ msgs[0] }}</span>
+                            </div>
+                            {% endif %}
+                        {% endwith %}
+
+                        <!-- Google OAuth Login Button -->
+                        <button data-macro="button_secondary" type="button" id="google-login-btn" class="btn-google-luxury" onclick="handleGoogleLogin()">
+                            <svg width="20" height="20" viewBox="0 0 24 24">
+                                <path fill="var(--google-blue, var(--c, #4285F4))" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path fill="var(--google-green, var(--c, #34A853))" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path fill="var(--google-yellow, var(--c, #FBBC05))" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                <path fill="var(--google-red, var(--c, #EA4335))" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            </svg>
+                            <span>{{ _('ui_auto_ffb0b1c5263b') }}</span>
+                        </button>
+
+                        <div class="divider-lux">
+                            <span class="divider-tag">{{ _('ui_auto_a8c8ca125aba') }}</span>
+                        </div>
+
+                        <!-- Standard Form -->
+                        <form method="post" autocomplete="on" id="login-form">
+                            <div class="lux-field">
+                                <input id="username" class="lux-input" type="text" name="username" placeholder=" " required autofocus autocomplete="username">
+                                <div class="lux-icon-left">
+                                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                    </svg>
+                                </div>
+                                <label class="lux-label" for="username">{{ _('ui_auto_ba2cb49e1255') }}</label>
+                            </div>
+
+                            <div class="lux-field">
+                                <input id="password" class="lux-input" type="password" name="password" placeholder=" " required autocomplete="current-password">
+                                <div class="lux-icon-left">
+                                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                    </svg>
+                                </div>
+                                <label class="lux-label" for="password">{{ _('login_password') }}</label>
+                                <button data-macro="button_secondary" type="button" class="lux-icon-right" id="toggle-password" title="Şifreyi Göster/Gizle">
+                                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="eye-icon">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <button data-macro="button_secondary" type="submit" id="login-submit-btn" class="btn-submit-quantum">
+                                <span>{{ _('btn_login') }}</span>
+                                <span class="ml-2">→</span>
+                            </button>
+                        </form>
+
+                        <!-- Security Badges -->
+                        <div class="security-footer">
+                            <div class="sec-item">
+                                <svg width="13" height="13" fill="none" stroke="var(--color-violet-500)" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                </svg>
+                                <span>{{ _('ui_auto_ff40a3b926f5') }}</span>
+                            </div>
+                            <div class="sec-item">
+                                <svg width="13" height="13" fill="none" stroke="var(--color-emerald-500)" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                </svg>
+                                <span>{{ _('ui_auto_5e3708adc733') }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Copyright -->
+                        <div class="copyright-tag">
+                            {{ _('ui_auto_0fecbfb8ddaa') }} <strong class="text-slate-400">{{ _('ui_auto_30423ad33865') }}</strong>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <!-- ══ RIGHT PANEL ══ -->
-    <div class="right-panel">
-        <div class="form-shell">
+    <!-- ══ JAVASCRIPT: ANTIGRAVITY PHYSICS & PARALLAX ══ -->
+    <script>
+    /* ── 1. ANTIGRAVITY DYNAMIC PHYSICS CANVAS ─────────────────── */
+    (function() {
+        const canvas = document.getElementById('antigravity-canvas');
+        const ctx = canvas.getContext('2d');
+        let W = canvas.width = window.innerWidth;
+        let H = canvas.height = window.innerHeight;
 
-            <!-- Mobile brand -->
-            <div class="mobile-brand">
-                <div class="brand-icon" style="width:38px;height:38px;font-size:15px;border-radius:11px;">₺</div>
-                <div class="brand-text">
-                    <div class="brand-name" style="font-size:15px;">E-Cüzdan</div>
-                    <div class="brand-sub">Wealth System</div>
-                </div>
-            </div>
+        let mouse = { x: W * 0.5, y: H * 0.5, isHover: false, radius: 180 };
 
-            <div class="form-eyebrow">Güvenli Giriş</div>
-            <h2 class="form-title">{{ _('btn_login') }}</h2>
-            <p class="form-subtitle">Hesabınıza erişmek için bilgilerinizi girin.</p>
-            <div class="form-divider"></div>
+        function resize() {
+            W = canvas.width = window.innerWidth;
+            H = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
 
-            <!-- Flash messages -->
-            {% with msgs = get_flashed_messages() %}
-                {% if msgs %}
-                <div class="flash-error">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                    </svg>
-                    {{ msgs[0] }}
-                </div>
-                {% endif %}
-            {% endwith %}
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            mouse.isHover = true;
+            document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+            document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+        });
 
-            <!-- OAuth Divider -->
-            <div class="oauth-divider">
-                <span class="oauth-divider-text">veya</span>
-            </div>
+        window.addEventListener('mouseleave', () => {
+            mouse.isHover = false;
+        });
 
-            <!-- Google OAuth Button -->
-            <button type="button" id="google-login-btn" class="btn-google" onclick="handleGoogleLogin()">
-                <svg width="20" height="20" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                Google ile giriş yap
-            </button>
+        // Click Ripple Shockwave
+        let shockwaves = [];
+        window.addEventListener('click', (e) => {
+            shockwaves.push({ x: e.clientX, y: e.clientY, r: 10, maxR: 240, alpha: 0.75, speed: 6 });
+        });
 
-            <!-- Form -->
-            <form method="post" autocomplete="on">
-                <div class="field">
-                    <input id="username" type="text" name="username" placeholder=" " required autofocus autocomplete="username">
-                    <div class="field-icon">
-                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                        </svg>
-                    </div>
-                    <label class="field-label" for="username">Kullanıcı adı veya e-posta</label>
-                </div>
+        // Currency / Quantum Node particle definitions
+        const SYMBOLS = ['₺', '$', '€', '₿', '▲', '✦', '📈', '🛡️'];
+        const COLOR_PALETTE = [
+            'rgba(139, 92, 246, ',  // Violet
+            'rgba(99, 102, 241, ',  // Indigo
+            'rgba(245, 158, 11, ',  // Amber Gold
+            'rgba(16, 185, 129, ',  // Emerald
+            'rgba(56, 189, 248, '   // Sky Blue
+        ];
 
-                <div class="field">
-                    <input id="password" type="password" name="password" placeholder=" " required autocomplete="current-password">
-                    <div class="field-icon">
-                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                        </svg>
-                    </div>
-                    <label class="field-label" for="password">{{ _('login_password') }}</label>
-                </div>
+        const PARTICLE_COUNT = Math.min(85, Math.floor((W * H) / 14000));
+        let particles = [];
 
-                <button type="submit" id="login-submit-btn" class="btn-login">
-                    {{ _('btn_login') }} →
-                </button>
-            </form>
+        class AntigravityParticle {
+            constructor() {
+                this.init(true);
+            }
 
-            <!-- Security row -->
-            <div class="security-row">
-                <div class="sec-badge">
-                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                    </svg>
-                    Şifrelenmiş bağlantı
-                </div>
-                <div class="sec-badge">
-                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                    </svg>
-                    Güvenli oturum
-                </div>
-            </div>
+            init(randomY = false) {
+                this.x = Math.random() * W;
+                this.y = randomY ? Math.random() * H : H + 20;
+                this.originX = this.x;
+                this.originY = this.y;
+                this.size = Math.random() * 2.2 + 1.2;
+                this.symbol = Math.random() > 0.65 ? SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)] : null;
+                this.vx = (Math.random() - 0.5) * 0.45;
+                this.vy = -(Math.random() * 0.6 + 0.25); // Gentle floating upwards
+                this.colorBase = COLOR_PALETTE[Math.floor(Math.random() * COLOR_PALETTE.length)];
+                this.alpha = Math.random() * 0.55 + 0.2;
+                this.pulseSpeed = Math.random() * 0.03 + 0.01;
+                this.pulseAngle = Math.random() * Math.PI * 2;
+                this.mass = Math.random() * 1.5 + 0.8;
+            }
 
-            <!-- Daily insight -->
-            {% if daily_insight %}
-            <div class="insight-card">
-                <div class="insight-tag">{{ daily_insight.category }}</div>
-                <p class="insight-text">{{ daily_insight.text }}</p>
-            </div>
-            {% endif %}
+            update() {
+                this.pulseAngle += this.pulseSpeed;
+                let currentAlpha = this.alpha + Math.sin(this.pulseAngle) * 0.15;
+                currentAlpha = Math.max(0.1, Math.min(0.85, currentAlpha));
 
-            <div class="copyright">Designed &amp; Developed by <strong style="color:rgba(255,255,255,0.3)">Emin Çetin</strong></div>
-        </div>
-    </div>
+                // 1. Antigravity Mouse Repulsion & Spring Force
+                if (mouse.isHover) {
+                    let dx = mouse.x - this.x;
+                    let dy = mouse.y - this.y;
+                    let dist = Math.hypot(dx, dy);
 
-</div>
+                    if (dist < mouse.radius) {
+                        let force = (1 - dist / mouse.radius) * 3.5;
+                        let angle = Math.atan2(dy, dx);
+                        this.vx -= Math.cos(angle) * force / this.mass;
+                        this.vy -= Math.sin(angle) * force / this.mass;
+                    }
+                }
 
-<script>
-/* ── Particle Canvas ─────────────────────────────────────────── */
-(function() {
-    const canvas = document.getElementById('particle-canvas');
-    const ctx = canvas.getContext('2d');
-    let W, H, particles = [];
+                // 2. Shockwave Push
+                shockwaves.forEach(sw => {
+                    let dx = this.x - sw.x;
+                    let dy = this.y - sw.y;
+                    let dist = Math.hypot(dx, dy);
+                    if (Math.abs(dist - sw.r) < 30) {
+                        let push = (1 - Math.abs(dist - sw.r) / 30) * 4;
+                        let angle = Math.atan2(dy, dx);
+                        this.vx += Math.cos(angle) * push;
+                        this.vy += Math.sin(angle) * push;
+                    }
+                });
 
-    function resize() {
-        W = canvas.width  = window.innerWidth;
-        H = canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resize);
-    resize();
+                // Velocity Friction & Natural Float
+                this.vx *= 0.96;
+                this.vy *= 0.96;
 
-    const COLORS = ['rgba(124,58,237,', 'rgba(99,102,241,', 'rgba(245,158,11,', 'rgba(16,185,129,'];
+                this.x += this.vx + (Math.sin(this.pulseAngle) * 0.2);
+                this.y += this.vy;
 
-    for (let i = 0; i < 60; i++) {
-        const color = COLORS[Math.floor(Math.random() * COLORS.length)];
-        particles.push({
-            x: Math.random() * window.innerWidth,
-            y: Math.random() * window.innerHeight,
-            r: Math.random() * 1.8 + 0.4,
-            dx: (Math.random() - 0.5) * 0.3,
-            dy: (Math.random() - 0.5) * 0.3,
-            alpha: Math.random() * 0.5 + 0.1,
-            color
+                // Screen Wrap
+                if (this.y < -30) this.y = H + 20;
+                if (this.x < -30) this.x = W + 20;
+                if (this.x > W + 30) this.x = -20;
+            }
+
+            draw() {
+                ctx.save();
+                if (this.symbol) {
+                    ctx.font = `${Math.floor(this.size * 5.5)}px 'Outfit', sans-serif`;
+                    ctx.fillStyle = this.colorBase + this.alpha + ')';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(this.symbol, this.x, this.y);
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = this.colorBase + this.alpha + ')';
+                    ctx.shadowBlur = 8;
+                    ctx.shadowColor = this.colorBase + '0.6)';
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+        }
+
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+            particles.push(new AntigravityParticle());
+        }
+
+        function drawConstellations() {
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    let dx = particles[i].x - particles[j].x;
+                    let dy = particles[i].y - particles[j].y;
+                    let dist = Math.hypot(dx, dy);
+                    if (dist < 110) {
+                        let alpha = (1 - dist / 110) * 0.18;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(139, 92, 246, ${alpha})`;
+                        ctx.lineWidth = 0.8;
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, W, H);
+
+            // Animate Shockwaves
+            for (let i = shockwaves.length - 1; i >= 0; i--) {
+                let sw = shockwaves[i];
+                sw.r += sw.speed;
+                sw.alpha *= 0.94;
+                ctx.beginPath();
+                ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(139, 92, 246, ${sw.alpha * 0.6})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                if (sw.r > sw.maxR || sw.alpha < 0.02) {
+                    shockwaves.splice(i, 1);
+                }
+            }
+
+            drawConstellations();
+
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+        animate();
+    })();
+
+    /* ── 2. 3D PARALLAX TILT ON LOGIN CARD ──────────────────────── */
+    (function() {
+        const card = document.getElementById('login-card');
+        const wrap = document.getElementById('card-wrapper');
+        if (!card || !wrap) return;
+
+        wrap.addEventListener('mousemove', (e) => {
+            const rect = wrap.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+
+            const rotateX = ((y - centerY) / centerY) * -7;
+            const rotateY = ((x - centerX) / centerX) * 7;
+
+            card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+            card.style.setProperty('--card-mouse-x', `${(x / rect.width) * 100}%`);
+            card.style.setProperty('--card-mouse-y', `${(y / rect.height) * 100}%`);
+        });
+
+        wrap.addEventListener('mouseleave', () => {
+            card.style.transform = 'rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+        });
+    })();
+
+    /* ── 3. PASSWORD VISIBILITY TOGGLE ──────────────────────────── */
+    const toggleBtn = document.getElementById('toggle-password');
+    const pwdInput = document.getElementById('password');
+    const eyeIcon = document.getElementById('eye-icon');
+
+    if (toggleBtn && pwdInput) {
+        toggleBtn.addEventListener('click', () => {
+            const isPassword = pwdInput.type === 'password';
+            pwdInput.type = isPassword ? 'text' : 'password';
+            eyeIcon.innerHTML = isPassword
+                ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/>'
+                : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />';
         });
     }
 
-    function draw() {
-        ctx.clearRect(0, 0, W, H);
-        particles.forEach(p => {
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-            ctx.fillStyle = p.color + p.alpha + ')';
-            ctx.fill();
-            p.x += p.dx; p.y += p.dy;
-            if (p.x < 0 || p.x > W) p.dx *= -1;
-            if (p.y < 0 || p.y > H) p.dy *= -1;
+    /* ── 4. LIVE ANIMATED COUNTERS ──────────────────────────────── */
+    function animateCounter(id, target, prefix, duration) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const start = performance.now();
+        function step(now) {
+            const p = Math.min((now - start) / duration, 1);
+            const ease = 1 - Math.pow(1 - p, 4);
+            const val = Math.floor(ease * target);
+            el.textContent = prefix + val.toLocaleString('tr-TR');
+            if (p < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+    }
+    window.addEventListener('load', function() {
+        animateCounter('net-worth-counter', 1482920, '₺', 2200);
+        animateCounter('savings-counter',   21450,   '₺', 2000);
+    });
+
+    /* ── 5. FORM & GOOGLE SUBMIT FEEDBACK ───────────────────────── */
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', function() {
+            const btn = document.getElementById('login-submit-btn');
+            btn.innerHTML = '<span>Giriş Yapılıyor…</span>';
+            btn.style.opacity = '0.8';
+            btn.disabled = true;
         });
-        requestAnimationFrame(draw);
     }
-    draw();
-})();
 
-/* ── Counter Animation ──────────────────────────────────────── */
-function animateCounter(id, target, prefix, duration) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const start = performance.now();
-    function step(now) {
-        const p = Math.min((now - start) / duration, 1);
-        const ease = 1 - Math.pow(1 - p, 4);
-        const val = Math.floor(ease * target);
-        el.textContent = prefix + val.toLocaleString('tr-TR');
-        if (p < 1) requestAnimationFrame(step);
+    function handleGoogleLogin() {
+        const btn = document.getElementById('google-login-btn');
+        btn.innerHTML = '<span class="text-xs text-slate-300">Google ile Yönlendiriliyor…</span>';
+        btn.style.opacity = '0.8';
+        btn.disabled = true;
+        window.location.href = '/login/google';
     }
-    requestAnimationFrame(step);
-}
-window.addEventListener('load', function() {
-    animateCounter('net-worth-counter', 1482920, '₺', 2200);
-    animateCounter('savings-counter',   21450,   '₺', 2000);
-});
-
-/* ── Login button loading state ─────────────────────────────── */
-document.querySelector('form').addEventListener('submit', function() {
-    const btn = document.getElementById('login-submit-btn');
-    btn.textContent = 'Giriş yapılıyor…';
-    btn.style.opacity = '0.75';
-    btn.disabled = true;
-});
-
-/* ── Google OAuth Login Handler ─────────────────────────────── */
-function handleGoogleLogin() {
-    const btn = document.getElementById('google-login-btn');
-    btn.textContent = 'Yönlendiriliyor…';
-    btn.style.opacity = '0.75';
-    btn.disabled = true;
-    
-    // Redirect to Google OAuth login endpoint
-    window.location.href = '/login/google';
-}
-</script>
+    </script>
 </body>
 </html>

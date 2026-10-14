@@ -29,6 +29,8 @@ instance/
 
 # Environment variables
 .env
+.env.local
+.env.*.local
 
 # Database
 *.db
@@ -55,6 +57,7 @@ alembic/versions/*.py
 
 # Tests
 .pytest_cache/
+.benchmarks/
 .coverage
 htmlcov/
 
@@ -69,8 +72,9 @@ _backup/
 # Virtual environment
 .venv/
 
-# Empty agent directories
+# Empty agent directories and AI work isolation
 .agents/
+.work/
 
 # Archive folder (dead code)
 archive/
@@ -84,3 +88,23 @@ logs/*
 static/uploads/profiles/*
 !static/uploads/profiles/.gitkeep
 client_secret_*.json
+# Generated wave/test artifacts
+coverage_wave*.json
+forensic_wave.log
+fullsuite_wave*.log
+integration_*_wave.log
+regression_wave.log
+unit_*_wave.log
+run_wave*.cmd
+run_wave*.bat
+phase*_*.txt
+integration_files.txt
+# Playwright E2E runtime artifacts
+test-results/
+playwright-report/
+blob-report/
+.mypy_cache/
+.ruff_cache/
+
+node_modules/
+.neon

@@ -70,22 +70,27 @@ class StrategyEngine:
         }
 
     def _run_single_scenario_sim(self, total_investable, mu, sigma, years, sims, annual_savings, inflation):
-        """Tek bir senaryo için GBM simülasyonu çalıştırıp yüzdelikleri hesaplar"""
-        mc_paths = []
-        for _ in range(sims):
-            path = [total_investable]
-            current = total_investable
-            for y in range(1, years + 1):
-                # Geometrik Brown Hareketi formülü
-                # S_t = S_{t-1} * exp((mu - 0.5 * sigma^2) * dt + sigma * sqrt(dt) * Z)
-                change = np.random.normal(mu - 0.5 * sigma**2, sigma)
-                current = current * np.exp(change)
-                # Enflasyonla ayarlanan yıllık tasarruf girdisini ekle
-                current += annual_savings * ((1 + inflation) ** (y - 1))
-                path.append(max(0.0, current))
-            mc_paths.append(path)
+        """Tek senaryoyu NumPy vektörleriyle çalıştırıp yüzdelikleri hesaplar.
 
-        mc_array = np.array(mc_paths)
+        Finansal formül değişmez; yalnızca simülasyon ekseni Python döngüsünden
+        NumPy matris işlemlerine taşınır. Böylece strateji sayfası 10.000
+        simülasyonluk varsayılan ayarda request timeout’a takılmaz.
+        """
+        mc_array = np.empty((sims, years + 1), dtype=float)
+        mc_array[:, 0] = total_investable
+        current = np.full(sims, total_investable, dtype=float)
+        annual_savings_by_year = annual_savings * ((1 + inflation) ** np.arange(years))
+        changes = np.random.normal(
+            mu - 0.5 * sigma**2,
+            sigma,
+            size=(sims, years),
+        )
+
+        for year_index in range(years):
+            current = current * np.exp(changes[:, year_index])
+            current += annual_savings_by_year[year_index]
+            mc_array[:, year_index + 1] = np.maximum(current, 0.0)
+
         percentiles = {'p10': [], 'p50': [], 'p90': []}
         for year_idx in range(years + 1):
             percentiles['p10'].append(float(np.percentile(mc_array[:, year_idx], 10)))

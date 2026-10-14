@@ -7,14 +7,30 @@ import logging
 
 from sqlalchemy import inspect, text
 
-from models import Asset, RecurringPlan, Transaction, User, db
+from database.phase3_concurrency import ensure_phase3_columns
+from database.schema_version import SCHEMA_VERSION
+from models import (
+    Asset,
+    BankAccount,
+    BankStatementSnapshot,
+    InvestorProfileAnswer,
+    ProfileQuestion,
+    RecurringPlan,
+    Transaction,
+    User,
+    db,
+)
 
 logger = logging.getLogger(__name__)
 
 
 def _ensure_schema():
     """Eksik sütunları ekler (SQLite uyumlu)"""
-    SCHEMA_VERSION = "v21.0"  # Notification tablosu eklendi (Faz 21 - Bildirim Merkezi)
+
+    # Ensure legacy databases expose the table consumed by OutboxProcessor.
+    # db.create_all() is idempotent and remains compatible with migration test doubles.
+    db.create_all()
+    ensure_phase3_columns(db.engine)
 
     # Schema versiyon tablosu yoksa oluştur (tek satırlık meta tablo)
     with db.engine.begin() as conn:
@@ -382,6 +398,66 @@ def _ensure_schema():
         db.create_all()
         logger.info("Notification tablosu oluşturuldu")
 
+    # PlanOccurrence tablosu (Faz 3 - Plan Occurrence Lifecycle)
+    # ``create_all`` yalnızca eksik tabloyu oluşturur; tekrar çalıştırılması
+    # mevcut finansal kayıtları değiştirmez ve migration'ı idempotent tutar.
+    inspector = inspect(db.engine)
+    if 'plan_occurrence' not in inspector.get_table_names():
+        logger.info("PlanOccurrence tablosu oluşturuluyor...")
+        db.create_all()
+        logger.info("PlanOccurrence tablosu oluşturuldu")
+        inspector = inspect(db.engine)
+
+    # Immutable ledger audit tabloları (Faz 4 - v24.0)
+    for table_name, label in (
+        ('ledger_adjustment', 'LedgerAdjustment'),
+        ('ledger_audit_event', 'LedgerAuditEvent'),
+    ):
+        if table_name not in inspector.get_table_names():
+            logger.info("%s tablosu oluşturuluyor...", label)
+            db.create_all()
+            logger.info("%s tablosu oluşturuldu", label)
+            inspector = inspect(db.engine)
+
+    # Banka mutabakat aggregate’ları (reconciliation workflow).
+    # create_all yalnız eksik tabloları oluşturur; mevcut finansal kayıtları
+    # değiştirmez ve eski yedeklerle uyumlu kalır.
+    inspector = inspect(db.engine)
+    for table_name, label in (
+        (BankAccount.__tablename__, 'BankAccount'),
+        (BankStatementSnapshot.__tablename__, 'BankStatementSnapshot'),
+    ):
+        if table_name not in inspector.get_table_names():
+            logger.info('%s tablosu oluşturuluyor...', label)
+            db.create_all()
+            logger.info('%s tablosu oluşturuldu', label)
+            inspector = inspect(db.engine)
+
+    if Transaction.__tablename__ in inspector.get_table_names():
+        transaction_columns = {
+            column['name'] for column in inspector.get_columns(Transaction.__tablename__)
+        }
+        if 'bank_account_id' not in transaction_columns:
+            with db.engine.begin() as conn:
+                conn.execute(text(
+                    'ALTER TABLE "transaction" ADD COLUMN bank_account_id INTEGER'
+                ))
+            logger.info('Transaction tablosuna bank_account_id sütunu eklendi')
+
+    # Profil ranking soru/cevap alanları (Ranking soru tipi)
+    inspector = inspect(db.engine)
+    profile_answer_columns = {column['name'] for column in inspector.get_columns(InvestorProfileAnswer.__tablename__)} if InvestorProfileAnswer.__tablename__ in inspector.get_table_names() else set()
+    if InvestorProfileAnswer.__tablename__ in inspector.get_table_names() and 'answer_order' not in profile_answer_columns:
+        with db.engine.begin() as conn:
+            conn.execute(text('ALTER TABLE "investor_profile_answer" ADD COLUMN answer_order TEXT'))
+        logger.info('InvestorProfileAnswer tablosuna answer_order sütunu eklendi')
+
+    profile_question_columns = {column['name'] for column in inspector.get_columns(ProfileQuestion.__tablename__)} if ProfileQuestion.__tablename__ in inspector.get_table_names() else set()
+    if ProfileQuestion.__tablename__ in inspector.get_table_names() and 'correct_order' not in profile_question_columns:
+        with db.engine.begin() as conn:
+            conn.execute(text('ALTER TABLE "profile_question" ADD COLUMN correct_order TEXT'))
+        logger.info('ProfileQuestion tablosuna correct_order sütunu eklendi')
+
     # Index oluşturma (SQLite için CREATE INDEX IF NOT EXISTS)
     from .indexes import _create_indexes_if_not_exist
     _create_indexes_if_not_exist()
@@ -392,4 +468,4 @@ def _ensure_schema():
             text("INSERT OR IGNORE INTO _schema_version (version) VALUES (:v)"),
             {"v": SCHEMA_VERSION}
         )
-    logger.info("Schema versiyonu kaydedildi: %s", SCHEMA_VERSION)
+    logger.debug("Schema versiyonu kaydedildi: %s", SCHEMA_VERSION)

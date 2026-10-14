@@ -4,16 +4,16 @@ Email notification delivery service
 
 import logging
 import smtplib
-from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from typing import List, Dict, Optional
+from email.mime.text import MIMEText
+from typing import Dict, List
 
 logger = logging.getLogger(__name__)
 
 
 class EmailDeliveryService:
     """Service for delivering email notifications"""
-    
+
     def __init__(self, smtp_server: str = None, smtp_port: int = None,
                  smtp_username: str = None, smtp_password: str = None,
                  from_email: str = None):
@@ -22,18 +22,18 @@ class EmailDeliveryService:
         self.smtp_username = smtp_username
         self.smtp_password = smtp_password
         self.from_email = from_email
-    
+
     def send_email(self, to_emails: List[str], subject: str, body: str,
                   html_body: str = None) -> Dict[str, any]:
         """
         Send email notification
-        
+
         Args:
             to_emails: List of recipient email addresses
             subject: Email subject
             body: Plain text body
             html_body: Optional HTML body
-            
+
         Returns:
             Dict with success status and message
         """
@@ -42,46 +42,46 @@ class EmailDeliveryService:
                 'success': False,
                 'message': 'SMTP server not configured'
             }
-        
+
         if not to_emails:
             return {
                 'success': False,
                 'message': 'No recipients specified'
             }
-        
+
         try:
             # Create message
             msg = MIMEMultipart('alternative')
             msg['Subject'] = subject
             msg['From'] = self.from_email
             msg['To'] = ', '.join(to_emails)
-            
+
             # Add plain text part
             text_part = MIMEText(body, 'plain')
             msg.attach(text_part)
-            
+
             # Add HTML part if provided
             if html_body:
                 html_part = MIMEText(html_body, 'html')
                 msg.attach(html_part)
-            
+
             # Connect to SMTP server
             with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
                 server.starttls()  # Secure connection
-                
+
                 # Login if credentials provided
                 if self.smtp_username and self.smtp_password:
                     server.login(self.smtp_username, self.smtp_password)
-                
+
                 # Send email
                 server.send_message(msg)
-            
+
             logger.info(f"Email sent successfully to {len(to_emails)} recipients")
             return {
                 'success': True,
                 'message': f'Email sent to {len(to_emails)} recipients'
             }
-            
+
         except smtplib.SMTPAuthenticationError as e:
             logger.error(f"SMTP authentication error: {e}")
             return {
@@ -100,20 +100,20 @@ class EmailDeliveryService:
                 'success': False,
                 'message': f'Error sending email: {str(e)}'
             }
-    
+
     def send_notification(self, notification: Dict, to_emails: List[str]) -> Dict[str, any]:
         """
         Send a notification as email
-        
+
         Args:
             notification: Notification dict with title, body, severity, link
             to_emails: List of recipient email addresses
-            
+
         Returns:
             Dict with success status and message
         """
         subject = f"[{notification.get('severity', 'INFO').upper()}] {notification.get('title', 'Notification')}"
-        
+
         # Build plain text body
         body = f"""
 {notification.get('title', 'Notification')}
@@ -123,7 +123,7 @@ class EmailDeliveryService:
 Severity: {notification.get('severity', 'INFO')}
 Link: {notification.get('link', '#')}
 """
-        
+
         # Build HTML body
         html_body = f"""
 <html>
@@ -151,13 +151,13 @@ Link: {notification.get('link', '#')}
 </body>
 </html>
 """
-        
+
         return self.send_email(to_emails, subject, body, html_body)
-    
+
     def test_connection(self) -> Dict[str, any]:
         """
         Test SMTP connection
-        
+
         Returns:
             Dict with success status and message
         """
@@ -166,21 +166,21 @@ Link: {notification.get('link', '#')}
                 'success': False,
                 'message': 'SMTP server not configured'
             }
-        
+
         try:
             with smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=10) as server:
                 server.starttls()
-                
+
                 if self.smtp_username and self.smtp_password:
                     server.login(self.smtp_username, self.smtp_password)
-                
+
                 server.noop()  # Test connection
-            
+
             return {
                 'success': True,
                 'message': 'SMTP connection successful'
             }
-            
+
         except Exception as e:
             logger.error(f"SMTP connection test failed: {e}")
             return {
@@ -192,10 +192,10 @@ Link: {notification.get('link', '#')}
 def create_email_service_from_config(config: Dict) -> EmailDeliveryService:
     """
     Create EmailDeliveryService from configuration dict
-    
+
     Args:
         config: Dict with smtp_server, smtp_port, smtp_username, smtp_password, from_email
-        
+
     Returns:
         EmailDeliveryService instance
     """

@@ -15,7 +15,7 @@
 
 {% macro progress_bar(value, max=100, color='primary', show_label=False) %}
 <div class="progress-bar">
-    <div class="progress-bar-fill bg-{{ color }}" style="width: {{ (value / max * 100)|round }}%;">
+    <div class="progress-bar-fill bg-{{ color }}" class="w-[{{ (value / max * 100)|round }}%]">
         {% if show_label %}
         <span class="text-xs font-bold text-white px-2">{{ value|round }}%</span>
         {% endif %}
@@ -26,7 +26,7 @@
 {% macro avatar(name, size='md', image_url=None) %}
 <div class="avatar avatar-{{ size }}">
     {% if image_url %}
-    <img src="{{ image_url }}" alt="{{ name }}">
+    <img src="{{ image_url }}" alt="{{ _('ui_auto_a2a3c9cf1e9c') }}">
     {% else %}
     {{ name[:2].upper() }}
     {% endif %}
@@ -38,7 +38,7 @@
 {% endmacro %}
 
 {% macro tooltip(text, content) %}
-<span class="tooltip" data-tooltip="{{ content }}">{{ text }}</span>
+<span class="tooltip" data-tooltip="{{ _('ui_auto_bdf69abf2c87') }}">{{ text }}</span>
 {% endmacro %}
 
 {% macro icon(name, size='md') %}
@@ -80,4 +80,178 @@
     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
     {% endif %}
 </svg>
+{% endmacro %}
+
+{#
+  source_badge — Veri Güven Mührü (Data Freshness Badge)
+  freshness: "live" | "delayed" | "session_end" | "estimated"
+#}
+{% macro source_badge(source='', freshness='live', as_of='', extra_classes='') %}
+{% if freshness == 'live' %}
+<span class="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-black text-emerald-700 dark:text-emerald-300 {{ extra_classes }}" title="Canlı veri · Kaynak: {{ source }}{% if as_of %} · {{ as_of }}{% endif %}">
+    <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true"></span>
+    {{ source }}{% if as_of %} · {{ as_of }}{% endif %}
+</span>
+{% elif freshness == 'delayed' %}
+<span class="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-black text-amber-700 dark:text-amber-300 {{ extra_classes }}" title="Gecikmeli veri (~15-20 dk) · Kaynak: {{ source }}">
+    <span class="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true"></span>
+    {{ source }} · Gecikmeli
+</span>
+{% elif freshness == 'session_end' %}
+<span class="inline-flex items-center gap-1 rounded-full border border-slate-400/30 bg-slate-400/10 px-2 py-0.5 text-[10px] font-black text-slate-600 dark:text-slate-400 {{ extra_classes }}" title="Seans sonu verisi · Kaynak: {{ source }}{% if as_of %} · {{ as_of }}{% endif %}">
+    <span class="h-1.5 w-1.5 rounded-full bg-slate-400" aria-hidden="true"></span>
+    Seans Sonu{% if as_of %} · {{ as_of }}{% endif %}
+</span>
+{% elif freshness == 'estimated' %}
+<span class="inline-flex items-center gap-1 rounded-full border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-[10px] font-black text-violet-700 dark:text-violet-300 {{ extra_classes }}" title="Tahmini değer · Kaynak: {{ source }}">
+    <span class="h-1.5 w-1.5 rounded-full bg-violet-500" aria-hidden="true"></span>
+    ~ Tahmini
+</span>
+{% else %}
+<span class="inline-flex items-center gap-1 rounded-full border border-slate-300/30 bg-slate-100/50 px-2 py-0.5 text-[10px] font-bold text-slate-500 {{ extra_classes }}">
+    {{ source }}
+</span>
+{% endif %}
+{% endmacro %}
+
+{#
+  data_quality_note — Yetersiz / Eksik Veri Bildirimi
+  reason: "insufficient_obs" | "no_source" | "indicative"
+#}
+{% macro data_quality_note(reason='insufficient_obs', count=0, min_req=20) %}
+{% if reason == 'insufficient_obs' %}
+<span class="inline-flex items-center gap-1 text-[10px] font-bold text-slate-400 dark:text-slate-500" title="Metrik hesaplaması için yeterli gözlem yok">
+    <svg class="h-3 w-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    Yetersiz Gözlem ({{ count }}/{{ min_req }} gün)
+</span>
+{% elif reason == 'no_source' %}
+<span class="inline-flex items-center gap-1 text-[10px] font-bold text-slate-400 dark:text-slate-500" title="Lisanslı veri kaynağı bağlı değil">
+    <svg class="h-3 w-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-1.414 1.414M6.05 17.95l-1.414 1.414M12 2v2m0 16v2m10-10h-2M4 12H2m15.364 6.364l-1.414-1.414M6.05 6.05L4.636 4.636"/></svg>
+    Veri mevcut değil
+</span>
+{% elif reason == 'indicative' %}
+<span class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400" title="Göstergeli değer — yatırım kararı için kullanmayın">
+    <svg class="h-3 w-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+    [Göstergeli]
+</span>
+{% endif %}
+{% endmacro %}
+
+
+{# ───────────────────────────────────────────────────────────────
+   empty_state — Boş liste/durum göstergesi
+   Args:
+     title    : Başlık
+     desc     : Açıklama metni
+     icon_svg : SVG HTML (|safe ile)
+     cta_text : CTA buton metni (opsiyonel)
+     cta_url  : CTA URL (opsiyonel)
+     cta_onclick: CTA onclick (opsiyonel)
+─────────────────────────────────────────────────────────────── #}
+{% macro empty_state(title, desc='', icon_svg=None, cta_text=None, cta_url=None, cta_onclick=None, extra_classes='') %}
+<div class="empty-state {{ extra_classes }}">
+    <div class="empty-state-icon">
+        {% if icon_svg %}
+            {{ icon_svg|safe }}
+        {% else %}
+            <svg class="w-10 h-10 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+            </svg>
+        {% endif %}
+    </div>
+    <p class="empty-state-title">{{ title }}</p>
+    {% if desc %}<p class="empty-state-desc">{{ desc }}</p>{% endif %}
+    {% if cta_text %}
+        {% if cta_url %}
+        <a href="{{ cta_url }}" class="btn-premium-primary">{{ cta_text }}</a>
+        {% elif cta_onclick %}
+        <button type="button" onclick="{{ cta_onclick }}" class="btn-premium-primary">{{ cta_text }}</button>
+        {% endif %}
+    {% endif %}
+</div>
+{% endmacro %}
+
+
+{# ───────────────────────────────────────────────────────────────
+   skeleton_card — Yükleme iskeleti kartı
+   Args:
+     lines   : Metin satır sayısı (1-4)
+     avatar  : Avatar skeleton göster
+     height  : Kart min-height (CSS değeri)
+─────────────────────────────────────────────────────────────── #}
+{% macro skeleton_card(lines=3, avatar=False, extra_classes='') %}
+<div class="premium-card p-4 {{ extra_classes }}">
+    <div class="flex items-start gap-3">
+        {% if avatar %}
+        <div class="skeleton skeleton-avatar flex-shrink-0"></div>
+        {% endif %}
+        <div class="flex-1 flex flex-col gap-2.5">
+            <div class="skeleton skeleton-title"></div>
+            {% if lines >= 2 %}<div class="skeleton skeleton-text"></div>{% endif %}
+            {% if lines >= 3 %}<div class="skeleton skeleton-text-sm"></div>{% endif %}
+            {% if lines >= 4 %}<div class="skeleton skeleton-text-sm"></div>{% endif %}
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+
+{# ───────────────────────────────────────────────────────────────
+   alert_banner — Üst bilgi/uyarı banner
+   type: 'success' | 'error' | 'warning' | 'info'
+─────────────────────────────────────────────────────────────── #}
+{% macro alert_banner(message, type='info', title=None, dismissible=False, extra_classes='') %}
+{% set icons = {
+    'success': '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+    'error':   '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+    'warning': '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>',
+    'info':    '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+} %}
+<div class="alert-banner alert-banner-{{ type }} {{ extra_classes }}" role="alert">
+    {{ icons[type]|safe }}
+    <div class="flex-1">
+        {% if title %}<p class="alert-banner-title">{{ title }}</p>{% endif %}
+        <p class="alert-banner-msg">{{ message }}</p>
+    </div>
+    {% if dismissible %}
+    <button type="button" class="opacity-60 hover:opacity-100 transition flex-shrink-0" onclick="this.closest('.alert-banner').remove()" aria-label="Kapat">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+    {% endif %}
+</div>
+{% endmacro %}
+
+
+{# ───────────────────────────────────────────────────────────────
+   page_header — Standart sayfa başlığı
+   Args:
+     title    : Ana başlık
+     eyebrow  : Üst küçük etiket (opsiyonel)
+     subtitle : Alt açıklama (opsiyonel)
+─────────────────────────────────────────────────────────────── #}
+{% macro page_header(title, eyebrow=None, subtitle=None, extra_classes='') %}
+<div class="page-header {{ extra_classes }}">
+    <div class="page-header-left">
+        {% if eyebrow %}<p class="page-header-eyebrow">{{ eyebrow }}</p>{% endif %}
+        <h1>{{ title }}</h1>
+        {% if subtitle %}<p class="page-header-subtitle">{{ subtitle }}</p>{% endif %}
+    </div>
+    {% if caller is defined %}
+    <div class="page-header-right flex items-center gap-2 flex-wrap">
+        {{ caller() }}
+    </div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+
+{# ───────────────────────────────────────────────────────────────
+   badge_premium — Premium yuvarlak rozet
+   type: 'success' | 'error' | 'warning' | 'info' | 'neutral'
+─────────────────────────────────────────────────────────────── #}
+{% macro badge_premium(text, type='neutral', dot=False, extra_classes='') %}
+<span class="badge-premium badge-{{ type }} {{ extra_classes }}">
+    {% if dot %}<span class="w-1.5 h-1.5 rounded-full bg-current opacity-80"></span>{% endif %}
+    {{ text }}
+</span>
 {% endmacro %}

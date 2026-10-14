@@ -1,0 +1,314 @@
+{
+  "fixture_version": "phase4.v1",
+  "environment": "local-staging-only",
+  "generated_at": "2026-08-20T00:00:00Z",
+  "cleanup": {
+    "tenant_prefix": "e2e_phase4_",
+    "description_prefix": "[E2E-PHASE4]",
+    "delete_after_run": true,
+    "never_touch_tenants": ["default", "production"]
+  },
+  "users": [
+    {
+      "id": 9101,
+      "username": "e2e_phase4_user_a",
+      "role": "kullanici",
+      "tenant_id": "e2e_phase4_tenant_a",
+      "capabilities": ["plans.read", "plans.pay", "transactions.read"]
+    },
+    {
+      "id": 9102,
+      "username": "e2e_phase4_admin_a",
+      "role": "yonetici",
+      "tenant_id": "e2e_phase4_tenant_a",
+      "capabilities": ["plans.read", "plans.pay", "transactions.read", "ledger.adjust", "ledger.reverse", "ledger.audit.read"]
+    },
+    {
+      "id": 9201,
+      "username": "e2e_phase4_user_b",
+      "role": "kullanici",
+      "tenant_id": "e2e_phase4_tenant_b",
+      "capabilities": ["plans.read", "transactions.read"]
+    }
+  ],
+  "tenants": [
+    {
+      "id": "e2e_phase4_tenant_a",
+      "name": "E2E Faz 4 Tenant A",
+      "marker": "[E2E-PHASE4][TENANT-A]"
+    },
+    {
+      "id": "e2e_phase4_tenant_b",
+      "name": "E2E Faz 4 Tenant B",
+      "marker": "[E2E-PHASE4][TENANT-B]"
+    }
+  ],
+  "categories": [
+    {"id": 9301, "name": "E2E Maaş", "type": "Gelir", "tenant_id": "e2e_phase4_tenant_a"},
+    {"id": 9302, "name": "E2E Kira", "type": "Gider", "tenant_id": "e2e_phase4_tenant_a"},
+    {"id": 9303, "name": "E2E Yatırım", "type": "Yatırım", "tenant_id": "e2e_phase4_tenant_a"}
+  ],
+  "plans": [
+    {
+      "id": 9401,
+      "tenant_id": "e2e_phase4_tenant_a",
+      "name": "[E2E-PHASE4] Maaş Planı",
+      "category": "E2E Maaş",
+      "flow_type": "Gelir",
+      "amount": "10000.0000",
+      "installments": 3,
+      "payment_day": 20,
+      "start_date": "2026-08-20",
+      "end_date": "2026-10-20",
+      "frequency": "Aylık",
+      "plan_type": "Taksit",
+      "status": "Aktif",
+      "version": 1
+    },
+    {
+      "id": 9402,
+      "tenant_id": "e2e_phase4_tenant_a",
+      "name": "[E2E-PHASE4] Kira Planı",
+      "category": "E2E Kira",
+      "flow_type": "Gider",
+      "amount": "2500.0000",
+      "installments": 0,
+      "payment_day": 5,
+      "start_date": "2026-08-05",
+      "end_date": null,
+      "frequency": "Aylık",
+      "plan_type": "Abonelik",
+      "status": "Aktif",
+      "version": 1
+    },
+    {
+      "id": 9501,
+      "tenant_id": "e2e_phase4_tenant_b",
+      "name": "[E2E-PHASE4] Tenant B Gizli Plan",
+      "category": "E2E Maaş",
+      "flow_type": "Gelir",
+      "amount": "99999.0000",
+      "installments": 1,
+      "payment_day": 1,
+      "start_date": "2026-08-01",
+      "end_date": "2026-08-01",
+      "frequency": "Aylık",
+      "plan_type": "Taksit",
+      "status": "Aktif",
+      "version": 1
+    }
+  ],
+  "occurrences": [
+    {
+      "id": 9601,
+      "plan_id": 9401,
+      "tenant_id": "e2e_phase4_tenant_a",
+      "occurrence_number": 1,
+      "scheduled_date": "2026-08-20",
+      "status": "scheduled",
+      "amount": "10000.0000",
+      "transaction_id": null,
+      "paid_at": null,
+      "notes": null
+    },
+    {
+      "id": 9602,
+      "plan_id": 9401,
+      "tenant_id": "e2e_phase4_tenant_a",
+      "occurrence_number": 2,
+      "scheduled_date": "2026-09-20",
+      "status": "paid",
+      "amount": "10000.0000",
+      "transaction_id": 9701,
+      "paid_at": "2026-09-20T08:00:00Z",
+      "notes": "[E2E-PHASE4] Önceden ödenmiş dönem"
+    },
+    {
+      "id": 9603,
+      "plan_id": 9401,
+      "tenant_id": "e2e_phase4_tenant_a",
+      "occurrence_number": 3,
+      "scheduled_date": "2026-10-20",
+      "status": "skipped",
+      "amount": "10000.0000",
+      "transaction_id": null,
+      "paid_at": null,
+      "notes": "[E2E-PHASE4] Kullanıcı tarafından atlandı"
+    },
+    {
+      "id": 9604,
+      "plan_id": 9402,
+      "tenant_id": "e2e_phase4_tenant_a",
+      "occurrence_number": 1,
+      "scheduled_date": "2026-08-05",
+      "status": "cancelled",
+      "amount": "2500.0000",
+      "transaction_id": null,
+      "paid_at": null,
+      "notes": "[E2E-PHASE4] İptal edilmiş örnek dönem"
+    }
+  ],
+  "payments": [
+    {
+      "id": 9801,
+      "plan_id": 9401,
+      "tenant_id": "e2e_phase4_tenant_a",
+      "installment_number": 2,
+      "amount": "10000.0000",
+      "payment_date": "2026-09-20",
+      "transaction_id": 9701,
+      "notes": "[E2E-PHASE4] Payment bridge"
+    }
+  ],
+  "transactions": [
+    {
+      "id": 9701,
+      "tenant_id": "e2e_phase4_tenant_a",
+      "date": "2026-09-20",
+      "category": "E2E Maaş",
+      "description": "[E2E-PHASE4] Maaş Planı #2",
+      "note": "Original paid plan transaction",
+      "type": "Gelir",
+      "status": "Ödendi",
+      "amount": "10000.0000",
+      "source_type": "plan",
+      "source_id": 9401,
+      "installment_number": 2,
+      "version": 1,
+      "is_deleted": false,
+      "idempotency_key": "e2e-phase4-original-9701"
+    },
+    {
+      "id": 9702,
+      "tenant_id": "e2e_phase4_tenant_a",
+      "date": "2026-08-19",
+      "category": "E2E Maaş",
+      "description": "[E2E-PHASE4] Manuel bekleyen işlem",
+      "note": "Pending transaction is editable",
+      "type": "Gelir",
+      "status": "Bekliyor",
+      "amount": "3000.0000",
+      "source_type": "manual",
+      "source_id": null,
+      "installment_number": null,
+      "version": 1,
+      "is_deleted": false,
+      "idempotency_key": "e2e-phase4-pending-9702"
+    },
+    {
+      "id": 9703,
+      "tenant_id": "e2e_phase4_tenant_a",
+      "date": "2026-08-18",
+      "category": "E2E Kira",
+      "description": "[E2E-PHASE4] Manuel paid işlem",
+      "note": "Manual paid transaction for adjustment/reversal UI",
+      "type": "Gider",
+      "status": "Ödendi",
+      "amount": "2500.0000",
+      "source_type": "manual",
+      "source_id": null,
+      "installment_number": null,
+      "version": 1,
+      "is_deleted": false,
+      "idempotency_key": "e2e-phase4-paid-9703"
+    },
+    {
+      "id": 9911,
+      "tenant_id": "e2e_phase4_tenant_a",
+      "date": "2026-09-20",
+      "category": "E2E Maaş",
+      "description": "[E2E-PHASE4] Adjustment #9901",
+      "note": "Compensating transaction for amount correction",
+      "type": "Gelir",
+      "status": "Ödendi",
+      "amount": "500.0000",
+      "source_type": "adjustment",
+      "source_id": 9701,
+      "installment_number": null,
+      "version": 1,
+      "is_deleted": false,
+      "idempotency_key": "e2e-phase4-adjustment-tx-9911"
+    },
+    {
+      "id": 9704,
+      "tenant_id": "e2e_phase4_tenant_b",
+      "date": "2026-08-18",
+      "category": "E2E Maaş",
+      "description": "[E2E-PHASE4] Tenant B transaction",
+      "note": "Must not be visible to tenant A",
+      "type": "Gelir",
+      "status": "Ödendi",
+      "amount": "99999.0000",
+      "source_type": "manual",
+      "source_id": null,
+      "installment_number": null,
+      "version": 1,
+      "is_deleted": false,
+      "idempotency_key": "e2e-phase4-tenant-b-9704"
+    }
+  ],
+  "ledger_adjustments": [
+    {
+      "id": 9901,
+      "tenant_id": "e2e_phase4_tenant_a",
+      "original_transaction_id": 9701,
+      "compensating_transaction_id": 9911,
+      "kind": "adjustment",
+      "status": "applied",
+      "amount_delta": "500.0000",
+      "original_amount_snapshot": "10000.0000",
+      "original_type_snapshot": "Gelir",
+      "original_category_snapshot": "E2E Maaş",
+      "original_date_snapshot": "2026-09-20",
+      "original_version": 1,
+      "reason_code": "amount_error",
+      "reason_text": "[E2E-PHASE4] Net tutar düzeltmesi",
+      "requested_by": 9102,
+      "approved_by": null,
+      "requested_at": "2026-09-20T08:05:00Z",
+      "applied_at": "2026-09-20T08:05:01Z",
+      "idempotency_key": "e2e-phase4-adjustment-9901",
+      "correlation_id": "e2e-phase4-correlation-9901"
+    }
+  ],
+  "audit_events": [
+    {
+      "id": 9951,
+      "tenant_id": "e2e_phase4_tenant_a",
+      "adjustment_id": 9901,
+      "transaction_id": 9911,
+      "event_type": "requested",
+      "actor_user_id": 9102,
+      "correlation_id": "e2e-phase4-correlation-9901",
+      "occurred_at": "2026-09-20T08:05:00Z"
+    },
+    {
+      "id": 9952,
+      "tenant_id": "e2e_phase4_tenant_a",
+      "adjustment_id": 9901,
+      "transaction_id": 9911,
+      "event_type": "applied",
+      "actor_user_id": 9102,
+      "correlation_id": "e2e-phase4-correlation-9901",
+      "occurred_at": "2026-09-20T08:05:01Z"
+    }
+  ],
+  "expected_counts": {
+    "tenant_a": {
+      "plans": 2,
+      "occurrences": 4,
+      "payments": 1,
+      "transactions": 4,
+      "ledger_adjustments": 1,
+      "audit_events": 2
+    },
+    "tenant_b": {
+      "plans": 1,
+      "occurrences": 0,
+      "payments": 0,
+      "transactions": 1,
+      "ledger_adjustments": 0,
+      "audit_events": 0
+    }
+  }
+}

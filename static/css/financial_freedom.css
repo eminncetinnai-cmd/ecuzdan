@@ -1,0 +1,84 @@
+/* ==========================================================================
+   E-Cüzdan — Financial Freedom & FIRE Hub CSS (static/css/financial_freedom.css)
+   Clean, User-Friendly, Premium Glassmorphism & Dark-Mode Ready Styling
+   ========================================================================== */
+
+/* Card hover and micro-interactions */
+.ff-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid var(--color-border, #e2e8f0);
+}
+
+.ff-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.08);
+}
+
+/* Progress Bar */
+.ff-progress-bar {
+    height: 10px;
+    border-radius: var(--border-radius-999, 999px);
+    background: var(--color-surface-subtle, #e2e8f0);
+    overflow: hidden;
+}
+
+.ff-progress-fill {
+    height: 100%;
+    border-radius: var(--border-radius-999, 999px);
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Criteria status borders */
+.criterion-success {
+    border-left: 4px solid var(--color-emerald-500, #10b981);
+}
+
+.criterion-warning {
+    border-left: 4px solid var(--color-amber-500, #f59e0b);
+}
+
+.criterion-danger {
+    border-left: 4px solid var(--color-rose-500, #ef4444);
+}
+
+/* Milestone item states */
+.milestone-done {
+    opacity: 1;
+}
+
+.milestone-pending {
+    opacity: 0.45;
+}
+
+.stage-step {
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--border-radius-999, 999px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-10, 10px);
+    font-weight: 800;
+}
+
+/* Accordion details styling */
+details.ff-accordion summary::-webkit-details-marker {
+    display: none;
+}
+
+details.ff-accordion summary {
+    user-select: none;
+}
+
+/* Dark mode overrides */
+[data-theme="dark"] .ff-card {
+    border-color: rgba(51, 65, 85, 0.6);
+}
+
+[data-theme="dark"] .ff-card:hover {
+    box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .ff-progress-bar {
+    background: rgba(30, 41, 59, 0.8);
+}

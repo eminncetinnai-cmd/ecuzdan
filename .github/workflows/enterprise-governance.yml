@@ -1,0 +1,84 @@
+name: Enterprise Control, Governance & Security Gates
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  governance-and-security-gates:
+    name: Enterprise Governance & Control Pipeline
+    runs-on: ubuntu-latest
+    env:
+      EAFGS_MODE: BLOCK
+      FLASK_ENV: testing
+      PYTHONUNBUFFERED: "1"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r configuration/dependencies/requirements.txt
+          pip install mypy import-linter
+
+      - name: "[Gate 1/8] Design System Consistency & Ratchet"
+        run: |
+          python scripts/check_design_system.py --ratchet
+
+      - name: "[Gate 2/8] EAFGS Layer Architecture Gate (BLOCK Mode)"
+        run: |
+          python scripts/governance/architecture_gate.py
+
+      - name: "[Gate 3/8] Static Type Checking (Mypy)"
+        run: |
+          python scripts/check_type_annotations.py
+
+      - name: "[Gate 4/8] Pre-Flight 500 & Template Smoke Gate"
+        run: |
+          python scripts/preflight_check.py
+
+      - name: "[Gate 5/8] Runtime Ledger Watchdog & Balance Drift Detector"
+        run: |
+          python scripts/run_ledger_watchdog.py
+
+      - name: "[Gate 6/8] N+1 SQL Query Profiler & Performance SLA Gate"
+        run: |
+          python scripts/check_query_performance.py
+
+      - name: "[Gate 7/8] Multi-Tenant Penetration Fuzzer & IDOR Gate"
+        run: |
+          python scripts/fuzz_tenant_isolation.py
+
+      - name: "[Gate 8/8] Control, Audit & Governance Unit Tests"
+        run: |
+          pytest tests/unit/ -k "watchdog or profiler or fuzzer or audit" -v --tb=short
+
+      - name: Publish GitHub Step Summary
+        if: always()
+        run: |
+          echo "## 🛡️ Enterprise Control & Governance Quality Gates Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Gate | Description | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Gate 1** | Design System Ratchet (0 regressions) | ${{ job.status == 'success' && '✅ PASSED' || '⚠️ CHECK LOG' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Gate 2** | EAFGS Layer Architecture (BLOCK mode) | ${{ job.status == 'success' && '✅ PASSED' || '⚠️ CHECK LOG' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Gate 3** | Mypy Static Type Checking | ${{ job.status == 'success' && '✅ PASSED' || '⚠️ CHECK LOG' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Gate 4** | Pre-Flight 500 & Template Smoke Gate | ${{ job.status == 'success' && '✅ PASSED' || '⚠️ CHECK LOG' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Gate 5** | Continuous Runtime Ledger Watchdog | ${{ job.status == 'success' && '✅ PASSED' || '⚠️ CHECK LOG' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Gate 6** | N+1 SQL Profiler & Performance SLA Gate | ${{ job.status == 'success' && '✅ PASSED' || '⚠️ CHECK LOG' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Gate 7** | Multi-Tenant Penetration Fuzzer (17 vectors) | ${{ job.status == 'success' && '✅ PASSED' || '⚠️ CHECK LOG' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Gate 8** | Control & Audit Unit Test Suite | ${{ job.status == 'success' && '✅ PASSED' || '⚠️ CHECK LOG' }} |" >> $GITHUB_STEP_SUMMARY

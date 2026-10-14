@@ -46,6 +46,10 @@ class RepositoryProvider:
         from repositories.reporting_repository import ReportingRepository
         return self._get_or_create('reporting', ReportingRepository)
 
+    def notification(self):
+        from repositories.notification_repository import NotificationRepository
+        return self._get_or_create('notification', NotificationRepository)
+
     def user(self):
         from repositories.user_repository import UserRepository
         return self._get_or_create('user', UserRepository)

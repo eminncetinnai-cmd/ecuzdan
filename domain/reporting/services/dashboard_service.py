@@ -45,7 +45,7 @@ class DashboardService:
         year_start = f"{now.year}-01-01"
         year_end = f"{now.year}-12-31"
         transactions = self.financial_repository.list_transactions(tenant_id=tenant_id)
-        
+
         # Phase 2: Transfer'leri nakit akışından hariç tut
         from domain.transactions.services.cash_flow_analysis import CashFlowAnalyzer
         cash_flow_transactions = [t for t in transactions if not CashFlowAnalyzer.is_transfer(t)]
@@ -118,6 +118,104 @@ class DashboardService:
         global_expense_cats = [c.name for c in all_cats if c.type == 'Gider']
         global_investment_cats = [c.name for c in all_cats if c.type == 'Yatırım']
 
+        # --- FAZ 5: Smart Feed & Actionable Insights ---
+        smart_insights = []
+
+        # 1. Yaklaşan Ödemeler (Önümüzdeki 7 gün içindeki bekleyen giderler)
+        in_7_days = (now + timedelta(days=7)).strftime("%Y-%m-%d")
+        upcoming_expenses = [
+            t for t in cash_flow_transactions
+            if t.type == 'Gider' and t.status == 'Bekliyor' and today <= t.date <= in_7_days
+        ]
+        if upcoming_expenses:
+            upcoming_total = sum(t.amount for t in upcoming_expenses)
+            smart_insights.append({
+                'type': 'warning',
+                'title': f'Önümüzdeki 7 Günde {len(upcoming_expenses)} Ödeme Var',
+                'description': f'Toplam {upcoming_total:,.2f} TL tutarında yaklaşan gideriniz bulunuyor. Nakit akışınızı kontrol edin.',
+                'action_label': 'Ödeme Takvimine Git',
+                'action_url': '/payment_calendar',
+                'icon': 'calendar',
+            })
+
+        # 2. Ay Sonu Nakit Delta Uyarısı veya Pozitif Bildirim
+        net_monthly_delta = month_data[-1] - actual_cash
+        if net_monthly_delta < 0:
+            smart_insights.append({
+                'type': 'danger',
+                'title': 'Ay Sonu Nakit Çıkışı Bekleniyor',
+                'description': f'Bu ay sonuna kadar net nakdiniz {abs(net_monthly_delta):,.2f} TL azalma eğiliminde. Harcamalarınızı gözden geçirin.',
+                'action_label': 'Aylık Analize Git',
+                'action_url': '/monthly_dashboard',
+                'icon': 'alert-circle',
+            })
+        elif net_monthly_delta > 0:
+            smart_insights.append({
+                'type': 'success',
+                'title': 'Pozitif Ay Sonu Nakit Projeksiyonu',
+                'description': f'Bu ay beklenen tahsilatlarla net nakdiniz {net_monthly_delta:,.2f} TL artacak görünüyor.',
+                'action_label': 'Nakit Akışını Gör',
+                'action_url': '/monthly_dashboard',
+                'icon': 'trending-up',
+            })
+
+        # 3. Varlık Portföyü Durumu
+        if not open_assets:
+            smart_insights.append({
+                'type': 'info',
+                'title': 'Portföyünüzü Büyütün',
+                'description': 'Henüz kayıtlı bir yatırım varlığınız bulunmuyor. Birikimlerinizi takip etmek için varlık ekleyin.',
+                'action_label': 'Varlık Ekle',
+                'action_url': '/assets?modal=new',
+                'icon': 'briefcase',
+            })
+        elif cash_pct > 70:
+            smart_insights.append({
+                'type': 'info',
+                'title': 'Yüksek Nakit Oranı (%' + f'{cash_pct:.0f})',
+                'description': 'Varlıklarınızın büyük kısmı nakitte duruyor. Enflasyona karşı yatırım sepetinizi değerlendirebilirsiniz.',
+                'action_label': 'Portföyü İncele',
+                'action_url': '/assets',
+                'icon': 'pie-chart',
+            })
+
+        # 4. Kategori Bütçe Limit Kontrolleri (bu ayki harcamalar)
+        cur_month_start = f"{now.year}-{now.month:02d}-01"
+        monthly_expenses = [
+            t for t in cash_flow_transactions
+            if t.type == 'Gider' and cur_month_start <= t.date <= today
+        ]
+        cat_expense_sums = {}
+        for t in monthly_expenses:
+            cat_expense_sums[t.category] = cat_expense_sums.get(t.category, Decimal('0')) + t.amount
+
+        for cat in all_cats:
+            limit = getattr(cat, 'monthly_budget_limit', None)
+            if limit and Decimal(str(limit)) > 0:
+                limit_dec = Decimal(str(limit))
+                spent = cat_expense_sums.get(cat.name, Decimal('0'))
+                ratio = (spent / limit_dec) * 100
+                if ratio >= 100:
+                    smart_insights.append({
+                        'type': 'danger',
+                        'title': f'{cat.name} Bütçe Limiti Aşıldı',
+                        'description': f'Aylık limit ({limit_dec:,.2f} TL) aşıldı! Harcanan: {spent:,.2f} TL (%{ratio:.0f}).',
+                        'action_label': 'Kategorileri Düzenle',
+                        'action_url': '/categories',
+                        'icon': 'alert-triangle',
+                    })
+                    break
+                elif ratio >= 80:
+                    smart_insights.append({
+                        'type': 'warning',
+                        'title': f'{cat.name} Bütçe Limitine Yaklaşıldı',
+                        'description': f'Aylık limitin %{ratio:.0f}\'i kullanıldı ({spent:,.2f} / {limit_dec:,.2f} TL).',
+                        'action_label': 'Kategorileri Gör',
+                        'action_url': '/categories',
+                        'icon': 'alert-circle',
+                    })
+                    break
+
         return {
             'today_cash': actual_cash,
             'year_paid_cash': year_paid_cash,
@@ -148,4 +246,18 @@ class DashboardService:
             'cash_pct': cash_pct,
             'investment_pct': investment_pct,
             'open_asset_count': len(open_assets),
+            'open_assets': [
+                {
+                    'id': getattr(a, 'id', None),
+                    'name': getattr(a, 'name', '') or getattr(a, 'type', 'Varlık'),
+                    'type': getattr(a, 'type', 'Diğer') or 'Diğer',
+                    'currency': getattr(a, 'currency', 'TRY') or 'TRY',
+                    'unit_price': _to_float(getattr(a, 'unit_price', 0)),
+                    'value': _to_float(getattr(a, 'value', 0)),
+                }
+                for a in open_assets
+            ],
+            'net_monthly_delta': net_monthly_delta,
+            'smart_insights': smart_insights[:4],
         }
+

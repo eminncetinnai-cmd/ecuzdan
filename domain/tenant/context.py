@@ -1,13 +1,13 @@
+"""Pure domain tenant context based on standard Python ContextVar.
+
+Does not import or depend on web frameworks, allowing safe usage across
+threads, async workers, background tasks, CLI commands, and web requests.
+"""
+
+from __future__ import annotations
+
 import contextvars
 from typing import Optional
-
-try:
-    # Flask imports only used at runtime when available
-    from flask import g, has_request_context, request
-except Exception:
-    has_request_context = None
-    g = None
-    request = None
 
 _tenant_var: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar('tenant_id', default=None)
 
@@ -20,30 +20,22 @@ class TenantContext:
         TenantContext.optional() -> Optional[str]
         TenantContext.require() -> str (raises RuntimeError if missing)
         TenantContext.set(tenant_id)
-
-    This implementation prefers Flask's `g` when a request context exists, otherwise uses a ContextVar so background workers and CLI can set the tenant.
     """
 
     @staticmethod
     def current() -> Optional[str]:
-        # Prefer Flask request context if available
+        # Check dynamic Flask g if present in active app/request context
         try:
-            if has_request_context() and g is not None:
-                # allow both attribute and mapping access
-                if hasattr(g, 'tenant_id'):
-                    return getattr(g, 'tenant_id')
-                # g may act like dict in some contexts
-                val = None
-                try:
-                    val = g.get('tenant_id')
-                except Exception:
-                    val = None
-                if val is not None:
-                    return val
+            import sys
+            flask_mod = sys.modules.get("flask")
+            if flask_mod:
+                g_obj = getattr(flask_mod, "g", None)
+                if g_obj:
+                    val = getattr(g_obj, "tenant_id", None)
+                    if val is not None:
+                        return val
         except Exception:
-            # If Flask not available or error, continue to contextvar
             pass
-        # Fallback to context var
         try:
             return _tenant_var.get()
         except Exception:
@@ -62,16 +54,6 @@ class TenantContext:
 
     @staticmethod
     def set(tenant_id: Optional[str]):
-        # If in Flask request context, set on g; otherwise set contextvar
-        try:
-            if has_request_context() and g is not None:
-                try:
-                    setattr(g, 'tenant_id', tenant_id)
-                    return
-                except Exception:
-                    pass
-        except Exception:
-            pass
         _tenant_var.set(tenant_id)
 
 

@@ -120,6 +120,52 @@ export function deselectAllRows(tableId) {
     }
 }
 
+// Apply column header text as data-label to all cells in a table
+export function applyDataLabels(tableOrId) {
+    const table = typeof tableOrId === 'string' ? document.getElementById(tableOrId) : tableOrId;
+    if (!table) return;
+
+    const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
+    if (headers.length === 0) return;
+
+    const rows = table.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+        const cells = Array.from(row.querySelectorAll('td'));
+        cells.forEach((cell, idx) => {
+            if (headers[idx] && !cell.hasAttribute('data-label')) {
+                cell.setAttribute('data-label', headers[idx]);
+            }
+        });
+    });
+}
+
+// Automatically scan and enable responsive mobile stacked cards on tables
+export function initResponsiveStackedTables() {
+    const tables = document.querySelectorAll('.responsive-card-table, .table-card-mobile, .data-table, #transTable');
+    tables.forEach(table => {
+        applyDataLabels(table);
+
+        // Watch for row updates (e.g. search filtering or pagination)
+        const tbody = table.querySelector('tbody');
+        if (tbody && !tbody._responsiveObserved) {
+            tbody._responsiveObserved = true;
+            const observer = new MutationObserver(() => {
+                applyDataLabels(table);
+            });
+            observer.observe(tbody, { childList: true, subtree: false });
+        }
+    });
+}
+
+// Self-initialize on DOM ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        initResponsiveStackedTables();
+    });
+} else {
+    initResponsiveStackedTables();
+}
+
 // Export for global access
 window.ECuzdanTables = {
     DEFAULT_DATATABLE_OPTIONS,
@@ -134,5 +180,8 @@ window.ECuzdanTables = {
     filterDataTableByColumn,
     getSelectedRows,
     selectRow,
-    deselectAllRows
+    deselectAllRows,
+    applyDataLabels,
+    initResponsiveStackedTables
 };
+

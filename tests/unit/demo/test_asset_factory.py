@@ -1,8 +1,9 @@
 """Unit tests for AssetFactory."""
 
 import pytest
+
 from infrastructure.demo.factories.asset_factory import AssetFactory
-from models import Asset, AssetSector, db
+from models import AssetSector, db
 from shared.decimal_precision import to_decimal
 
 
@@ -29,7 +30,7 @@ def test_asset_factory_create_asset_no_sync_cash_param(asset_factory, test_secto
         # Mock category validation to always return True
         original_is_valid = asset_factory.category_service.is_valid_category
         asset_factory.category_service.is_valid_category = lambda x, y: True
-        
+
         asset = asset_factory.create_asset(
             asset_type='Hisse Senedi',
             name='Test Asset',
@@ -47,16 +48,16 @@ def test_asset_factory_create_asset_no_sync_cash_param(asset_factory, test_secto
             notes='Test notes',
             is_admin_generated=True
         )
-        
+
         assert asset is not None
         assert asset.type == 'Hisse Senedi'
         assert asset.name == 'Test Asset'
         assert asset.symbol == 'TEST'
         assert asset.value == to_decimal(1000)
         assert asset.sector_id == test_sector.id
-        assert asset.is_admin_generated == True
+        assert asset.is_admin_generated
         assert asset.tenant_id == 'test_tenant'
-        
+
         # Asset is not persisted to DB by factory, so no need to delete
         # Restore original method
         asset_factory.category_service.is_valid_category = original_is_valid
@@ -68,7 +69,7 @@ def test_asset_factory_create_asset_without_sector_creates_default(asset_factory
         # Mock category validation
         original_is_valid = asset_factory.category_service.is_valid_category
         asset_factory.category_service.is_valid_category = lambda x, y: True
-        
+
         asset = asset_factory.create_asset(
             asset_type='Hisse Senedi',
             name='Test Asset',
@@ -83,20 +84,20 @@ def test_asset_factory_create_asset_without_sector_creates_default(asset_factory
             liquidity='Likit',
             sector_id=None  # Should create default 'Genel' sector
         )
-        
+
         assert asset is not None
         assert asset.sector_id is not None
         assert asset.sector_id > 0
-        
+
         # Verify 'Genel' sector was created
         general_sector = AssetSector.query.filter_by(name='Genel').first()
         assert general_sector is not None
         assert asset.sector_id == general_sector.id
-        
+
         # Clean up sector (asset is not persisted)
         db.session.delete(general_sector)
         db.session.commit()
-        
+
         asset_factory.category_service.is_valid_category = original_is_valid
 
 
@@ -105,16 +106,16 @@ def test_asset_factory_get_or_create_sector(asset_factory, app):
     with app.app_context():
         # Get non-existent sector (should create it)
         sector = asset_factory.get_or_create_sector('New Test Sector')
-        
+
         assert sector is not None
         assert sector.name == 'New Test Sector'
-        
+
         # Get existing sector (should return same instance)
         sector2 = asset_factory.get_or_create_sector('New Test Sector')
-        
+
         assert sector.id == sector2.id
         assert sector.name == sector2.name
-        
+
         db.session.delete(sector)
         db.session.commit()
 
@@ -131,7 +132,7 @@ def test_asset_factory_create_asset_valuation(asset_factory):
         notes='Test valuation',
         updated_at='2025-01-01'
     )
-    
+
     assert valuation_data is not None
     assert valuation_data['asset_id'] == 1
     assert valuation_data['old_value'] == to_decimal(1000)

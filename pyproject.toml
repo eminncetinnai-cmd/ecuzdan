@@ -1,11 +1,23 @@
 [tool.ruff]
 line-length = 120
 target-version = 'py310'
-exclude = ['venv', '__pycache__', '.pytest_cache']
+exclude = [
+    '.venv',
+    'venv',
+    '__pycache__',
+    '.pytest_cache',
+    '.mypy_cache',
+    '.benchmarks',
+    'htmlcov',
+    '.work',
+    'node_modules',
+    'instance',
+    'backups',
+]
 
 [tool.ruff.lint]
 select = ['E', 'F', 'W', 'C90', 'I']
-ignore = ['E501', 'C901']
+ignore = ['E501', 'C901', 'E402', 'W291', 'W293', 'E741']
 
 # Pytest configuration moved to pytest.ini to avoid conflicts
 # [tool.pytest.ini_options]

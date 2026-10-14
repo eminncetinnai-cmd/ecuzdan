@@ -1,6 +1,7 @@
 {% extends 'layout.html' %}
+{% from 'macros/buttons.html' import button_secondary, button_danger %}
 
-{% block title %}Bildirimler | {{ brand }}{% endblock %}
+{% block title %}{{ _('notifications_title') }} | {{ brand }}{% endblock %}
 
 {% block content %}
 <div class="notifications-page">
@@ -13,23 +14,13 @@
                     </svg>
                 </div>
                 <div>
-                    <h1 class="page-title">Bildirimler</h1>
-                    <p class="page-subtitle">Tüm bildirimlerinizi buradan yönetebilirsiniz</p>
+                    <h1 class="page-title">{{ _('notifications_title') }}</h1>
+                    <p class="page-subtitle">{{ _('notifications_subtitle') }}</p>
                 </div>
             </div>
             <div class="page-actions">
-                <button type="button" onclick="markAllRead()" class="btn btn-secondary btn-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    Tümünü Okundu İşaretle
-                </button>
-                <button type="button" onclick="deleteAllRead()" class="btn btn-danger btn-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                    </svg>
-                    Okunmuşları Sil
-                </button>
+                {{ button_secondary(_('notifications_mark_all_read'), onclick='markAllRead()', extra_classes='btn-sm') }}
+                {{ button_danger(_('notifications_delete_read'), onclick='deleteAllRead()', extra_classes='btn-sm') }}
             </div>
         </div>
     </div>
@@ -38,31 +29,32 @@
     <div class="filters-bar">
         <div class="filters-left">
             <div class="filter-group">
-                <label class="filter-label">Durum</label>
+                <label class="filter-label">{{ _('notifications_status') }}</label>
                 <select id="filterStatus" class="filter-select" onchange="applyFilters()">
-                    <option value="all">Tümü</option>
-                    <option value="unread">Okunmamış</option>
-                    <option value="read">Okunmuş</option>
+                    <option value="all">{{ _('notifications_all') }}</option>
+                    <option value="unread">{{ _('notifications_unread') }}</option>
+                    <option value="read">{{ _('notifications_read') }}</option>
                 </select>
             </div>
             <div class="filter-group">
-                <label class="filter-label">Önem</label>
+                <label class="filter-label">{{ _('notifications_severity') }}</label>
                 <select id="filterSeverity" class="filter-select" onchange="applyFilters()">
-                    <option value="all">Tümü</option>
-                    <option value="danger">Kritik</option>
-                    <option value="warning">Uyarı</option>
-                    <option value="info">Bilgi</option>
+                    <option value="all">{{ _('notifications_all') }}</option>
+                    <option value="danger">{{ _('notifications_critical') }}</option>
+                    <option value="warning">{{ _('notifications_warning') }}</option>
+                    <option value="info">{{ _('notifications_info') }}</option>
                 </select>
             </div>
             <div class="filter-group">
-                <label class="filter-label">Kategori</label>
+                <label class="filter-label">{{ _('notifications_category') }}</label>
                 <select id="filterCategory" class="filter-select" onchange="applyFilters()">
-                    <option value="all">Tümü</option>
-                    <option value="budget">Bütçe</option>
-                    <option value="transaction">İşlem</option>
-                    <option value="recurring_plan">Düzenli Plan</option>
-                    <option value="asset">Varlık</option>
-                    <option value="system">Sistem</option>
+                    <option value="all">{{ _('notifications_all') }}</option>
+                    <option value="budget">{{ _('notifications_budget') }}</option>
+                    <option value="transaction">{{ _('notifications_transaction') }}</option>
+                    <option value="recurring_plan">{{ _('notifications_recurring_plan') }}</option>
+                    <option value="asset">{{ _('notifications_asset') }}</option>
+                    <option value="macro">🌐 {{ _('notifications_macro') }}</option>
+                    <option value="system">{{ _('notifications_system') }}</option>
                 </select>
             </div>
         </div>
@@ -71,27 +63,28 @@
                 <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
-                <input type="text" id="searchInput" class="search-input" placeholder="Bildirim ara..." onkeyup="applyFilters()">
+                <input type="text" id="searchInput" class="search-input" placeholder="{{ _('notifications_search') }}" onkeyup="applyFilters()">
             </div>
+            {{ button_secondary('✕ Sıfırla', onclick='resetNotificationFilters()', extra_classes='btn-sm') }}
         </div>
     </div>
 
     <!-- Stats -->
     <div class="stats-bar">
         <div class="stat-item">
-            <div class="stat-label">Toplam</div>
+            <div class="stat-label">{{ _('notifications_total') }}</div>
             <div class="stat-value" id="statTotal">0</div>
         </div>
         <div class="stat-item">
-            <div class="stat-label">Okunmamış</div>
+            <div class="stat-label">{{ _('notifications_unread_stat') }}</div>
             <div class="stat-value stat-value-danger" id="statUnread">0</div>
         </div>
         <div class="stat-item">
-            <div class="stat-label">Kritik</div>
+            <div class="stat-label">{{ _('notifications_critical') }}</div>
             <div class="stat-value stat-value-danger" id="statDanger">0</div>
         </div>
         <div class="stat-item">
-            <div class="stat-label">Uyarı</div>
+            <div class="stat-label">{{ _('notifications_warning') }}</div>
             <div class="stat-value stat-value-warning" id="statWarning">0</div>
         </div>
     </div>
@@ -100,23 +93,23 @@
     <div class="notifications-list" id="notificationsList">
         <div class="loading-state">
             <div class="loading-spinner"></div>
-            <p>Bildirimler yükleniyor...</p>
+            <p>{{ _('notifications_loading') }}</p>
         </div>
     </div>
 
     <!-- Pagination -->
-    <div class="pagination-bar" id="paginationBar" style="display: none;">
+    <div class="pagination-bar hidden" id="paginationBar">
         <div class="pagination-info">
-            <span id="paginationInfo">Toplam 0 bildirim</span>
+            <span id="paginationInfo">{{ _('notifications_pagination_total', count=0) }}</span>
         </div>
         <div class="pagination-controls">
-            <button type="button" class="pagination-btn" onclick="prevPage()" id="prevBtn" disabled>
+            <button data-macro="button_secondary" type="button" class="pagination-btn" onclick="prevPage()" id="prevBtn" aria-label="Önceki Sayfa" title="Önceki Sayfa" disabled>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M15 19l-7-7 7-7"></path>
                 </svg>
             </button>
             <span class="pagination-pages" id="paginationPages">1 / 1</span>
-            <button type="button" class="pagination-btn" onclick="nextPage()" id="nextBtn" disabled>
+            <button data-macro="button_secondary" type="button" class="pagination-btn" onclick="nextPage()" id="nextBtn" aria-label="Sonraki Sayfa" title="Sonraki Sayfa" disabled>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M9 5l7 7-7 7"></path>
                 </svg>
@@ -125,5 +118,5 @@
     </div>
 </div>
 
-<script src="{{ url_for('static', filename='js/notifications-page.js') }}"></script>
+<script src="{{ static_asset_url('js/notifications-page.js') }}"></script>
 {% endblock %}

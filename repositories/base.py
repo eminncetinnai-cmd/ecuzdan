@@ -1,8 +1,12 @@
 """Small SQLAlchemy repository primitives."""
 
+from typing import Any, Type, TypeVar
+
 from models import db
 
 from .contracts import BaseRepositoryContract
+
+T = TypeVar('T')
 
 
 class BaseRepository(BaseRepositoryContract):
@@ -17,23 +21,23 @@ class BaseRepository(BaseRepositoryContract):
         self.db = database or db
         self.session = self.db.session
 
-    def query(self, *entities):
+    def query(self, *entities: Any):
         return self.session.query(*entities)
 
-    def get(self, model, obj_id):
+    def get(self, model: Type[T], obj_id: Any) -> T | None:
         return self.session.get(model, obj_id)
 
-    def add(self, entity):
+    def add(self, entity: T) -> T:
         self.session.add(entity)
         return entity
 
-    def delete(self, entity):
+    def delete(self, entity: Any) -> None:
         self.session.delete(entity)
 
-    def commit(self):
+    def commit(self) -> None:
         self.session.commit()
 
-    def rollback(self):
+    def rollback(self) -> None:
         self.session.rollback()
 
 
@@ -51,7 +55,7 @@ class TenantScopedRepository(BaseRepository):
           geçirilmelidir.
     """
 
-    def require_tenant_id(self, tenant_id=None) -> str:
+    def require_tenant_id(self, tenant_id: str | None = None) -> str:
         """
         tenant_id çözümler ve zorunlu tutar.
 
@@ -75,11 +79,11 @@ class TenantScopedRepository(BaseRepository):
             "Bu metodu çağırırken tenant_id parametresi zorunludur."
         )
 
-    def filter_for_tenant(self, query, model, tenant_id):
+    def filter_for_tenant(self, query: Any, model: Any, tenant_id: str):
         """SQLAlchemy query'e tenant filtresi ekler."""
         return query.filter(model.tenant_id == tenant_id)
 
-    def get_for_tenant(self, model, record_id, tenant_id):
+    def get_for_tenant(self, model: Any, record_id: Any, tenant_id: str) -> Any:
         """
         Kaydı tenant sınırı içinde getirir.
         Bulunamazsa None döner (caller 404/PermissionError kararını verir).
@@ -90,11 +94,10 @@ class TenantScopedRepository(BaseRepository):
             .first()
         )
 
-    def assert_same_tenant(self, record, tenant_id, error_msg="Bu kaydı görüntüleme yetkiniz yok."):
+    def assert_same_tenant(self, record: Any, tenant_id: str, error_msg: str = "Bu kaydı görüntüleme yetkiniz yok.") -> Any:
         """
         Kaydın tenant'ını doğrular; uyuşmazlıkta PermissionError fırlatır.
         """
         if record is None or record.tenant_id != tenant_id:
             raise PermissionError(error_msg)
         return record
-

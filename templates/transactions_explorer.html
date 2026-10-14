@@ -1,5 +1,7 @@
 {% extends "layout.html" %}
+{% block document_title %}{{ _('tx_explorer_title') }} | {{ brand }}{% endblock %}
 {% block content %}
+
 <style>
     /* Transaction Explorer - Modern Layout */
     .explorer-container {
@@ -36,7 +38,7 @@
         font-weight: 800;
         text-transform: uppercase;
         letter-spacing: 0.1em;
-        color: #64748b;
+        color: var(--color-slate-500, var(--color-slate-500, #64748b));
         margin-bottom: 0.75rem;
     }
 
@@ -53,7 +55,7 @@
 
     .filter-input:focus {
         outline: none;
-        border-color: #f59e0b;
+        border-color: var(--color-amber-500, var(--color-amber-500, #f59e0b));
         box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
     }
 
@@ -68,13 +70,13 @@
     .filter-checkbox input[type="checkbox"] {
         width: 1rem;
         height: 1rem;
-        accent-color: #f59e0b;
+        accent-color: var(--color-amber-500, var(--color-amber-500, #f59e0b));
     }
 
     .filter-checkbox label {
         font-size: 0.8rem;
         font-weight: 600;
-        color: #334155;
+        color: var(--color-slate-700, var(--color-slate-700, #334155));
         cursor: pointer;
     }
 
@@ -110,22 +112,26 @@
         font-weight: 800;
         text-transform: uppercase;
         letter-spacing: 0.1em;
-        color: #64748b;
+        color: var(--color-slate-500, var(--color-slate-500, #64748b));
         margin-bottom: 0.25rem;
     }
 
     .summary-value {
         font-size: 1.25rem;
         font-weight: 900;
-        color: #0f172a;
+        color: var(--color-slate-900, var(--color-slate-900, #0f172a));
     }
 
     .summary-value.income {
-        color: #059669;
+        color: var(--color-emerald-600, var(--color-emerald-600, #059669));
     }
 
     .summary-value.expense {
-        color: #dc2626;
+        color: var(--color-rose-600, var(--color-rose-600, #dc2626));
+    }
+
+    .summary-value.net {
+        color: var(--color-violet-600, var(--color-violet-600, #7c3aed));
     }
 
     /* Quick Filter Chips */
@@ -138,7 +144,7 @@
 
     .filter-chip {
         padding: 0.5rem 1rem;
-        border-radius: 999px;
+        border-radius: var(--border-radius-999, 999px);
         font-size: 0.75rem;
         font-weight: 700;
         text-transform: uppercase;
@@ -151,13 +157,13 @@
 
     .filter-chip:hover {
         background: rgba(245, 158, 11, 0.1);
-        border-color: #f59e0b;
+        border-color: var(--color-amber-500, var(--color-amber-500, #f59e0b));
     }
 
     .filter-chip.active {
-        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        background: linear-gradient(135deg, var(--color-amber-500, var(--color-amber-500, #f59e0b)) 0%, var(--color-amber-600, var(--color-amber-600, #d97706)) 100%);
         color: white;
-        border-color: #f59e0b;
+        border-color: var(--color-amber-500, var(--color-amber-500, #f59e0b));
     }
 
     /* Global Search */
@@ -179,7 +185,7 @@
 
     .global-search input:focus {
         outline: none;
-        border-color: #f59e0b;
+        border-color: var(--color-amber-500, var(--color-amber-500, #f59e0b));
         box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1);
     }
 
@@ -188,7 +194,7 @@
         left: 1rem;
         top: 50%;
         transform: translateY(-50%);
-        color: #94a3b8;
+        color: var(--color-slate-400, var(--color-slate-400, #94a3b8));
     }
 
     /* Transaction Cards */
@@ -219,7 +225,7 @@
         top: 0;
         bottom: 0;
         width: 4px;
-        background: var(--card-color, #64748b);
+        background: var(--card-color, var(--color-slate-500, #64748b));
     }
 
     .transaction-card:hover {
@@ -229,15 +235,19 @@
     }
 
     .transaction-card.income::before {
-        --card-color: #059669;
+        --card-color: var(--color-emerald-600, var(--color-emerald-600, #059669));
     }
 
     .transaction-card.expense::before {
-        --card-color: #dc2626;
+        --card-color: var(--color-rose-600, var(--color-rose-600, #dc2626));
     }
 
     .transaction-card.investment::before {
-        --card-color: #3b82f6;
+        --card-color: var(--color-blue-500, var(--color-blue-500, #3b82f6));
+    }
+
+    .transaction-card.transfer::before {
+        --card-color: var(--color-violet-600, var(--color-violet-600, #7c3aed));
     }
 
     .card-header {
@@ -252,38 +262,43 @@
         font-weight: 800;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: #4f46e5;
+        color: var(--color-indigo-600, var(--color-indigo-600, #4f46e5));
     }
 
     .card-date {
         font-size: 0.75rem;
         font-weight: 600;
-        color: #64748b;
+        color: var(--color-slate-500, var(--color-slate-500, #64748b));
     }
 
     .card-description {
         font-size: 0.9rem;
         font-weight: 500;
-        color: #334155;
+        color: var(--color-slate-700, var(--color-slate-700, #334155));
         margin-bottom: 0.5rem;
     }
 
     .card-amount {
         font-size: 1.5rem;
         font-weight: 900;
-        color: #0f172a;
+        color: var(--color-slate-900, var(--color-slate-900, #0f172a));
     }
 
     .card-amount.income {
-        color: #059669;
+        color: var(--color-emerald-600, var(--color-emerald-600, #059669));
     }
 
     .card-amount.expense {
-        color: #dc2626;
+        color: var(--color-rose-600, var(--color-rose-600, #dc2626));
+    }
+
+        .card-amount.transfer {
+        color: var(--color-violet-600, var(--color-violet-600, #7c3aed));
     }
 
     .card-amount.investment {
-        color: #3b82f6;
+
+        color: var(--color-blue-500, var(--color-blue-500, #3b82f6));
     }
 
     .card-meta {
@@ -297,7 +312,7 @@
     .card-meta-item {
         font-size: 0.7rem;
         font-weight: 600;
-        color: #64748b;
+        color: var(--color-slate-500, var(--color-slate-500, #64748b));
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
@@ -360,12 +375,135 @@
         background: rgba(0, 0, 0, 0.05);
     }
 
+        .drawer-field {
+        margin-bottom: 1.1rem;
+        min-width: 0;
+    }
+
+    .drawer-highlight {
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .drawer-label {
+        margin-bottom: 0.35rem;
+        color: var(--color-slate-500, var(--color-slate-500, #64748b));
+        font-size: 0.65rem;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+
+    .drawer-value {
+        color: var(--color-slate-700, var(--color-slate-700, #334155));
+        font-size: 0.9rem;
+        font-weight: 650;
+        overflow-wrap: anywhere;
+    }
+
+    .drawer-category {
+        color: var(--color-indigo-600, var(--color-indigo-600, #4f46e5));
+        font-size: 1rem;
+        font-weight: 800;
+    }
+
+    .drawer-amount {
+        font-size: 2rem;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+    }
+
+    .drawer-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.85rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .drawer-note {
+        font-style: italic;
+        white-space: pre-wrap;
+    }
+
+    .drawer-context {
+        display: grid;
+        gap: 0.65rem;
+        margin: 1.25rem 0;
+        padding: 1rem;
+        border: 1px solid rgba(99, 102, 241, 0.15);
+        border-radius: 0.9rem;
+        background: rgba(99, 102, 241, 0.05);
+    }
+
+    .drawer-context-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+        color: var(--color-slate-500, var(--color-slate-500, #64748b));
+        font-size: 0.72rem;
+    }
+
+    .drawer-context-row strong {
+        color: var(--color-slate-700, var(--color-slate-700, #334155));
+        font-size: 0.75rem;
+        text-align: right;
+        overflow-wrap: anywhere;
+    }
+
+    .drawer-context-link {
+        color: var(--color-indigo-600, var(--color-indigo-600, #4f46e5));
+        font-weight: 800;
+        text-decoration: none;
+    }
+
+    .drawer-context-link:hover {
+        text-decoration: underline;
+    }
+
+    .drawer-muted {
+        color: var(--color-slate-400, var(--color-slate-400, #94a3b8));
+        font-size: 0.72rem;
+        text-align: right;
+    }
+
+    .drawer-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1.75rem;
+    }
+
+    .drawer-primary-action,
+    .drawer-danger-action {
+        flex: 1;
+        border-radius: 0.75rem;
+        cursor: pointer;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        padding: 0.75rem;
+        text-transform: uppercase;
+    }
+
+    .drawer-primary-action {
+        border: 0;
+        color: white;
+        background: linear-gradient(135deg, var(--color-amber-500, var(--color-amber-500, #f59e0b)) 0%, var(--color-amber-600, var(--color-amber-600, #d97706)) 100%);
+    }
+
+    .drawer-danger-action {
+        border: 1px solid rgba(220, 38, 38, 0.2);
+        color: var(--color-rose-600, var(--color-rose-600, #dc2626));
+        background: rgba(220, 38, 38, 0.1);
+    }
+
     /* Loading Indicator */
     .loading-indicator {
+
         display: flex;
         justify-content: center;
         padding: 2rem;
-        color: #64748b;
+        color: var(--color-slate-500, var(--color-slate-500, #64748b));
         font-weight: 600;
     }
 
@@ -382,69 +520,104 @@
             max-height: 300px;
         }
 
-        .side-drawer {
-            width: 100%;
+                .side-drawer {
+            width: min(100%, 500px);
             right: -100%;
         }
+
+        .drawer-grid {
+            grid-template-columns: 1fr;
+        }
+
     }
 </style>
 
+<div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div>
+        <p class="mb-2 text-[10px] font-black uppercase tracking-[0.18em] text-amber-600">{{ _('tx_explorer_filters_title') }}</p>
+        <h1 class="text-2xl font-black tracking-tight text-slate-900">{{ _('tx_explorer_title') }}</h1>
+        <p class="mt-2 max-w-2xl text-sm text-slate-500">{{ _('tx_explorer_subtitle') }}</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+                <a href="{{ url_for('transactions.transactions') }}" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-600 shadow-sm transition hover:border-amber-300 hover:text-amber-700">{{ _('tx_open_transaction') }}</a>
+        <a href="{{ url_for('transactions.reconciliation') }}" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-600 shadow-sm transition hover:border-amber-300 hover:text-amber-700">{{ _('tx_open_reconciliation') }}</a>
+
+    </div>
+</div>
+
 <div class="explorer-container">
+
     <!-- Left Filter Panel -->
     <div class="filter-panel">
         <div class="filter-section">
-            <div class="filter-title">Tarih Aralığı</div>
-            <input type="date" class="filter-input" id="filterDateFrom" placeholder="Başlangıç">
-            <input type="date" class="filter-input" id="filterDateTo" placeholder="Bitiş" style="margin-top: 0.5rem;">
+                        <div class="filter-title">{{ _('tx_explorer_filters_title') }}</div>
+            <label class="sr-only" for="filterDateFrom">{{ _('tx_explorer_date_from') }}</label>
+            <input type="date" class="filter-input" id="filterDateFrom" aria-label="{{ _('tx_explorer_date_from') }}">
+            <label class="sr-only" for="filterDateTo">{{ _('tx_explorer_date_to') }}</label>
+            <input type="date" class="filter-input" id="filterDateTo" aria-label="{{ _('tx_explorer_date_to') }}" class="mt-2">
+
         </div>
 
         <div class="filter-section">
-            <div class="filter-title">İşlem Türü</div>
-            <div class="filter-checkbox">
-                <input type="checkbox" id="filterTypeIncome" value="Gelir">
-                <label for="filterTypeIncome">Gelir</label>
-            </div>
-            <div class="filter-checkbox">
-                <input type="checkbox" id="filterTypeExpense" value="Gider">
-                <label for="filterTypeExpense">Gider</label>
-            </div>
-            <div class="filter-checkbox">
-                <input type="checkbox" id="filterTypeInvestment" value="Yatırım">
-                <label for="filterTypeInvestment">Yatırım</label>
-            </div>
+                        <div class="filter-title">{{ _('tx_type_label') }}</div>
+
+                            {% for option in type_options|default([]) %}
+                <div class="filter-checkbox">
+                    <input type="checkbox" id="filterType{{ option.dom_key }}" value="{{ option.value }}">
+                    <label for="filterType{{ option.dom_key }}">{{ _(option.label_key) }}</label>
+                </div>
+                {% endfor %}
+
+
+
         </div>
 
         <div class="filter-section">
-            <div class="filter-title">Kategori</div>
-            <select class="filter-input" id="filterCategory">
-                <option value="">Tümü</option>
+                        <div class="filter-title">{{ _('tx_filter_category') }}</div>
+            <select class="filter-input" id="filterCategory" aria-label="{{ _('tx_filter_category') }}">
+                <option value="">{{ _('tx_filter_all') }}</option>
+
                 {% for c in cats %}
                 <option value="{{ c.name }}">{{ c.name }}</option>
+                {% endfor %}
+                        </select>
+        </div>
+
+        <div class="filter-section">
+            <div class="filter-title">{{ _('tx_explorer_account_filter') }}</div>
+            <select class="filter-input" id="filterBankAccount" aria-label="{{ _('tx_explorer_account_filter') }}">
+                <option value="">{{ _('tx_explorer_all_accounts') }}</option>
+                {% for account in bank_accounts|default([]) %}
+                <option value="{{ account.id }}" data-currency="{{ account.currency }}">{{ account.name }} · {{ account.currency }}</option>
                 {% endfor %}
             </select>
         </div>
 
         <div class="filter-section">
-            <div class="filter-title">Durum</div>
+            <div class="filter-title">{{ _('tx_filter_status') }}</div>
+
+                        {% for option in status_options|default([]) %}
             <div class="filter-checkbox">
-                <input type="checkbox" id="filterStatusPaid" value="Ödendi">
-                <label for="filterStatusPaid">Ödendi</label>
+                <input type="checkbox" id="filterStatus{{ option.dom_key }}" value="{{ option.value }}">
+                <label for="filterStatus{{ option.dom_key }}">{{ _(option.label_key) }}</label>
             </div>
-            <div class="filter-checkbox">
-                <input type="checkbox" id="filterStatusPending" value="Bekliyor">
-                <label for="filterStatusPending">Bekliyor</label>
-            </div>
+            {% endfor %}
+
         </div>
 
         <div class="filter-section">
-            <div class="filter-title">Tutar Aralığı</div>
-            <input type="number" class="filter-input" id="filterMinAmount" placeholder="Min Tutar" style="margin-bottom: 0.5rem;">
-            <input type="number" class="filter-input" id="filterMaxAmount" placeholder="Max Tutar">
+                        <div class="filter-title">{{ _('tx_explorer_amount_min') }} / {{ _('tx_explorer_amount_max') }}</div>
+            <label class="sr-only" for="filterMinAmount">{{ _('tx_explorer_amount_min') }}</label>
+            <input type="number" class="filter-input" id="filterMinAmount" placeholder="{{ _('tx_explorer_amount_min') }}" class="mb-2">
+            <label class="sr-only" for="filterMaxAmount">{{ _('tx_explorer_amount_max') }}</label>
+            <input type="number" class="filter-input" id="filterMaxAmount" placeholder="{{ _('tx_explorer_amount_max') }}">
+
         </div>
 
         <div class="filter-section">
-            <button type="button" onclick="clearFilters()" style="width: 100%; padding: 0.75rem; background: rgba(100, 116, 116, 0.1); border: 1px solid rgba(100, 116, 116, 0.2); border-radius: 0.75rem; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; cursor: pointer; transition: all 0.2s;">
-                Filtreleri Temizle
+            <button data-macro="button_secondary" type="button" onclick="clearFilters()" class="w-full p-3 bg-slate-500/10 border border-slate-500/20 rounded-xl font-bold text-xs uppercase tracking-wider text-slate-500 cursor-pointer transition hover:bg-slate-500/20">
+                                {{ _('tx_explorer_clear_filters') }}
+
             </button>
         </div>
     </div>
@@ -454,40 +627,64 @@
         <!-- Dashboard Summary -->
         <div class="dashboard-summary">
             <div class="summary-card">
-                <div class="summary-label">Toplam İşlem</div>
+                                <div class="summary-label">{{ _('tx_explorer_summary_total') }}</div>
+
                 <div class="summary-value" id="summaryTotalTx">0</div>
             </div>
             <div class="summary-card">
-                <div class="summary-label">Toplam Tutar</div>
-                <div class="summary-value" id="summaryTotalAmount">₺0</div>
+                                <div class="summary-label">{{ _('tx_explorer_summary_volume') }}</div>
+
+                                <div class="summary-value" id="summaryTotalAmount">{{ _('tx_explorer_no_value') }}</div>
+
             </div>
             <div class="summary-card">
-                <div class="summary-label">Gelir</div>
-                <div class="summary-value income" id="summaryIncome">₺0</div>
+                                <div class="summary-label">{{ _('tx_explorer_summary_income') }}</div>
+
+                                <div class="summary-value income" id="summaryIncome">{{ _('tx_explorer_no_value') }}</div>
+
+            </div>
+                        <div class="summary-card">
+                <div class="summary-label">{{ _('tx_explorer_summary_expense') }}</div>
+                                <div class="summary-value expense" id="summaryExpense">{{ _('tx_explorer_no_value') }}</div>
+
             </div>
             <div class="summary-card">
-                <div class="summary-label">Gider</div>
-                <div class="summary-value expense" id="summaryExpense">₺0</div>
+                <div class="summary-label">{{ _('tx_explorer_summary_net') }}</div>
+                                <div class="summary-value net" id="summaryNet">{{ _('tx_explorer_no_value') }}</div>
+
             </div>
+            <div class="summary-card">
+                <div class="summary-label">{{ _('tx_explorer_summary_pending') }}</div>
+                <div class="summary-value" id="summaryPending">0</div>
+            </div>
+
         </div>
 
+                <p class="mb-2 text-[10px] font-semibold text-slate-500" id="summaryScope">{{ _('tx_explorer_summary_scope') }}</p>
+
         <!-- Global Search -->
+
         <div class="global-search">
             <svg class="global-search-icon" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
-            <input type="text" id="globalSearch" placeholder="Ara... (varlık, kategori, açıklama, not)">
+                        <label class="sr-only" for="globalSearch">{{ _('tx_explorer_search_placeholder') }}</label>
+            <input type="text" id="globalSearch" aria-label="{{ _('tx_explorer_search_placeholder') }}" placeholder="{{ _('tx_explorer_search_placeholder') }}">
+
         </div>
+        <div id="activeFilterSummary" class="mb-3 hidden rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[10px] font-bold text-amber-800" aria-live="polite"></div>
 
         <!-- Quick Filter Chips -->
         <div class="quick-filters">
-            <button type="button" class="filter-chip active" data-filter="all">Tümü</button>
-            <button type="button" class="filter-chip" data-filter="today">Bugün</button>
-            <button type="button" class="filter-chip" data-filter="week">Bu Hafta</button>
-            <button type="button" class="filter-chip" data-filter="month">Bu Ay</button>
-            <button type="button" class="filter-chip" data-filter="income">Gelir</button>
-            <button type="button" class="filter-chip" data-filter="expense">Gider</button>
-            <button type="button" class="filter-chip" data-filter="investment">Yatırım</button>
+                        <button data-macro="button_secondary" type="button" class="filter-chip active" data-filter="all">{{ _('tx_explorer_filter_all') }}</button>
+            <button data-macro="button_secondary" type="button" class="filter-chip" data-filter="today">{{ _('tx_explorer_filter_today') }}</button>
+            <button data-macro="button_secondary" type="button" class="filter-chip" data-filter="week">{{ _('tx_explorer_filter_week') }}</button>
+            <button data-macro="button_secondary" type="button" class="filter-chip" data-filter="month">{{ _('tx_explorer_filter_month') }}</button>
+            <button data-macro="button_secondary" type="button" class="filter-chip" data-filter="income">{{ _('tx_type_income') }}</button>
+            <button data-macro="button_secondary" type="button" class="filter-chip" data-filter="expense">{{ _('tx_type_expense') }}</button>
+            <button data-macro="button_secondary" type="button" class="filter-chip" data-filter="investment">{{ _('tx_type_investment') }}</button>
+            <button data-macro="button_secondary" type="button" class="filter-chip" data-filter="transfer">{{ _('tx_type_transfer') }}</button>
+
         </div>
 
         <!-- Transaction List -->
@@ -496,9 +693,20 @@
         </div>
 
         <!-- Loading Indicator -->
-        <div class="loading-indicator" id="loadingIndicator" style="display: none;">
-            Yükleniyor...
+                <div class="loading-indicator" id="loadingIndicator" class="hidden" aria-live="polite">
+            {{ _('tx_explorer_loading') }}
         </div>
+        <div id="explorerEmpty" class="hidden rounded-2xl border border-dashed border-slate-200 bg-white/70 px-6 py-12 text-center">
+            <h3 class="text-sm font-black uppercase tracking-tight text-slate-800">{{ _('tx_explorer_empty_title') }}</h3>
+            <p class="mx-auto mt-2 max-w-md text-xs leading-5 text-slate-500">{{ _('tx_explorer_empty_description') }}</p>
+            <button data-macro="button_secondary" type="button" onclick="clearFilters(); resetAndLoad();" class="mt-4 rounded-xl bg-amber-500 px-4 py-2 text-[10px] font-black uppercase tracking-wider text-white">{{ _('tx_explorer_clear_filters') }}</button>
+        </div>
+        <div id="explorerError" class="hidden rounded-2xl border border-rose-200 bg-rose-50 px-6 py-10 text-center" role="alert">
+            <h3 class="text-sm font-black uppercase tracking-tight text-rose-800">{{ _('tx_explorer_error_title') }}</h3>
+            <p class="mx-auto mt-2 max-w-md text-xs leading-5 text-rose-700">{{ _('tx_explorer_error_description') }}</p>
+            <button data-macro="button_secondary" type="button" onclick="resetAndLoad();" class="mt-4 rounded-xl border border-rose-300 bg-white px-4 py-2 text-[10px] font-black uppercase tracking-wider text-rose-700">{{ _('tx_explorer_retry') }}</button>
+        </div>
+
     </div>
 </div>
 
@@ -507,10 +715,10 @@
 <div class="side-drawer" id="sideDrawer">
     <div class="drawer-header">
         <div>
-            <h3 style="font-size: 1.25rem; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: -0.025em;">İşlem Detayları</h3>
-            <p style="font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">İşlem bilgileri ve geçmişi</p>
+            <h3 class="text-xl font-black text-slate-900 uppercase tracking-tight">{{ _('tx_explorer_title') }}</h3>
+            <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">{{ _('tx_explorer_subtitle') }}</p>
         </div>
-        <button type="button" onclick="closeDrawer()">
+        <button data-macro="button_secondary" type="button" onclick="closeDrawer()">
             <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M6 18L18 6M6 6l12 12"/>
             </svg>
@@ -522,17 +730,67 @@
 </div>
 
 <script>
+    const explorerCopy = {
+        unassignedAccount: {{ _('tx_explorer_account_unassigned')|tojson }},
+        accountLabel: {{ _('tx_explorer_detail_account')|tojson }},
+        sourceLabel: {{ _('tx_explorer_detail_source')|tojson }},
+        reconciliationLabel: {{ _('tx_explorer_detail_reconciliation')|tojson }},
+                openTransaction: {{ _('tx_explorer_open_transaction')|tojson }},
+        deleteConfirm: {{ _('tx_explorer_delete_confirm')|tojson }},
+        category: {{ _('tx_explorer_detail_category')|tojson }},
+        amount: {{ _('tx_explorer_detail_amount')|tojson }},
+        date: {{ _('tx_explorer_detail_date')|tojson }},
+        status: {{ _('tx_explorer_detail_status')|tojson }},
+        description: {{ _('tx_explorer_detail_description')|tojson }},
+        note: {{ _('tx_explorer_detail_note')|tojson }},
+        type: {{ _('tx_explorer_detail_type')|tojson }},
+        origin: {{ _('tx_explorer_detail_origin')|tojson }},
+        ledger: {{ _('tx_explorer_detail_ledger')|tojson }},
+        edit: {{ _('tx_explorer_edit')|tojson }},
+        delete: {{ _('tx_explorer_delete')|tojson }},
+        noReconciliation: {{ _('tx_explorer_no_reconciliation')|tojson }},
+        loading: {{ _('tx_explorer_loading')|tojson }},
+        activeFilter: {{ _('tx_explorer_filter_active')|tojson }},
+        errorDescription: {{ _('tx_explorer_error_description')|tojson }},
+        noValue: {{ _('tx_explorer_no_value')|tojson }},
+        transactionsUrl: {{ url_for('transactions.transactions')|tojson }},
+        reconciliationUrl: {{ url_for('transactions.reconciliation')|tojson }},
+        typeValues: {{ type_values|default({})|tojson }},
+        statusValues: {{ status_values|default({})|tojson }},
+        typeLabels: {
+            {% for option in type_options|default([]) %}{{ option.value|tojson }}: {{ _(option.label_key)|tojson }},{% endfor %}
+        },
+        statusLabels: {
+            {% for option in status_options|default([]) %}{{ option.value|tojson }}: {{ _(option.label_key)|tojson }},{% endfor %}
+        },
+        sourceLabels: {
+            manual: {{ _('tx_source_manual')|tojson }},
+            plan: {{ _('tx_source_plan')|tojson }},
+            asset: {{ _('tx_source_asset')|tojson }},
+            asset_sale: {{ _('tx_source_asset_sale')|tojson }},
+            asset_dividend: {{ _('tx_source_asset_dividend')|tojson }},
+            asset_interest: {{ _('tx_source_asset_interest')|tojson }},
+            adjustment: {{ _('tx_source_adjustment')|tojson }},
+            reversal: {{ _('tx_source_reversal')|tojson }},
+            default: {{ _('tx_source_default')|tojson }},
+        },
+
+    };
+
     // State management
     let currentPage = 1;
     let isLoading = false;
     let hasMore = true;
     let currentFilters = {};
+    let activeRequestController = null;
+    let requestSequence = 0;
 
     // Initialize
     document.addEventListener('DOMContentLoaded', function() {
-        loadTransactions();
+        restoreFiltersFromUrl();
         setupEventListeners();
         setupInfiniteScroll();
+        loadTransactions();
     });
 
     function setupEventListeners() {
@@ -572,36 +830,73 @@
         });
     }
 
-    function resetAndLoad() {
-        currentPage = 1;
-        hasMore = true;
-        document.getElementById('transactionList').innerHTML = '';
-        loadTransactions();
-    }
+        function loadTransactions() {
 
-    function loadTransactions() {
-        if (isLoading) return;
+        if (isLoading || !hasMore) return;
         isLoading = true;
-        document.getElementById('loadingIndicator').style.display = 'flex';
+        setExplorerState({loading: true});
+        const requestId = ++requestSequence;
 
         const filters = getFilters();
-        
-        fetch(`/api/transactions?page=${currentPage}&filters=${encodeURIComponent(JSON.stringify(filters))}`)
-            .then(response => response.json())
+        currentFilters = filters;
+        syncUrlState(filters);
+        updateActiveFilterSummary(filters);
+        const query = new URLSearchParams({
+            page: String(currentPage),
+            per_page: '50',
+            filters: JSON.stringify(filters),
+        });
+        activeRequestController = new AbortController();
+        ECuzdanApi.get(`${ECuzdanEndpoints.transactions.explorer}?${query.toString()}`, {
+            signal: activeRequestController.signal,
+        })
             .then(data => {
+
+                ECuzdanApi.dto.transactions(data);
                 if (data.transactions.length === 0) {
                     hasMore = false;
+                    if (currentPage === 1) setExplorerState({empty: true});
                 } else {
+                    setExplorerState();
                     renderTransactions(data.transactions);
                     updateDashboard(data.summary);
                     currentPage++;
                 }
             })
-            .catch(error => console.error('Error loading transactions:', error))
+            .catch(error => {
+                if (requestId !== requestSequence || error.name === 'AbortError') return;
+                if (currentPage === 1) setExplorerState({error: true});
+                console.error('Transaction Explorer request failed', error);
+            })
             .finally(() => {
+                if (requestId !== requestSequence) return;
+                activeRequestController = null;
                 isLoading = false;
                 document.getElementById('loadingIndicator').style.display = 'none';
             });
+    }
+
+    function setExplorerState({loading = false, empty = false, error = false} = {}) {
+        const list = document.getElementById('transactionList');
+        const loadingElement = document.getElementById('loadingIndicator');
+        const emptyElement = document.getElementById('explorerEmpty');
+        const errorElement = document.getElementById('explorerError');
+        loadingElement.style.display = loading ? 'flex' : 'none';
+        emptyElement.classList.toggle('hidden', !empty);
+        errorElement.classList.toggle('hidden', !error);
+        list.classList.toggle('hidden', empty || error);
+    }
+
+    function resetAndLoad() {
+        if (activeRequestController) activeRequestController.abort();
+        activeRequestController = null;
+        isLoading = false;
+        requestSequence += 1;
+        currentPage = 1;
+        hasMore = true;
+        document.getElementById('transactionList').innerHTML = '';
+        setExplorerState();
+        loadTransactions();
     }
 
     function loadMoreTransactions() {
@@ -613,8 +908,9 @@
             search: document.getElementById('globalSearch').value,
             dateFrom: document.getElementById('filterDateFrom').value,
             dateTo: document.getElementById('filterDateTo').value,
-            types: getCheckedValues(['filterTypeIncome', 'filterTypeExpense', 'filterTypeInvestment']),
+            types: getCheckedValues(['filterTypeIncome', 'filterTypeExpense', 'filterTypeInvestment', 'filterTypeTransfer']),
             category: document.getElementById('filterCategory').value,
+            bankAccountId: document.getElementById('filterBankAccount').value,
             statuses: getCheckedValues(['filterStatusPaid', 'filterStatusPending']),
             minAmount: document.getElementById('filterMinAmount').value,
             maxAmount: document.getElementById('filterMaxAmount').value
@@ -637,194 +933,319 @@
 
     function createTransactionCard(tx) {
         const card = document.createElement('div');
-        card.className = `transaction-card ${tx.type.toLowerCase()}`;
-        card.onclick = () => openDrawer(tx.id);
-        
-        const typeClass = tx.type === 'Gelir' ? 'income' : tx.type === 'Gider' ? 'expense' : 'investment';
-        
+                const typeClass = getTransactionTypeClass(tx.type);
+
+        const accountName = tx.bank_account_name
+            ? `${tx.bank_account_name}${tx.bank_account_currency ? ` · ${tx.bank_account_currency}` : ''}`
+            : explorerCopy.unassignedAccount;
+        card.className = `transaction-card ${typeClass}`;
+        card.tabIndex = 0;
+        card.setAttribute('role', 'button');
+                card.setAttribute('aria-label', `${tx.category || explorerCopy.noValue} ${formatMoney(tx.amount, tx.bank_account_currency)}`);
+
+        card.addEventListener('click', () => openDrawer(tx.id));
+        card.addEventListener('keydown', event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openDrawer(tx.id);
+            }
+        });
         card.innerHTML = `
             <div class="card-header">
-                <div class="card-category">${tx.category}</div>
-                <div class="card-date">${formatDate(tx.date)}</div>
+                            <div class="card-category">${escapeHtml(tx.category || explorerCopy.noValue)}</div>
+
+                <div class="card-date">${escapeHtml(formatDate(tx.date))}</div>
             </div>
-            <div class="card-description">${tx.description || '—'}</div>
-            <div class="card-amount ${typeClass}">${formatMoney(tx.amount)} ₺</div>
+                        <div class="card-description">${escapeHtml(tx.description || explorerCopy.noValue)}</div>
+
+                        <div class="card-amount ${typeClass}">${formatMoney(tx.amount, tx.bank_account_currency)}</div>
+
             <div class="card-meta">
-                <div class="card-meta-item">${tx.status}</div>
-                ${tx.note ? `<div class="card-meta-item">Not: ${tx.note}</div>` : ''}
+                                <div class="card-meta-item">${escapeHtml(explorerCopy.statusLabels?.[tx.status] || tx.status || explorerCopy.noValue)}</div>
+
+                <div class="card-meta-item">${escapeHtml(accountName)}</div>
+                ${tx.note ? `<div class="card-meta-item">${escapeHtml(tx.note)}</div>` : ''}
             </div>
         `;
-        
         return card;
     }
 
     function updateDashboard(summary) {
-        document.getElementById('summaryTotalTx').textContent = summary.total_count || 0;
-        document.getElementById('summaryTotalAmount').textContent = formatMoney(summary.total_amount || 0) + ' ₺';
-        document.getElementById('summaryIncome').textContent = formatMoney(summary.total_income || 0) + ' ₺';
-        document.getElementById('summaryExpense').textContent = formatMoney(summary.total_expense || 0) + ' ₺';
+        const total = summary || {};
+        document.getElementById('summaryTotalTx').textContent = total.total_count || 0;
+        const summaryCurrency = total.currency || getSelectedAccountCurrency();
+        document.getElementById('summaryTotalAmount').textContent = formatSummaryMoney(total.total_amount, summaryCurrency);
+        document.getElementById('summaryIncome').textContent = formatSummaryMoney(total.total_income, summaryCurrency);
+        document.getElementById('summaryExpense').textContent = formatSummaryMoney(total.total_expense, summaryCurrency);
+        document.getElementById('summaryNet').textContent = formatSummaryMoney(total.total_net, summaryCurrency);
+        document.getElementById('summaryPending').textContent = total.total_pending || 0;
+    }
+
+    function getSelectedAccountCurrency() {
+        const selected = document.getElementById('filterBankAccount')?.selectedOptions?.[0];
+        return selected?.dataset?.currency || null;
+    }
+
+    function formatSummaryMoney(amount, currency) {
+        if (currency) return formatMoney(amount, currency);
+        const numericValue = Number.parseFloat(amount);
+        const value = Number.isFinite(numericValue) ? numericValue : 0;
+        return new Intl.NumberFormat(getUiLocale(), {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }).format(value);
     }
 
     function applyQuickFilter(filter) {
-        clearFilters();
-        
+        clearFilters(false);
         const today = new Date().toISOString().split('T')[0];
-        
-        switch(filter) {
+        switch (filter) {
             case 'today':
                 document.getElementById('filterDateFrom').value = today;
                 document.getElementById('filterDateTo').value = today;
                 break;
-            case 'week':
+            case 'week': {
                 const weekAgo = new Date();
                 weekAgo.setDate(weekAgo.getDate() - 7);
                 document.getElementById('filterDateFrom').value = weekAgo.toISOString().split('T')[0];
                 document.getElementById('filterDateTo').value = today;
                 break;
-            case 'month':
+            }
+            case 'month': {
                 const monthAgo = new Date();
                 monthAgo.setMonth(monthAgo.getMonth() - 1);
                 document.getElementById('filterDateFrom').value = monthAgo.toISOString().split('T')[0];
                 document.getElementById('filterDateTo').value = today;
                 break;
+            }
             case 'income':
-                document.getElementById('filterTypeIncome').checked = true;
-                break;
             case 'expense':
-                document.getElementById('filterTypeExpense').checked = true;
-                break;
             case 'investment':
-                document.getElementById('filterTypeInvestment').checked = true;
+            case 'transfer': {
+                const input = document.getElementById(`filterType${filter.charAt(0).toUpperCase()}${filter.slice(1)}`);
+                if (input && explorerCopy.typeValues?.[filter]) input.checked = true;
                 break;
-            case 'all':
+            }
             default:
-                // No filters
                 break;
         }
-        
         resetAndLoad();
     }
 
-    function clearFilters() {
+    function clearFilters(resetChip = true) {
         document.getElementById('globalSearch').value = '';
         document.getElementById('filterDateFrom').value = '';
         document.getElementById('filterDateTo').value = '';
         document.getElementById('filterCategory').value = '';
+        document.getElementById('filterBankAccount').value = '';
         document.getElementById('filterMinAmount').value = '';
         document.getElementById('filterMaxAmount').value = '';
-        
         document.querySelectorAll('.filter-checkbox input').forEach(input => {
             input.checked = false;
         });
-        
-        document.querySelectorAll('.filter-chip').forEach(chip => {
-            chip.classList.remove('active');
+                if (resetChip) {
+            document.querySelectorAll('.filter-chip').forEach(chip => chip.classList.remove('active'));
+            document.querySelector('.filter-chip[data-filter="all"]').classList.add('active');
+        }
+        updateActiveFilterSummary({});
+    }
+
+    function restoreFiltersFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        document.getElementById('globalSearch').value = params.get('q') || '';
+        document.getElementById('filterDateFrom').value = params.get('from') || '';
+        document.getElementById('filterDateTo').value = params.get('to') || '';
+        document.getElementById('filterCategory').value = params.get('category') || '';
+        document.getElementById('filterBankAccount').value = params.get('account') || '';
+        document.getElementById('filterMinAmount').value = params.get('min') || '';
+        document.getElementById('filterMaxAmount').value = params.get('max') || '';
+        const types = new Set((params.get('types') || '').split(',').filter(Boolean));
+        ['income', 'expense', 'investment', 'transfer'].forEach(key => {
+            const domKey = key.charAt(0).toUpperCase() + key.slice(1);
+            const input = document.getElementById(`filterType${domKey}`);
+            if (input) input.checked = types.has(input.value);
         });
-        
-        document.querySelector('.filter-chip[data-filter="all"]').classList.add('active');
+        const statuses = new Set((params.get('statuses') || '').split(',').filter(Boolean));
+        ['paid', 'pending'].forEach(key => {
+            const domKey = key.charAt(0).toUpperCase() + key.slice(1);
+            const input = document.getElementById(`filterStatus${domKey}`);
+            if (input) input.checked = statuses.has(input.value);
+        });
+    }
+
+    function syncUrlState(filters) {
+        const params = new URLSearchParams();
+        if (filters.search) params.set('q', filters.search);
+        if (filters.dateFrom) params.set('from', filters.dateFrom);
+        if (filters.dateTo) params.set('to', filters.dateTo);
+        if (filters.category) params.set('category', filters.category);
+        if (filters.bankAccountId) params.set('account', filters.bankAccountId);
+        if (filters.minAmount) params.set('min', filters.minAmount);
+        if (filters.maxAmount) params.set('max', filters.maxAmount);
+        if (filters.types.length) params.set('types', filters.types.join(','));
+        if (filters.statuses.length) params.set('statuses', filters.statuses.join(','));
+        const query = params.toString();
+        window.history.replaceState({}, '', `${window.location.pathname}${query ? `?${query}` : ''}`);
+    }
+
+    function updateActiveFilterSummary(filters) {
+        const values = [];
+        if (filters.search) values.push(filters.search);
+        if (filters.dateFrom || filters.dateTo) values.push(`${filters.dateFrom || explorerCopy.noValue} → ${filters.dateTo || explorerCopy.noValue}`);
+        if (filters.category) values.push(filters.category);
+        if (filters.bankAccountId) values.push(document.getElementById('filterBankAccount').selectedOptions[0]?.textContent || filters.bankAccountId);
+        if (filters.types.length) values.push(filters.types.map(type => explorerCopy.typeLabels?.[type] || type).join(', '));
+        if (filters.statuses.length) values.push(filters.statuses.map(status => explorerCopy.statusLabels?.[status] || status).join(', '));
+        if (filters.minAmount || filters.maxAmount) values.push(`${filters.minAmount || explorerCopy.noValue} – ${filters.maxAmount || explorerCopy.noValue}`);
+        const summary = document.getElementById('activeFilterSummary');
+        summary.textContent = values.length ? `${explorerCopy.activeFilter}: ${values.join(' · ')}` : '';
+        summary.classList.toggle('hidden', values.length === 0);
     }
 
     function openDrawer(transactionId) {
-        fetch(`/api/transactions/${transactionId}`)
-            .then(response => response.json())
+        const content = document.getElementById('drawerContent');
+        content.innerHTML = `<div class="loading-indicator" class="flex">${escapeHtml(explorerCopy.loading)}</div>`;
+        document.getElementById('sideDrawer').classList.add('open');
+        document.getElementById('drawerBackdrop').classList.add('open');
+        ECuzdanApi.get(ECuzdanEndpoints.transactions.detail(transactionId))
             .then(data => {
+                if (data.success === false) throw new Error(data.message || explorerCopy.errorDescription);
                 renderDrawerContent(data);
-                document.getElementById('sideDrawer').classList.add('open');
-                document.getElementById('drawerBackdrop').classList.add('open');
             })
-            .catch(error => console.error('Error loading transaction details:', error));
+            .catch(error => {
+                content.innerHTML = `<div class="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">${escapeHtml(error.message || explorerCopy.errorDescription)}</div>`;
+                console.error('Error loading transaction details:', error);
+            });
     }
 
     function closeDrawer() {
+
         document.getElementById('sideDrawer').classList.remove('open');
         document.getElementById('drawerBackdrop').classList.remove('open');
     }
 
     function renderDrawerContent(tx) {
         const content = document.getElementById('drawerContent');
-        const typeClass = tx.type === 'Gelir' ? 'income' : tx.type === 'Gider' ? 'expense' : 'investment';
-        
+        const typeClass = getTransactionTypeClass(tx.type);
+        const amountColor = typeClass === 'income' ? 'var(--color-emerald-600, var(--color-emerald-600, #059669))' : typeClass === 'expense' ? 'var(--color-rose-600, var(--color-rose-600, #dc2626))' : typeClass === 'transfer' ? 'var(--color-violet-600, var(--color-violet-600, #7c3aed))' : 'var(--color-blue-500, var(--color-blue-500, #3b82f6))';
+        const account = tx.bank_account_name
+            ? `${tx.bank_account_name}${tx.bank_account_currency ? ` · ${tx.bank_account_currency}` : ''}`
+            : explorerCopy.unassignedAccount;
+        const source = explorerCopy.sourceLabels[tx.source_type] || explorerCopy.sourceLabels.default;
+        const reconciliationLink = tx.reconciliation_available && tx.bank_account_id
+            ? `<a href="${explorerCopy.reconciliationUrl}?account_id=${encodeURIComponent(tx.bank_account_id)}" class="drawer-context-link">${escapeHtml(explorerCopy.reconciliationLabel)}</a>`
+            : `<span class="drawer-muted">${escapeHtml(explorerCopy.noReconciliation)}</span>`;
+
         content.innerHTML = `
-            <div style="margin-bottom: 1.5rem;">
-                <div style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin-bottom: 0.5rem;">Kategori</div>
-                <div style="font-size: 1rem; font-weight: 700; color: #4f46e5;">${tx.category}</div>
+            <div class="drawer-field drawer-highlight">
+                <div class="drawer-label">${escapeHtml(explorerCopy.category)}</div>
+                <div class="drawer-value drawer-category">${escapeHtml(tx.category || explorerCopy.noValue)}</div>
             </div>
-            
-            <div style="margin-bottom: 1.5rem;">
-                <div style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin-bottom: 0.5rem;">Tutar</div>
-                <div style="font-size: 2rem; font-weight: 900; color: ${typeClass === 'income' ? '#059669' : typeClass === 'expense' ? '#dc2626' : '#3b82f6'};">${formatMoney(tx.amount)} ₺</div>
+            <div class="drawer-field">
+                <div class="drawer-label">${escapeHtml(explorerCopy.amount)}</div>
+                <div class="drawer-amount" style="color:${amountColor};">${escapeHtml(formatMoney(tx.amount, tx.bank_account_currency))}</div>
             </div>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
-                <div>
-                    <div style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin-bottom: 0.5rem;">Tarih</div>
-                    <div style="font-size: 0.9rem; font-weight: 600; color: #334155;">${formatDate(tx.date)}</div>
+            <div class="drawer-grid">
+                <div class="drawer-field">
+                    <div class="drawer-label">${escapeHtml(explorerCopy.date)}</div>
+                    <div class="drawer-value">${escapeHtml(formatDate(tx.date))}</div>
                 </div>
-                <div>
-                    <div style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin-bottom: 0.5rem;">Durum</div>
-                    <div style="font-size: 0.9rem; font-weight: 600; color: #334155;">${tx.status}</div>
+                <div class="drawer-field">
+                    <div class="drawer-label">${escapeHtml(explorerCopy.status)}</div>
+                    <div class="drawer-value">${escapeHtml(explorerCopy.statusLabels?.[tx.status] || tx.status || explorerCopy.noValue)}</div>
+                </div>
+                <div class="drawer-field">
+                    <div class="drawer-label">${escapeHtml(explorerCopy.type)}</div>
+                    <div class="drawer-value">${escapeHtml(explorerCopy.typeLabels?.[tx.type] || tx.type || explorerCopy.noValue)}</div>
+                </div>
+                <div class="drawer-field">
+                    <div class="drawer-label">${escapeHtml(explorerCopy.accountLabel)}</div>
+                    <div class="drawer-value">${escapeHtml(account)}</div>
                 </div>
             </div>
-            
-            <div style="margin-bottom: 1.5rem;">
-                <div style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin-bottom: 0.5rem;">Açıklama</div>
-                <div style="font-size: 0.9rem; font-weight: 500; color: #334155;">${tx.description || '—'}</div>
+            <div class="drawer-field">
+                <div class="drawer-label">${escapeHtml(explorerCopy.description)}</div>
+                                    <div class="drawer-value">${escapeHtml(tx.description || explorerCopy.noValue)}</div>
+
             </div>
-            
-            ${tx.note ? `
-            <div style="margin-bottom: 1.5rem;">
-                <div style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin-bottom: 0.5rem;">Not</div>
-                <div style="font-size: 0.9rem; font-weight: 500; color: #334155; font-style: italic;">${tx.note}</div>
+            ${tx.note ? `<div class="drawer-field"><div class="drawer-label">${escapeHtml(explorerCopy.note)}</div><div class="drawer-value drawer-note">${escapeHtml(tx.note)}</div></div>` : ''}
+            <div class="drawer-context">
+                <div class="drawer-context-row"><span>${escapeHtml(explorerCopy.origin)}</span><strong>${escapeHtml(source)}</strong></div>
+                <div class="drawer-context-row"><span>${escapeHtml(explorerCopy.ledger)}</span><strong>${escapeHtml(tx.ledger_layer || explorerCopy.noValue)}</strong></div>
+                <div class="drawer-context-row"><span>${escapeHtml(explorerCopy.reconciliationLabel)}</span>${reconciliationLink}</div>
             </div>
-            ` : ''}
-            
-            <div style="display: flex; gap: 0.75rem; margin-top: 2rem;">
-                <button type="button" onclick="editTransaction(${tx.id})" style="flex: 1; padding: 0.75rem; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; border-radius: 0.75rem; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer;">
-                    Düzenle
-                </button>
-                <button type="button" onclick="deleteTransaction(${tx.id})" style="flex: 1; padding: 0.75rem; background: rgba(220, 38, 38, 0.1); color: #dc2626; border: 1px solid rgba(220, 38, 38, 0.2); border-radius: 0.75rem; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer;">
-                    Sil
-                </button>
+            <div class="drawer-actions">
+                <button data-macro="button_secondary" type="button" onclick="editTransaction(${Number(tx.id)})" class="drawer-primary-action">${escapeHtml(explorerCopy.edit)}</button>
+                <button data-macro="button_danger" type="button" onclick="deleteTransaction(${Number(tx.id)})" class="drawer-danger-action">${escapeHtml(explorerCopy.delete)}</button>
             </div>
         `;
     }
 
     function editTransaction(id) {
         // Redirect to edit page or open edit modal
-        window.location.href = `/transactions?edit=${id}`;
+        const editUrl = new URL(explorerCopy.transactionsUrl, window.location.origin);
+        editUrl.searchParams.set('edit', String(id));
+        window.location.href = editUrl.toString();
+
     }
 
     function deleteTransaction(id) {
-        if (confirm('Bu işlemi silmek istediğinize emin misiniz?')) {
-            fetch(`/delete_t/${id}`, {
-                method: 'GET',
+        if (confirm(explorerCopy.deleteConfirm)) {
+            ECuzdanApi.post(ECuzdanEndpoints.transactions.delete(id), {
                 headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    closeDrawer();
-                    resetAndLoad();
-                }
-            })
-            .catch(error => console.error('Error deleting transaction:', error));
+                .then(data => {
+                    if (data.success) {
+                        closeDrawer();
+                        resetAndLoad();
+                    }
+                })
+                .catch(error => console.error('Error deleting transaction:', error));
         }
     }
 
     // Utility functions
-    function formatDate(dateStr) {
-        if (!dateStr) return '—';
-        const date = new Date(dateStr);
-        return date.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' });
+    function getTransactionTypeClass(type) {
+        const typeClasses = {
+            [explorerCopy.typeValues?.income]: 'income',
+            [explorerCopy.typeValues?.expense]: 'expense',
+            [explorerCopy.typeValues?.investment]: 'investment',
+            [explorerCopy.typeValues?.transfer]: 'transfer',
+        };
+        return typeClasses[type] || 'unknown';
     }
 
-    function formatMoney(amount) {
-        var val = amount;
-        if (typeof amount === 'string') {
-            val = parseFloat(amount);
-            if (isNaN(val)) val = 0;
+    function getUiLocale() {
+        const language = document.documentElement.lang || 'tr';
+        return {tr: 'tr-TR', en: 'en-US', de: 'de-DE', it: 'it-IT'}[language] || 'tr-TR';
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return explorerCopy.noValue;
+        const date = new Date(dateStr);
+        return new Intl.DateTimeFormat(getUiLocale(), {day: '2-digit', month: 'short', year: 'numeric'}).format(date);
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, character => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[character]));
+    }
+
+    function formatMoney(amount, currency) {
+        const numericValue = Number.parseFloat(amount);
+        const value = Number.isFinite(numericValue) ? numericValue : 0;
+        try {
+            return new Intl.NumberFormat(getUiLocale(), {
+                style: 'currency',
+                currency,
+                currencyDisplay: 'symbol',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            }).format(value);
+        } catch (error) {
+            return new Intl.NumberFormat(getUiLocale(), {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(value);
         }
-        return Number(val || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     function debounce(func, wait) {

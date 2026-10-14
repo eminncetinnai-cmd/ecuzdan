@@ -8,7 +8,7 @@ from typing import Optional
 @dataclass(kw_only=True)
 class OutboxMessage:
     """Represents a domain event stored in the outbox for guaranteed delivery."""
-    
+
     id: str
     event_type: str
     payload: str  # JSON serialized event data

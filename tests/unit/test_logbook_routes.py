@@ -3,12 +3,14 @@ Unit Tests - Logbook Routes
 Logbook route functions
 """
 
+from unittest.mock import Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+
 from routes.logbook import (
-    _get_logbook_service,
     _filters_from_request,
     _get_category_color,
+    _get_logbook_service,
     register_logbook_routes,
 )
 
@@ -23,7 +25,7 @@ def test_get_logbook_service():
         mock_applications.logbook.return_value = mock_logbook
         mock_container.applications = mock_applications
         mock_get_container.return_value = mock_container
-        
+
         result = _get_logbook_service()
         assert result == mock_logbook
 
@@ -46,9 +48,9 @@ def test_register_logbook_routes():
     """Test register_logbook_routes function"""
     mock_bp = Mock()
     mock_bp.route = Mock(return_value=lambda f: f)
-    
+
     register_logbook_routes(mock_bp)
-    
+
     assert mock_bp.route.called
 
 
@@ -56,12 +58,11 @@ def test_register_logbook_routes():
 def test_logbook_imports():
     """Test that logbook functions can be imported"""
     from routes.logbook import (
-        _get_logbook_service,
-        _filters_from_request,
         _get_category_color,
+        _get_logbook_service,
         register_logbook_routes,
     )
-    
+
     assert callable(_get_logbook_service)
     assert callable(_filters_from_request)
     assert callable(_get_category_color)
@@ -72,13 +73,13 @@ def test_logbook_imports():
 def test_logbook_routes_structure():
     """Test logbook routes module structure"""
     import routes.logbook as logbook_module
-    
+
     # Check for expected functions
     assert hasattr(logbook_module, '_get_logbook_service')
     assert hasattr(logbook_module, '_filters_from_request')
     assert hasattr(logbook_module, '_get_category_color')
     assert hasattr(logbook_module, 'register_logbook_routes')
-    
+
     # Check for expected imports
     assert hasattr(logbook_module, 'logging')
     assert hasattr(logbook_module, 'traceback')
@@ -104,9 +105,9 @@ def test_register_logbook_routes_route_registration():
     """Test register_logbook_routes registers routes"""
     mock_bp = Mock()
     mock_bp.route = Mock(return_value=lambda f: f)
-    
+
     register_logbook_routes(mock_bp)
-    
+
     # Should register multiple routes
     assert mock_bp.route.call_count >= 8
 
@@ -115,7 +116,7 @@ def test_register_logbook_routes_route_registration():
 def test_logbook_module_has_required_imports():
     """Test logbook module has required imports"""
     import routes.logbook as logbook_module
-    
+
     # Flask imports
     assert hasattr(logbook_module, 'g')
     assert hasattr(logbook_module, 'jsonify')
@@ -124,7 +125,7 @@ def test_logbook_module_has_required_imports():
     assert hasattr(logbook_module, 'request')
     assert hasattr(logbook_module, 'session')
     assert hasattr(logbook_module, 'url_for')
-    
+
     # Custom imports
     assert hasattr(logbook_module, 'get_container')
     assert hasattr(logbook_module, 'handle_ajax_or_flash')
@@ -139,7 +140,7 @@ def test_logbook_blueprint_parameter():
     """Test register_logbook_routes accepts blueprint parameter"""
     mock_bp = Mock()
     mock_bp.route = Mock(return_value=lambda f: f)
-    
+
     # Should not raise exception
     register_logbook_routes(mock_bp)
 
@@ -147,9 +148,10 @@ def test_logbook_blueprint_parameter():
 @pytest.mark.unit
 def test_logbook_index_route_exists():
     """Test logbook index route exists"""
-    import routes.logbook as logbook_module
     import inspect
-    
+
+    import routes.logbook as logbook_module
+
     source = inspect.getsource(logbook_module)
     assert '/' in source
 
@@ -157,9 +159,10 @@ def test_logbook_index_route_exists():
 @pytest.mark.unit
 def test_logbook_timeline_route_exists():
     """Test logbook timeline route exists"""
-    import routes.logbook as logbook_module
     import inspect
-    
+
+    import routes.logbook as logbook_module
+
     source = inspect.getsource(logbook_module)
     assert '/timeline' in source
 
@@ -167,9 +170,10 @@ def test_logbook_timeline_route_exists():
 @pytest.mark.unit
 def test_logbook_calendar_route_exists():
     """Test logbook calendar route exists"""
-    import routes.logbook as logbook_module
     import inspect
-    
+
+    import routes.logbook as logbook_module
+
     source = inspect.getsource(logbook_module)
     assert '/calendar' in source
 
@@ -177,9 +181,10 @@ def test_logbook_calendar_route_exists():
 @pytest.mark.unit
 def test_logbook_create_route_exists():
     """Test logbook create route exists"""
-    import routes.logbook as logbook_module
     import inspect
-    
+
+    import routes.logbook as logbook_module
+
     source = inspect.getsource(logbook_module)
     assert '/create' in source
 
@@ -187,9 +192,10 @@ def test_logbook_create_route_exists():
 @pytest.mark.unit
 def test_logbook_detail_route_exists():
     """Test logbook detail route exists"""
-    import routes.logbook as logbook_module
     import inspect
-    
+
+    import routes.logbook as logbook_module
+
     source = inspect.getsource(logbook_module)
     assert '/<int:id>' in source or 'detail' in source
 
@@ -197,9 +203,10 @@ def test_logbook_detail_route_exists():
 @pytest.mark.unit
 def test_logbook_update_route_exists():
     """Test logbook update route exists"""
-    import routes.logbook as logbook_module
     import inspect
-    
+
+    import routes.logbook as logbook_module
+
     source = inspect.getsource(logbook_module)
     assert '/update' in source
 
@@ -207,9 +214,10 @@ def test_logbook_update_route_exists():
 @pytest.mark.unit
 def test_logbook_delete_route_exists():
     """Test logbook delete route exists"""
-    import routes.logbook as logbook_module
     import inspect
-    
+
+    import routes.logbook as logbook_module
+
     source = inspect.getsource(logbook_module)
     assert '/delete' in source
 
@@ -217,9 +225,10 @@ def test_logbook_delete_route_exists():
 @pytest.mark.unit
 def test_logbook_api_entries_route_exists():
     """Test logbook API entries route exists"""
-    import routes.logbook as logbook_module
     import inspect
-    
+
+    import routes.logbook as logbook_module
+
     source = inspect.getsource(logbook_module)
     assert '/api/entries' in source
 
@@ -227,9 +236,10 @@ def test_logbook_api_entries_route_exists():
 @pytest.mark.unit
 def test_logbook_api_calendar_events_route_exists():
     """Test logbook API calendar events route exists"""
-    import routes.logbook as logbook_module
     import inspect
-    
+
+    import routes.logbook as logbook_module
+
     source = inspect.getsource(logbook_module)
     assert '/api/calendar-events' in source
 
@@ -237,9 +247,10 @@ def test_logbook_api_calendar_events_route_exists():
 @pytest.mark.unit
 def test_logbook_api_assets_route_exists():
     """Test logbook API assets route exists"""
-    import routes.logbook as logbook_module
     import inspect
-    
+
+    import routes.logbook as logbook_module
+
     source = inspect.getsource(logbook_module)
     assert '/api/assets' in source
 
@@ -247,9 +258,10 @@ def test_logbook_api_assets_route_exists():
 @pytest.mark.unit
 def test_logbook_api_transactions_route_exists():
     """Test logbook API transactions route exists"""
-    import routes.logbook as logbook_module
     import inspect
-    
+
+    import routes.logbook as logbook_module
+
     source = inspect.getsource(logbook_module)
     assert '/api/transactions' in source
 
@@ -257,9 +269,10 @@ def test_logbook_api_transactions_route_exists():
 @pytest.mark.unit
 def test_logbook_error_handling_structure():
     """Test logbook routes have error handling"""
-    import routes.logbook as logbook_module
     import inspect
-    
+
+    import routes.logbook as logbook_module
+
     # Check that the module has error handling patterns
     source = inspect.getsource(logbook_module)
     assert 'except Exception' in source or 'try:' in source
@@ -268,9 +281,10 @@ def test_logbook_error_handling_structure():
 @pytest.mark.unit
 def test_logbook_ajax_handling():
     """Test logbook routes use AJAX helpers"""
-    import routes.logbook as logbook_module
     import inspect
-    
+
+    import routes.logbook as logbook_module
+
     source = inspect.getsource(logbook_module)
     assert 'is_ajax_request' in source or 'handle_ajax_or_flash' in source
 
@@ -278,9 +292,10 @@ def test_logbook_ajax_handling():
 @pytest.mark.unit
 def test_logbook_json_responses():
     """Test logbook routes use jsonify"""
-    import routes.logbook as logbook_module
     import inspect
-    
+
+    import routes.logbook as logbook_module
+
     source = inspect.getsource(logbook_module)
     assert 'jsonify' in source
 
@@ -288,9 +303,10 @@ def test_logbook_json_responses():
 @pytest.mark.unit
 def test_logbook_flash_messaging():
     """Test logbook routes use flash messaging"""
-    import routes.logbook as logbook_module
     import inspect
-    
+
+    import routes.logbook as logbook_module
+
     source = inspect.getsource(logbook_module)
     assert 'flash' in source
 
@@ -298,9 +314,10 @@ def test_logbook_flash_messaging():
 @pytest.mark.unit
 def test_logbook_rollback_session():
     """Test logbook routes use rollback_session"""
-    import routes.logbook as logbook_module
     import inspect
-    
+
+    import routes.logbook as logbook_module
+
     source = inspect.getsource(logbook_module)
     assert 'rollback_session' in source
 
@@ -308,9 +325,10 @@ def test_logbook_rollback_session():
 @pytest.mark.unit
 def test_logbook_traceback_logging():
     """Test logbook routes use traceback logging"""
-    import routes.logbook as logbook_module
     import inspect
-    
+
+    import routes.logbook as logbook_module
+
     source = inspect.getsource(logbook_module)
     assert 'traceback' in source
 
@@ -318,9 +336,10 @@ def test_logbook_traceback_logging():
 @pytest.mark.unit
 def test_logbook_filters():
     """Test logbook routes use filters"""
-    import routes.logbook as logbook_module
     import inspect
-    
+
+    import routes.logbook as logbook_module
+
     source = inspect.getsource(logbook_module)
     assert 'filters' in source
 
@@ -328,9 +347,10 @@ def test_logbook_filters():
 @pytest.mark.unit
 def test_logbook_category_colors():
     """Test logbook routes use category colors"""
-    import routes.logbook as logbook_module
     import inspect
-    
+
+    import routes.logbook as logbook_module
+
     source = inspect.getsource(logbook_module)
     assert 'color' in source or '#3b82f6' in source
 
@@ -338,9 +358,10 @@ def test_logbook_category_colors():
 @pytest.mark.unit
 def test_logbook_tenant_context():
     """Test logbook routes use tenant context"""
-    import routes.logbook as logbook_module
     import inspect
-    
+
+    import routes.logbook as logbook_module
+
     source = inspect.getsource(logbook_module)
     assert 'tenant_id' in source
 
@@ -348,8 +369,9 @@ def test_logbook_tenant_context():
 @pytest.mark.unit
 def test_logbook_service_methods():
     """Test logbook routes use service methods"""
-    import routes.logbook as logbook_module
     import inspect
-    
+
+    import routes.logbook as logbook_module
+
     source = inspect.getsource(logbook_module)
     assert 'logbook_service' in source

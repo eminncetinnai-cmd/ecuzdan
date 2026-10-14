@@ -1,6 +1,7 @@
 """Service layer for category management."""
 
-from typing import Optional, Dict, List, Set
+from typing import Dict, List, Optional, Set
+
 from models import Category
 from repositories.category_repository import CategoryRepository, TenantCategoryRepository
 
@@ -63,7 +64,7 @@ class CategoryService:
     ) -> Dict[str, any]:
         """
         Validate multiple category names.
-        
+
         Returns:
             dict: {
                 'valid': list of valid category names,
@@ -73,13 +74,13 @@ class CategoryService:
         """
         valid: List[str] = []
         invalid: List[str] = []
-        
+
         for name in category_names:
             if self.is_valid_category(name, tenant_id):
                 valid.append(name)
             else:
                 invalid.append(name)
-        
+
         return {
             'valid': valid,
             'invalid': invalid,
@@ -105,7 +106,7 @@ class CategoryService:
     def get_category_mapping(self, tenant_id: Optional[str] = None) -> Dict[str, str]:
         """
         Get category name to type mapping.
-        
+
         Returns:
             dict: {category_name: category_type}
         """
@@ -115,16 +116,16 @@ class CategoryService:
     def get_standard_category_codes(self) -> Dict[str, Set[str]]:
         """
         Get all standard category codes.
-        
+
         Returns:
             dict: {category_type: set of category_codes}
         """
         standard_categories = self.get_standard_categories()
         mapping: Dict[str, Set[str]] = {}
-        
+
         for cat in standard_categories:
             if cat.type not in mapping:
                 mapping[cat.type] = set()
             mapping[cat.type].add(cat.code)
-        
+
         return mapping

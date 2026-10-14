@@ -1,1 +1,1 @@
-﻿# domain.ai.prompts: prompt templates and prompt management.\n
+# domain.ai.prompts: prompt templates and prompt management.\n

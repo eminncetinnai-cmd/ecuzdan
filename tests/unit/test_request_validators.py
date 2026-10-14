@@ -3,12 +3,14 @@ Unit Tests - Request Validators
 Form DTO construction and validation functions
 """
 
+from decimal import Decimal
 import pytest
+
 from validators.request_validators import (
-    transaction_form_from_request,
-    plan_form_from_request,
-    payment_form_from_request,
     logbook_entry_from_request,
+    payment_form_from_request,
+    plan_form_from_request,
+    transaction_form_from_request,
 )
 
 
@@ -23,7 +25,7 @@ def test_transaction_form_from_request_success():
         'date': '2025-01-01',
         'note': 'Weekly groceries',
     }
-    
+
     result = transaction_form_from_request(form)
     assert result.amount == 100.50
     assert result.category == 'Food'
@@ -41,7 +43,7 @@ def test_transaction_form_from_request_invalid_amount():
         'category': 'Food',
         'description': 'Test',
     }
-    
+
     with pytest.raises(ValueError, match="Geçersiz tutar değeri"):
         transaction_form_from_request(form)
 
@@ -54,7 +56,7 @@ def test_transaction_form_from_request_zero_amount():
         'category': 'Food',
         'description': 'Test',
     }
-    
+
     with pytest.raises(ValueError, match="Tutar sıfırdan büyük olmalıdır"):
         transaction_form_from_request(form)
 
@@ -67,7 +69,7 @@ def test_transaction_form_from_request_negative_amount():
         'category': 'Food',
         'description': 'Test',
     }
-    
+
     with pytest.raises(ValueError, match="Tutar sıfırdan büyük olmalıdır"):
         transaction_form_from_request(form)
 
@@ -78,7 +80,7 @@ def test_transaction_form_from_request_default_values():
     form = {
         'amount': '50',
     }
-    
+
     result = transaction_form_from_request(form)
     assert result.amount == 50
     assert result.category == ''
@@ -106,7 +108,7 @@ def test_plan_form_from_request_success():
         'end_date': '2025-12-31',
         'target_asset_id': '5',
     }
-    
+
     result = plan_form_from_request(form)
     assert result.action == 'add_expense_plan'
     assert result.name == 'Rent'
@@ -132,7 +134,7 @@ def test_plan_form_from_request_invalid_amount():
         'installments': '12',
         'payment_day': '15',
     }
-    
+
     with pytest.raises(ValueError, match="Tutar ve gün değerleri geçerli olmalıdır"):
         plan_form_from_request(form)
 
@@ -146,7 +148,7 @@ def test_plan_form_from_request_invalid_installments():
         'installments': '-1',
         'payment_day': '15',
     }
-    
+
     with pytest.raises(ValueError, match="Tutar ve gün değerleri geçerli olmalıdır"):
         plan_form_from_request(form)
 
@@ -160,7 +162,7 @@ def test_plan_form_from_request_invalid_payment_day():
         'installments': '12',
         'payment_day': '0',
     }
-    
+
     with pytest.raises(ValueError, match="Tutar ve gün değerleri geçerli olmalıdır"):
         plan_form_from_request(form)
 
@@ -174,7 +176,7 @@ def test_plan_form_from_request_payment_day_too_high():
         'installments': '12',
         'payment_day': '32',
     }
-    
+
     with pytest.raises(ValueError, match="Tutar ve gün değerleri geçerli olmalıdır"):
         plan_form_from_request(form)
 
@@ -188,7 +190,7 @@ def test_plan_form_from_request_invalid_action():
         'installments': '12',
         'payment_day': '15',
     }
-    
+
     with pytest.raises(ValueError, match="Geçersiz işlem"):
         plan_form_from_request(form)
 
@@ -203,7 +205,7 @@ def test_plan_form_from_request_invalid_date_format():
         'payment_day': '15',
         'start_date': '01/01/2025',
     }
-    
+
     with pytest.raises(ValueError, match="Geçersiz başlangıç tarihi formatı"):
         plan_form_from_request(form)
 
@@ -217,7 +219,7 @@ def test_plan_form_from_request_default_values():
         'installments': '12',
         'payment_day': '15',
     }
-    
+
     result = plan_form_from_request(form)
     assert result.name == ''
     assert result.category == ''
@@ -239,7 +241,7 @@ def test_payment_form_from_request_success():
         'installment_number': '1',
         'notes': 'First payment',
     }
-    
+
     result = payment_form_from_request(form)
     assert result.plan_id == '1'
     assert result.amount == 100
@@ -255,7 +257,7 @@ def test_payment_form_from_request_missing_plan_id():
         'amount': '100',
         'payment_date': '2025-01-15',
     }
-    
+
     with pytest.raises(ValueError, match="Ödeme planı belirtilmedi"):
         payment_form_from_request(form)
 
@@ -268,7 +270,7 @@ def test_payment_form_from_request_invalid_amount():
         'amount': '0',
         'payment_date': '2025-01-15',
     }
-    
+
     with pytest.raises(ValueError, match="Geçerli bir ödeme tutarı girin"):
         payment_form_from_request(form)
 
@@ -280,7 +282,7 @@ def test_payment_form_from_request_missing_payment_date():
         'plan_id': '1',
         'amount': '100',
     }
-    
+
     with pytest.raises(ValueError, match="Ödeme tarihi gerekli"):
         payment_form_from_request(form)
 
@@ -293,7 +295,7 @@ def test_payment_form_from_request_invalid_date_format():
         'amount': '100',
         'payment_date': '15/01/2025',
     }
-    
+
     with pytest.raises(ValueError, match="Geçersiz tarih formatı"):
         payment_form_from_request(form)
 
@@ -307,7 +309,7 @@ def test_payment_form_from_request_invalid_installment_number():
         'payment_date': '2025-01-15',
         'installment_number': '0',
     }
-    
+
     with pytest.raises(ValueError, match="Taksit numarası en az 1 olmalıdır"):
         payment_form_from_request(form)
 
@@ -320,7 +322,7 @@ def test_payment_form_from_request_default_values():
         'amount': '100',
         'payment_date': '2025-01-15',
     }
-    
+
     result = payment_form_from_request(form)
     assert result.installment_number == 1
     assert result.notes is None
@@ -338,7 +340,7 @@ def test_logbook_entry_from_request_success():
         'asset_id': '1',
         'transaction_id': '2',
     }
-    
+
     result = logbook_entry_from_request(form)
     assert result.title == 'Market Analysis'
     assert result.content == 'Detailed analysis of market trends'
@@ -356,7 +358,7 @@ def test_logbook_entry_from_request_missing_title():
         'content': 'Test content',
         'entry_date': '2025-01-01',
     }
-    
+
     with pytest.raises(ValueError, match="Başlık zorunludur"):
         logbook_entry_from_request(form)
 
@@ -368,7 +370,7 @@ def test_logbook_entry_from_request_missing_content():
         'title': 'Test title',
         'entry_date': '2025-01-01',
     }
-    
+
     with pytest.raises(ValueError, match="İçerik zorunludur"):
         logbook_entry_from_request(form)
 
@@ -380,7 +382,7 @@ def test_logbook_entry_from_request_missing_date():
         'title': 'Test title',
         'content': 'Test content',
     }
-    
+
     with pytest.raises(ValueError, match="Tarih zorunludur"):
         logbook_entry_from_request(form)
 
@@ -393,7 +395,7 @@ def test_logbook_entry_from_request_default_values():
         'content': 'Test content',
         'entry_date': '2025-01-01',
     }
-    
+
     result = logbook_entry_from_request(form)
     assert result.category == 'Finansal'
     assert result.sentiment == 'Nötr'
@@ -405,13 +407,91 @@ def test_logbook_entry_from_request_default_values():
 def test_request_validators_imports():
     """Test that all validator functions can be imported"""
     from validators.request_validators import (
-        transaction_form_from_request,
-        plan_form_from_request,
-        payment_form_from_request,
         logbook_entry_from_request,
+        payment_form_from_request,
+        plan_form_from_request,
+        transaction_form_from_request,
     )
-    
+
     assert callable(transaction_form_from_request)
     assert callable(plan_form_from_request)
     assert callable(payment_form_from_request)
     assert callable(logbook_entry_from_request)
+
+
+@pytest.mark.unit
+def test_plan_form_from_request_indefinite_subscription():
+    """Test plan_form_from_request in indefinite duration mode (installments=0)"""
+    form = {
+        'action': 'add_expense_plan',
+        'name': 'Netflix Aboneliği',
+        'category': 'Abonelikler',
+        'amount': '299.99',
+        'installments': '0',
+        'payment_day': '5',
+        'plan_type': 'Abonelik',
+        'frequency': 'Aylık',
+    }
+
+    result = plan_form_from_request(form)
+    assert result.installments == 0
+    assert result.plan_type == 'Abonelik'
+    assert result.amount == Decimal('299.99')
+    assert result.payment_day == 5
+    assert result.status == 'Aktif'
+
+
+@pytest.mark.unit
+def test_plan_form_from_request_indefinite_dca_investment():
+    """Test plan_form_from_request for indefinite DCA investment plan"""
+    form = {
+        'action': 'add_investment_plan',
+        'name': 'Aylık Gram Altın Alımı',
+        'category': 'Yatırım',
+        'amount': '5000',
+        'installments': '0',
+        'payment_day': '15',
+        'plan_type': 'DCA',
+        'frequency': 'Aylık',
+        'target_asset_id': '10',
+    }
+
+    result = plan_form_from_request(form)
+    assert result.installments == 0
+    assert result.plan_type == 'DCA'
+    assert result.target_asset_id == 10
+    assert result.amount == 5000
+
+
+@pytest.mark.unit
+def test_plan_form_from_request_update_and_edit_actions():
+    """Test plan_form_from_request accepts update_plan and edit_plan actions"""
+    form_update = {
+        'action': 'update_plan',
+        'plan_id': '42',
+        'name': 'Güncellenen Plan',
+        'category': 'Faturalar',
+        'amount': '750',
+        'installments': '6',
+        'payment_day': '20',
+        'plan_type': 'Taksit',
+    }
+    result_update = plan_form_from_request(form_update)
+    assert result_update.action == 'update_plan'
+    assert result_update.plan_id == '42'
+    assert result_update.installments == 6
+
+    form_edit = {
+        'action': 'edit_plan',
+        'plan_id': '42',
+        'name': 'Düzenlenen Plan',
+        'category': 'Faturalar',
+        'amount': '750',
+        'installments': '0',
+        'payment_day': '20',
+        'plan_type': 'Abonelik',
+    }
+    result_edit = plan_form_from_request(form_edit)
+    assert result_edit.action == 'edit_plan'
+    assert result_edit.installments == 0
+

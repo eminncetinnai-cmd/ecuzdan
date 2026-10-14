@@ -18,19 +18,19 @@ def test_sidebar_routes_exist(client):
     # Test investment_performance
     response = client.get('/investment_performance')
     assert response.status_code in [200, 302, 403, 404]
-    
+
     # Test financial_freedom
     response = client.get('/financial_freedom')
     assert response.status_code in [200, 302, 403, 404]
-    
+
     # Test financial_dashboard
     response = client.get('/financial_dashboard')
     assert response.status_code in [200, 302, 403, 404]
-    
+
     # Test strategy
     response = client.get('/strategy')
     assert response.status_code in [200, 302, 403, 404]
-    
+
     # Test analysis
     response = client.get('/analysis')
     assert response.status_code in [200, 302, 403, 404]
@@ -46,11 +46,11 @@ def test_sidebar_routes_with_auth(client):
     # Test without authentication - should redirect to login
     response = client.get('/financial_freedom')
     assert response.status_code in [302, 403, 404]
-    
+
     # Test without authentication - should redirect to login
     response = client.get('/financial_dashboard')
     assert response.status_code in [302, 403, 404]
-    
+
     # Test without authentication - should redirect to login
     response = client.get('/strategy')
     assert response.status_code in [302, 403, 404]

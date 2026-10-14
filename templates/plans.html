@@ -1,182 +1,418 @@
 {% extends "layout.html" %}
-{% block content %}
-<style>
-    .plan-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-    .plan-card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px -15px rgba(0, 0, 0, 0.1); }
-    
-    .tab-btn.active {
-        background-color: #f8fafc;
-        border-bottom: 2px solid #6366f1;
-        color: #4f46e5;
-        font-weight: 800;
-    }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(5px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-</style>
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static_asset_url('css/plans.css') }}">
+{% endblock %}
+
+{% block content %}
 <div class="max-w-6xl mx-auto">
-    <div class="flex flex-wrap justify-between items-start mb-8 gap-4 pb-4 border-b border-slate-200/60">
-        <div>
-            <h2 class="text-4xl font-black text-slate-900 tracking-tighter uppercase leading-none bg-gradient-to-r from-slate-900 via-indigo-800 to-slate-900 bg-clip-text text-transparent">Finansal Planlama</h2>
-            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Abonelikler, Taksitler, DCA ve Dönemsel İşlemler</p>
+    <div class="page-header mb-6 pb-4 border-b border-slate-200/60 dark:border-slate-800">
+        <div class="page-header-left">
+            <p class="page-header-eyebrow">{{ _('ui_auto_2707e8f8b673') }}</p>
+            <h1>{{ _('ui_auto_646729fc04c3') }}</h1>
         </div>
         <div class="flex items-center gap-3">
-            <button type="button" onclick="openPlanModal()" class="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white rounded-xl text-xs font-black shadow-lg hover:shadow-xl transition transform hover:scale-105 cursor-pointer">
+            <button data-macro="button_secondary" type="button" onclick="exportPlansToCsv()" class="btn-premium-secondary" aria-label="CSV Dışa Aktar" title="Planları CSV Olarak İndir">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span>Dışa Aktar (CSV)</span>
+            </button>
+            <button data-macro="button_primary" type="button" onclick="openPlanModal()" class="btn-premium-primary" aria-label="{{ _('plans_empty_cta') }}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-                <span>YENİ PLAN OLUŞTUR</span>
+                <span>{{ _('ui_auto_de72312d0f78') }}</span>
             </button>
         </div>
     </div>
 
+    <!-- Segmented Navigation Bar -->
+    <div class="border-b border-slate-200 dark:border-slate-800 flex gap-2 sm:gap-4 overflow-x-auto pb-1 mb-8" role="tablist">
+        <a href="{{ url_for('plans.plans') }}" class="tx-tab-btn active" role="tab" aria-selected="true">
+            <span class="inline-flex items-center gap-1.5">
+                <span>📋</span>
+                <span>Düzenli Planlar &amp; Taksitler</span>
+            </span>
+        </a>
+        <a href="{{ url_for('plans.payment_calendar') }}" class="tx-tab-btn" role="tab" aria-selected="false">
+            <span class="inline-flex items-center gap-1.5">
+                <span>📅</span>
+                <span>Ödeme Takvimi &amp; Nakit Akışı</span>
+            </span>
+        </a>
+    </div>
+
     <!-- Özet Kartları -->
-    <div class="grid grid-cols-1 xl:grid-cols-4 gap-4 mb-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
-            <p class="text-[10px] uppercase tracking-[0.25em] text-slate-500 font-bold mb-3">Toplam Plan</p>
+            <p class="text-[10px] uppercase tracking-[0.25em] text-slate-500 font-bold mb-3">{{ _('ui_auto_9fd133cb9c87') }}</p>
             <p class="text-3xl font-black text-slate-700">{{ plan_count }}</p>
+            <p class="text-[10px] font-bold text-slate-400 mt-1">{{ active_plan_count }} Aktif Plan</p>
         </div>
         <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
-            <p class="text-[10px] uppercase tracking-[0.25em] text-slate-500 font-bold mb-3">Aylık Planlı Gelir</p>
-            <p class="text-3xl font-black text-emerald-700">+{{ income_total|round(2)|format_money }} ₺</p>
+            <p class="text-[10px] uppercase tracking-[0.25em] text-slate-500 font-bold mb-3">{{ _('ui_auto_8949fdbd070e') }}</p>
+            <p class="text-3xl font-black text-emerald-700">+{{ income_total|round(2)|format_money }} <span class="text-base">{{ base_currency_symbol }}</span></p>
+            <p class="text-[10px] font-bold text-emerald-600 mt-1">Aylık Aktif Gelir</p>
         </div>
         <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
-            <p class="text-[10px] uppercase tracking-[0.25em] text-slate-500 font-bold mb-3">Aylık Planlı Gider</p>
-            <p class="text-3xl font-black text-rose-700">-{{ expense_total|round(2)|format_money }} ₺</p>
+            <p class="text-[10px] uppercase tracking-[0.25em] text-slate-500 font-bold mb-3">{{ _('ui_auto_4aa02270f935') }}</p>
+            <p class="text-3xl font-black text-rose-700">-{{ expense_total|round(2)|format_money }} <span class="text-base">{{ base_currency_symbol }}</span></p>
+            <p class="text-[10px] font-bold text-rose-600 mt-1">Aylık Aktif Gider</p>
         </div>
         <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
-            <p class="text-[10px] uppercase tracking-[0.25em] text-slate-500 font-bold mb-3">Net Nakit Akışı</p>
-            <p class="text-3xl font-black {{ 'text-emerald-700' if net_total >= 0 else 'text-rose-700' }}">{{ net_total|round(2)|format_money }} ₺</p>
+            <p class="text-[10px] uppercase tracking-[0.25em] text-slate-500 font-bold mb-3">{{ _('ui_auto_93ac9275763e') }}</p>
+            <p class="text-3xl font-black {{ 'text-emerald-700' if net_total >= 0 else 'text-rose-700' }}">{{ net_total|round(2)|format_money }} <span class="text-base">{{ base_currency_symbol }}</span></p>
+            <p class="text-[10px] font-bold text-slate-400 mt-1">Aylık Net Nakit</p>
+        </div>
+        <div class="rounded-3xl border border-amber-200 bg-amber-50/50 p-5 shadow-sm">
+            <p class="text-[10px] uppercase tracking-[0.25em] text-amber-700 font-bold mb-3">Toplam Kalan Borç</p>
+            <p class="text-3xl font-black text-amber-900">{{ (total_remaining_debt or 0)|format_money }} <span class="text-base">{{ base_currency_symbol }}</span></p>
+            <p class="text-[10px] font-bold text-amber-700/80 mt-1">Taksitli Borçlar</p>
         </div>
     </div>
 
-    <!-- Tabs Container -->
-    <div class="mb-6 border-b border-slate-200 flex gap-4 overflow-x-auto">
-        <button type="button" onclick="switchTab('tab-subscription', this)">Abonelikler</button>
-        <button type="button" onclick="switchTab('tab-installment', this)">Taksitler</button>
-        <button type="button" onclick="switchTab('tab-dca', this)">DCA Yatırımları</button>
-        <button type="button" onclick="switchTab('tab-periodic', this)">Dönemsel İşlemler</button>
-    </div>
+    <!-- Persisted upcoming schedule: read-only, no lazy sync -->
+    <section aria-labelledby="plans-upcoming-title" class="mb-8 rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-50/80 via-white to-slate-50 p-5 shadow-sm">
+        <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+            <div>
+                <h3 id="plans-upcoming-title" class="text-sm font-black uppercase tracking-tight text-slate-800">{{ _('plans_upcoming_title') }} <span class="ml-2 text-[10px] font-bold tracking-widest text-indigo-500">{{ _('plans_upcoming_window', days=upcoming_window_days) }}</span></h3>
+                <p class="mt-1 text-[10px] font-semibold uppercase tracking-widest text-slate-400">{{ _('plans_upcoming_source') }}</p>
+            </div>
+            <span class="rounded-full border border-indigo-100 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider text-indigo-700">{{ upcoming_occurrence_count }} · {{ _('plans_upcoming_count') }}</span>
+        </div>
+        {% if upcoming_occurrences %}
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {% for occurrence in upcoming_occurrences %}
+            <article class="rounded-2xl border border-white bg-white/80 p-3 shadow-sm">
+                <div class="flex items-center justify-between gap-2">
+                    <time class="text-xs font-black text-slate-800" datetime="{{ occurrence.scheduled_date }}">{{ occurrence.scheduled_date }}</time>
+                    <span class="rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-emerald-700">{{ _('plans_upcoming_scheduled') }}</span>
+                </div>
+                <p class="mt-3 truncate text-xs font-black text-slate-700" title="{{ occurrence.plan_name }}">{{ occurrence.plan_name }}</p>
+                <div class="mt-2 flex items-center justify-between gap-2 text-[10px] font-bold text-slate-400">
+                    <span>{{ _('plans_occurrence_number', number=occurrence.occurrence_number) }}</span>
+                    <span class="text-indigo-700">{% if occurrence.amount is not none %}{{ occurrence.amount|round(2)|format_money }} {{ base_currency_symbol }}{% else %}—{% endif %}</span>
+                </div>
+                <div class="mt-3 flex items-center justify-between border-t border-slate-100 pt-2 text-[10px]">
+                    <button data-macro="button_secondary" type="button" onclick="cancelOccurrence({{ occurrence.id }})" class="font-bold text-rose-600 hover:text-rose-800">İptal Et</button>
+                    <button data-macro="button_secondary" type="button" onclick="skipOccurrence({{ occurrence.id }})" class="font-bold text-amber-600 hover:text-amber-800">Atla</button>
+                    <button data-macro="button_secondary" type="button" onclick="openPlanDetail({{ occurrence.plan_id }})" class="font-bold text-indigo-600 hover:text-indigo-800">Detay</button>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="rounded-2xl border border-dashed border-indigo-200 bg-white/60 p-5 text-center">
+            <p class="text-xs font-bold text-slate-500">{{ _('plans_upcoming_empty') }}</p>
+            <p class="mt-1 text-[10px] font-semibold text-slate-400">{{ _('plans_upcoming_source') }}</p>
+        </div>
+        {% endif %}
+        <p class="mt-4 text-[10px] font-semibold text-slate-400">{{ _('plans_currency_note') }}</p>
+    </section>
 
-    <!-- Macro for Plan Tables -->
-    {% macro _render_plan_table(plan_list) %}
-    <div class="overflow-x-auto">
+    <!-- Unified filters -->
+    <form method="get" action="{{ url_for('plans.plans') }}" class="mb-6 rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-sm">
+        <div class="flex flex-wrap items-end gap-3">
+            <div class="min-w-[220px] flex-1">
+                <label for="plan-search" class="mb-1 block text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ _('ui_auto_b3d39a6db7b2') }}</label>
+                <input id="plan-search" name="q" value="{{ active_filters.search }}" placeholder="{{ _('ui_auto_23055b3a7ceb') }}" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 outline-none focus:border-indigo-400">
+            </div>
+            <div>
+                <label for="plan-flow" class="mb-1 block text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ _('ui_auto_d433eaf3bf77') }}</label>
+                <select id="plan-flow" name="flow" class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700">
+                    <option value="">{{ _('plans_filter_all') }}</option>
+                    {% for option in filter_options.flows %}<option value="{{ option.value }}" {% if active_filters.flow == option %}selected{% endif %}>{{ _(flow_label_keys.get(option.value, option.value)) }}</option>{% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="plan-lifecycle" class="mb-1 block text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ _('ui_auto_8173539b7b65') }}</label>
+                <select id="plan-lifecycle" name="lifecycle" class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700">
+                    <option value="">{{ _('plans_filter_all') }}</option>
+                    {% for option in filter_options.lifecycles %}<option value="{{ option.value }}" {% if active_filters.lifecycle == option %}selected{% endif %}>{{ _(lifecycle_label_keys.get(option.value, option.value)) }}</option>{% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="plan-status" class="mb-1 block text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ _('plans_table_status') }}</label>
+                <select id="plan-status" name="status" class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700">
+                    <option value="">{{ _('plans_filter_all') }}</option>
+                    {% for option in filter_options.statuses %}<option value="{{ option.value }}" {% if active_filters.status == option %}selected{% endif %}>{{ _(status_label_keys.get(option.value, option.value)) }}</option>{% endfor %}
+                </select>
+            </div>
+            <label class="flex items-center gap-2 rounded-xl border border-indigo-100 bg-indigo-50 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-indigo-700">
+                <input type="checkbox" name="investment" value="1" {% if active_filters.investment_only %}checked{% endif %}>
+                {{ _('ui_auto_dc6cbd5c1a5a') }}
+            </label>
+            <button data-macro="button_secondary" type="submit" class="plan-btn plan-btn-secondary plan-btn-compact inline-flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                <span>{{ _('ui_auto_4d0a4d01c991') }}</span>
+            </button>
+            {% if active_filters.search or active_filters.flow or active_filters.lifecycle or active_filters.status or active_filters.investment_only %}
+            <a href="{{ url_for('plans.plans') }}" class="plan-btn plan-btn-quiet plan-btn-compact inline-flex items-center gap-1 text-rose-600 hover:text-rose-700" title="Filtreleri Sıfırla">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                <span>{{ _('ui_auto_021e6221a5d4') }}</span>
+            </a>
+            {% else %}
+            <a href="{{ url_for('plans.plans') }}" class="plan-btn plan-btn-quiet plan-btn-compact">{{ _('ui_auto_021e6221a5d4') }}</a>
+            {% endif %}
+        </div>
+    </form>
+
+    <!-- Macro for canonical plan tables -->
+    {% macro _render_canonical_plan_table(plan_list) %}
+        <div class="plan-desktop-table overflow-x-auto">
+
         <table class="w-full text-xs text-left">
             <thead>
                 <tr class="bg-slate-50/50 border-b border-slate-100 text-slate-400 text-[9px] uppercase font-bold">
-                    <th class="p-3">Tanım</th>
-                    <th>Kategori / Tip</th>
-                    <th>Tutar</th>
-                    <th>Süre / Periyot</th>
-                    <th>Durum</th>
-                    <th class="text-right p-3">İşlemler</th>
+                    <th class="py-2.5 px-2 cursor-pointer select-none hover:text-indigo-600 transition" onclick="sortPlanTable(this, 'name')">
+                        <span class="inline-flex items-center gap-1">{{ _('plans_table_name') }} <span class="sort-indicator text-slate-300">⇅</span></span>
+                    </th>
+                    <th class="py-2.5 px-2">{{ _('plans_table_classification') }}</th>
+                    <th class="py-2.5 px-2 cursor-pointer select-none hover:text-indigo-600 transition" onclick="sortPlanTable(this, 'amount')">
+                        <span class="inline-flex items-center gap-1">{{ _('plans_table_amount') }} <span class="sort-indicator text-slate-300">⇅</span></span>
+                    </th>
+                    <th class="py-2.5 px-2 cursor-pointer select-none hover:text-indigo-600 transition" onclick="sortPlanTable(this, 'day')">
+                        <span class="inline-flex items-center gap-1">{{ _('plans_table_schedule') }} <span class="sort-indicator text-slate-300">⇅</span></span>
+                    </th>
+                    <th class="py-2.5 px-2 cursor-pointer select-none hover:text-indigo-600 transition" onclick="sortPlanTable(this, 'remaining')">
+                        <span class="inline-flex items-center gap-1">Kalan <span class="sort-indicator text-slate-300">⇅</span></span>
+                    </th>
+                    <th class="py-2.5 px-2 cursor-pointer select-none hover:text-indigo-600 transition" onclick="sortPlanTable(this, 'status')">
+                        <span class="inline-flex items-center gap-1">{{ _('plans_table_status') }} <span class="sort-indicator text-slate-300">⇅</span></span>
+                    </th>
+                    <th class="text-right py-2.5 px-2 w-32">{{ _('plans_table_actions') }}</th>
                 </tr>
             </thead>
             <tbody class="font-semibold text-slate-700">
                 {% for p in plan_list %}
-                <tr class="border-b border-slate-100 hover:bg-slate-50/30 transition">
-                    <td class="p-3 font-bold text-slate-900">
-                        {{ p.name }}
-                        <span class="block text-[10px] text-slate-400 font-normal mt-0.5">{{ p.note or '' }}</span>
-                    </td>
-                    <td>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold 
-                            {% if p.flow_type == 'Gelir' %}bg-emerald-100/70 text-emerald-800
-                            {% elif p.flow_type == 'Gider' %}bg-rose-100/70 text-rose-800
-                            {% else %}bg-indigo-100/70 text-indigo-800{% endif %}">
-                            {{ p.flow_type }} | {{ p.category }}
-                        </span>
-                    </td>
-                    <td class="font-bold {% if p.flow_type == 'Gelir' %}text-emerald-600{% elif p.flow_type == 'Gider' %}text-rose-600{% else %}text-indigo-600{% endif %}">
-                        {{ p.amount|format_money }} ₺
-                    </td>
-                    <td>
-                        {% if p.installments == 0 or p.installments == 9999 %}
-                            <span class="text-slate-500">Süresiz</span>
-                        {% else %}
-                            {{ p.installments }} Ay
+                <tr data-plan-row class="border-b border-slate-100 hover:bg-slate-50/30 transition"
+                    data-name="{{ p.name|lower }}"
+                    data-amount="{{ p.amount or 0 }}"
+                    data-day="{{ p.payment_day or 1 }}"
+                    data-remaining="{{ p.months_remaining if p.months_remaining is not none else (9999 if p.status.value not in ('Tamamlandı', 'İptal') else -1) }}"
+                    data-status="{{ p.status.value if p.status.value is defined else p.status }}">
+                    <td class="py-2.5 px-2 font-bold text-slate-900">{{ p.name }}<span class="block text-[10px] text-slate-400 font-normal mt-0.5">{{ p.note or '' }}</span></td>
+                    <td class="py-2.5 px-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold {% if p.flow.value == 'Gelir' %}bg-emerald-100/70 text-emerald-800{% elif p.flow.value == 'Gider' %}bg-rose-100/70 text-rose-800{% else %}bg-indigo-100/70 text-indigo-800{% endif %}">{{ _(flow_label_keys.get(p.flow.value, p.flow.value)) }} · {{ p.category }}</span></td>
+                    <td class="py-2.5 px-2 font-bold {% if p.flow.value == 'Gelir' %}text-emerald-600{% elif p.flow.value == 'Gider' %}text-rose-600{% else %}text-indigo-600{% endif %}">{{ p.amount|format_money }} <span class="text-[10px]">{{ base_currency_symbol }}</span></td>
+                    <td class="py-2.5 px-2">
+                        <span class="font-bold">{{ _(lifecycle_label_keys.get(p.lifecycle.value, p.lifecycle.value)) }}</span>
+                        <span class="block text-[10px] text-slate-500">{{ _(frequency_label_keys.get(p.frequency, p.frequency)) }} · {{ _('plans_schedule_day', day=p.payment_day) }}{% if p.occurrence_limit %} · {{ _('plans_schedule_occurrences', count=p.occurrence_limit) }}{% endif %}</span>
+                        {% if p.payment_countdown %}
+                            <span class="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold {{ p.payment_countdown.badge_class }}">
+                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                {{ p.payment_countdown.label }}
+                            </span>
                         {% endif %}
-                        · Her ayın {{ p.payment_day }}. günü
                     </td>
-                    <td>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold {% if p.status == 'Aktif' %}bg-emerald-100/50 text-emerald-600{% else %}bg-slate-200 text-slate-500{% endif %}">
-                            {{ p.status }}
+                    <td class="py-2.5 px-2">
+                        {%- set mr = p.months_remaining -%}
+                        {%- set is_done = (p.is_completed is defined and p.is_completed and p.occurrence_limit) -%}
+                        {%- if p.status.value in ('Tamamlandı', 'İptal') or is_done -%}
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Bitti
+                            </span>
+                        {%- elif mr is none -%}
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-500" title="Süresiz plan">∞ Süresiz</span>
+                        {%- elif mr == 0 -%}
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-600">Son ay</span>
+                            {% if p.remaining_total_amount is defined and p.remaining_total_amount is not none %}
+                                <span class="block text-[10px] font-bold text-slate-500 mt-0.5">{{ p.remaining_total_amount|format_money }} {{ base_currency_symbol }}</span>
+                            {% endif %}
+                        {%- else -%}
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-sky-50 text-sky-700">{{ mr }} ay</span>
+                            {% if p.remaining_total_amount is defined and p.remaining_total_amount is not none %}
+                                <span class="block text-[10px] font-bold text-slate-500 mt-0.5">{{ p.remaining_total_amount|format_money }} {{ base_currency_symbol }}</span>
+                            {% endif %}
+                        {%- endif -%}
+                    </td>
+                    <td class="py-2.5 px-2">
+                        {% set is_done = (p.is_completed is defined and p.is_completed and p.occurrence_limit) %}
+                        {% set s_val = 'Tamamlandı' if is_done else (p.status.value if p.status.value is defined else p.status) %}
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold {% if s_val == 'Aktif' %}bg-emerald-100/50 text-emerald-600{% elif s_val == 'Duraklatıldı' %}bg-amber-100/60 text-amber-700{% elif s_val == 'Tamamlandı' %}bg-slate-200 text-slate-600{% else %}bg-rose-100/60 text-rose-600{% endif %}">
+                            {{ _(status_label_keys.get(s_val, s_val)) }}
                         </span>
                     </td>
-                    <td class="text-right p-3">
-                        <button 
-                            data-id="{{ p.id }}"
-                            data-name="{{ p.name }}"
-                            data-category="{{ p.category }}"
-                            data-flow-type="{{ p.flow_type }}"
-                            data-plan-type="{{ p.plan_type }}"
-                            data-frequency="{{ p.frequency }}"
-                            data-amount="{{ p.amount }}"
-                            data-installments="{{ p.installments }}"
-                            data-payment-day="{{ p.payment_day }}"
-                            data-note="{{ p.note or '' }}"
-                            data-start-date="{{ p.start_date or '' }}"
-                            onclick="editPlan(this)" 
-                            class="text-indigo-500 font-bold hover:underline mr-3">DÜZENLE</button>
-                        <button type="button" onclick="openPaymentModal('{{ p.id }}', '{{ p.name }}', '{{ p.amount }}', '{{ p.installments }}')" class="text-emerald-500 font-bold hover:underline mr-3">ÖDE</button>
-                        <button type="button" onclick="checkPlanBeforeDelete({{ p.id }}, '{{ p.flow_type }}')" class="text-rose-500 font-bold hover:underline">SİL</button>
+                    <td class="py-2.5 px-2 whitespace-nowrap text-right">
+                        <div class="plan-table-actions">
+                            <button data-macro="button_secondary" type="button" onclick="openPlanDetail({{ p.id }}, this)" class="plan-table-action detail" aria-label="{{ p.name }} detaylarını görüntüle" title="Detaylar">
+                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-8h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span class="sr-only">{{ _('plans_action_details') }}</span>
+                            </button>
+                            <button data-macro="button_secondary" data-id="{{ p.id }}" data-version="{{ p.version if p.version is defined else 1 }}" data-name="{{ p.name }}" data-category="{{ p.category }}" data-flow-type="{{ p.flow.value }}" data-plan-type="{{ p.legacy_plan_type or 'Taksit' }}" data-frequency="{{ p.frequency }}" data-amount="{{ p.amount }}" data-installments="{{ p.occurrence_limit or 0 }}" data-payment-day="{{ p.payment_day }}" data-note="{{ p.note or '' }}" data-start-date="{{ p.start_date.isoformat() if p.start_date else '' }}" data-end-date="{{ p.end_date.isoformat() if p.end_date else '' }}" data-target-asset-id="{{ p.target_asset_id or '' }}" data-status="{{ p.status.value if p.status.value is defined else p.status }}" onclick="editPlan(this)" class="plan-table-action edit" aria-label="{{ p.name }} planını düzenle" title="Düzenle">
+                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.5-8.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 7.5-7.5z"/></svg><span class="sr-only">{{ _('plans_action_edit') }}</span>
+                            </button>
+                            <button data-macro="button_secondary" type="button" onclick="openPaymentModal('{{ p.id }}', '{{ p.name }}', '{{ p.amount }}', '{{ p.occurrence_limit or 0 }}')" class="plan-table-action pay" aria-label="{{ p.name }} için ödeme yap" title="Ödeme Yap">
+                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7h18M5 5h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm10 8h3"/></svg><span class="sr-only">{{ _('plans_action_pay') }}</span>
+                            </button>
+                            {% set current_status = p.status.value if p.status.value is defined else p.status %}
+                            {% if current_status == 'Aktif' %}
+                            <button data-macro="button_secondary" type="button" onclick="updatePlanStatus({{ p.id }}, 'İptal')" class="plan-table-action delete" aria-label="{{ p.name }} planını iptal et" title="Planı İptal Et">
+                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg><span class="sr-only">İptal</span>
+                            </button>
+                            {% else %}
+                            <button data-macro="button_secondary" type="button" onclick="updatePlanStatus({{ p.id }}, 'Aktif')" class="plan-table-action pay" aria-label="{{ p.name }} planını aktife al" title="Planı Yeniden Aktif Yap">
+                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg><span class="sr-only">Aktif</span>
+                            </button>
+                            {% endif %}
+                            <button data-macro="button_danger" type="button" onclick="checkPlanBeforeDelete({{ p.id }}, '{{ p.flow.value }}')" class="plan-table-action delete" aria-label="{{ p.name }} planını sil" title="Sil">
+                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18m-2 0v14H5V6m3 0V4h8v2"/></svg><span class="sr-only">{{ _('plans_action_delete') }}</span>
+                            </button>
+                        </div>
                     </td>
                 </tr>
-                {% else %}
-                <tr><td colspan="6" class="p-4 text-center text-slate-400 italic">Bu sekmede henüz bir kayıt yok.</td></tr>
-                {% endfor %}
+                {% else %}<tr><td colspan="7" class="p-4 text-center text-slate-400 italic">{{ _('plans_empty_title') }} <span class="mt-1 block text-[10px] not-italic font-semibold">{{ _('plans_empty_body') }}</span> <button data-macro="button_primary" type="button" onclick="openPlanModal('empty')" class="plan-btn plan-btn-primary plan-btn-compact mt-3">{{ _('plans_empty_cta') }}</button></td></tr>{% endfor %}
             </tbody>
         </table>
     </div>
+        <div class="plan-mobile-cards space-y-3">
+
+        {% for p in plan_list %}
+        {%- set mr = p.months_remaining -%}
+        <article data-plan-card class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 shadow-sm">
+            <div class="flex items-start justify-between gap-3">
+                <div><h4 class="text-sm font-black text-slate-900">{{ p.name }}</h4><p class="mt-0.5 text-[10px] text-slate-400">{{ p.note or p.category }}</p></div>
+                <strong class="whitespace-nowrap text-sm {% if p.flow.value == 'Gelir' %}text-emerald-600{% elif p.flow.value == 'Gider' %}text-rose-600{% else %}text-indigo-600{% endif %}">{{ p.amount|format_money }} <span class="text-[10px]">{{ base_currency_symbol }}</span></strong>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-1.5 text-[10px] font-bold">
+                {% set is_done = (p.is_completed is defined and p.is_completed and p.occurrence_limit) %}
+                {% set s_val = 'Tamamlandı' if is_done else (p.status.value if p.status.value is defined else p.status) %}
+                <span class="rounded-full bg-white px-2 py-1 text-slate-600">{{ _(flow_label_keys.get(p.flow.value, p.flow.value)) }}</span>
+                <span class="rounded-full bg-white px-2 py-1 text-slate-600">{{ _(lifecycle_label_keys.get(p.lifecycle.value, p.lifecycle.value)) }}</span>
+                <span class="rounded-full bg-emerald-50 px-2 py-1 text-emerald-700">{{ _(status_label_keys.get(s_val, s_val)) }}</span>
+                {%- if p.payment_countdown -%}
+                    <span class="rounded-full px-2 py-1 text-[9px] font-bold {{ p.payment_countdown.badge_class }}">{{ p.payment_countdown.label }}</span>
+                {%- endif -%}
+                {%- if p.status.value in ('Tamamlandı', 'İptal') or is_done -%}
+                    <span class="rounded-full bg-slate-100 px-2 py-1 text-slate-500">✓ Bitti</span>
+                {%- elif mr is none -%}
+                    <span class="rounded-full bg-indigo-50 px-2 py-1 text-indigo-600">∞ Süresiz</span>
+                {%- elif mr == 0 -%}
+                    <span class="rounded-full bg-amber-50 px-2 py-1 text-amber-700">Son ay</span>
+                {%- else -%}
+                    <span class="rounded-full bg-sky-50 px-2 py-1 text-sky-700">{{ mr }} ay kaldı</span>
+                {%- endif -%}
+            </div>
+            <dl class="mt-3 grid grid-cols-3 gap-2 text-[10px]">
+                <div class="rounded-xl bg-white p-2"><dt class="font-bold uppercase tracking-wider text-slate-400">{{ _('ui_auto_78aae24cf2c6') }}</dt><dd class="mt-1 font-bold text-slate-700">{{ p.frequency }}</dd></div>
+                <div class="rounded-xl bg-white p-2"><dt class="font-bold uppercase tracking-wider text-slate-400">{{ _('ui_auto_4457dbd3a9b0') }}</dt><dd class="mt-1 font-bold text-slate-700">{{ _('plans_schedule_day', day=p.payment_day) }}{% if p.occurrence_limit %} · {{ _('plans_schedule_occurrences', count=p.occurrence_limit) }}{% endif %}</dd></div>
+                <div class="rounded-xl bg-white p-2"><dt class="font-bold uppercase tracking-wider text-slate-400">Kalan</dt><dd class="mt-1 font-bold text-slate-700">{% if p.status.value in ('Tamamlandı', 'İptal') or is_done %}Bitti{% elif mr is none %}Süresiz{% elif mr == 0 %}Son ay{% if p.remaining_total_amount is defined and p.remaining_total_amount is not none %}<span class="block text-[9px] text-slate-500 font-normal">{{ p.remaining_total_amount|format_money }}</span>{% endif %}{% else %}{{ mr }} ay{% if p.remaining_total_amount is defined and p.remaining_total_amount is not none %}<span class="block text-[9px] text-slate-500 font-normal">{{ p.remaining_total_amount|format_money }}</span>{% endif %}{% endif %}</dd></div>
+            </dl>
+            <div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5"><button data-macro="button_secondary" type="button" onclick="openPlanDetail({{ p.id }}, this)" class="plan-btn plan-btn-secondary plan-btn-compact">{{ _('plans_action_details') }}</button><button data-macro="button_secondary" data-id="{{ p.id }}" data-version="{{ p.version if p.version is defined else 1 }}" data-name="{{ p.name }}" data-category="{{ p.category }}" data-flow-type="{{ p.flow.value }}" data-plan-type="{{ p.legacy_plan_type or 'Taksit' }}" data-frequency="{{ p.frequency }}" data-amount="{{ p.amount }}" data-installments="{{ p.occurrence_limit or 0 }}" data-payment-day="{{ p.payment_day }}" data-note="{{ p.note or '' }}" data-start-date="{{ p.start_date.isoformat() if p.start_date else '' }}" data-end-date="{{ p.end_date.isoformat() if p.end_date else '' }}" data-target-asset-id="{{ p.target_asset_id or '' }}" data-status="{{ p.status.value if p.status.value is defined else p.status }}" onclick="editPlan(this)" class="plan-btn plan-btn-secondary plan-btn-compact">{{ _('plans_action_edit') }}</button><button data-macro="button_primary" type="button" onclick="openPaymentModal('{{ p.id }}', '{{ p.name }}', '{{ p.amount }}', '{{ p.occurrence_limit or 0 }}')" class="plan-btn plan-btn-success plan-btn-compact">{{ _('plans_action_pay') }}</button>{% set current_status = p.status.value if p.status.value is defined else p.status %}{% if current_status == 'Aktif' %}<button data-macro="button_secondary" type="button" onclick="updatePlanStatus({{ p.id }}, 'İptal')" class="plan-btn plan-btn-secondary plan-btn-compact text-rose-600">İptal</button>{% else %}<button data-macro="button_secondary" type="button" onclick="updatePlanStatus({{ p.id }}, 'Aktif')" class="plan-btn plan-btn-secondary plan-btn-compact text-emerald-600">Aktif</button>{% endif %}<button data-macro="button_danger" type="button" onclick="checkPlanBeforeDelete({{ p.id }}, '{{ p.flow.value }}')" class="plan-btn plan-btn-danger plan-btn-compact">{{ _('plans_action_delete') }}</button></div>
+        </article>
+
+        {% else %}<div class="rounded-2xl border border-dashed border-slate-200 p-4 text-center text-xs italic text-slate-400">{{ _('plans_empty_title') }} <span class="mt-1 block text-[10px] not-italic font-semibold">{{ _('plans_empty_body') }}</span> <button data-macro="button_primary" type="button" onclick="openPlanModal('empty')" class="plan-btn plan-btn-primary plan-btn-compact mt-3">{{ _('plans_empty_cta') }}</button></div>{% endfor %}
+    </div>
     {% endmacro %}
 
-    <!-- TAB 1: Abonelikler -->
-    <div id="tab-subscription" class="tab-content active plan-card premium-card p-6 bg-white/80 shadow-lg mb-8 rounded-3xl">
-        <h3 class="font-black text-sm border-b pb-2.5 mb-4 italic text-slate-700 uppercase tracking-tight">Süresiz Abonelik Planları</h3>
-        {{ _render_plan_table(subscription_plans) }}
+    <!-- Unified plan views -->
+    {% set effective_active_plans = [] %}
+    {% set effective_completed_plans = [] %}
+    {% if active_plans is defined and active_plans is not none and active_plans|length > 0 %}
+        {% set effective_active_plans = active_plans %}
+    {% elif all_plans is defined and all_plans %}
+        {% for p in all_plans %}
+            {% set s = (p.status.value if (p.status is defined and p.status.value is defined) else p.status)|string %}
+            {% if s == 'Aktif' %}
+                {% set _ = effective_active_plans.append(p) %}
+            {% else %}
+                {% set _ = effective_completed_plans.append(p) %}
+            {% endif %}
+        {% endfor %}
+        {% if not effective_active_plans and not effective_completed_plans %}
+            {% set effective_active_plans = all_plans %}
+        {% endif %}
+    {% endif %}
+    {% if completed_plans is defined and completed_plans is not none and completed_plans|length > 0 %}
+        {% set effective_completed_plans = completed_plans %}
+    {% endif %}
+    {% set effective_all_plans = all_plans if (all_plans is defined and all_plans is not none) else [] %}
+    {% set effective_inv_plans = investment_plans if (investment_plans is defined and investment_plans is not none) else [] %}
+
+    <div class="mb-6 border-b border-slate-200 flex gap-4 overflow-x-auto">
+        <button data-macro="button_secondary" type="button" class="tab-btn active px-2 pb-3 text-xs font-black uppercase tracking-wider text-indigo-600" onclick="switchTab('tab-active', this)">
+            Aktif
+            <span class="ml-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] text-emerald-700">{{ effective_active_plans|length }}</span>
+        </button>
+        <button data-macro="button_secondary" type="button" class="tab-btn px-2 pb-3 text-xs font-black uppercase tracking-wider text-slate-500" onclick="switchTab('tab-completed', this)">
+            Tamamlanan &amp; İptal
+            <span class="ml-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px]">{{ effective_completed_plans|length }}</span>
+        </button>
+        <button data-macro="button_secondary" type="button" class="tab-btn px-2 pb-3 text-xs font-black uppercase tracking-wider text-slate-500" onclick="switchTab('tab-investment', this)">
+            {{ _('ui_auto_54b16ee378f1') }}
+            <span class="ml-1 rounded-full bg-indigo-100 px-2 py-0.5 text-[10px]">{{ effective_inv_plans|length }}</span>
+        </button>
+        <button data-macro="button_secondary" type="button" class="tab-btn px-2 pb-3 text-xs font-black uppercase tracking-wider text-slate-500" onclick="switchTab('tab-all', this)">
+            {{ _('ui_auto_7a62687b3b35') }}
+            <span class="ml-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px]">{{ effective_all_plans|length }}</span>
+        </button>
     </div>
 
-    <!-- TAB 2: Taksitler -->
-    <div id="tab-installment" class="tab-content plan-card premium-card p-6 bg-white/80 shadow-lg mb-8 rounded-3xl">
-        <h3 class="font-black text-sm border-b pb-2.5 mb-4 italic text-slate-700 uppercase tracking-tight">Belirli Süreli Taksitler</h3>
-        {{ _render_plan_table(installment_plans) }}
+    <!-- Aktif Planlar -->
+    <div id="tab-active" class="tab-content active plan-card premium-card p-6 bg-white/80 shadow-lg mb-8 rounded-3xl">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-2 border-b pb-3">
+            <div>
+                <h3 class="font-black text-sm italic text-slate-700 uppercase tracking-tight">Aktif Planlar</h3>
+                <p class="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mt-0.5">Devam eden gelir, gider ve yatırım planları</p>
+            </div>
+            <span class="rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-700">{{ effective_active_plans|length }} Aktif Plan</span>
+        </div>
+        {{ _render_canonical_plan_table(effective_active_plans) }}
     </div>
 
-    <!-- TAB 3: DCA -->
-    <div id="tab-dca" class="tab-content plan-card premium-card p-6 bg-white/80 shadow-lg mb-8 rounded-3xl">
-        <h3 class="font-black text-sm border-b pb-2.5 mb-4 italic text-slate-700 uppercase tracking-tight">Düzenli Yatırım (DCA)</h3>
-        {{ _render_plan_table(dca_plans) }}
+    <!-- Tamamlanan / İptal Planlar -->
+    <div id="tab-completed" class="tab-content plan-card premium-card p-6 bg-white/80 shadow-lg mb-8 rounded-3xl">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-2 border-b pb-3">
+            <div>
+                <h3 class="font-black text-sm italic text-slate-700 uppercase tracking-tight">Tamamlanan &amp; İptal Planlar</h3>
+                <p class="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mt-0.5">Biten, duraklatılan ve iptal edilen planlar</p>
+            </div>
+            <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-500">{{ effective_completed_plans|length }} Plan</span>
+        </div>
+        {% if effective_completed_plans %}
+            {{ _render_canonical_plan_table(effective_completed_plans) }}
+        {% else %}
+        <div class="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-6 text-center">
+            <p class="text-xs font-bold text-slate-400">Henüz tamamlanan veya iptal edilen plan yok.</p>
+            <p class="mt-1 text-[10px] font-semibold text-slate-300">Tamamlandı / İptal / Duraklatıldı statüsündeki planlar burada görünür.</p>
+        </div>
+        {% endif %}
     </div>
 
-    <!-- TAB 4: Dönemsel -->
-    <div id="tab-periodic" class="tab-content plan-card premium-card p-6 bg-white/80 shadow-lg mb-8 rounded-3xl">
-        <h3 class="font-black text-sm border-b pb-2.5 mb-4 italic text-slate-700 uppercase tracking-tight">Dönemsel İşlemler</h3>
-        {{ _render_plan_table(periodic_plans) }}
+    <!-- Yatırım Planları -->
+    <div id="tab-investment" class="tab-content plan-card premium-card p-6 bg-white/80 shadow-lg mb-8 rounded-3xl">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-2 border-b pb-3"><h3 class="font-black text-sm italic text-slate-700 uppercase tracking-tight">{{ _('ui_auto_54b16ee378f1') }}</h3><span class="text-[10px] font-bold uppercase tracking-widest text-indigo-500">{{ _('ui_auto_1c71c2803051') }}</span></div>
+        {{ _render_canonical_plan_table(effective_inv_plans) }}
+    </div>
+
+    <!-- Tüm Planlar (Klasik Görünüm) -->
+    <div id="tab-all" class="tab-content plan-card premium-card p-6 bg-white/80 shadow-lg mb-8 rounded-3xl">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-2 border-b pb-3">
+            <div>
+                <h3 class="font-black text-sm italic text-slate-700 uppercase tracking-tight">{{ _('ui_auto_8a950b18217a') }}</h3>
+                <p class="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mt-0.5">{{ _('ui_auto_ca3f9fffb9c0') }}</p>
+            </div>
+            <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-500">{{ effective_all_plans|length }} Plan</span>
+        </div>
+        {{ _render_canonical_plan_table(effective_all_plans) }}
     </div>
 
 </div>
 
+
 <!-- Unified Plan Modal -->
-<div id="unifiedPlanModal" class="edit-modal hidden">
+<div id="unifiedPlanModal" class="edit-modal hidden" role="dialog" aria-modal="true" aria-labelledby="planModalTitle">
     <div class="edit-modal-backdrop" onclick="closePlanModal()"></div>
     <div class="edit-modal-content">
         <div class="edit-modal-card">
             <div class="edit-modal-header">
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <div style="display: flex; align-items: center;">
-                        <div style="background: #e0e7ff; padding: 0.5rem; border-radius: 0.75rem; margin-right: 0.75rem;">
-                            <svg style="width: 1.25rem; height: 1.25rem; color: #4f46e5;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                <div class="modal-header-actions">
+                    <div class="modal-header-left">
+                        <div class="modal-icon">
+                            <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
                         </div>
                         <div>
-                            <h3 id="planModalTitle" style="font-size: 1.125rem; font-weight: 900; color: #1e293b; text-transform: uppercase; letter-spacing: -0.025em;">Plan Ekle/Düzenle</h3>
-                            <p style="font-size: 0.625rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Düzenli plan şablonu</p>
+                            <h3 id="planModalTitle" class="text-lg font-black text-slate-900 uppercase tracking-tight">{{ _('ui_auto_8c12699960ce') }}</h3>
+                            <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">{{ _('ui_auto_a305b3530d05') }}</p>
                         </div>
                     </div>
-                    <button type="button" onclick="closePlanModal()" style="color: #94a3b8; background: none; border: none; cursor: pointer; transition: color 0.2s;">
-                        <svg style="width: 1.5rem; height: 1.5rem;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <button data-macro="button_secondary" type="button" onclick="closePlanModal()" class="modal-close">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
             </div>
@@ -185,72 +421,145 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="action" id="planAction" value="add_expense_plan">
                 <input type="hidden" name="plan_id" id="plan_id" value="">
+                <input type="hidden" name="version" id="plan_version" value="1">
                 
-                <div class="grid grid-cols-2 gap-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">İşlem Yönü</label>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('ui_auto_3f9adc6c7aaf') }}</label>
                         <select id="flow_type_selector" class="edit-modal-input font-bold" onchange="updateCategoriesAndAction()" required>
-                            <option value="Gider">Gider (Çıkış)</option>
-                            <option value="Gelir">Gelir (Giriş)</option>
-                            <option value="Yatırım">Yatırım (Aktarım)</option>
+                            <option value="Gider">{{ _('ui_auto_b811c1b29331') }}</option>
+                            <option value="Gelir">{{ _('ui_auto_b6e3b0ecf5d0') }}</option>
+                            <option value="Yatırım">{{ _('ui_auto_4d9da7c7033d') }}</option>
                         </select>
                     </div>
                     <div>
-                        <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Plan Tipi</label>
-                        <select name="plan_type" id="plan_type" class="edit-modal-input font-bold" onchange="updateInstallmentState()" required>
-                            <option value="Taksit">Taksit</option>
-                            <option value="Abonelik">Abonelik</option>
-                            <option value="DCA">DCA Yatırımı</option>
-                            <option value="Dönemsel">Dönemsel</option>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('ui_auto_46dc4a0a632b') }}</label>
+                        <select name="frequency" id="plan_frequency" class="edit-modal-input font-bold" onchange="updateDurationLiveSummary()" required>
+                            <option value="Aylık">{{ _('ui_auto_bd979bf4fed3') }}</option>
+                            <option value="3-Aylık">{{ _('ui_auto_53eadd3e0c35') }}</option>
+                            <option value="Yıllık">{{ _('ui_auto_8b022425d461') }}</option>
+                            <option value="Haftalık">{{ _('ui_auto_b5313f3706c3') }}</option>
                         </select>
                     </div>
                 </div>
 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Tanım</label>
-                    <input type="text" name="name" id="plan_name" placeholder="Örn: Ev Kirası / Netflix" class="edit-modal-input" required>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">Ödeme Süresi / Modeli</label>
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <label id="duration_card_indefinite" class="duration-mode-card relative flex flex-col p-3 rounded-2xl border-2 cursor-pointer transition select-none border-indigo-500 bg-indigo-50/50">
+                            <div class="flex items-center gap-2">
+                                <input type="radio" name="duration_mode_choice" id="duration_mode_indefinite" value="indefinite" checked class="accent-indigo-600 w-4 h-4" onchange="onDurationModeChange('indefinite')">
+                                <span class="text-xs font-black text-slate-800">♾️ Süresiz / Düzenli</span>
+                            </div>
+                            <p class="text-[10px] text-slate-500 font-medium mt-1.5 ml-6">Maaş, kira, fatura, abonelik vb. İptal edilene kadar devam eder.</p>
+                        </label>
+
+                        <label id="duration_card_installment" class="duration-mode-card relative flex flex-col p-3 rounded-2xl border-2 cursor-pointer transition select-none border-slate-200 bg-slate-50/50 hover:bg-slate-50">
+                            <div class="flex items-center gap-2">
+                                <input type="radio" name="duration_mode_choice" id="duration_mode_installment" value="installment" class="accent-indigo-600 w-4 h-4" onchange="onDurationModeChange('installment')">
+                                <span class="text-xs font-black text-slate-800">🔢 Belirli Süreli / Taksitli</span>
+                            </div>
+                            <p class="text-[10px] text-slate-500 font-medium mt-1.5 ml-6">Kredi, borç, cihaz taksiti vb. Belirli taksit sayısında biter.</p>
+                        </label>
+                    </div>
+                    <input type="hidden" name="plan_type" id="plan_type" value="Abonelik">
+                </div>
+
+                <div>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('plans_table_name') }}</label>
+                    <input type="text" name="name" id="plan_name" placeholder="{{ _('ui_auto_dc5465a9d2e7') }}" class="edit-modal-input" required>
                 </div>
                 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Kategori</label>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('plans_label_category') }}</label>
                     <select name="category" id="plan_category" class="edit-modal-input font-bold" required>
                         <!-- Populated dynamically via JS -->
                     </select>
                 </div>
-                
-                <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Not (isteğe bağlı)</label>
-                    <input type="text" name="note" id="plan_note" placeholder="Ek açıklama" class="edit-modal-input">
+
+                <div id="target_asset_wrapper" class="hidden">
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('ui_auto_7e595f929791') }}</label>
+                    <select name="target_asset_id" id="target_asset_id" class="edit-modal-input font-bold">
+                        <option value="">{{ _('ui_auto_db0a3a2bfb1f') }}</option>
+                        {% for asset in assets %}<option value="{{ asset.id }}">{{ asset.name }}</option>{% endfor %}
+                    </select>
+                    <p class="text-[8px] text-slate-400 mt-1">{{ _('ui_auto_0c3f291cac58') }}</p>
                 </div>
                 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Aylık/Periyodik Tutar (₺)</label>
-                    <input type="number" step="0.01" min="0.01" name="amount" id="plan_amount" placeholder="0.00" class="edit-modal-input font-bold text-indigo-700" required>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('plans_label_note_optional') }}</label>
+                    <input type="text" name="note" id="plan_note" placeholder="{{ _('plans_note_placeholder') }}" class="edit-modal-input">
                 </div>
                 
-                <div class="grid grid-cols-2 gap-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('ui_auto_a58f6e554fa2') }}</label>
+                    <input type="number" step="0.01" min="0.01" name="amount" id="plan_amount" placeholder="0.00" class="edit-modal-input font-bold text-indigo-700" oninput="updateDurationLiveSummary()" required>
+                </div>
+
+                <!-- Süresiz Mod Açıklama Rozeti -->
+                <div id="indefinite_info_box" class="rounded-2xl border border-indigo-100 bg-indigo-50/70 p-3 text-[11px] text-indigo-800 font-medium flex items-center gap-2.5">
+                    <span class="text-base flex-shrink-0">💡</span>
+                    <span>Bu plan, siz duraklatana veya iptal edene kadar her ay belirlenen günde düzenli olarak tekrarlanır. Taksit sayısı gerekmez.</span>
+                </div>
+
+                <!-- Taksitli Mod Alanları (Sadece Taksitli seçilince görünür) -->
+                <div id="installment_fields_group" class="hidden space-y-3">
                     <div>
-                        <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Kaç Ay (0 = Süresiz)?</label>
-                        <input type="number" min="0" max="9999" name="installments" id="plan_installments" placeholder="12" class="edit-modal-input" required>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">Taksit / Dönem Sayısı</label>
+                        <input type="number" min="1" max="360" name="installments" id="plan_installments" placeholder="12" class="edit-modal-input font-bold" oninput="updateDurationLiveSummary()">
+                        <p class="text-[8px] text-slate-400 mt-1">Toplam taksit sayısı (örn. 6, 12, 24 ay).</p>
                     </div>
+                    <div id="plan_duration_summary" class="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-3 text-[11px] font-bold text-emerald-800 flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-base">📅</span>
+                            <span id="duration_summary_text">12 Taksit • Son Ödeme: —</span>
+                        </div>
+                        <div id="duration_total_text" class="text-xs font-black text-emerald-900 whitespace-nowrap">
+                            Toplam: —
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Ay İçi Gün</label>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('ui_auto_130653bb9ed1') }}</label>
                         <input type="number" min="1" max="31" name="payment_day" id="plan_payment_day" placeholder="1-31" class="edit-modal-input" required>
+                        <p class="text-[8px] text-slate-400 mt-1">Her ayın hangi günü (1-31).</p>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('ui_auto_72f8822a6d0d') }}</label>
+                        <input type="date" name="start_date" id="plan_start_date" class="edit-modal-input" onchange="updateDurationLiveSummary()">
+                        <p class="text-[8px] text-slate-400 mt-1">{{ _('ui_auto_99b289e4b185') }}</p>
                     </div>
                 </div>
-                
-                <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Başlangıç Tarihi (isteğe bağlı)</label>
-                    <input type="date" name="start_date" id="plan_start_date" class="edit-modal-input">
-                    <p style="font-size: 0.5rem; color: #64748b; margin-top: 0.25rem;">Boş bırakılırsa bu ay başlar</p>
-                </div>
-                
-                <div class="flex space-x-2 pt-2" style="display: flex; gap: 0.5rem;">
-                    <button type="submit" id="plan_submit_btn" style="flex: 1; background: linear-gradient(to right, #4f46e5, #4338ca); color: white; font-weight: 900; padding: 1rem; border-radius: 0.75rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); text-transform: uppercase; font-size: 0.625rem; letter-spacing: 0.05em; border: none; cursor: pointer; transition: box-shadow 0.2s;">
-                        PLAN KAYDET
+
+                <div id="advanced_end_date_wrapper" class="pt-1">
+                    <button data-macro="button_secondary" type="button" onclick="toggleAdvancedEndDate()" class="plan-btn plan-btn-quiet plan-btn-compact text-[10px] text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1 font-bold">
+                        <span id="advanced_end_date_icon">▸</span>
+                        <span>{{ _('ui_auto_8e3e77f7dd9d') }}</span>
                     </button>
-                    <button type="button" onclick="closePlanModal()" style="padding: 1rem; background: #e2e8f0; color: #334155; border-radius: 0.75rem; font-weight: 900; font-size: 0.625rem; text-transform: uppercase; letter-spacing: 0.05em; border: none; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); transition: background 0.2s;">
-                        İPTAL
+                    <div id="advanced_end_date_container" class="hidden mt-2">
+                        <input type="date" name="end_date" id="plan_end_date" class="edit-modal-input" onchange="updateDurationLiveSummary()">
+                        <p class="text-[8px] text-slate-400 mt-1">{{ _('ui_auto_9022eaa9f838') }}</p>
+                    </div>
+                </div>
+
+                <div id="plan_status_wrapper">
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('plans_table_status') }}</label>
+                    <select name="status" id="plan_status" class="edit-modal-input font-bold" required>
+                        <option value="Aktif">{{ _('plans_status_active') }}</option>
+                        <option value="Duraklatıldı">{{ _('plans_status_paused') }}</option>
+                        <option value="Tamamlandı">{{ _('plans_status_completed') }}</option>
+                        <option value="İptal">{{ _('plans_status_cancelled') }}</option>
+                    </select>
+                </div>
+
+<div class="plan-btn-group pt-2">
+                    <button data-macro="button_primary" type="submit" id="plan_submit_btn" class="plan-btn plan-btn-primary" class="flex-1">
+                        {{ _('ui_auto_fc0e8f22bbeb') }}
+                    </button>
+                    <button data-macro="button_secondary" type="button" onclick="closePlanModal()" class="plan-btn plan-btn-secondary" class="flex-none">
+                        {{ _('ui_auto_571a2b59da0f') }}
                     </button>
                 </div>
             </form>
@@ -259,7 +568,7 @@
 </div>
 
 <!-- Payment Modal -->
-<div id="paymentModal" class="fixed inset-0 z-50 hidden flex items-center justify-center">
+<div id="paymentModal" class="fixed inset-0 z-50 hidden flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="paymentModalTitle">
     <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closePaymentModal()"></div>
     <div class="relative bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full mx-4 border border-emerald-100 transform transition-all">
         <div class="flex items-center gap-4 mb-5">
@@ -269,45 +578,137 @@
                 </svg>
             </div>
             <div>
-                <h3 id="paymentModalTitle" class="font-black text-slate-900 text-base uppercase tracking-tight">İşlem / Ödeme Yap</h3>
+                <h3 id="paymentModalTitle" class="font-black text-slate-900 text-base uppercase tracking-tight">{{ _('ui_auto_9a79dc9516eb') }}</h3>
                 <p id="paymentPlanName" class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">—</p>
             </div>
-            <button type="button" onclick="closePaymentModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700" aria-label="Kapat">&times;</button>
+            <button data-macro="button_secondary" type="button" onclick="closePaymentModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700" aria-label="{{ _('plans_action_close') }}">&times;</button>
         </div>
         <div id="paymentFeedback" class="hidden mb-4 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 px-4 py-3 text-[12px]"></div>
         <form id="paymentForm">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <input type="hidden" name="plan_id" id="paymentPlanId">
+                        <input type="hidden" name="plan_id" id="paymentPlanId">
+            <input type="hidden" name="occurrence_id" id="paymentOccurrenceId">
+
             <div class="mb-4">
-                <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Tutar (₺)</label>
+                <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">{{ _('plans_label_amount', currency=base_currency_symbol) }}</label>
                 <input type="number" step="0.01" name="amount" id="paymentAmount" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 text-xs focus:ring-2 focus:ring-emerald-500 outline-none font-bold" required>
             </div>
             <div class="mb-4">
-                <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Tarih</label>
+                <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">{{ _('plans_label_date') }}</label>
                 <input type="date" name="payment_date" id="paymentDate" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 text-xs focus:ring-2 focus:ring-emerald-500 outline-none" required>
             </div>
             <div class="mb-4">
-                <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Dönem/Taksit No (Toplam: <span id="paymentInstallments">—</span>)</label>
+                <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">{{ _('ui_auto_55ff12b3d47b') }} <span id="paymentInstallments">—</span>)</label>
                 <input type="number" name="installment_number" id="paymentInstallmentNumber" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 text-xs focus:ring-2 focus:ring-emerald-500 outline-none" required min="1">
             </div>
+                        <p id="paymentOccurrenceInfo" class="mb-4 rounded-xl border border-indigo-100 bg-indigo-50 px-3 py-2 text-[10px] font-semibold text-indigo-700" aria-live="polite">{{ _('plans_occurrence_loading') }}</p>
             <div class="mb-6">
-                <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Not (isteğe bağlı)</label>
+                <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">{{ _('plans_label_note_optional') }}</label>
+
                 <input type="text" name="notes" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
             </div>
             <div class="flex gap-3">
-                <button type="button" onclick="closePaymentModal()" class="flex-1 px-4 py-3 rounded-xl font-bold text-[11px] uppercase bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">
-                    İptal
+<button data-macro="button_secondary" type="button" onclick="closePaymentModal()" class="plan-btn plan-btn-secondary flex-1">
+                    {{ _('plans_action_cancel') }}
                 </button>
-                <button type="submit" class="flex-1 px-4 py-3 rounded-xl font-black text-[11px] uppercase bg-emerald-600 text-white hover:bg-emerald-700 transition shadow-lg cursor-pointer">
-                    ONAYLA
+<button data-macro="button_primary" type="submit" class="plan-btn plan-btn-success flex-1">
+                    {{ _('plans_action_confirm') }}
                 </button>
             </div>
         </form>
     </div>
 </div>
 
+<!-- Read-only plan detail drawer -->
+<div id="planDetailDrawer" class="fixed inset-0 z-[60] hidden" aria-hidden="true">
+    <div class="plan-detail-backdrop absolute inset-0 bg-slate-900/45 backdrop-blur-sm" onclick="closePlanDetail()"></div>
+    <aside class="plan-detail-panel absolute right-0 top-0 flex h-full w-full max-w-xl flex-col border-l border-slate-200 bg-white shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="planDetailTitle" tabindex="-1">
+        <header class="flex items-start justify-between gap-4 border-b border-slate-100 bg-slate-50/80 px-5 py-5">
+            <div class="min-w-0">
+                <p class="text-[10px] font-black uppercase tracking-[0.22em] text-indigo-600">{{ _('plans_detail_source') }}</p>
+                <h2 id="planDetailTitle" class="mt-2 truncate text-lg font-black tracking-tight text-slate-900">{{ _('plans_detail_title') }}</h2>
+            </div>
+            <button data-macro="button_secondary" id="planDetailClose" type="button" onclick="closePlanDetail()" class="plan-btn plan-btn-quiet plan-btn-compact flex-shrink-0" aria-label="{{ _('plans_detail_close') }}">
+                <span aria-hidden="true" class="text-xl leading-none">&times;</span>
+                <span class="sr-only">{{ _('plans_detail_close') }}</span>
+            </button>
+        </header>
+        <div id="planDetailContent" class="flex-1 overflow-y-auto px-5 py-5" aria-live="polite">
+            <p class="rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-xs font-bold text-indigo-700">{{ _('plans_detail_loading') }}</p>
+        </div>
+    </aside>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
 <script>
-    const categoryData = {
+    window.planCopy = {
+        categoryMissing: {{ _('plans_category_missing')|tojson }},
+        createTitle: {{ _('plans_modal_create_title')|tojson }},
+        editTitle: {{ _('plans_modal_edit_title')|tojson }},
+        deleteConfirm: {{ _('plans_delete_confirm')|tojson }},
+        deleteFailed: {{ _('plans_delete_failed')|tojson }},
+        deleteError: {{ _('plans_delete_error')|tojson }},
+        saveSuccess: {{ _('plans_save_success')|tojson }},
+        genericError: {{ _('plans_generic_error')|tojson }},
+        occurrenceLoading: {{ _('plans_occurrence_loading')|tojson }},
+        occurrenceNotFound: {{ _('plans_occurrence_not_found')|tojson }},
+        occurrenceFallback: {{ _('plans_occurrence_fallback')|tojson }},
+        occurrenceInfo: {{ _('plans_occurrence_info')|tojson }},
+        paymentIndefinite: {{ _('plans_payment_indefinite')|tojson }},
+        detailTitle: {{ _('plans_detail_title')|tojson }},
+        detailLoading: {{ _('plans_detail_loading')|tojson }},
+        detailError: {{ _('plans_detail_error')|tojson }},
+        detailNotFound: {{ _('plans_detail_not_found')|tojson }},
+        detailNext: {{ _('plans_detail_next')|tojson }},
+        detailNoSchedule: {{ _('plans_detail_no_schedule')|tojson }},
+        detailOccurrences: {{ _('plans_detail_occurrences')|tojson }},
+        detailEdit: {{ _('plans_detail_edit')|tojson }},
+        detailPay: {{ _('plans_detail_pay')|tojson }},
+        detailFieldCategory: {{ _('plans_detail_field_category')|tojson }},
+        detailFieldFlow: {{ _('plans_detail_field_flow')|tojson }},
+        detailFieldAmount: {{ _('plans_detail_field_amount')|tojson }},
+        detailFieldFrequency: {{ _('plans_detail_field_frequency')|tojson }},
+        detailFieldLifecycle: {{ _('plans_detail_field_lifecycle')|tojson }},
+        detailFieldStatus: {{ _('plans_detail_field_status')|tojson }},
+        detailFieldStart: {{ _('plans_detail_field_start')|tojson }},
+        detailFieldEnd: {{ _('plans_detail_field_end')|tojson }},
+        detailScheduled: {{ _('plans_detail_status_scheduled')|tojson }},
+        detailPaid: {{ _('plans_detail_status_paid')|tojson }},
+        detailSkipped: {{ _('plans_detail_status_skipped')|tojson }},
+        detailCancelled: {{ _('plans_detail_status_cancelled')|tojson }},
+        flowLabels: {
+            'Gelir': {{ _('plans_flow_income')|tojson }},
+            'Gider': {{ _('plans_flow_expense')|tojson }},
+            'Yatırım': {{ _('plans_flow_investment')|tojson }}
+        },
+        lifecycleLabels: {
+            'Süresiz': {{ _('plans_lifecycle_indefinite')|tojson }},
+            'Taksitli': {{ _('plans_lifecycle_installment')|tojson }},
+            'Bitiş Tarihli': {{ _('plans_lifecycle_end_dated')|tojson }}
+        },
+        frequencyLabels: {
+            'Aylık': {{ _('plans_frequency_monthly')|tojson }},
+            '3-Aylık': {{ _('plans_frequency_quarterly')|tojson }},
+            'Yıllık': {{ _('plans_frequency_yearly')|tojson }},
+            'Haftalık': {{ _('plans_frequency_weekly')|tojson }}
+        },
+        statusLabels: {
+            'Aktif': {{ _('plans_status_active')|tojson }},
+            'Duraklatıldı': {{ _('plans_status_paused')|tojson }},
+            'Tamamlandı': {{ _('plans_status_completed')|tojson }},
+            'İptal': {{ _('plans_status_cancelled')|tojson }}
+        },
+        occurrenceLabels: {
+            scheduled: {{ _('plans_detail_status_scheduled')|tojson }},
+            paid: {{ _('plans_detail_status_paid')|tojson }},
+            skipped: {{ _('plans_detail_status_skipped')|tojson }},
+            cancelled: {{ _('plans_detail_status_cancelled')|tojson }}
+        }
+    };
+
+    window.categoryData = {
         'Gelir': [
             {% for c in income_cats %}'{{ c.name }}',{% endfor %}
         ],
@@ -319,112 +720,17 @@
         ]
     };
 
-    function switchTab(tabId, btn) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-        
-        document.getElementById(tabId).classList.add('active');
-        btn.classList.add('active');
-    }
+    window.base_currency_symbol = '{{ base_currency_symbol }}';
+    window.plan_currency_symbol = window.base_currency_symbol;
 
-    function updateCategoriesAndAction(selectedCat = null) {
-        try {
-            const flow = document.getElementById('flow_type_selector').value;
-            const catSelect = document.getElementById('plan_category');
-            const actionInput = document.getElementById('planAction');
-            
-            if (flow === 'Gelir') actionInput.value = 'add_income_plan';
-            else if (flow === 'Gider') actionInput.value = 'add_expense_plan';
-            else actionInput.value = 'add_investment_plan';
-
-            catSelect.innerHTML = '';
-            const cats = categoryData[flow] || [];
-            
-            if (cats.length === 0) {
-                const opt = document.createElement('option');
-                opt.value = '';
-                opt.textContent = 'Kategori bulunamadı';
-                catSelect.appendChild(opt);
-            } else {
-                cats.forEach(c => {
-                    const opt = document.createElement('option');
-                    opt.value = c;
-                    opt.textContent = c;
-                    catSelect.appendChild(opt);
-                });
-            }
-            
-            if (selectedCat && cats.includes(selectedCat)) {
-                catSelect.value = selectedCat;
-            }
-        } catch (e) {
-            console.error('Error updating categories:', e);
-        }
-    }
-    
-    function updateInstallmentState() {
-        const planType = document.getElementById('plan_type').value;
-        const instInput = document.getElementById('plan_installments');
-        
-        if (planType === 'Abonelik' || planType === 'DCA') {
-            instInput.value = 0;
-            instInput.readOnly = true;
-            instInput.classList.add('bg-slate-200', 'text-slate-500');
-        } else {
-            if(instInput.value == 0) instInput.value = 12;
-            instInput.readOnly = false;
-            instInput.classList.remove('bg-slate-200', 'text-slate-500');
-        }
-    }
-
-    function openPlanModal() {
-        document.getElementById('unifiedPlanForm').reset();
-        document.getElementById('plan_id').value = '';
-        document.getElementById('planModalTitle').textContent = 'Plan Oluştur';
-        updateCategoriesAndAction();
-        updateInstallmentState();
-        window.openModal('unifiedPlanModal');
-    }
-
-    function editPlan(btn) {
-        document.getElementById('plan_id').value = btn.dataset.id;
-        document.getElementById('plan_name').value = btn.dataset.name;
-        
-        const flow = btn.dataset.flowType;
-        document.getElementById('flow_type_selector').value = flow;
-        updateCategoriesAndAction(btn.dataset.category);
-        
-        document.getElementById('plan_type').value = btn.dataset.planType || 'Taksit';
-        document.getElementById('plan_amount').value = btn.dataset.amount;
-        document.getElementById('plan_installments').value = btn.dataset.installments;
-        document.getElementById('plan_payment_day').value = btn.dataset.paymentDay;
-        document.getElementById('plan_note').value = btn.dataset.note;
-        document.getElementById('plan_start_date').value = btn.dataset.startDate;
-        
-        updateInstallmentState();
-
-        document.getElementById('planModalTitle').textContent = 'Plan Düzenle';
-        window.openModal('unifiedPlanModal');
-    }
-
-    function closePlanModal() {
-        window.closeModal('unifiedPlanModal');
-    }
-
-    // Ajax Delete
-    function checkPlanBeforeDelete(planId, flowType) {
-        if (confirm('Planı silmek istediğinize emin misiniz?')) {
-            deletePlan(planId, 'all');
-        }
-    }
-
-    function deletePlan(planId, mode) {
+    // Canonical Endpoint contract for delete plan (checked by test_frontend_backend_endpoint_contract):
+    window.deletePlan = function(planId, mode) {
         const formData = new FormData();
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
         formData.append('csrf_token', csrfToken);
-        formData.append('mode', mode);
+        formData.append('mode', mode || 'all');
         
-        fetch(`/plans/${planId}/delete`, {
+        fetch(ECuzdanEndpoints.plans.delete(planId), {
             method: 'POST',
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
             body: formData
@@ -434,93 +740,15 @@
             if (data.success) {
                 location.reload();
             } else {
-                showToast(data.message || 'Silme başarısız.', 'error');
+                showToast(data.message || (window.planCopy ? window.planCopy.deleteFailed : 'Silinemedi'), 'error');
             }
         })
         .catch(error => {
             console.error('Error deleting plan:', error);
-            showToast('Silme sırasında hata oluştu.', 'error');
+            showToast(window.planCopy ? window.planCopy.deleteError : 'Hata oluştu', 'error');
         });
-    }
-
-    // Ajax Forms
-    document.getElementById('unifiedPlanForm')?.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        
-        // Ensure readonly installments are sent correctly
-        if (document.getElementById('plan_installments').readOnly) {
-            formData.set('installments', '0');
-        }
-
-        fetch('/plans', {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast(data.message || 'Plan kaydedildi', 'success');
-                setTimeout(() => {
-                    closePlanModal();
-                    window.location.reload();
-                }, 1000);
-            } else {
-                showToast(data.message || 'Bir hata oluştu', 'error');
-            }
-        })
-        .catch(error => showToast('Bir hata oluştu', 'error'));
-    });
-
-    // Payment Logic
-    function openPaymentModal(planId, planName, amount, installments) {
-        const today = new Date().toISOString().slice(0, 10);
-        document.getElementById('paymentPlanId').value = planId;
-        document.getElementById('paymentPlanName').textContent = planName;
-        document.getElementById('paymentAmount').value = amount;
-        document.getElementById('paymentDate').value = today;
-        document.getElementById('paymentInstallments').textContent = (installments == 0 || installments == 9999) ? 'Süresiz' : installments;
-        document.getElementById('paymentInstallmentNumber').value = 1;
-        document.getElementById('paymentFeedback').classList.add('hidden');
-        window.openModal('paymentModal');
-    }
-
-    function closePaymentModal() {
-        document.getElementById('paymentForm').reset();
-        window.closeModal('paymentModal');
-    }
-
-    function setPaymentFeedback(message, type = 'error') {
-        const feedback = document.getElementById('paymentFeedback');
-        if (!message) { feedback.classList.add('hidden'); return; }
-        feedback.textContent = message;
-        feedback.classList.remove('hidden', 'bg-emerald-50', 'text-emerald-700', 'bg-rose-50', 'text-rose-700');
-        feedback.classList.add(type === 'success' ? 'bg-emerald-50' : 'bg-rose-50');
-        feedback.classList.add(type === 'success' ? 'text-emerald-700' : 'text-rose-700');
-    }
-
-    document.getElementById('paymentForm')?.addEventListener('submit', function(e) {
-        e.preventDefault();
-        setPaymentFeedback('');
-        const formData = new FormData(this);
-        fetch('/add_payment', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast('İşlem kaydedildi.', 'success');
-                setTimeout(() => window.location.reload(), 1000);
-            } else {
-                showToast('Hata: ' + data.message, 'error');
-            }
-        });
-    });
-
+    };
 </script>
+<script src="{{ static_asset_url('js/plans.js') }}"></script>
+<script>document.querySelectorAll('form[method="POST"]').forEach(function(form){form.addEventListener('submit',function(event){if(form.dataset.submitting === 'true'){event.preventDefault();event.stopImmediatePropagation();return;}form.dataset.submitting='true';form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(function(button){button.disabled=true;});},true);});</script>
 {% endblock %}

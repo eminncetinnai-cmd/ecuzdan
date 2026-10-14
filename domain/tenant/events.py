@@ -1,7 +1,9 @@
 """Tenant domain events."""
 
 from dataclasses import dataclass
+
 from domain.common.events import DomainEvent
+
 
 @dataclass(frozen=True, kw_only=True)
 class TenantCreatedEvent(DomainEvent):

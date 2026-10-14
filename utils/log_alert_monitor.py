@@ -42,8 +42,38 @@ class LogAlertMonitor:
     def _read_recent_levels(self) -> Counter:
         counts: Counter = Counter()
         cutoff = datetime.now() - timedelta(minutes=self.window_minutes)
-        files = [self.error_log_file, self.main_log_file]
 
+        # 1. Try structured log first for high-fidelity JSON counts
+        structured_file = os.path.join(self.log_dir, 'e_cuzdan_structured.log')
+        if os.path.exists(structured_file):
+            try:
+                import json
+
+                from utils.log_viewer import _tail_lines
+                for line in _tail_lines(structured_file, 1000):
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        entry = json.loads(line)
+                        ts_str = entry.get('timestamp')
+                        if ts_str:
+                            dt = datetime.fromisoformat(ts_str.replace('Z', '+00:00'))
+                            if dt.tzinfo:
+                                dt = dt.replace(tzinfo=None)
+                            if dt >= cutoff:
+                                lvl = str(entry.get('level', '')).upper()
+                                if lvl in ('CRITICAL', 'ERROR', 'WARNING'):
+                                    counts[lvl] += 1
+                    except Exception:
+                        pass
+                if counts:
+                    return counts
+            except Exception as exc:
+                logger.debug('Structured log scan error in alert monitor: %s', exc)
+
+        # 2. Fall back to regex scan on text logs
+        files = [self.error_log_file, self.main_log_file]
         for file_path in files:
             if not os.path.exists(file_path):
                 continue
@@ -74,6 +104,30 @@ class LogAlertMonitor:
                 email_system.send_warning_alert(subject, message)
         except Exception as exc:
             logger.warning('Log alert notification failed: %s', exc)
+
+        # In-app notification attempt
+        try:
+            from flask import current_app
+
+            from models import Notification, User, db
+            if current_app:
+                admin_user = User.query.filter_by(role='admin').first() or User.query.first()
+                if admin_user:
+                    dedupe = f"sysalert:{priority}:{datetime.now().strftime('%Y%m%d%H%M')}"
+                    notif = Notification(
+                        user_id=admin_user.id,
+                        tenant_id=getattr(admin_user, 'tenant_id', 'default'),
+                        title=f"Sistem Uyarısı: {subject}",
+                        message=message,
+                        category='system',
+                        severity='danger' if priority == 'CRITICAL' else ('warning' if priority == 'HIGH' else 'info'),
+                        priority='urgent' if priority == 'CRITICAL' else 'high',
+                        dedupe_key=dedupe,
+                    )
+                    db.session.add(notif)
+                    db.session.commit()
+        except Exception:
+            pass
 
     def evaluate(self) -> Dict:
         """Read recent log levels without sending notifications."""

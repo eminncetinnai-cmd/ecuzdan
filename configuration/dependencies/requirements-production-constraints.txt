@@ -1,0 +1,79 @@
+# GENERATED — E-Cüzdan dependency profile
+# Profile: production
+# Generated at: 2026-08-26T08:15:42.848431+00:00
+# Source manifest: C:\Users\e.cetin\Desktop\e-cuzdan\requirements-production-profile.txt
+# Source clean-room report: C:\Users\e.cetin\e_cuzdan_profile_production_20260826_110620\pip_install_report.json
+# Resolved distributions: 70; pip bootstrap excluded
+# Do not edit manually; regenerate from a reviewed profile clean-room report.
+
+# Exact profile version constraints.
+alembic==1.19.1
+arabic-reshaper==3.0.1
+asn1crypto==1.5.1
+beautifulsoup4==4.15.0
+blinker==1.9.0
+certifi==2026.7.22
+cffi==2.1.1
+charset-normalizer==3.5.1
+click==8.4.2
+colorama==0.4.6
+cryptography==50.0.1
+cssselect2==0.9.0
+curl_cffi==0.16.2
+Deprecated==1.3.1
+Flask==3.1.3
+Flask-Limiter==4.1.1
+Flask-SQLAlchemy==3.1.1
+greenlet==3.5.5
+gunicorn==23.0.0
+html5lib==1.1
+idna==3.19
+itsdangerous==2.2.0
+Jinja2==3.1.6
+limits==5.8.0
+lxml==6.1.2
+Mako==1.4.1
+MarkupSafe==3.0.3
+multitasking==0.0.13
+numpy==2.5.2
+ordered-set==4.1.0
+oscrypto==1.3.0
+packaging==26.3
+pandas==3.0.5
+peewee==4.4.0
+pillow==12.3.0
+platformdirs==4.11.4
+protobuf==7.36.0
+psutil==7.2.2
+psycopg==3.3.4
+psycopg-binary==3.3.4
+pycparser==3.0
+pyHanko==0.36.2
+pyhanko-certvalidator==0.31.4
+PyJWT==2.13.0
+pypdf==6.16.2
+python-bidi==0.6.11
+python-dateutil==2.9.0.post0
+python-dotenv==1.2.3
+pytz==2026.3.post1
+PyYAML==6.0.3
+redis==5.3.1
+reportlab==4.5.1
+requests==2.34.2
+scipy==1.18.1
+six==1.17.0
+soupsieve==2.9.2
+SQLAlchemy==2.0.52
+svglib==2.2.0
+tinycss2==1.5.1
+typing_extensions==4.16.0
+tzdata==2026.3
+tzlocal==5.4.4
+uritools==6.1.3
+urllib3==2.7.0
+webencodings==0.6.1
+websockets==17.0.1
+Werkzeug==3.1.8
+wrapt==2.3.0
+xhtml2pdf==0.2.17
+yfinance==1.6.0

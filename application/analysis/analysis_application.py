@@ -3,7 +3,6 @@
 Orchestrates financial analysis including inflation analysis and risk analysis.
 """
 
-from typing import Optional
 
 from application.base import ApplicationService
 

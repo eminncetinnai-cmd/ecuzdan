@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
 
-from shared.db import db
 from sqlalchemy import Numeric
+
+from shared.db import db
 
 
 def utcnow_naive():
@@ -65,12 +66,19 @@ class Asset(db.Model):
         db.Index('idx_asset_purchase_date', 'purchase_date'),
         db.Index('idx_asset_risk_level', 'risk_level'),
         db.Index('idx_asset_tenant_id', 'tenant_id'),
+        db.Index('idx_asset_last_updated', 'last_updated'),
     )
 
     id = db.Column(db.Integer, primary_key=True)
     type = db.Column(db.String(50), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     value = db.Column(Numeric(19, 4), nullable=False)  # Otomatik hesaplanır: unit_price * quantity
+
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive, nullable=False)
+    version = db.Column(db.Integer, default=1, nullable=False)
+    __mapper_args__ = {
+        'version_id_col': version,
+    }
     description = db.Column(db.String(200))
 
     # Profesyonel yatırım alanları
@@ -115,13 +123,23 @@ class Asset(db.Model):
     # Portföy Muhasebesi - Maliyet Yöntemi
     cost_method = db.Column(db.String(20), default='WEIGHTED_AVERAGE', nullable=False)  # 'FIFO', 'LIFO', 'WEIGHTED_AVERAGE', 'HIFO'
 
+    def _get_transactions(self):
+        """İlişkili işlem listesini getirir; SQLAlchemy relationship'i kullanarak N+1 sorgularını önler."""
+        try:
+            return list(self.transactions)
+        except Exception:
+            try:
+                from models import AssetTransaction
+                return AssetTransaction.query.filter_by(asset_id=self.id).all()
+            except Exception:
+                return []
+
     @property
     def weighted_average_cost(self):
         """Ağırlıklı Ortalama Maliyet (WAC) hesapla"""
-        from models import AssetTransaction
         from shared.decimal_precision import to_decimal
 
-        transactions = AssetTransaction.query.filter_by(asset_id=self.id).all()
+        transactions = self._get_transactions()
 
         if not transactions:
             return self.purchase_cost if self.purchase_cost and self.purchase_cost > 0 else self.value
@@ -148,28 +166,35 @@ class Asset(db.Model):
 
     @property
     def roi(self):
-        """Return on Investment hesapla - Weighted Average Cost kullanarak"""
+        """Return on Investment yüzdesini toplam cost basis ile hesaplar.
+
+        AssetTransaction kayıtları varsa kalan pozisyon için WAC kullanılır.
+        Manuel oluşturulmuş pozisyonlarda ``purchase_cost`` zaten toplam
+        maliyettir; bu değer tekrar quantity ile çarpılmaz.
+        """
         from shared.decimal_precision import to_decimal
-        effective_cost_per_unit = to_decimal(self.weighted_average_cost)
-        total_qty = to_decimal(self.quantity or 0)
-        if total_qty == 0:
-            from models import AssetTransaction
-            txs = AssetTransaction.query.filter_by(asset_id=self.id).all()
-            if txs:
-                for tx in txs:
-                    if tx.transaction_type == 'buy':
-                        total_qty += to_decimal(tx.quantity)
-                    elif tx.transaction_type == 'sell':
-                        total_qty -= to_decimal(tx.quantity)
 
-        effective_cost = effective_cost_per_unit * total_qty
-        val = to_decimal(self.value or 0)
+        value = to_decimal(self.value or 0)
+        purchase_cost = to_decimal(self.purchase_cost or 0)
 
-        if effective_cost > 0:
-            return to_decimal(((val - effective_cost) / effective_cost) * 100)
+        transactions = self._get_transactions()
+
+        if transactions:
+            remaining_quantity = to_decimal(0)
+            for transaction in transactions:
+                tx_quantity = to_decimal(transaction.quantity or 0)
+                if transaction.transaction_type == 'buy':
+                    remaining_quantity += tx_quantity
+                elif transaction.transaction_type == 'sell':
+                    remaining_quantity -= tx_quantity
+            wac = to_decimal(self.weighted_average_cost or 0)
+            cost_basis = wac * remaining_quantity if wac > 0 and remaining_quantity > 0 else purchase_cost
+        else:
+            cost_basis = purchase_cost
+
+        if cost_basis > 0:
+            return to_decimal(((value - cost_basis) / cost_basis) * 100)
         return to_decimal(0)
-
-
     @property
     def total_gain_loss(self):
         """Toplam getiri/kayıp = Gerçekleşmiş Kar + Gerçekleşmemiş Kar.
@@ -195,10 +220,9 @@ class Asset(db.Model):
         float ile karıştırılması 'unsupported operand' TypeError üretiyordu.
         Düzeltme: tüm aritmetik to_decimal() ile Decimal türünde yapılır.
         """
-        from models import AssetTransaction
         from shared.decimal_precision import to_decimal
 
-        transactions = AssetTransaction.query.filter_by(asset_id=self.id).all()
+        transactions = self._get_transactions()
         if not transactions:
             return to_decimal(0)
 
@@ -229,35 +253,26 @@ class Asset(db.Model):
 
     @property
     def unrealized_gain(self):
-        """Gerçekleşmemiş kar — mevcut pozisyonun değer artışı.
-
-        Önceki hata: tx.quantity (Decimal) ile int 0 toplanıyordu;
-        effective_cost_per_unit (Decimal) ile int/float çarpımı TypeError veriyordu.
-        Düzeltme: tüm aritmetik to_decimal() ile Decimal türünde yapılır.
-        """
-        from models import AssetTransaction
+        """Gerçekleşmemiş karı toplam cost basis üzerinden hesaplar."""
         from shared.decimal_precision import to_decimal
 
-        effective_cost_per_unit = to_decimal(self.weighted_average_cost)
         val = to_decimal(self.value or 0)
-
-        transactions = AssetTransaction.query.filter_by(asset_id=self.id).all()
+        purchase_cost = to_decimal(self.purchase_cost or 0)
+        transactions = self._get_transactions()
         if transactions:
             total_quantity = to_decimal(0)
             for tx in transactions:
-                qty = to_decimal(tx.quantity)
+                qty = to_decimal(tx.quantity or 0)
                 if tx.transaction_type == 'buy':
                     total_quantity += qty
                 elif tx.transaction_type == 'sell':
                     total_quantity -= qty
-            effective_cost = effective_cost_per_unit * total_quantity if total_quantity > 0 else to_decimal(0)
+            wac = to_decimal(self.weighted_average_cost or 0)
+            effective_cost = wac * total_quantity if wac > 0 and total_quantity > 0 else purchase_cost
         else:
-            qty = to_decimal(self.quantity or 0)
-            effective_cost = effective_cost_per_unit * qty if qty > 0 else to_decimal(0)
+            effective_cost = purchase_cost
 
-        # Unrealized gain = güncel değer - kalan maliyet
         return val - effective_cost
-
     @property
     def portfolio_weight(self):
         """Portföy ağırlığı — sadece bu tenant'ın varlık toplamına göre hesaplanır.
@@ -265,20 +280,38 @@ class Asset(db.Model):
         Önceki hata: get_total_assets() tenant filtresi olmadan tüm DB'yi topluyordu
         (cross-tenant veri sızıntısı). Düzeltme: Flask g'den tenant_id alınarak
         SQL seviyesinde filtreleme yapılır.
+        N+1 Önleme: db.session.info ve instance önbelleği kontrol edilerek aynı istekte
+        tekrar tekrar sum(value) sorgusu çalıştırılması engellenir.
         """
         from shared.decimal_precision import to_decimal
         try:
-            from flask import g
+            if hasattr(self, '_cached_total_portfolio_value') and self._cached_total_portfolio_value is not None:
+                total = self._cached_total_portfolio_value
+                if total > 0:
+                    return to_decimal(self.value or 0) / total * 100
+                return to_decimal(0)
+
             from sqlalchemy import func
+
             from database.connection import db
-            tenant_id = g.get('tenant_id')
+            from domain.tenant.context import TenantContext
+            tenant_id = getattr(self, 'tenant_id', None) or TenantContext.optional()
             if not tenant_id:
                 return to_decimal(0)
-            total = db.session.query(func.sum(Asset.value)).filter(
-                Asset.tenant_id == tenant_id,
-                Asset.is_closed == False,
-            ).scalar()
-            total = to_decimal(total or 0)
+
+            session_info = getattr(db.session, 'info', None)
+            cache_key = f"_portfolio_total_value_{tenant_id}"
+            if session_info is not None and cache_key in session_info:
+                total = session_info[cache_key]
+            else:
+                total = db.session.query(func.sum(Asset.value)).filter(
+                    Asset.tenant_id == tenant_id,
+                    Asset.is_closed.is_(False),
+                ).scalar()
+                total = to_decimal(total or 0)
+                if session_info is not None:
+                    session_info[cache_key] = total
+
             if total > 0:
                 return to_decimal(self.value or 0) / total * 100
         except Exception:

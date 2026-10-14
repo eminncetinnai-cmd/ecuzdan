@@ -200,17 +200,45 @@ def test_generate_advanced_demo_data_no_user(mock_user, mock_db):
         assert 'transactions' in stats
 
 
-@pytest.mark.unit
-@pytest.mark.skip(reason="Requires database context - better suited for integration tests")
-def test_transaction_exists_check():
-    """Test transaction existence check logic."""
-    # This test requires actual database context, skip for unit tests
-    pass
+@pytest.mark.integration
+def test_transaction_exists_check(app):
+    """Duplicate transaction detection uses the transaction natural key."""
+    from models import Transaction, db
+
+    with app.app_context():
+        transaction = Transaction(
+            date='2026-01-15', category='Maaş', description='Demo maaş',
+            type='Gelir', status='Ödendi', amount=1000, tenant_id='test-tenant'
+        )
+        db.session.add(transaction)
+        db.session.commit()
+        orchestrator = DemoDataOrchestrator(tenant_id='test-tenant')
+
+        assert orchestrator._transaction_exists(transaction) is True
+        different = Transaction(
+            date='2026-01-15', category='Maaş', description='Farklı maaş',
+            type='Gelir', status='Ödendi', amount=1000, tenant_id='test-tenant'
+        )
+        assert orchestrator._transaction_exists(different) is False
 
 
-@pytest.mark.unit
-@pytest.mark.skip(reason="Requires database context - better suited for integration tests")
-def test_recurring_plan_exists_check():
-    """Test recurring plan existence check logic."""
-    # This test requires actual database context, skip for unit tests
-    pass
+@pytest.mark.integration
+def test_recurring_plan_exists_check(app):
+    """Duplicate recurring-plan detection uses the plan name key."""
+    from models import RecurringPlan, db
+
+    with app.app_context():
+        plan = RecurringPlan(
+            name='Demo plan', category='Maaş / Ücret Geliri', flow_type='Gelir',
+            amount=50000, installments=12, payment_day=15, tenant_id='test-tenant'
+        )
+        db.session.add(plan)
+        db.session.commit()
+        orchestrator = DemoDataOrchestrator(tenant_id='test-tenant')
+
+        assert orchestrator._recurring_plan_exists(plan) is True
+        different = RecurringPlan(
+            name='Different plan', category='Maaş / Ücret Geliri', flow_type='Gelir',
+            amount=50000, installments=12, payment_day=15, tenant_id='test-tenant'
+        )
+        assert orchestrator._recurring_plan_exists(different) is False

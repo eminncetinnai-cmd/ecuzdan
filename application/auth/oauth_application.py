@@ -1,10 +1,13 @@
 """Application Service for OAuth login flows."""
 
 from typing import Dict
+
 from application.base import ApplicationService
+from domain.users.events import UserCreatedEvent, UserLoggedInEvent
 from domain.users.services import AuthService
-from domain.users.events import UserLoggedInEvent, UserCreatedEvent, OAuthAccountLinkedEvent
+
 from .ports.oauth_provider import OAuthProvider
+
 
 class OAuthApplicationService(ApplicationService):
     def __init__(self, auth_domain_service: AuthService, providers: Dict[str, OAuthProvider], outbox):
@@ -26,7 +29,7 @@ class OAuthApplicationService(ApplicationService):
         def _use_case():
             # 1. Fetch user info via port
             user_info = provider.verify_token_and_get_user(code, redirect_uri)
-            
+
             if not user_info.email_verified:
                 raise ValueError("E-posta adresi doğrulanmamış hesaplar kabul edilmemektedir.")
 
@@ -59,11 +62,11 @@ class OAuthApplicationService(ApplicationService):
                     pass
 
             self._outbox.save(UserLoggedInEvent(
-                user_id=user.id, 
+                user_id=user.id,
                 session_id=session_id,
                 via_provider=user_info.provider
             ))
-            
+
             return user
 
         return self.execute(_use_case)

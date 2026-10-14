@@ -1,0 +1,30 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# E-CÜZDAN NAMING POLICY
+# Defines naming conventions for files, modules, and directories.
+# ═══════════════════════════════════════════════════════════════════════════════
+version: "1.0.0"
+
+conventions:
+  python_modules:
+    pattern: "^[a-z0-9_]+\\.py$"
+    example: "category_service.py"
+
+  templates:
+    pattern: "^[a-z0-9_]+\\.html$"
+    example: "storage_health.html"
+
+  static_assets:
+    pattern: "^[a-z0-9_\\-\\.]+\\.(css|js|png|svg|ico)$"
+    example: "storage_health.css"
+
+  tests:
+    pattern: "^test_[a-z0-9_]+\\.py$"
+    example: "test_storage_health_cleanup.py"
+
+  documentation:
+    pattern: "^[A-Z0-9_\\-]+\\.md$|^[a-z0-9_\\-]+\\.md$"
+    example: "README.md, architecture.md"
+
+  migrations_scripts:
+    pattern: "^[a-z0-9_]+\\.(py|sql|ps1|sh)$"
+    example: "seed_standard_categories.py"

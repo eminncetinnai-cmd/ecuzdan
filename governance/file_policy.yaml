@@ -1,0 +1,61 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# E-CÜZDAN FILE PLACEMENT & ROOT DIRECTORY POLICY
+# Defines valid locations for all file classes and rules for root protection.
+# ═══════════════════════════════════════════════════════════════════════════════
+version: "1.0.0"
+
+root_allowlist:
+  exact_files:
+    - "app.py"
+    - "config.py"
+    - "models.py"
+    - "market_data_service.py"
+    - "strategy.py"
+    - "worker.py"
+    - "wsgi.py"
+    - "pyproject.toml"
+    - "pytest.ini"
+    - ".gitignore"
+    - ".env"
+    - ".env.example"
+    - ".coveragerc_oauth"
+    - "docker-compose.logging.yml"
+    - "docker-compose.observability.yml"
+    - "start_e_cuzdan.bat"
+    - "README.md"
+    - "requirements.txt"
+  patterns:
+    - "client_secret_*.json"
+    - "e_cuzdan_v*.db"
+
+root_forbidden_extensions:
+  - ".tmp"
+  - ".bak"
+  - ".old"
+  - ".log"
+  - ".txt"
+  - ".csv"
+  - ".xlsx"
+  - ".png"
+  - ".jpg"
+
+file_placement_rules:
+  - rule: "domain_no_flask"
+    path_pattern: "domain/**/*.py"
+    disallowed_modules: ["flask", "werkzeug"]
+    message: "Domain layer must not import Flask or Web framework modules."
+
+  - rule: "tests_in_tests_dir"
+    path_pattern: "**/*test*.py"
+    allowed_parent: "tests/"
+    message: "All test files must reside inside the tests/ hierarchy."
+
+  - rule: "scripts_in_scripts_dir"
+    path_pattern: "**/*seed*.py"
+    allowed_parent: "scripts/"
+    message: "Seed and migration scripts must reside inside scripts/."
+
+  - rule: "temporary_work_in_work_dir"
+    path_pattern: "**/*probe*.py"
+    allowed_parent: ".work/"
+    message: "Probes and temporary analysis scripts must reside in .work/."

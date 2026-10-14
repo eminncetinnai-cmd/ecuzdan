@@ -2,18 +2,18 @@
 Email Alert System - Log uyarıları için email gönderme sistemi
 """
 
+import logging
 import smtplib
 import ssl
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from typing import List, Optional
-import logging
 from datetime import datetime
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from typing import List, Optional
 
 
 class EmailAlertConfig:
     """Email uyarı konfigürasyonu"""
-    
+
     def __init__(self):
         self.smtp_server = None
         self.smtp_port = 587
@@ -22,7 +22,7 @@ class EmailAlertConfig:
         self.from_email = None
         self.to_emails: List[str] = []
         self.enabled = False
-    
+
     def load_from_config(self, config_dict: dict):
         """Konfigürasyonu yükle"""
         self.smtp_server = config_dict.get('SMTP_SERVER')
@@ -36,15 +36,15 @@ class EmailAlertConfig:
 
 class EmailAlertSystem:
     """Email uyarı sistemi"""
-    
+
     def __init__(self, config: Optional[EmailAlertConfig] = None):
         self.config = config or EmailAlertConfig()
         self.logger = logging.getLogger(__name__)
-    
+
     def send_alert(self, subject: str, message: str, priority: str = 'HIGH'):
         """
         Email uyarısı gönder
-        
+
         Args:
             subject: Email konusu
             message: Email içeriği
@@ -53,14 +53,14 @@ class EmailAlertSystem:
         if not self.config.enabled or not self.config.to_emails:
             self.logger.warning("Email alerts disabled or no recipients configured")
             return
-        
+
         try:
             # Email oluştur
             msg = MIMEMultipart()
             msg['From'] = self.config.from_email
             msg['To'] = ', '.join(self.config.to_emails)
             msg['Subject'] = f"[{priority}] E-Cüzdan Alert: {subject}"
-            
+
             # Email body
             body = f"""
             <html>
@@ -75,34 +75,34 @@ class EmailAlertSystem:
             </body>
             </html>
             """
-            
+
             msg.attach(MIMEText(body, 'html'))
-            
+
             # Email gönder
             context = ssl.create_default_context()
-            
+
             with smtplib.SMTP(self.config.smtp_server, self.config.smtp_port) as server:
                 server.starttls(context=context)
                 server.login(self.config.smtp_username, self.config.smtp_password)
                 server.send_message(msg)
-            
+
             self.logger.info(f"Email alert sent successfully: {subject}")
-            
+
         except Exception as e:
             self.logger.error(f"Failed to send email alert: {e}")
-    
+
     def send_critical_alert(self, subject: str, message: str):
         """Kritik uyarı gönder"""
         self.send_alert(subject, message, 'CRITICAL')
-    
+
     def send_error_alert(self, subject: str, message: str):
         """Hata uyarısı gönder"""
         self.send_alert(subject, message, 'HIGH')
-    
+
     def send_warning_alert(self, subject: str, message: str):
         """Uyarı gönder"""
         self.send_alert(subject, message, 'MEDIUM')
-    
+
     def send_info_alert(self, subject: str, message: str):
         """Bilgi uyarısı gönder"""
         self.send_alert(subject, message, 'LOW')
@@ -124,8 +124,8 @@ def setup_email_alerts(config_dict: dict):
     """Email uyarı sistemini konfigüre et"""
     config = EmailAlertConfig()
     config.load_from_config(config_dict)
-    
+
     global _email_alert_system
     _email_alert_system = EmailAlertSystem(config)
-    
+
     return _email_alert_system

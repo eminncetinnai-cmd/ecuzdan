@@ -11,13 +11,15 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 # Importing the application uses the same configuration and bootstrap path as runtime.
+from sqlalchemy import inspect  # noqa: E402
+
 from app import app  # noqa: E402
 from models import db  # noqa: E402
-from sqlalchemy import inspect  # noqa: E402
 
 REQUIRED_TABLES = frozenset(
     {
         '_schema_version',
+        'outbox_messages',
         'tenant',
         'user',
         'category',

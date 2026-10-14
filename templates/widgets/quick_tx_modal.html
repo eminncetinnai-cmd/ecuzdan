@@ -1,0 +1,91 @@
+<!-- Global Hızlı İşlem Modal Widget -->
+<div id="globalQuickTxModal" class="edit-modal hidden">
+    <div class="edit-modal-backdrop" onclick="closeGlobalQuickTxModal()"></div>
+    <div class="edit-modal-content">
+        <div class="edit-modal-card">
+            <div class="edit-modal-header">
+                <div class="modal-header-actions">
+                    <div class="modal-header-left">
+                        <div class="modal-icon modal-icon-sky">
+                            <svg class="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">{{ _('nav_quick_transaction') }}</h3>
+                            <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">{{ _('nav_quick_transaction_description') }}</p>
+                        </div>
+                    </div>
+                    <button data-macro="button_secondary" type="button" onclick="closeGlobalQuickTxModal()" class="modal-close">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <form id="globalQuickTxForm" class="edit-modal-body space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('tx_filter_type') }}</label>
+                        <select id="globalQuickTxFlowType" class="edit-modal-input font-bold" onchange="updateGlobalQuickTxCategory()" required>
+                            <option value="Gider">{{ _('tx_type_expense') }} ({{ _('expense_outflow') }})</option>
+                            <option value="Gelir">{{ _('tx_type_income') }} ({{ _('income_inflow') }})</option>
+                            <option value="Yatırım">{{ _('tx_type_investment') }} ({{ _('investment_transfer') }})</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('tx_category_label') }}</label>
+                        <select name="category" id="globalQuickTxCategory" class="edit-modal-input font-bold" required>
+                            <!-- JS ile doldurulacak -->
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('tx_description_label') }}</label>
+                    <input type="text" name="description" placeholder="{{ _('tx_description_placeholder') }}" class="edit-modal-input" required>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="text-[9px] font-bold text-slate-400 uppercase">{{ _('tx_amount_label') }}</label>
+                        </div>
+                        <input type="number" step="0.01" min="0.01" name="amount" id="globalQuickTxAmount" placeholder="0.00" class="edit-modal-input font-bold text-sky-700" required>
+                        <!-- Hızlı Tutar Çipleri -->
+                        <div class="flex flex-wrap gap-1 mt-1.5">
+                            <button data-macro="button_secondary" type="button" onclick="setQuickTxAmount(100)" class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200">+100</button>
+                            <button data-macro="button_secondary" type="button" onclick="setQuickTxAmount(250)" class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200">+250</button>
+                            <button data-macro="button_secondary" type="button" onclick="setQuickTxAmount(500)" class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200">+500</button>
+                            <button data-macro="button_secondary" type="button" onclick="setQuickTxAmount(1000)" class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200">+1k</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('tx_date_label') }}</label>
+                        <input type="date" name="date" id="globalQuickTxDate" class="edit-modal-input" required>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('tx_status_label') }}</label>
+                        <select name="status" class="edit-modal-input font-bold" required>
+                            <option value="Ödendi">{{ _('tx_status_paid') }}</option>
+                            <option value="Bekliyor">{{ _('tx_status_pending') }}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('tx_note_label') }}</label>
+                    <input type="text" name="note" placeholder="{{ _('tx_note_placeholder') }}" class="edit-modal-input">
+                </div>
+
+                <div class="modal-footer">
+                    <button data-macro="button_primary" type="submit" class="modal-submit modal-submit-sky">
+                        {{ _('tx_save_btn') }}
+                    </button>
+                    <button data-macro="button_secondary" type="button" onclick="closeGlobalQuickTxModal()" class="modal-cancel">
+                        {{ _('tx_cancel_btn') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

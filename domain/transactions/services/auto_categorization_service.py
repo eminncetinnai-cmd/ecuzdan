@@ -63,7 +63,8 @@ class AutoCategorizationService:
                 words = self._extract_words(description)
 
                 for word in words:
-                    self.category_keywords[word][tx.category] += 0.1
+                    weights = self.category_keywords.setdefault(word, {})
+                    weights[tx.category] = weights.get(tx.category, 0.0) + 0.1
 
         logger.info("Model eğitimi tamamlandı")
 
@@ -140,7 +141,8 @@ class AutoCategorizationService:
 
         for word in words:
             # Doğru kategori için skoru artır
-            self.category_keywords[word][correct_category.name] += 0.5
+            weights = self.category_keywords.setdefault(word, {})
+            weights[correct_category.name] = weights.get(correct_category.name, 0.0) + 0.5
 
         logger.info(f"Model güncellendi: {transaction.id} için {correct_category.name}")
 

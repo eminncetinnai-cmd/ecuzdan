@@ -13,11 +13,15 @@ logger = logging.getLogger(__name__)
 
 
 def is_ajax_request():
-    """Request'in AJAX olup olmadığını kontrol eder"""
-    return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    """Request'in AJAX veya JSON API çağrısı olup olmadığını kontrol eder"""
+    return bool(
+        request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        or 'application/json' in request.headers.get('Accept', '')
+        or request.is_json
+    )
 
 
-def ajax_response(success, message, redirect_url=None):
+def ajax_response(success, message, redirect_url=None, error_code=None):
     """
     Standart AJAX response döner
 
@@ -30,10 +34,16 @@ def ajax_response(success, message, redirect_url=None):
         JSON response
     """
     response = {'success': success, 'message': message}
+    if not success and error_code:
+        response['error_code'] = error_code
     if redirect_url:
         response['redirect'] = redirect_url
     return jsonify(response)
 
+
+def api_error(message, error_code="REQUEST_FAILED", status_code=400):
+    """Return the standard financial CRUD error contract."""
+    return ajax_response(False, message, error_code=error_code), status_code
 
 def handle_ajax_or_flash(success, success_message, error_message=None, redirect_url=None):
     """

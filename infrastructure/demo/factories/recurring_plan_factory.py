@@ -2,8 +2,7 @@
 
 import logging
 import random
-from decimal import Decimal
-from typing import Dict, Any, Optional
+from typing import Optional
 
 from domain.categories.services.category_service import CategoryService
 from domain.demo.config_loader import DemoDataConfigLoader
@@ -19,7 +18,7 @@ class RecurringPlanFactory:
     def __init__(self, tenant_id: Optional[str] = None):
         """
         Initialize the recurring plan factory.
-        
+
         Args:
             tenant_id: Tenant ID for tenant-scoped operations
         """
@@ -40,7 +39,7 @@ class RecurringPlanFactory:
     ) -> Optional[RecurringPlan]:
         """
         Create a recurring plan with category validation.
-        
+
         Args:
             name: Plan name
             logical_category: Logical/demo category name (e.g., 'salary')
@@ -50,7 +49,7 @@ class RecurringPlanFactory:
             payment_day: Payment day of month
             note: Optional note
             is_admin_generated: Whether this is admin-generated data
-        
+
         Returns:
             RecurringPlan object or None if category is invalid
         """
@@ -58,16 +57,16 @@ class RecurringPlanFactory:
         standard_category = self.config_loader.get_standard_category_name(
             logical_category, category_type
         )
-        
+
         if not standard_category:
             # Fallback: try to use logical category directly
             standard_category = logical_category
-        
+
         # Validate category exists - must be standard category (tenant_id=None)
         if not self.category_service.is_valid_category(standard_category, None):
             logger.warning(f"Invalid category '{standard_category}' - not a standard category")
             return None
-        
+
         # Create recurring plan
         plan = RecurringPlan(
             name=name,
@@ -79,7 +78,7 @@ class RecurringPlanFactory:
             note=note,
             tenant_id=self.tenant_id
         )
-        
+
         return plan
 
     def create_recurring_plan_from_template(
@@ -91,23 +90,23 @@ class RecurringPlanFactory:
     ) -> Optional[RecurringPlan]:
         """
         Create a recurring plan from a predefined template.
-        
+
         Args:
             template_name: Template name (e.g., 'salary_plan')
             year: Year for note formatting
             variation_percent: Amount variation percentage
             is_admin_generated: Whether this is admin-generated data
-        
+
         Returns:
             RecurringPlan object or None if template/invalid
         """
         template = self.config_loader.get_recurring_plan_template(template_name)
         if not template:
             return None
-        
+
         # Get generation rule
         rule_name = template.get('amount_rule')
-        
+
         # Handle inline amount rule (dict) vs reference (string)
         if isinstance(rule_name, dict):
             # Inline rule - use directly
@@ -118,7 +117,7 @@ class RecurringPlanFactory:
             rule_type = self._map_flow_type_to_rule_type(template['type'])
             rule = self.config_loader.get_generation_rule(rule_name, rule_type)
             inline_rule = None
-        
+
         # Calculate amount with variation
         if rule:
             base_amount = rule.get('base_amount', 0)
@@ -129,15 +128,15 @@ class RecurringPlanFactory:
         else:
             amount = 0
             logger.warning(f"No amount rule found for template '{template_name}'")
-        
+
         # Format name and note
         name = template.get('name', '').format(year=year)
         note = template.get('note_template', '').format(year=year)
-        
+
         # Get logical category name from template
         logical_category = template.get('category_mapping')
         category_type = self._map_flow_type_to_category_type(template['type'])
-        
+
         return self.create_recurring_plan(
             name=name,
             logical_category=logical_category,
@@ -166,7 +165,7 @@ class RecurringPlanFactory:
             'Yatırım': 'investment'
         }
         return mapping.get(flow_type, 'expense')
-    
+
     def _map_flow_type_to_rule_type(self, flow_type: str) -> str:
         """Map flow type to rule type for generation rules."""
         mapping = {

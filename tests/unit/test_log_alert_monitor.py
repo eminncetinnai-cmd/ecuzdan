@@ -1,6 +1,5 @@
 """Unit tests for log alert monitor."""
 
-import os
 from datetime import datetime
 from unittest.mock import patch
 

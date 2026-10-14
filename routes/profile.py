@@ -2,10 +2,11 @@
 
 import logging
 
-from flask import g, jsonify, redirect, render_template, request, session, url_for
+from flask import g, jsonify, redirect, render_template, request, session, url_for  # noqa: F401
 
-from bootstrap.container import get_container
+from bootstrap.container import get_container  # noqa: F401
 from domain.tenant.accessor import get_tenant as get_tenant_id
+from infrastructure.i18n import i18n
 from utils.ajax_helpers import handle_ajax_or_flash, is_ajax_request
 from utils.auth_helpers import login_required
 from utils.notification_helpers import flash_error
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 def _get_profile_service():
-    from bootstrap import get_container
+    from bootstrap import get_container  # noqa: F811
     return get_container().applications.profile()
 
 
@@ -31,7 +32,7 @@ def register_profile_routes(bp):
             )
         except Exception as e:
             logger.exception(f"Profile index error: {e}")
-            flash_error('Profil sayfası yüklenirken hata oluştu.')
+            flash_error(i18n.gettext('profile_page_load_error'))
             return render_template('profile.html', active_profile=None, profile_history=[])
 
     @bp.route('/start')
@@ -41,7 +42,7 @@ def register_profile_routes(bp):
             return render_template('profile_wizard.html', **profile_service.wizard_context())
         except Exception as e:
             logger.exception(f"Profile start error: {e}")
-            flash_error('Test başlatılırken hata oluştu.')
+            flash_error(i18n.gettext('profile_start_error'))
             return redirect(url_for('profile.index'))
 
     @bp.route('/submit', methods=['POST'])
@@ -50,28 +51,28 @@ def register_profile_routes(bp):
         is_ajax = is_ajax_request()
         try:
             profile, profile_result = profile_service.submit_answers(
-                g.get('tenant_id'),
+                get_tenant_id(),
                 session.get('user_id'),
                 (request.json or {}).get('answers', []),
             )
             logger.info(f"Profile created for user {session.get('user_id')}: {profile_result['final_risk_level']}")
-            response = handle_ajax_or_flash(True, 'Profil başarıyla oluşturuldu!', 'Profil oluşturulamadı.')
+            response = handle_ajax_or_flash(True, i18n.gettext('profile_created'), i18n.gettext('profile_update_failed'))
             if response:
                 return response
         except ValueError as e:
             profile_service.rollback()
-            response = handle_ajax_or_flash(False, None, f'Validasyon hatası: {str(e)}')
+            response = handle_ajax_or_flash(False, None, f"{i18n.gettext('profile_update_failed')}: {str(e)}")
             if response:
                 return response
         except Exception as e:
             logger.exception(f"Profile submit error: {e}")
             profile_service.rollback()
-            response = handle_ajax_or_flash(False, None, 'Profil oluşturulurken beklenmeyen bir hata oluştu.')
+            response = handle_ajax_or_flash(False, None, i18n.gettext('profile_unexpected_error'))
             if response:
                 return response
 
         if is_ajax:
-            return jsonify({'success': False, 'message': 'Bilinmeyen bir hata oluştu.'})
+            return jsonify({'success': False, 'message': i18n.gettext('profile_unexpected_error')})
         return redirect(url_for('profile.index'))
 
     @bp.route('/result/<int:id>')
@@ -80,12 +81,12 @@ def register_profile_routes(bp):
         try:
             context = profile_service.result_context(id, get_tenant_id())
             if not context:
-                flash_error('Profil bulunamadı veya yetkiniz yok.')
+                flash_error(i18n.gettext('profile_not_found'))
                 return redirect(url_for('profile.index'))
             return render_template('profile_result.html', **context)
         except Exception as e:
             logger.exception(f"Profile result error: {e}")
-            flash_error('Profil detayı yüklenirken hata oluştu.')
+            flash_error(i18n.gettext('profile_result_load_error'))
             return redirect(url_for('profile.index'))
 
     @bp.route('/api/questions')
@@ -102,7 +103,7 @@ def register_profile_routes(bp):
     def api_submit():
         try:
             profile, profile_result = profile_service.submit_answers(
-                g.get('tenant_id'),
+                get_tenant_id(),
                 session.get('user_id'),
                 (request.json or {}).get('answers', []),
             )
@@ -122,7 +123,7 @@ def register_profile_routes(bp):
         try:
             profile_data = profile_service.profile_payload(id, get_tenant_id())
             if not profile_data:
-                return jsonify({'success': False, 'message': 'Profil bulunamadı'}), 404
+                return jsonify({'success': False, 'message': i18n.gettext('profile_not_found')}), 404
             return jsonify({'success': True, 'profile': profile_data})
         except Exception as e:
             logger.exception(f"API profile error: {e}")

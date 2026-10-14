@@ -1,12 +1,11 @@
-import sys
-import os
 import logging
+import os
+import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from shared.db import db
 from models import QuizQuestion
-
+from shared.db import db
 
 logger = logging.getLogger("QuizQuestionsSeed")
 
@@ -140,7 +139,7 @@ QUIZ_QUESTIONS = [
 
 def seed_quiz_questions():
     """Quiz sorularını database'e ekler"""
-    logger.info("Quiz soruları seed işlemi başlatılıyor...")
+    logger.debug("Quiz soruları seed işlemi başlatılıyor...")
 
     for q_data in QUIZ_QUESTIONS:
         # Check if question already exists
@@ -162,12 +161,12 @@ def seed_quiz_questions():
                 is_active=True
             )
             db.session.add(question)
-            logger.info(f"Soru eklendi: {q_data['question'][:50]}...")
+            logger.debug(f"Soru eklendi: {q_data['question'][:50]}...")
         else:
-            logger.info(f"Soru zaten var: {q_data['question'][:50]}...")
+            logger.debug(f"Soru zaten var: {q_data['question'][:50]}...")
 
     db.session.commit()
-    logger.info(f"Quiz soruları seed işlemi tamamlandı. Toplam soru: {len(QUIZ_QUESTIONS)}")
+    logger.debug(f"Quiz soruları seed işlemi tamamlandı. Toplam soru: {len(QUIZ_QUESTIONS)}")
 
 
 if __name__ == "__main__":

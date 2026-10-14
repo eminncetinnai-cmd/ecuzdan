@@ -1,1 +1,1 @@
-﻿# domain.market: market data, pricing, and external feed domain.\n
+# domain.market: market data, pricing, and external feed domain.\n

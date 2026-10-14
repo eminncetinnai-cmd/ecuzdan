@@ -87,6 +87,9 @@
             if (data.investment && data.investment.length) {
                 html += '<div><h4 class="text-[9px] font-black uppercase text-blue-600 mb-1 flex justify-between"><span>Yatırım</span><span>' + formatMoney(data.investment_total) + '</span></h4><ul class="text-[11px]">' + renderTxList(data.investment, 'text-blue-600') + '</ul></div>';
             }
+            html += '<div class="pt-2 border-t border-slate-100 flex justify-end">';
+            html += '<a href="/transactions?date=' + encodeURIComponent(isoDate) + '" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"><span>Günün İşlemlerini Gör</span><span>→</span></a>';
+            html += '</div>';
             html += '</div>';
         }
         html += '</div>';
@@ -189,7 +192,7 @@
     function loadMonth(year, month) {
         const loading = document.getElementById('cal-loading');
         if (loading) loading.classList.remove('hidden');
-        return fetch('/payment_calendar/month_data?year=' + year + '&month=' + month)
+        return fetch(ECuzdanEndpoints.plans.paymentCalendarMonthData + '?year=' + year + '&month=' + month)
             .then(function (r) { 
                 if (!r.ok) {
                     console.error('API error:', r.status, r.statusText);
@@ -224,27 +227,45 @@
         loadMonth(y, m);
     }
 
+    function activateTab(tab, updateUrl = true) {
+        if (!tab) return;
+        document.querySelectorAll('.pay-tab-btn').forEach(function (b) {
+            b.classList.toggle('active', b.dataset.tab === tab);
+            b.setAttribute('aria-selected', String(b.dataset.tab === tab));
+        });
+        document.querySelectorAll('.pay-tab-panel').forEach(function (p) {
+            p.classList.toggle('active', p.id === 'pay-tab-' + tab);
+        });
+        if (tab === 'calendar' && gridEl && !gridEl.dataset.loaded) {
+            gridEl.dataset.loaded = '1';
+            loadMonth(state.year, state.month);
+        }
+        if (tab === 'balance') {
+            initBalanceTab();
+        }
+        if (updateUrl) {
+            try {
+                history.replaceState(null, '', '#' + tab);
+            } catch (e) {}
+        }
+    }
+
     function initTabs() {
         document.querySelectorAll('.pay-tab-btn').forEach(function (btn) {
             btn.addEventListener('click', function () {
-                const tab = btn.dataset.tab;
-                console.log('Tab clicked:', tab);
-                document.querySelectorAll('.pay-tab-btn').forEach(function (b) {
-                    b.classList.toggle('active', b.dataset.tab === tab);
-                });
-                document.querySelectorAll('.pay-tab-panel').forEach(function (p) {
-                    p.classList.toggle('active', p.id === 'pay-tab-' + tab);
-                });
-                if (tab === 'calendar' && gridEl && !gridEl.dataset.loaded) {
-                    console.log('Loading calendar for month:', state.year, state.month);
-                    gridEl.dataset.loaded = '1';
-                    loadMonth(state.year, state.month);
-                }
-                if (tab === 'balance') {
-                    initBalanceTab();
-                }
+                activateTab(btn.dataset.tab, true);
             });
         });
+
+        // URL hash or query param support (?tab=calendar or #calendar)
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryTab = urlParams.get('tab');
+        const hashTab = (window.location.hash || '').replace('#', '');
+        const targetTab = queryTab || hashTab;
+
+        if (targetTab && ['list', 'calendar', 'balance'].includes(targetTab)) {
+            activateTab(targetTab, false);
+        }
     }
 
     // Balance Chart Functions
@@ -304,7 +325,7 @@
         const loading = document.getElementById('balance-loading');
         if (loading) loading.classList.remove('hidden');
 
-        return fetch('/payment_calendar/daily_balance?year=' + year + '&month=' + month)
+        return fetch(ECuzdanEndpoints.plans.paymentCalendarDailyBalance + '?year=' + year + '&month=' + month)
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 if (data.error) throw new Error(data.error);
@@ -321,6 +342,21 @@
     function renderBalanceChart(labels, data) {
         const ctx = document.getElementById('balanceChart');
         if (!ctx) return;
+
+        if (typeof Chart === 'undefined') {
+            let retryCount = 0;
+            const retryInterval = setInterval(() => {
+                retryCount++;
+                if (typeof Chart !== 'undefined') {
+                    clearInterval(retryInterval);
+                    renderBalanceChart(labels, data);
+                } else if (retryCount >= 50) {
+                    clearInterval(retryInterval);
+                    console.warn('[PaymentCalendar] Chart.js is not loaded');
+                }
+            }, 100);
+            return;
+        }
 
         // Destroy existing chart
         if (balanceChart) {
@@ -431,5 +467,31 @@
             popover.addEventListener('mouseenter', cancelHide);
             popover.addEventListener('mouseleave', hidePopover);
         }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                hidePopover();
+                return;
+            }
+
+            // Keyboard navigation when on calendar tab
+            const activePanel = document.querySelector('.pay-tab-panel.active');
+            if (activePanel && activePanel.id === 'pay-tab-calendar') {
+                const isInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName);
+                if (!isInput && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                    if (e.key === 'ArrowLeft' || e.key === '[') {
+                        e.preventDefault();
+                        shiftMonth(-1);
+                    } else if (e.key === 'ArrowRight' || e.key === ']') {
+                        e.preventDefault();
+                        shiftMonth(1);
+                    } else if (e.key.toLowerCase() === 't') {
+                        e.preventDefault();
+                        const t = state.today.split('-');
+                        loadMonth(parseInt(t[0], 10), parseInt(t[1], 10));
+                    }
+                }
+            }
+        });
     });
 })();

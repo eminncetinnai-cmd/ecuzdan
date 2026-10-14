@@ -1,10 +1,10 @@
 {% extends "layout.html" %}
 {% block content %}
 <div id="financial-dashboard-page" 
-     data-market-assets="{{ market_data.assets | tojson if market_data and market_data.assets else '[]' }}"
-     data-sharpe-ratios="{{ analysis.sharpe_ratios | tojson if analysis and analysis.sharpe_ratios else '{}' }}"
-     data-market-stress="{{ analysis.market_stress.stress_index if analysis and analysis.market_stress else '0' }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/financial_dashboard.css') }}">
+     data-market-assets='{{ market_data.assets | tojson if market_data and market_data.assets else "[]" }}'
+     data-sharpe-ratios='{{ analysis.sharpe_ratios | tojson if analysis and analysis.sharpe_ratios else "{}" }}'
+     data-market-stress='{{ analysis.market_stress.stress_index if analysis and analysis.market_stress else "0" }}'>
+<link rel="stylesheet" href="{{ static_asset_url('css/financial_dashboard.css') }}">
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
      BAŞLIK
@@ -23,11 +23,39 @@
         <!-- Son güncelleme -->
         {% if analysis and analysis.timestamp %}
         <div class="text-right">
-            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Son Analiz</p>
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{{ _('ui_auto_a44071b8b52d') }}</p>
             <p class="text-xs font-black text-indigo-600">{{ analysis.timestamp }}</p>
         </div>
         {% endif %}
     </div>
+</div>
+
+<!-- Segmented Navigation Hub -->
+<div class="mb-8 flex flex-wrap items-center gap-2 border-b border-slate-200/80 pb-4 dark:border-slate-800">
+    <a href="{{ url_for('analysis.analysis_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'analysis.analysis_dashboard' or request.path.startswith('/analysis') %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        <span>Finansal Sağlık &amp; Karne</span>
+    </a>
+    <a href="{{ url_for('dashboard.financial_freedom') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'dashboard.financial_freedom' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        <span>Finansal Özgürlük (FIRE)</span>
+    </a>
+    <a href="{{ url_for('strategy.strategy') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'strategy.strategy' or request.path.startswith('/strategy') %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+        <span>Portföy Stratejisi</span>
+    </a>
+    <a href="{{ url_for('dashboard.financial_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'dashboard.financial_dashboard' or request.path.startswith('/financial_dashboard') %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <span>Piyasa &amp; Kantitatif Analiz</span>
+    </a>
+    <a href="{{ url_for('global_ratios.global_ratios_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'global_ratios.global_ratios_dashboard' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span>Küresel Rasyolar (Makro)</span>
+    </a>
+    <a href="{{ url_for('central_bank_reserves.central_bank_reserves_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'central_bank_reserves.central_bank_reserves_dashboard' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+        <span>TCMB Rezervleri &amp; Altın</span>
+    </a>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
@@ -38,12 +66,9 @@
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
     </svg>
     <div>
-        <p class="font-black text-amber-800 text-xs mb-0.5">Yasal Uyarı &amp; Metodoloji Notu</p>
+        <p class="font-black text-amber-800 text-xs mb-0.5">{{ _('ui_auto_5192a6be5548') }}</p>
         <p class="text-[11px] text-amber-700 leading-relaxed">
-            Bu sayfadaki tüm analizler <strong>istatistiksel ve akademik amaçlıdır</strong>; yatırım tavsiyesi niteliği taşımaz.
-            Kullanılan modeller (Z-Score, Sharpe Ratio, Korelasyon Matrisi) finans literatüründen alınmıştır.
-            Geçmiş performans gelecekteki getirileri garanti etmez. Tüm kararlarınızı kendi araştırmanıza ve
-            lisanslı bir finansal danışmana danışarak verin.
+            {{ _('ui_auto_7160bc910925') }} <strong>{{ _('ui_auto_0cdb376c9ca8') }}</strong>{{ _('ui_auto_6bc23f884b7f') }}
         </p>
     </div>
 </div>
@@ -58,10 +83,9 @@
             </svg>
         </div>
         <div>
-            <h3 class="font-black text-xl text-rose-900 uppercase tracking-tight mb-1">Piyasa Verisi Alınamıyor</h3>
+            <h3 class="font-black text-xl text-rose-900 uppercase tracking-tight mb-1">{{ _('ui_auto_142c8fb7c4c8') }}</h3>
             <p class="text-rose-700 text-sm leading-relaxed">
-                Anlık piyasa verileri şu anda erişilemiyor. Bu durum genellikle internet bağlantısı veya
-                veri sağlayıcı (yfinance) kaynaklıdır. Lütfen birkaç dakika sonra tekrar deneyin.
+                {{ _('ui_auto_d7ac07b93933') }}
             </p>
             {% if analysis and analysis.error %}
             <p class="text-[10px] text-rose-500 mt-2 font-mono bg-rose-100 px-3 py-1 rounded-lg inline-block">
@@ -80,7 +104,7 @@
 <div class="mb-3 fade-up delay-1">
     <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
         <span class="w-1.5 h-4 bg-indigo-500 rounded-full inline-block"></span>
-        Bölüm 1 — Makro Ekonomik Göstergeler
+        {{ _('ui_auto_51b201f21094') }}
     </h3>
 </div>
 
@@ -88,9 +112,9 @@
     <!-- Faiz -->
     <div class="quant-card p-5 text-center border-t-4 border-indigo-500">
         <div class="flex items-center justify-center gap-1 mb-1">
-            <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider">TCMB Politika Faizi</p>
+            <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider">{{ _('ui_auto_1e50e90570d2') }}</p>
             <span class="info-tip">?
-                <span class="tip-box">Türkiye Cumhuriyet Merkez Bankası'nın belirlediği kısa vadeli faiz oranı. Yüksek faiz → borçlanma maliyeti artar, büyüme yavaşlar; düşük faiz → kredi genişler, enflasyon riski artar.</span>
+                <span class="tip-box">{{ _('ui_auto_83cbd8d4dc4d') }}</span>
             </span>
         </div>
         {% if analysis.macro_regime %}
@@ -108,9 +132,9 @@
     <!-- Enflasyon -->
     <div class="quant-card p-5 text-center border-t-4 border-rose-500">
         <div class="flex items-center justify-center gap-1 mb-1">
-            <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider">TÜFE Enflasyon</p>
+            <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider">{{ _('ui_auto_aa5fde88df68') }}</p>
             <span class="info-tip">?
-                <span class="tip-box">Tüketici Fiyat Endeksi değişimi. Yüksek enflasyon, nakit varlıkların satın alma gücünü aşındırır. Reel getiri = Nominal Getiri − Enflasyon.</span>
+                <span class="tip-box">{{ _('ui_auto_777e7285939c') }}</span>
             </span>
         </div>
         {% if analysis.macro_regime %}
@@ -127,23 +151,11 @@
     <!-- Reel Faiz -->
     <div class="quant-card p-5 text-center border-t-4 border-emerald-500">
         <div class="flex items-center justify-center gap-1 mb-1">
-            <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Reel Faiz</p>
+            <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider">{{ _('ui_auto_b76c9da345e8') }}</p>
             <span class="info-tip">?
-                <span class="tip-box">Reel Faiz = Politika Faizi − Enflasyon. Pozitif reel faiz para birimini destekler; negatif reel faiz enflasyona karşı korumasız bırakır.</span>
+                <span class="tip-box">{{ _('ui_auto_a32364e76a7d') }}</span>
             </span>
         </div>
-                    <!-- VaR -->
-                    <div class="glossary-item">
-                        <p class="font-black text-xs text-slate-800 mb-0.5">VaR (Value at Risk — Riske Maruz Değer)</p>
-                        <p class="text-[11px] text-slate-600 leading-relaxed">Belirli bir güven düzeyinde (örn. %95) ve zaman diliminde (örn. 1 gün) portföyün uğrayabileceği maksimum kaybı ifade eder. <strong>Örnek:</strong> 1 günlük %95 VaR = 10.000 TL → Portföyün %5 olasılıkla 10.000 TL'den fazla kaybedeceği anlamına gelir.</p>
-                        <div class="mt-1 font-mono text-[9px] bg-white rounded px-2 py-1 text-slate-500">VaR₉₅ = μ − 1.645 × σ × √t</div>
-                    </div>
-                    <!-- Drawdown -->
-                    <div class="glossary-item">
-                        <p class="font-black text-xs text-slate-800 mb-0.5">Drawdown (Maksimum Düşüş)</p>
-                        <p class="text-[11px] text-slate-600 leading-relaxed">Portföyün zirve değerinden en dip değerine kadar yaşadığı maksimum yüzde düşüşü. Yatırımcının psikolojik dayanıklılığını test eden kritik bir risk ölçütüdür. <strong>Örnek:</strong> 100 TL → 60 TL → Max Drawdown = %40.</p>
-                        <div class="mt-1 font-mono text-[9px] bg-white rounded px-2 py-1 text-slate-500">MDD = (Trough − Peak) / Peak × 100</div>
-                    </div>
         {% if analysis.macro_regime %}
         {% set real_rate = (analysis.macro_regime.interest_rate - analysis.macro_regime.inflation_rate) * 100 %}
         <p class="text-3xl font-black {% if real_rate > 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">
@@ -162,9 +174,9 @@
         {% elif analysis.macro_regime and analysis.macro_regime.regime == 'AGRESIF' %}border-emerald-500
         {% else %}border-slate-400{% endif %}">
         <div class="flex items-center justify-center gap-1 mb-1">
-            <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Makro Rejim</p>
+            <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider">{{ _('ui_auto_c531084dfe8a') }}</p>
             <span class="info-tip">?
-                <span class="tip-box">Mevcut faiz ve enflasyon koşullarına göre belirlenen piyasa rejimidir. Defansif: Yüksek enflasyon/faiz → altın, emtia öne çıkar. Agresif: Düşük faiz/enflasyon → hisse, kripto öne çıkar.</span>
+                <span class="tip-box">{{ _('ui_auto_5cc91d2c5fdf') }}</span>
             </span>
         </div>
         {% if analysis.macro_regime %}
@@ -187,7 +199,7 @@
 <div class="mb-3 fade-up">
     <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
         <span class="w-1.5 h-4 bg-rose-500 rounded-full inline-block"></span>
-        Bölüm 2 — Piyasa Stres Endeksi &amp; Varlık Öncelikleri
+        {{ _('ui_auto_92426d56afa6') }}
     </h3>
 </div>
 
@@ -195,9 +207,9 @@
     <!-- Stres Gauge -->
     <div class="quant-card p-8 bg-white/80">
         <div class="flex items-center gap-2 mb-6">
-            <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight">Piyasa Stres Endeksi</h4>
+            <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight">{{ _('ui_auto_e3f17ff89755') }}</h4>
             <span class="info-tip">?
-                <span class="tip-box">Varlıklar arası korelasyon yükseldikçe piyasa stresi artar. Kriz dönemlerinde normalde birbirinden bağımsız hareket eden varlıklar eş zamanlı düşer (korelasyon → 1). Endeks 0–100 arasındadır.</span>
+                <span class="tip-box">{{ _('ui_auto_daf06254c146') }}</span>
             </span>
         </div>
         {% if analysis.market_stress %}
@@ -221,30 +233,30 @@
                 {{ analysis.market_stress.stress_level }} STRES
             </span>
             {% if analysis.market_stress.crisis_mode %}
-            <p class="text-[10px] text-rose-600 font-black mt-2 animate-pulse">⚠ KRİZ MODU AKTİF — Korelasyonlar kritik eşiği aştı</p>
+            <p class="text-[10px] text-rose-600 font-black mt-2 animate-pulse">{{ _('ui_auto_3a52becea73c') }}</p>
             {% endif %}
         </div>
         <!-- Stres Yorumu -->
         <div class="rounded-xl bg-slate-50 p-4 text-xs text-slate-600 leading-relaxed">
             {% if analysis.market_stress.stress_index > 70 %}
-            <strong class="text-rose-700">Yüksek Stres:</strong> Varlıklar arası korelasyon kritik düzeyde. Bu ortamda çeşitlendirme etkisi azalır; defansif pozisyonlar (nakit, altın) ve stop-loss seviyeleri gözden geçirilmelidir.
+            <strong class="text-rose-700">{{ _('ui_auto_0e2486116426') }}</strong> Varlıklar arası korelasyon kritik düzeyde. Bu ortamda çeşitlendirme etkisi azalır; defansif pozisyonlar (nakit, altın) ve stop-loss seviyeleri gözden geçirilmelidir.
             {% elif analysis.market_stress.stress_index > 40 %}
-            <strong class="text-amber-700">Orta Stres:</strong> Piyasada belirli bir gerilim var. Portföy dengesini koruyun, yeni pozisyonlar açmadan önce risk/ödül oranını değerlendirin.
+            <strong class="text-amber-700">{{ _('ui_auto_a334c0cef347') }}</strong> Piyasada belirli bir gerilim var. Portföy dengesini koruyun, yeni pozisyonlar açmadan önce risk/ödül oranını değerlendirin.
             {% else %}
-            <strong class="text-emerald-700">Düşük Stres:</strong> Piyasa koşulları görece sakin. Çeşitlendirme etkisi yüksek; uzun vadeli yatırım fırsatları değerlendirilebilir.
+            <strong class="text-emerald-700">{{ _('ui_auto_9d9833a92187') }}</strong> Piyasa koşulları görece sakin. Çeşitlendirme etkisi yüksek; uzun vadeli yatırım fırsatları değerlendirilebilir.
             {% endif %}
         </div>
         {% else %}
-        <p class="text-xs text-slate-400 italic text-center py-8">Stres verisi hesaplanamadı</p>
+        <p class="text-xs text-slate-400 italic text-center py-8">{{ _('ui_auto_4c8865531292') }}</p>
         {% endif %}
     </div>
 
     <!-- Varlık Öncelikleri -->
     <div class="quant-card p-8 bg-white/80">
         <div class="flex items-center gap-2 mb-6">
-            <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight">Varlık Öncelik Skoru</h4>
+            <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight">{{ _('ui_auto_75d7d49d2c3a') }}</h4>
             <span class="info-tip">?
-                <span class="tip-box">Mevcut makro rejime göre her varlık sınıfına atanan göreli öncelik puanı (0–100). Yüksek puan, mevcut ekonomik ortamda o varlığın daha uygun olduğunu gösterir.</span>
+                <span class="tip-box">{{ _('ui_auto_6d28f4463e3a') }}</span>
             </span>
         </div>
         {% if analysis.macro_regime and analysis.macro_regime.asset_scores %}
@@ -267,13 +279,13 @@
                     </span>
                 </div>
                 {% if asset.priority %}
-                <span class="badge-base badge-al">Öncelikli</span>
+                <span class="badge-base badge-al">{{ _('ui_auto_79931c3aac54') }}</span>
                 {% endif %}
             </div>
             {% endfor %}
         </div>
         <div class="mt-5 p-3 rounded-xl bg-indigo-50 text-[10px] text-indigo-700 font-semibold leading-relaxed">
-            <strong>Rejim Yorumu:</strong>
+            <strong>{{ _('ui_auto_517854b2cf5c') }}</strong>
             {% if analysis.macro_regime.regime == 'DEFANSIF' %}
             Yüksek enflasyon/faiz ortamında altın ve emtia enflasyona karşı koruma sağlar. Hisse ve kripto varlıklarda volatilite riski artar.
             {% elif analysis.macro_regime.regime == 'AGRESIF' %}
@@ -283,7 +295,7 @@
             {% endif %}
         </div>
         {% else %}
-        <p class="text-xs text-slate-400 italic text-center py-8">Varlık skoru verisi yok</p>
+        <p class="text-xs text-slate-400 italic text-center py-8">{{ _('ui_auto_eea599916263') }}</p>
         {% endif %}
     </div>
 </div>
@@ -294,16 +306,16 @@
 <div class="mb-3 fade-up">
     <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
         <span class="w-1.5 h-4 bg-amber-500 rounded-full inline-block"></span>
-        Bölüm 3 — Normalize Piyasa Performansı (Base-100)
+        {{ _('ui_auto_f3b2c9311856') }}
     </h3>
 </div>
 
 <div class="quant-card p-8 bg-white/80 mb-10 fade-up">
     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div class="flex items-center gap-2">
-            <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight">Karşılaştırmalı Getiri Analizi</h4>
+            <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight">{{ _('ui_auto_e89e5e94ae22') }}</h4>
             <span class="info-tip">?
-                <span class="tip-box">Tüm varlıklar başlangıç değeri 100 kabul edilerek normalize edilmiştir. Bu yöntem, farklı para birimlerindeki varlıkları aynı ölçekte karşılaştırmayı sağlar. 100'ün üzeri kazanç, altı kayıp anlamına gelir.</span>
+                <span class="tip-box">{{ _('ui_auto_0edae7837765') }}</span>
             </span>
         </div>
         <!-- YTD Getiri Özeti -->
@@ -335,20 +347,19 @@
 <div class="mb-3 fade-up">
     <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
         <span class="w-1.5 h-4 bg-purple-500 rounded-full inline-block"></span>
-        Bölüm 4 — Ortalamaya Dönüş Sinyalleri (Z-Score Modeli)
+        {{ _('ui_auto_fbca7d894fd3') }}
     </h3>
 </div>
 
 <div class="quant-card p-8 bg-white/80 mb-10 fade-up">
     <div class="flex items-center gap-2 mb-2">
-        <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight">Z-Score Tabanlı Sinyal Analizi</h4>
+        <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight">{{ _('ui_auto_5d40d101b018') }}</h4>
         <span class="info-tip">?
-            <span class="tip-box">Z-Score, bir varlığın mevcut fiyatının tarihsel ortalamasından kaç standart sapma uzakta olduğunu gösterir. Z > +2: Aşırı alım (SAT sinyali), Z < -2: Aşırı satım (AL sinyali), -2 < Z < +2: Nötr (TUT).</span>
+            <span class="tip-box">Z-Score, bir varlığın mevcut fiyatının tarihsel ortalamasından kaç standart sapma uzakta olduğunu gösterir. Z > {{ _('ui_auto_e76bec234597') }} < -2: Aşırı satım (AL sinyali), -2 < Z < +2: Nötr (TUT).</span>
         </span>
     </div>
     <p class="text-[10px] text-slate-500 mb-6 leading-relaxed">
-        Ortalamaya dönüş (Mean Reversion) teorisi: Varlık fiyatları uzun vadeli ortalamasından sapsa da zamanla bu ortalamaya geri döner.
-        Z-Score bu sapmayı standartlaştırarak farklı varlıkları karşılaştırılabilir kılar. <em>Kaynak: Bollinger, 1992; Lo &amp; MacKinlay, 1988.</em>
+        {{ _('ui_auto_3b3b48ea7950') }} <em>{{ _('ui_auto_93b624eb6e8c') }}</em>
     </p>
 
     {% if analysis.mean_reversion %}
@@ -370,7 +381,7 @@
             <span class="text-xs font-black text-slate-600">TUT: {{ tut_count }}</span>
         </div>
         <div class="ml-auto text-[10px] text-slate-500 font-semibold">
-            Pencere: 252 iş günü (1 yıl) | Eşik: ±2σ
+            {{ _('ui_auto_8d57ce0dcd2e') }}
         </div>
     </div>
 
@@ -392,9 +403,9 @@
             <!-- Z-Score Görseli -->
             <div class="mb-3">
                 <div class="flex justify-between text-[9px] text-slate-400 mb-1">
-                    <span>Aşırı Satım (-2)</span>
-                    <span>Nötr (0)</span>
-                    <span>Aşırı Alım (+2)</span>
+                    <span>{{ _('ui_auto_999dcca64d45') }}</span>
+                    <span>{{ _('ui_auto_ea6e045c94c0') }}</span>
+                    <span>{{ _('ui_auto_c1b950999195') }}</span>
                 </div>
                 <div class="relative h-3 bg-gradient-to-r from-emerald-200 via-slate-200 to-rose-200 rounded-full">
                     <!-- Z-score iğnesi: -4 ile +4 arası normalize -->
@@ -409,11 +420,11 @@
             </div>
             <div class="grid grid-cols-2 gap-2 text-[10px]">
                 <div>
-                    <p class="text-slate-400">Z-Score</p>
+                    <p class="text-slate-400">{{ _('ui_auto_4bb4e5b6a948') }}</p>
                     <p class="font-black text-slate-800">{{ signal.current_z_score }}</p>
                 </div>
                 <div>
-                    <p class="text-slate-400">Sinyal Gücü</p>
+                    <p class="text-slate-400">{{ _('ui_auto_6ed2365c939d') }}</p>
                     <div class="signal-track mt-1">
                         <div class="signal-fill
                             {% if signal.signal == 'AL' %}bg-emerald-500
@@ -438,7 +449,7 @@
         {% endfor %}
     </div>
     {% else %}
-    <p class="text-xs text-slate-400 italic text-center py-8">Z-Score verisi hesaplanamadı</p>
+    <p class="text-xs text-slate-400 italic text-center py-8">{{ _('ui_auto_31358e6a64ab') }}</p>
     {% endif %}
 </div>
 
@@ -448,20 +459,20 @@
 <div class="mb-3 fade-up">
     <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
         <span class="w-1.5 h-4 bg-emerald-500 rounded-full inline-block"></span>
-        Bölüm 5 — Sharpe Ratio (Riske Ayarlı Getiri Analizi)
+        {{ _('ui_auto_f686f70706da') }}
     </h3>
 </div>
 
 <div class="quant-card p-8 bg-white/80 mb-10 fade-up">
     <div class="flex items-center gap-2 mb-2">
-        <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight">Yıllıklandırılmış Sharpe Ratio</h4>
+        <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight">{{ _('ui_auto_33a829c6a211') }}</h4>
         <span class="info-tip">?
-            <span class="tip-box">Sharpe Ratio = (Portföy Getirisi − Risksiz Faiz) / Standart Sapma. 1'in üzeri iyi, 2'nin üzeri çok iyi, negatif değer risk almaya değmediğini gösterir. Nobel ödüllü William Sharpe tarafından 1966'da geliştirilmiştir.</span>
+            <span class="tip-box">{{ _('ui_auto_b555aa3b1f33') }}</span>
         </span>
     </div>
     <p class="text-[10px] text-slate-500 mb-6 leading-relaxed">
         Sharpe Ratio, birim risk başına elde edilen fazla getiriyi ölçer. Risksiz faiz oranı olarak %{{ (analysis.get('risk_free_rate', 0.02) * 100)|round(1) }} kullanılmıştır.
-        <em>Kaynak: Sharpe, W.F. (1966). "Mutual Fund Performance." Journal of Business.</em>
+        <em>{{ _('ui_auto_2e75f15da8b5') }}</em>
     </p>
 
     {% if analysis.sharpe_ratios %}
@@ -497,20 +508,20 @@
             </div>
             <p class="text-[9px] text-slate-500 leading-relaxed">
                 {% if sharpe.sharpe_ratio > 2 %}
-                <strong class="text-emerald-700">Mükemmel:</strong> Birim risk başına çok yüksek getiri. Portföyde ağırlık artırılabilir.
+                <strong class="text-emerald-700">{{ _('ui_auto_4982f1a94c8c') }}</strong> Birim risk başına çok yüksek getiri. Portföyde ağırlık artırılabilir.
                 {% elif sharpe.sharpe_ratio > 1 %}
-                <strong class="text-indigo-700">İyi:</strong> Kabul edilebilir risk/ödül dengesi. Portföyde tutulabilir.
+                <strong class="text-indigo-700">{{ _('ui_auto_95e8b10c31da') }}</strong> Kabul edilebilir risk/ödül dengesi. Portföyde tutulabilir.
                 {% elif sharpe.sharpe_ratio > 0 %}
-                <strong class="text-amber-700">Zayıf:</strong> Getiri var ancak risk karşılığı yetersiz. Alternatifler değerlendirilmeli.
+                <strong class="text-amber-700">{{ _('ui_auto_9bd563bd6d1f') }}</strong> Getiri var ancak risk karşılığı yetersiz. Alternatifler değerlendirilmeli.
                 {% else %}
-                <strong class="text-rose-700">Negatif:</strong> Risksiz faizin altında getiri. Risk almak değmemiş.
+                <strong class="text-rose-700">{{ _('ui_auto_3de9261cc14a') }}</strong> Risksiz faizin altında getiri. Risk almak değmemiş.
                 {% endif %}
             </p>
         </div>
         {% endfor %}
     </div>
     {% else %}
-    <p class="text-xs text-slate-400 italic text-center py-8">Sharpe Ratio verisi hesaplanamadı</p>
+    <p class="text-xs text-slate-400 italic text-center py-8">{{ _('ui_auto_a3ebe6471a17') }}</p>
     {% endif %}
 </div>
 
@@ -520,27 +531,26 @@
 <div class="mb-3 fade-up">
     <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
         <span class="w-1.5 h-4 bg-cyan-500 rounded-full inline-block"></span>
-        Bölüm 6 — Korelasyon Matrisi (Çeşitlendirme Analizi)
+        {{ _('ui_auto_857734e509cb') }}
     </h3>
 </div>
 
 <div class="quant-card p-8 bg-white/80 mb-10 fade-up">
     <div class="flex items-center gap-2 mb-2">
-        <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight">Varlıklar Arası Korelasyon</h4>
+        <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight">{{ _('ui_auto_61a79264da4c') }}</h4>
         <span class="info-tip">?
-            <span class="tip-box">Korelasyon katsayısı -1 ile +1 arasındadır. +1: Tam pozitif korelasyon (birlikte hareket), -1: Tam negatif korelasyon (zıt hareket), 0: İlişkisiz. Çeşitlendirme için düşük/negatif korelasyonlu varlıklar seçilmelidir.</span>
+            <span class="tip-box">{{ _('ui_auto_669fc8ceb8eb') }}</span>
         </span>
     </div>
     <p class="text-[10px] text-slate-500 mb-6 leading-relaxed">
-        Modern Portföy Teorisi (Markowitz, 1952): Birbirleriyle düşük korelasyonlu varlıkları bir araya getirmek, toplam portföy riskini azaltır.
-        Aşağıdaki matris, varlıkların son dönem fiyat hareketleri arasındaki ilişkiyi göstermektedir.
+        {{ _('ui_auto_b3dcb6a78e90') }}
     </p>
 
     {% if analysis.correlation_matrices %}
     <!-- Periyot Seçici -->
     <div class="flex gap-2 mb-6">
         {% for period in analysis.correlation_matrices.keys() %}
-        <button type="button" onclick="showCorrelation({{ period }})"
+        <button data-macro="button_primary" type="button" onclick="showCorrelation({{ period }})"
                 id="corr-btn-{{ period }}"
                 class="tab-btn px-4 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-indigo-100 {% if loop.first %}active{% endif %}">
             {{ period }} Gün
@@ -580,7 +590,7 @@
                                 {% elif val > 0 %}bg-slate-100 text-slate-600
                                 {% elif val > -0.4 %}bg-sky-100 text-sky-700
                                 {% else %}bg-emerald-100 text-emerald-800{% endif %}"
-                                title="{{ t1 }} / {{ t2 }}: {{ val|round(3) }}">
+                                title="{{ _('ui_auto_27b595c8f5f7') }}">
                                 {{ val|round(2) }}
                             </div>
                         </td>
@@ -592,26 +602,26 @@
         </div>
         <!-- Renk Açıklaması -->
         <div class="flex flex-wrap gap-3 mt-4 justify-center text-[9px] font-semibold">
-            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-rose-200"></span> Yüksek Korelasyon (&gt;0.7)</span>
-            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-amber-100"></span> Orta Korelasyon (0.4–0.7)</span>
-            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-slate-100"></span> Düşük Korelasyon (0–0.4)</span>
-            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-sky-100"></span> Hafif Negatif (-0.4–0)</span>
-            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-emerald-100"></span> Güçlü Negatif (&lt;-0.4)</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-rose-200"></span> {{ _('ui_auto_b23740e1463f') }}</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-amber-100"></span> {{ _('ui_auto_30e69804bcf6') }}</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-slate-100"></span> {{ _('ui_auto_23b3d10761e0') }}</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-sky-100"></span> {{ _('ui_auto_941ed7de4bc0') }}</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-emerald-100"></span> {{ _('ui_auto_846a9ab7f09a') }}</span>
         </div>
         {% if corr_data.crisis_mode %}
         <div class="mt-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-[10px] text-rose-700 font-semibold">
-            ⚠ Bu periyotta maksimum korelasyon <strong>{{ corr_data.max_correlation }}</strong> — Kriz korelasyonu eşiği (0.9) aşıldı. Çeşitlendirme etkisi zayıflıyor.
+            {{ _('ui_auto_f2c32438b31b') }} <strong>{{ corr_data.max_correlation }}</strong> {{ _('ui_auto_746e422d4508') }}
         </div>
         {% else %}
         <div class="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-[10px] text-emerald-700 font-semibold">
-            Maksimum korelasyon: <strong>{{ corr_data.max_correlation }}</strong> — Çeşitlendirme etkisi korunuyor.
+            {{ _('ui_auto_98e599817924') }} <strong>{{ corr_data.max_correlation }}</strong> {{ _('ui_auto_fdea97fe03dc') }}
         </div>
         {% endif %}
         {% endif %}
     </div>
     {% endfor %}
     {% else %}
-    <p class="text-xs text-slate-400 italic text-center py-8">Korelasyon matrisi hesaplanamadı</p>
+    <p class="text-xs text-slate-400 italic text-center py-8">{{ _('ui_auto_12ee883467ac') }}</p>
     {% endif %}
 </div>
 
@@ -621,20 +631,20 @@
 <div class="mb-3 fade-up">
     <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
         <span class="w-1.5 h-4 bg-orange-500 rounded-full inline-block"></span>
-        Bölüm 7 — Fırsat Matrisi (Varlıklar Arası Rasyo Analizi)
+        {{ _('ui_auto_bbad70d1fad6') }}
     </h3>
 </div>
 
 <div class="quant-card p-8 bg-white/80 mb-10 fade-up">
     <div class="flex items-center gap-2 mb-2">
-        <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight">Çapraz Varlık Rasyo Sinyalleri</h4>
+        <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight">{{ _('ui_auto_04547fb188e8') }}</h4>
         <span class="info-tip">?
-            <span class="tip-box">İki varlık arasındaki fiyat rasyosu tarihsel medyanından sapması Z-Score ile ölçülür. Örneğin Altın/Gümüş rasyosu tarihsel ortalamanın üzerindeyse altın görece pahalı, gümüş görece ucuz demektir.</span>
+            <span class="tip-box">{{ _('ui_auto_6c0f109ddf53') }}</span>
         </span>
     </div>
     <p class="text-[10px] text-slate-500 mb-6 leading-relaxed">
-        Çapraz varlık rasyo analizi, iki varlık arasındaki tarihsel ilişkinin bozulduğu dönemlerde göreceli değer fırsatlarını tespit eder.
-        <em>Kaynak: Pairs Trading — Gatev, Goetzmann &amp; Rouwenhorst (2006).</em>
+        {{ _('ui_auto_c9e1c1359d13') }}
+        <em>{{ _('ui_auto_4a619a0a4c96') }}</em>
     </p>
 
     {% if analysis.opportunity_matrix %}
@@ -642,12 +652,12 @@
         <table class="w-full text-xs">
             <thead>
                 <tr class="bg-slate-50 border-b border-slate-200 text-slate-400 text-[9px] uppercase font-black tracking-wider">
-                    <th class="p-4 text-left">Rasyo Çifti</th>
-                    <th class="p-4 text-center">Sinyal</th>
-                    <th class="p-4 text-left">Sinyal Gücü</th>
-                    <th class="p-4 text-right">Z-Score</th>
-                    <th class="p-4 text-right">Mevcut Rasyo</th>
-                    <th class="p-4 text-left">Yorum</th>
+                    <th class="p-4 text-left">{{ _('ui_auto_3f4e6a02643b') }}</th>
+                    <th class="p-4 text-center">{{ _('ui_auto_49b1973d91a4') }}</th>
+                    <th class="p-4 text-left">{{ _('ui_auto_6ed2365c939d') }}</th>
+                    <th class="p-4 text-right">{{ _('ui_auto_4bb4e5b6a948') }}</th>
+                    <th class="p-4 text-right">{{ _('ui_auto_fcc60984ab6c') }}</th>
+                    <th class="p-4 text-left">{{ _('ui_auto_a3b70bd3e87c') }}</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
@@ -703,7 +713,7 @@
         </table>
     </div>
     {% else %}
-    <p class="text-xs text-slate-400 italic text-center py-8">Fırsat matrisi verisi hesaplanamadı</p>
+    <p class="text-xs text-slate-400 italic text-center py-8">{{ _('ui_auto_aace6010a603') }}</p>
     {% endif %}
 </div>
 
@@ -715,33 +725,33 @@
 <div class="mb-3 fade-up">
     <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
         <span class="w-1.5 h-4 bg-slate-500 rounded-full inline-block"></span>
-        Bölüm 8 — Finansal Terimler Sözlüğü &amp; Örnek Hesaplamalar
+        {{ _('ui_auto_3a0ffe87f566') }}
     </h3>
 </div>
 
 <div class="quant-card p-8 bg-white/80 mb-10 fade-up">
-    <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-6">Kantitatif Finans Rehberi</h4>
+    <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-6">{{ _('ui_auto_98a2c2a6d2c8') }}</h4>
     <p class="text-[10px] text-slate-500 mb-6">
-        Bu sayfada kullanılan tüm finansal ve teknik terimler, akademik kaynakları ve pratik örnekleriyle aşağıda açıklanmıştır.
+        {{ _('ui_auto_a546bb288a92') }}
     </p>
 
     <!-- Sekme Navigasyonu -->
     <div class="flex flex-wrap gap-2 mb-6">
-        <button type="button" onclick="showGlossaryTab('risk')" id="gtab-risk"
+        <button data-macro="button_secondary" type="button" onclick="showGlossaryTab('risk')" id="gtab-risk"
                 class="tab-btn active px-4 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100">
-            Risk Metrikleri
+            {{ _('ui_auto_a18474651810') }}
         </button>
-        <button type="button" onclick="showGlossaryTab('market')" id="gtab-market"
+        <button data-macro="button_secondary" type="button" onclick="showGlossaryTab('market')" id="gtab-market"
                 class="tab-btn px-4 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100">
             Piyasa Analizi
         </button>
-        <button type="button" onclick="showGlossaryTab('macro')" id="gtab-macro"
+        <button data-macro="button_secondary" type="button" onclick="showGlossaryTab('macro')" id="gtab-macro"
                 class="tab-btn px-4 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100">
-            Makro Ekonomi
+            {{ _('ui_auto_8cf626aa7d3e') }}
         </button>
-        <button type="button" onclick="showGlossaryTab('calc')" id="gtab-calc"
+        <button data-macro="button_secondary" type="button" onclick="showGlossaryTab('calc')" id="gtab-calc"
                 class="tab-btn px-4 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100">
-            Örnek Hesaplamalar
+            {{ _('ui_auto_770d8faaedca') }}
         </button>
     </div>
 
@@ -749,45 +759,57 @@
     <div id="gtab-panel-risk" class="glossary-panel">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div class="glossary-item">
-                <p class="font-black text-sm text-slate-800 mb-1">Sharpe Ratio</p>
+                <p class="font-black text-sm text-slate-800 mb-1">{{ _('ui_auto_a61a533520da') }}</p>
                 <p class="text-[11px] text-slate-600 leading-relaxed mb-2">
-                    Birim risk başına elde edilen fazla getiriyi ölçer. Portföyleri karşılaştırmak için en yaygın kullanılan riske ayarlı getiri metriğidir.
+                    {{ _('ui_auto_bbf56134ec92') }}
                 </p>
                 <div class="bg-indigo-50 rounded-lg p-2 font-mono text-[10px] text-indigo-800">
-                    SR = (Rp − Rf) / σp
+                    {{ _('ui_auto_0627193939e5') }}
                 </div>
-                <p class="text-[9px] text-slate-400 mt-1">Rp: Portföy getirisi | Rf: Risksiz faiz | σp: Standart sapma</p>
-                <p class="text-[9px] text-indigo-600 mt-1 font-semibold">Kaynak: Sharpe (1966), Journal of Business</p>
+                <p class="text-[9px] text-slate-400 mt-1">{{ _('ui_auto_356af4f06846') }}</p>
+                <p class="text-[9px] text-indigo-600 mt-1 font-semibold">{{ _('ui_auto_464f0f909788') }}</p>
             </div>
             <div class="glossary-item">
-                <p class="font-black text-sm text-slate-800 mb-1">Volatilite (Standart Sapma)</p>
+                <p class="font-black text-sm text-slate-800 mb-1">{{ _('ui_auto_aa0d55c7d192') }}</p>
                 <p class="text-[11px] text-slate-600 leading-relaxed mb-2">
-                    Getiri serilerinin ortalamadan ne kadar saptığını ölçer. Yüksek volatilite = yüksek risk. Yıllıklandırma için günlük σ × √252 formülü kullanılır.
+                    {{ _('ui_auto_d35c9b0dab28') }}
                 </p>
                 <div class="bg-indigo-50 rounded-lg p-2 font-mono text-[10px] text-indigo-800">
-                    σ_yıllık = σ_günlük × √252
+                    {{ _('ui_auto_38b624ccc5fe') }}
                 </div>
-                <p class="text-[9px] text-slate-400 mt-1">252: Yıllık işlem günü sayısı</p>
+                <p class="text-[9px] text-slate-400 mt-1">{{ _('ui_auto_9936e41e27ca') }}</p>
             </div>
             <div class="glossary-item">
-                <p class="font-black text-sm text-slate-800 mb-1">Korelasyon Katsayısı (ρ)</p>
+                <p class="font-black text-sm text-slate-800 mb-1">{{ _('ui_auto_7bf80640c44a') }}</p>
                 <p class="text-[11px] text-slate-600 leading-relaxed mb-2">
-                    İki varlığın getirilerinin birlikte hareket etme derecesini -1 ile +1 arasında ölçer. Çeşitlendirme için ρ &lt; 0.3 olan çiftler tercih edilir.
+                    {{ _('ui_auto_56bc86cc4158') }}
                 </p>
                 <div class="bg-indigo-50 rounded-lg p-2 font-mono text-[10px] text-indigo-800">
-                    ρ(A,B) = Cov(A,B) / (σA × σB)
+                    {{ _('ui_auto_6b60e1971800') }}
                 </div>
-                <p class="text-[9px] text-indigo-600 mt-1 font-semibold">Kaynak: Markowitz (1952), Journal of Finance</p>
+                <p class="text-[9px] text-indigo-600 mt-1 font-semibold">{{ _('ui_auto_2119bd4e50fe') }}</p>
             </div>
             <div class="glossary-item">
-                <p class="font-black text-sm text-slate-800 mb-1">Beta (β)</p>
+                <p class="font-black text-sm text-slate-800 mb-1">{{ _('ui_auto_711c1dce645f') }}</p>
                 <p class="text-[11px] text-slate-600 leading-relaxed mb-2">
-                    Varlığın piyasa endeksine göre duyarlılığını ölçer. β=1: Piyasayla aynı hareket, β&gt;1: Piyasadan daha volatil, β&lt;1: Daha az volatil.
+                    {{ _('ui_auto_05af1a1a80d1') }}
                 </p>
                 <div class="bg-indigo-50 rounded-lg p-2 font-mono text-[10px] text-indigo-800">
-                    β = Cov(Ri, Rm) / Var(Rm)
+                    {{ _('ui_auto_2a003212f4d2') }}
                 </div>
-                <p class="text-[9px] text-slate-400 mt-1">Ri: Varlık getirisi | Rm: Piyasa getirisi</p>
+                <p class="text-[9px] text-slate-400 mt-1">{{ _('ui_auto_8c38dce1646b') }}</p>
+            </div>
+            <!-- VaR -->
+            <div class="glossary-item">
+                <p class="font-black text-sm text-slate-800 mb-1">{{ _('ui_auto_ec810f6ee5a7') }}</p>
+                <p class="text-[11px] text-slate-600 leading-relaxed mb-2">{{ _('ui_auto_3a10ce0d2cdc') }} <strong>{{ _('ui_auto_a520564509f4') }}</strong> {{ _('ui_auto_54ec4a7705ec') }}</p>
+                <div class="bg-indigo-50 rounded-lg p-2 font-mono text-[10px] text-indigo-800">{{ _('ui_auto_c35af9678d0c') }}</div>
+            </div>
+            <!-- Drawdown -->
+            <div class="glossary-item">
+                <p class="font-black text-sm text-slate-800 mb-1">{{ _('ui_auto_6c730d10bd12') }}</p>
+                <p class="text-[11px] text-slate-600 leading-relaxed mb-2">{{ _('ui_auto_7b06067aa678') }} <strong>{{ _('ui_auto_a520564509f4') }}</strong> {{ _('ui_auto_dff277b35547') }}</p>
+                <div class="bg-indigo-50 rounded-lg p-2 font-mono text-[10px] text-indigo-800">{{ _('ui_auto_a6491c351103') }}</div>
             </div>
         </div>
     </div>
@@ -796,46 +818,45 @@
     <div id="gtab-panel-market" class="glossary-panel hidden">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div class="glossary-item">
-                <p class="font-black text-sm text-slate-800 mb-1">Z-Score (Ortalamaya Dönüş)</p>
+                <p class="font-black text-sm text-slate-800 mb-1">{{ _('ui_auto_6571630be348') }}</p>
                 <p class="text-[11px] text-slate-600 leading-relaxed mb-2">
-                    Bir değerin tarihsel ortalamasından kaç standart sapma uzakta olduğunu gösterir. Finansal piyasalarda aşırı alım/satım tespitinde kullanılır.
+                    {{ _('ui_auto_cfd8fac476b4') }}
                 </p>
                 <div class="bg-indigo-50 rounded-lg p-2 font-mono text-[10px] text-indigo-800">
-                    Z = (X − μ) / σ
+                    {{ _('ui_auto_811dfdba7a30') }}
                 </div>
-                <p class="text-[9px] text-slate-400 mt-1">X: Mevcut değer | μ: Hareketli ortalama | σ: Hareketli standart sapma</p>
-                <p class="text-[9px] text-indigo-600 mt-1 font-semibold">Kaynak: Lo &amp; MacKinlay (1988), Review of Financial Studies</p>
+                <p class="text-[9px] text-slate-400 mt-1">{{ _('ui_auto_c1936298248f') }}</p>
+                <p class="text-[9px] text-indigo-600 mt-1 font-semibold">{{ _('ui_auto_0b5f2bb81651') }}</p>
             </div>
             <div class="glossary-item">
-                <p class="font-black text-sm text-slate-800 mb-1">Base-100 Normalizasyon</p>
+                <p class="font-black text-sm text-slate-800 mb-1">{{ _('ui_auto_f2c57f312d39') }}</p>
                 <p class="text-[11px] text-slate-600 leading-relaxed mb-2">
-                    Farklı fiyat düzeylerindeki varlıkları karşılaştırmak için başlangıç değeri 100 kabul edilerek yeniden ölçeklendirme yöntemi.
+                    {{ _('ui_auto_c4134bab316c') }}
                 </p>
                 <div class="bg-indigo-50 rounded-lg p-2 font-mono text-[10px] text-indigo-800">
-                    N(t) = (P(t) / P(0)) × 100
+                    {{ _('ui_auto_b603939e9af1') }}
                 </div>
-                <p class="text-[9px] text-slate-400 mt-1">P(t): t anındaki fiyat | P(0): Başlangıç fiyatı</p>
+                <p class="text-[9px] text-slate-400 mt-1">{{ _('ui_auto_b5b55ec798cd') }}</p>
             </div>
             <div class="glossary-item">
-                <p class="font-black text-sm text-slate-800 mb-1">Pairs Trading (Rasyo Analizi)</p>
+                <p class="font-black text-sm text-slate-800 mb-1">{{ _('ui_auto_c2b5a716490b') }}</p>
                 <p class="text-[11px] text-slate-600 leading-relaxed mb-2">
-                    İki tarihsel olarak ilişkili varlık arasındaki fiyat rasyosunun tarihsel normdan sapmasını kullanarak işlem yapma stratejisi.
+                    {{ _('ui_auto_68be98e53fb3') }}
                 </p>
                 <div class="bg-indigo-50 rounded-lg p-2 font-mono text-[10px] text-indigo-800">
-                    Rasyo = P(A) / P(B)
-                    Z_rasyo = (Rasyo − Medyan) / σ_rasyo
+                    {{ _('ui_auto_c25983e5863a') }}
                 </div>
-                <p class="text-[9px] text-indigo-600 mt-1 font-semibold">Kaynak: Gatev, Goetzmann &amp; Rouwenhorst (2006)</p>
+                <p class="text-[9px] text-indigo-600 mt-1 font-semibold">{{ _('ui_auto_49522a5f92e0') }}</p>
             </div>
             <div class="glossary-item">
-                <p class="font-black text-sm text-slate-800 mb-1">Piyasa Stres Endeksi</p>
+                <p class="font-black text-sm text-slate-800 mb-1">{{ _('ui_auto_e3f17ff89755') }}</p>
                 <p class="text-[11px] text-slate-600 leading-relaxed mb-2">
-                    Varlıklar arası korelasyonun yükselmesi, piyasa stresinin arttığına işaret eder. Kriz dönemlerinde normalde bağımsız varlıklar eş zamanlı düşer.
+                    {{ _('ui_auto_0b85d54dba06') }}
                 </p>
                 <div class="bg-indigo-50 rounded-lg p-2 font-mono text-[10px] text-indigo-800">
-                    Stres = max(0, (ρ_max − 0.5) × 200)
+                    {{ _('ui_auto_cb665c36396a') }}
                 </div>
-                <p class="text-[9px] text-slate-400 mt-1">ρ_max: Maksimum çift korelasyonu | Aralık: 0–100</p>
+                <p class="text-[9px] text-slate-400 mt-1">{{ _('ui_auto_d012415ecbea') }}</p>
             </div>
         </div>
     </div>
@@ -844,47 +865,46 @@
     <div id="gtab-panel-macro" class="glossary-panel hidden">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div class="glossary-item">
-                <p class="font-black text-sm text-slate-800 mb-1">Makro Rejim</p>
+                <p class="font-black text-sm text-slate-800 mb-1">{{ _('ui_auto_c531084dfe8a') }}</p>
                 <p class="text-[11px] text-slate-600 leading-relaxed mb-2">
-                    Faiz oranı ve enflasyon kombinasyonuna göre belirlenen ekonomik ortam. Her rejim farklı varlık sınıflarını ön plana çıkarır.
+                    {{ _('ui_auto_5d63717e6b99') }}
                 </p>
                 <div class="overflow-x-auto">
                     <table class="w-full text-[9px] mt-2">
                         <thead><tr class="bg-slate-100">
-                            <th class="p-2 text-left">Rejim</th><th class="p-2">Faiz</th><th class="p-2">Enflasyon</th><th class="p-2">Önerilen</th>
+                            <th class="p-2 text-left">{{ _('ui_auto_fa37e9bb6d77') }}</th><th class="p-2">{{ _('ui_auto_c5795f8598bf') }}</th><th class="p-2">{{ _('ui_auto_5d77ba8865c8') }}</th><th class="p-2">{{ _('ui_auto_bd68db913e45') }}</th>
                         </tr></thead>
                         <tbody>
-                            <tr class="border-b"><td class="p-2 font-bold text-amber-700">Defansif</td><td class="p-2 text-center">&gt;%20</td><td class="p-2 text-center">&gt;%40</td><td class="p-2">Altın, Emtia</td></tr>
-                            <tr class="border-b"><td class="p-2 font-bold text-emerald-700">Agresif</td><td class="p-2 text-center">&lt;%10</td><td class="p-2 text-center">&lt;%20</td><td class="p-2">Hisse, Kripto</td></tr>
-                            <tr><td class="p-2 font-bold text-slate-700">Nötr</td><td class="p-2 text-center">%10–20</td><td class="p-2 text-center">%20–40</td><td class="p-2">Dengeli</td></tr>
+                            <tr class="border-b"><td class="p-2 font-bold text-amber-700">{{ _('ui_auto_8c6004126645') }}</td><td class="p-2 text-center">{{ _('ui_auto_2294d551dc46') }}</td><td class="p-2 text-center">{{ _('ui_auto_a51bd1dba034') }}</td><td class="p-2">{{ _('ui_auto_36662f914682') }}</td></tr>
+                            <tr class="border-b"><td class="p-2 font-bold text-emerald-700">{{ _('ui_auto_f587f2e07936') }}</td><td class="p-2 text-center">{{ _('ui_auto_39c563b11df0') }}</td><td class="p-2 text-center">{{ _('ui_auto_acde26b42638') }}</td><td class="p-2">{{ _('ui_auto_738bf021e76f') }}</td></tr>
+                            <tr><td class="p-2 font-bold text-slate-700">{{ _('ui_auto_ba9743d7adc6') }}</td><td class="p-2 text-center">%10–20</td><td class="p-2 text-center">%20–40</td><td class="p-2">{{ _('ui_auto_df0e900f2f90') }}</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
             <div class="glossary-item">
-                <p class="font-black text-sm text-slate-800 mb-1">Reel Faiz Oranı</p>
+                <p class="font-black text-sm text-slate-800 mb-1">{{ _('ui_auto_ed718f2ef963') }}</p>
                 <p class="text-[11px] text-slate-600 leading-relaxed mb-2">
-                    Enflasyondan arındırılmış faiz oranı. Paranın gerçek satın alma gücündeki değişimi gösterir. Negatif reel faiz, tasarruf sahiplerini varlıklara yönlendirir.
+                    {{ _('ui_auto_33c55a237865') }}
                 </p>
                 <div class="bg-indigo-50 rounded-lg p-2 font-mono text-[10px] text-indigo-800">
-                    Reel Faiz ≈ Nominal Faiz − Enflasyon
-                    (Fisher Denklemi: (1+r) = (1+n)/(1+π))
+                    {{ _('ui_auto_dab94a4c3c22') }}
                 </div>
-                <p class="text-[9px] text-indigo-600 mt-1 font-semibold">Kaynak: Fisher (1930), The Theory of Interest</p>
+                <p class="text-[9px] text-indigo-600 mt-1 font-semibold">{{ _('ui_auto_93a8f8efbbf3') }}</p>
             </div>
             <div class="glossary-item">
-                <p class="font-black text-sm text-slate-800 mb-1">TÜFE (Tüketici Fiyat Endeksi)</p>
+                <p class="font-black text-sm text-slate-800 mb-1">{{ _('ui_auto_d89aa4e254f0') }}</p>
                 <p class="text-[11px] text-slate-600 leading-relaxed mb-2">
-                    Belirli bir mal ve hizmet sepetinin fiyat değişimini ölçen endeks. Türkiye'de TÜİK tarafından aylık yayımlanır. Yatırım kararlarında reel getiriyi hesaplamak için kullanılır.
+                    {{ _('ui_auto_596b027accdd') }}
                 </p>
             </div>
             <div class="glossary-item">
-                <p class="font-black text-sm text-slate-800 mb-1">Altın/Gümüş Rasyosu (GSR)</p>
+                <p class="font-black text-sm text-slate-800 mb-1">{{ _('ui_auto_c1ad6a1e5288') }}</p>
                 <p class="text-[11px] text-slate-600 leading-relaxed mb-2">
-                    Bir ons altının kaç ons gümüşe eşit olduğunu gösterir. Tarihsel ortalama 60–80 arasındadır. GSR &gt; 80 → Gümüş görece ucuz; GSR &lt; 50 → Altın görece ucuz.
+                    {{ _('ui_auto_7d71e4d6f1d1') }}
                 </p>
                 <div class="bg-indigo-50 rounded-lg p-2 font-mono text-[10px] text-indigo-800">
-                    GSR = Altın Fiyatı / Gümüş Fiyatı
+                    {{ _('ui_auto_90b79ce93405') }}
                 </div>
             </div>
         </div>
@@ -895,73 +915,73 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- Sharpe Hesabı -->
             <div class="calc-box">
-                <p class="font-black text-sm text-slate-800 mb-3">📐 Sharpe Ratio Hesabı</p>
+                <p class="font-black text-sm text-slate-800 mb-3">{{ _('ui_auto_b05a81cf486a') }}</p>
                 <div class="text-[11px] text-slate-600 space-y-1.5 leading-relaxed">
-                    <p><strong>Senaryo:</strong> Bir hisse senedi portföyü</p>
+                    <p><strong>{{ _('ui_auto_a3a459640ab3') }}</strong> {{ _('ui_auto_ca2fee4f46b6') }}</p>
                     <div class="bg-white rounded-lg p-3 font-mono text-[10px] space-y-1">
-                        <p>Yıllık Getiri (Rp)    = %18</p>
-                        <p>Risksiz Faiz (Rf)     = %2</p>
-                        <p>Yıllık Volatilite (σ) = %12</p>
-                        <p class="border-t pt-1 font-black text-indigo-700">SR = (18% − 2%) / 12% = <strong>1.33</strong></p>
+                        <p>{{ _('ui_auto_e19a3519aa79') }}</p>
+                        <p>{{ _('ui_auto_074890c8fd25') }}</p>
+                        <p>{{ _('ui_auto_8fdc1a55590a') }}</p>
+                        <p class="border-t pt-1 font-black text-indigo-700">{{ _('ui_auto_07aa727cb6ce') }} <strong>1.33</strong></p>
                     </div>
-                    <p class="text-[9px] text-slate-500">SR = 1.33 → İyi bir riske ayarlı getiri. Her 1 birim risk için 1.33 birim fazla getiri elde edilmiştir.</p>
+                    <p class="text-[9px] text-slate-500">{{ _('ui_auto_9fe5dae9762b') }}</p>
                 </div>
             </div>
             <!-- Z-Score Hesabı -->
             <div class="calc-box">
-                <p class="font-black text-sm text-slate-800 mb-3">📐 Z-Score Hesabı</p>
+                <p class="font-black text-sm text-slate-800 mb-3">{{ _('ui_auto_a310ebc788d9') }}</p>
                 <div class="text-[11px] text-slate-600 space-y-1.5 leading-relaxed">
-                    <p><strong>Senaryo:</strong> Altın fiyatı analizi</p>
+                    <p><strong>{{ _('ui_auto_a3a459640ab3') }}</strong> {{ _('ui_auto_f757a33de3cf') }}</p>
                     <div class="bg-white rounded-lg p-3 font-mono text-[10px] space-y-1">
-                        <p>Mevcut Fiyat (X)       = 2.400 USD</p>
-                        <p>252 Günlük Ort. (μ)   = 2.000 USD</p>
-                        <p>Std. Sapma (σ)         = 150 USD</p>
-                        <p class="border-t pt-1 font-black text-rose-700">Z = (2400 − 2000) / 150 = <strong>+2.67</strong></p>
+                        <p>{{ _('ui_auto_1545c2663be4') }}</p>
+                        <p>{{ _('ui_auto_b7169192fc2a') }}</p>
+                        <p>{{ _('ui_auto_e85e15596698') }}</p>
+                        <p class="border-t pt-1 font-black text-rose-700">{{ _('ui_auto_c1dd55daced7') }} <strong>+2.67</strong></p>
                     </div>
-                    <p class="text-[9px] text-slate-500">Z = +2.67 → SAT sinyali. Fiyat tarihsel ortalamanın 2.67 standart sapma üzerinde; aşırı alım bölgesi.</p>
+                    <p class="text-[9px] text-slate-500">{{ _('ui_auto_186bfacac4a5') }}</p>
                 </div>
             </div>
             <!-- Korelasyon Yorumu -->
             <div class="calc-box">
-                <p class="font-black text-sm text-slate-800 mb-3">📐 Korelasyon ve Çeşitlendirme</p>
+                <p class="font-black text-sm text-slate-800 mb-3">{{ _('ui_auto_99ab58ce0528') }}</p>
                 <div class="text-[11px] text-slate-600 space-y-1.5 leading-relaxed">
-                    <p><strong>Senaryo:</strong> 2 varlıklı portföy</p>
+                    <p><strong>{{ _('ui_auto_a3a459640ab3') }}</strong> {{ _('ui_auto_7cc9f1b85c9f') }}</p>
                     <div class="bg-white rounded-lg p-3 font-mono text-[10px] space-y-1">
-                        <p>Varlık A: σ = %15, Ağırlık = %50</p>
-                        <p>Varlık B: σ = %20, Ağırlık = %50</p>
-                        <p>Korelasyon (ρ) = 0.2</p>
-                        <p class="border-t pt-1 font-black text-emerald-700">σ_portföy ≈ %13.5 (Tek başına &lt; %17.5)</p>
+                        <p>{{ _('ui_auto_115664ba1898') }}</p>
+                        <p>{{ _('ui_auto_6f932e82f9be') }}</p>
+                        <p>{{ _('ui_auto_5787c16a78da') }}</p>
+                        <p class="border-t pt-1 font-black text-emerald-700">{{ _('ui_auto_aceabde3f38c') }}</p>
                     </div>
-                    <p class="text-[9px] text-slate-500">Düşük korelasyon sayesinde portföy riski, ağırlıklı ortalama riskten daha düşük oldu.</p>
+                    <p class="text-[9px] text-slate-500">{{ _('ui_auto_802cd7b96fd6') }}</p>
                 </div>
             </div>
             <!-- Reel Getiri Hesabı -->
             <div class="calc-box">
-                <p class="font-black text-sm text-slate-800 mb-3">📐 Reel Getiri Hesabı</p>
+                <p class="font-black text-sm text-slate-800 mb-3">{{ _('ui_auto_511cc19c8dcf') }}</p>
                 <div class="text-[11px] text-slate-600 space-y-1.5 leading-relaxed">
-                    <p><strong>Senaryo:</strong> Türkiye yatırımcısı</p>
+                    <p><strong>{{ _('ui_auto_a3a459640ab3') }}</strong> {{ _('ui_auto_81331b6d9318') }}</p>
                     <div class="bg-white rounded-lg p-3 font-mono text-[10px] space-y-1">
-                        <p>Mevduat Faizi (nominal) = %45</p>
-                        <p>TÜFE Enflasyon          = %50</p>
-                        <p class="border-t pt-1 font-black text-rose-700">Reel Getiri ≈ 45% − 50% = <strong>−5%</strong></p>
+                        <p>{{ _('ui_auto_1f2d23c62233') }}</p>
+                        <p>{{ _('ui_auto_cf7ff8329e09') }}</p>
+                        <p class="border-t pt-1 font-black text-rose-700">{{ _('ui_auto_ea2aebc05f75') }} <strong>−5%</strong></p>
                     </div>
-                    <p class="text-[9px] text-slate-500">Nominal olarak %45 kazanılsa da enflasyon nedeniyle gerçek satın alma gücü %5 azalmıştır.</p>
+                    <p class="text-[9px] text-slate-500">{{ _('ui_auto_de7e9b503259') }}</p>
                 </div>
             </div>
         </div>
 
         <!-- Akademik Referanslar -->
         <div class="mt-6 p-5 bg-slate-900 rounded-2xl text-white">
-            <p class="font-black text-xs uppercase tracking-wider text-amber-400 mb-4">Akademik Referans Listesi</p>
+            <p class="font-black text-xs uppercase tracking-wider text-amber-400 mb-4">{{ _('ui_auto_efdbfa2c7aa7') }}</p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-[10px] text-slate-300 leading-relaxed">
-                <p>• Sharpe, W.F. (1966). "Mutual Fund Performance." <em>Journal of Business</em>, 39(1), 119–138.</p>
-                <p>• Markowitz, H. (1952). "Portfolio Selection." <em>Journal of Finance</em>, 7(1), 77–91.</p>
-                <p>• Lo, A.W. &amp; MacKinlay, A.C. (1988). "Stock Market Prices Do Not Follow Random Walks." <em>Review of Financial Studies</em>, 1(1), 41–66.</p>
-                <p>• Gatev, E., Goetzmann, W.N. &amp; Rouwenhorst, K.G. (2006). "Pairs Trading." <em>Review of Financial Studies</em>, 19(3), 797–827.</p>
-                <p>• Fisher, I. (1930). <em>The Theory of Interest</em>. Macmillan.</p>
-                <p>• Bengen, W.P. (1994). "Determining Withdrawal Rates Using Historical Data." <em>Journal of Financial Planning</em>.</p>
-                <p>• Black, F. &amp; Scholes, M. (1973). "The Pricing of Options and Corporate Liabilities." <em>Journal of Political Economy</em>.</p>
-                <p>• Fama, E.F. (1970). "Efficient Capital Markets." <em>Journal of Finance</em>, 25(2), 383–417.</p>
+                <p>{{ _('ui_auto_bce1db7a0996') }} <em>{{ _('ui_auto_7f329eeb691e') }}</em>, 39(1), 119–138.</p>
+                <p>{{ _('ui_auto_7ddc5d6a105e') }} <em>{{ _('ui_auto_f89bb47a3ae5') }}</em>, 7(1), 77–91.</p>
+                <p>{{ _('ui_auto_6f96607c99c4') }} <em>{{ _('ui_auto_5c618bdb303f') }}</em>, 1(1), 41–66.</p>
+                <p>{{ _('ui_auto_1c5866426c4e') }} <em>{{ _('ui_auto_5c618bdb303f') }}</em>, 19(3), 797–827.</p>
+                <p>{{ _('ui_auto_c51eef4815b1') }} <em>{{ _('ui_auto_325458f4f623') }}</em>{{ _('ui_auto_ab46a7de4386') }}</p>
+                <p>{{ _('ui_auto_6763cbbb2353') }} <em>{{ _('ui_auto_088d5b871c52') }}</em>.</p>
+                <p>{{ _('ui_auto_f3611fc0238c') }} <em>{{ _('ui_auto_d5687a53d99d') }}</em>.</p>
+                <p>{{ _('ui_auto_5357418872fa') }} <em>{{ _('ui_auto_f89bb47a3ae5') }}</em>, 25(2), 383–417.</p>
             </div>
         </div>
     </div>
@@ -970,6 +990,7 @@
 <!-- ═══════════════════════════════════════════════════════════════════════════
      JAVASCRIPT
 ══════════════════════════════════════════════════════════════════════════════ -->
+<script src="{{ static_asset_url('js/financial_dashboard.js') }}"></script>
 <script>
 (function() {
     const pageData = document.getElementById('financial-dashboard-page');
@@ -1041,7 +1062,5 @@
     }
 })();
 </script>
-
-<script src="{{ url_for('static', filename='js/financial_dashboard.js') }}"></script>
 </div>
 {% endblock %}

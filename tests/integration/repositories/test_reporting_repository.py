@@ -3,8 +3,10 @@ Unit Tests - Reporting Repository
 Repository for reporting and analytics queries
 """
 
+from unittest.mock import Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+
 from repositories.reporting_repository import ReportingRepository
 
 
@@ -18,8 +20,7 @@ def test_reporting_repository_class_exists():
 def test_reporting_repository_inheritance():
     """Test ReportingRepository inherits from base classes"""
     from repositories.base import BaseRepository
-    from repositories.contracts import ReportingRepositoryContract
-    
+
     assert issubclass(ReportingRepository, BaseRepository)
     # Skip protocol check as it requires @runtime_checkable
     # assert issubclass(ReportingRepository, ReportingRepositoryContract)
@@ -31,7 +32,7 @@ def test_reporting_repository_init():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = ReportingRepository(database=mock_db)
     assert repo.session == mock_session
 
@@ -47,10 +48,10 @@ def test_reporting_repository_imports():
 def test_reporting_repository_module_structure():
     """Test reporting_repository module structure"""
     import repositories.reporting_repository as reporting_repo_module
-    
+
     # Check for expected class
     assert hasattr(reporting_repo_module, 'ReportingRepository')
-    
+
     # Check for expected imports
     assert hasattr(reporting_repo_module, 'Asset')
     assert hasattr(reporting_repo_module, 'RecurringPlan')
@@ -153,7 +154,7 @@ def test_serialize_calendar_tx():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = ReportingRepository(database=mock_db)
     mock_transaction = Mock()
     mock_transaction.id = 1
@@ -164,11 +165,11 @@ def test_serialize_calendar_tx():
     mock_transaction.status = 'Ödendi'
     mock_transaction.amount = 100.0
     mock_transaction.origin = 'manual'
-    
+
     with patch('utils.format_utils.format_money') as mock_format_money:
         mock_format_money.return_value = '₺100.00'
         result = repo._serialize_calendar_tx(mock_transaction)
-        
+
         assert result['id'] == 1
         assert result['category'] == 'Test Category'
         assert result['description'] == 'Test Description'
@@ -186,7 +187,7 @@ def test_serialize_calendar_tx_empty_fields():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = ReportingRepository(database=mock_db)
     mock_transaction = Mock()
     mock_transaction.id = 1
@@ -197,11 +198,11 @@ def test_serialize_calendar_tx_empty_fields():
     mock_transaction.status = 'Ödendi'
     mock_transaction.amount = 100.0
     mock_transaction.origin = 'manual'
-    
+
     with patch('utils.format_utils.format_money') as mock_format_money:
         mock_format_money.return_value = '₺100.00'
         result = repo._serialize_calendar_tx(mock_transaction)
-        
+
         assert result['description'] == ''
         assert result['note'] == ''
 
@@ -212,16 +213,16 @@ def test_get_monthly_balance():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = ReportingRepository(database=mock_db)
-    
+
     with patch('repositories.reporting_repository.db.session') as mock_db_session:
         mock_query = Mock()
         mock_db_session.query.return_value = mock_query
         mock_query.filter.return_value = mock_query
         mock_query.group_by.return_value = mock_query
         mock_query.all.return_value = []
-        
+
         from decimal import Decimal
         result = repo.get_monthly_balance(2024, 1, 'test_tenant')
         assert result == (Decimal('0.0'), Decimal('0.0'))
@@ -233,16 +234,16 @@ def test_get_actual_cash():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = ReportingRepository(database=mock_db)
-    
+
     with patch('repositories.reporting_repository.db.session') as mock_db_session:
         mock_query = Mock()
         mock_db_session.query.return_value = mock_query
         mock_query.filter.return_value = mock_query
         mock_query.filter_by.return_value = mock_query
         mock_query.scalar.return_value = 1000.0
-        
+
         result = repo.get_actual_cash('test_tenant')
         assert result == 1000.0
 
@@ -253,16 +254,16 @@ def test_get_total_assets():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = ReportingRepository(database=mock_db)
-    
+
     with patch('repositories.reporting_repository.db.session') as mock_db_session:
         mock_query = Mock()
         mock_db_session.query.return_value = mock_query
         mock_query.filter.return_value = mock_query
         mock_query.filter_by.return_value = mock_query
         mock_query.scalar.return_value = 5000.0
-        
+
         result = repo.get_total_assets('test_tenant')
         assert result == 5000.0
 
@@ -273,36 +274,94 @@ def test_get_total_debts():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = ReportingRepository(database=mock_db)
-    
+
     with patch('repositories.reporting_repository.db.session') as mock_db_session:
         mock_query = Mock()
         mock_db_session.query.return_value = mock_query
         mock_query.filter.return_value = mock_query
         mock_query.filter_by.return_value = mock_query
         mock_query.scalar.return_value = 2000.0
-        
+
         result = repo.get_total_debts('test_tenant')
         assert result == 2000.0
 
 
-@pytest.mark.unit
-def test_get_transactions_by_date_range():
-    """Test get_transactions_by_date_range method - skipped due to complex SQLAlchemy mocking"""
-    pytest.skip("Complex SQLAlchemy filter mocking requires actual query objects")
+@pytest.mark.integration
+def test_get_transactions_by_date_range(app):
+    """Date-range reporting returns only tenant-scoped transactions."""
+    from models import Transaction, db
+
+    with app.app_context():
+        transaction = Transaction(
+            date='2026-01-15', category='Maaş', description='Ocak geliri',
+            type='Gelir', status='Ödendi', amount=1000, tenant_id='default'
+        )
+        db.session.add(transaction)
+        db.session.commit()
+
+        result = ReportingRepository().get_transactions_by_date_range(
+            '2026-01-01', '2026-01-31', tenant_id='default'
+        )
+
+    assert len(result) == 1
+    assert result[0].description == 'Ocak geliri'
 
 
-@pytest.mark.unit
-def test_get_calendar_month_data():
-    """Test get_calendar_month_data method - skipped due to complex SQLAlchemy mocking"""
-    pytest.skip("Complex SQLAlchemy filter mocking requires actual query objects")
+@pytest.mark.integration
+def test_get_calendar_month_data(app):
+    """Calendar reporting groups income and expenses by day."""
+    from models import Transaction, db
+
+    with app.app_context():
+        db.session.add_all([
+            Transaction(
+                date='2026-01-15', category='Maaş', description='Gelir',
+                type='Gelir', status='Ödendi', amount=1000, tenant_id='default'
+            ),
+            Transaction(
+                date='2026-01-15', category='Vergi', description='Gider',
+                type='Gider', status='Ödendi', amount=250, tenant_id='default'
+            ),
+        ])
+        db.session.commit()
+
+        result = ReportingRepository().get_calendar_month_data(
+            2026, 1, tenant_id='default'
+        )
+
+    assert '2026-01-15' in result
+    assert result['2026-01-15']['income_total'] == 1000.0
+    assert result['2026-01-15']['expense_total'] == 250.0
+    assert result['2026-01-15']['net'] == 750.0
 
 
-@pytest.mark.unit
-def test_get_pending_payments():
-    """Test get_pending_payments method - skipped due to complex SQLAlchemy mocking"""
-    pytest.skip("Complex SQLAlchemy filter mocking requires actual query objects")
+@pytest.mark.integration
+def test_get_pending_payments(app):
+    """Pending expense and investment transactions are returned in date order."""
+    from models import Transaction, db
+
+    with app.app_context():
+        db.session.add_all([
+            Transaction(
+                date='2026-01-15', category='Kredi', description='Bekleyen',
+                type='Gider', status='Bekliyor', amount=300, tenant_id='default'
+            ),
+            Transaction(
+                date='2026-01-16', category='Vergi', description='Ödenen',
+                type='Gider', status='Ödendi', amount=400, tenant_id='default'
+            ),
+        ])
+        db.session.commit()
+
+        result = ReportingRepository().get_pending_payments(
+            '2026-01-01', '2026-01-31', tenant_id='default'
+        )
+
+    assert len(result) == 1
+    assert result[0].description == 'Bekleyen'
+
 
 
 @pytest.mark.unit
@@ -311,25 +370,39 @@ def test_get_monthly_balance_with_tenant():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = ReportingRepository(database=mock_db)
-    
+
     with patch('repositories.reporting_repository.db.session') as mock_db_session:
         mock_query = Mock()
         mock_db_session.query.return_value = mock_query
         mock_query.filter.return_value = mock_query
         mock_query.group_by.return_value = mock_query
         mock_query.all.return_value = []
-        
+
         from decimal import Decimal
         result = repo.get_monthly_balance(2024, 1, 'test_tenant')
         assert result == (Decimal('0.0'), Decimal('0.0'))
 
 
-@pytest.mark.unit
-def test_get_transactions_by_date_range_no_tenant():
-    """Test get_transactions_by_date_range without tenant - skipped due to complex SQLAlchemy mocking"""
-    pytest.skip("Complex SQLAlchemy filter mocking requires actual query objects")
+@pytest.mark.integration
+def test_get_transactions_by_date_range_no_tenant(app):
+    """Date-range reporting can intentionally return all tenants when no scope is given."""
+    from models import Transaction, db
+
+    with app.app_context():
+        db.session.add(Transaction(
+            date='2026-02-01', category='Maaş', description='Global kayıt',
+            type='Gelir', status='Ödendi', amount=500, tenant_id='default'
+        ))
+        db.session.commit()
+
+        result = ReportingRepository().get_transactions_by_date_range(
+            '2026-02-01', '2026-02-28'
+        )
+
+    assert len(result) == 1
+    assert result[0].description == 'Global kayıt'
 
 
 @pytest.mark.unit
@@ -338,7 +411,7 @@ def test_serialize_calendar_tx_with_recurring():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = ReportingRepository(database=mock_db)
     mock_transaction = Mock()
     mock_transaction.id = 1
@@ -349,9 +422,9 @@ def test_serialize_calendar_tx_with_recurring():
     mock_transaction.status = 'Ödendi'
     mock_transaction.amount = 100.0
     mock_transaction.origin = 'recurring'
-    
+
     with patch('utils.format_utils.format_money') as mock_format_money:
         mock_format_money.return_value = '₺100.00'
         result = repo._serialize_calendar_tx(mock_transaction)
-        
+
         assert result['origin'] == 'recurring'

@@ -3,9 +3,11 @@ Unit Tests - DB Session
 Database session utilities for route error handling tests
 """
 
-import pytest
 from unittest.mock import Mock, patch
-from utils.db_session import rollback_session, remove_session
+
+import pytest
+
+from utils.db_session import remove_session, rollback_session
 
 
 @pytest.mark.unit
@@ -19,7 +21,7 @@ def test_db_session_module_imports():
 def test_db_session_module_structure():
     """Test db_session module structure"""
     import utils.db_session as session_module
-    
+
     # Check for expected functions
     assert hasattr(session_module, 'rollback_session')
     assert hasattr(session_module, 'remove_session')
@@ -31,10 +33,10 @@ def test_rollback_session():
     mock_session = Mock()
     mock_db = Mock()
     mock_db.session = mock_session
-    
+
     with patch('utils.db_session.db', mock_db):
         rollback_session()
-        
+
         mock_session.rollback.assert_called_once()
 
 
@@ -44,10 +46,10 @@ def test_remove_session():
     mock_session = Mock()
     mock_db = Mock()
     mock_db.session = mock_session
-    
+
     with patch('utils.db_session.db', mock_db):
         remove_session()
-        
+
         mock_session.remove.assert_called_once()
 
 

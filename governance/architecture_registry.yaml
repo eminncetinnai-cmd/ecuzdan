@@ -1,0 +1,153 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# E-CÜZDAN ARCHITECTURE REGISTRY (EAFGS)
+# Central architectural zone mapping, layer responsibilities and boundaries.
+# ═══════════════════════════════════════════════════════════════════════════════
+version: "1.0.0"
+project: "E-Cüzdan v15"
+enforcement_mode: "WARNING"  # Options: OBSERVE, WARNING, BLOCK
+
+layers:
+  domain:
+    path: "domain/"
+    description: "Core financial business logic, entities, value objects, and domain services."
+    allowed_imports:
+      - "domain.*"
+      - "shared.*"
+      - "typing"
+      - "dataclasses"
+      - "datetime"
+      - "decimal"
+      - "enum"
+      - "math"
+      - "re"
+    forbidden_imports:
+      - "flask"
+      - "routes.*"
+      - "application.*"
+      - "infrastructure.*"
+      - "sqlalchemy"
+    allowed_extensions: [".py"]
+    owner: "domain_architect"
+
+  application:
+    path: "application/"
+    description: "Application services, use cases, and workflow orchestration."
+    allowed_imports:
+      - "domain.*"
+      - "application.*"
+      - "repositories.*"
+      - "infrastructure.ports.*"
+      - "shared.*"
+      - "utils.*"
+    forbidden_imports:
+      - "flask.render_template"
+      - "routes.*"
+    allowed_extensions: [".py"]
+    owner: "application_architect"
+
+  routes:
+    path: "routes/"
+    description: "Flask HTTP blueprints, route decorators, request validation, response serialization."
+    allowed_imports:
+      - "flask.*"
+      - "application.*"
+      - "domain.*"
+      - "bootstrap.*"
+      - "utils.*"
+      - "shared.*"
+      - "infrastructure.i18n"
+    forbidden_imports: []
+    allowed_extensions: [".py"]
+    owner: "api_team"
+
+  repositories:
+    path: "repositories/"
+    description: "Persistence interaction, database queries, ORM mapping."
+    allowed_imports:
+      - "domain.*"
+      - "repositories.*"
+      - "models.*"
+      - "database.*"
+      - "sqlalchemy.*"
+      - "shared.*"
+    forbidden_imports:
+      - "flask.*"
+      - "routes.*"
+    allowed_extensions: [".py"]
+    owner: "data_architect"
+
+  infrastructure:
+    path: "infrastructure/"
+    description: "External API clients, OAuth, Redis, OTel, i18n, and system adapters."
+    allowed_imports:
+      - "domain.*"
+      - "infrastructure.*"
+      - "shared.*"
+      - "utils.*"
+    forbidden_imports:
+      - "routes.*"
+    allowed_extensions: [".py"]
+    owner: "infrastructure_team"
+
+  database:
+    path: "database/"
+    description: "Database connection initialization, session helpers, schema migrations."
+    allowed_imports:
+      - "sqlalchemy.*"
+      - "shared.*"
+    forbidden_imports:
+      - "routes.*"
+      - "flask.render_template"
+    allowed_extensions: [".py", ".sql"]
+    owner: "database_admin"
+
+  templates:
+    path: "templates/"
+    description: "Jinja2 HTML templates and layout files."
+    allowed_extensions: [".html", ".j2", ".jinja"]
+    owner: "frontend_team"
+
+  static:
+    path: "static/"
+    description: "Static frontend assets (CSS, JS, images, fonts)."
+    allowed_extensions: [".css", ".js", ".png", ".jpg", ".jpeg", ".svg", ".ico", ".woff", ".woff2", ".webmanifest"]
+    owner: "frontend_team"
+
+  tests:
+    path: "tests/"
+    description: "Automated test suite categorized by scope (unit, integration, e2e, regression, forensic)."
+    subdirectories:
+      unit: "tests/unit/"
+      integration: "tests/integration/"
+      e2e: "tests/e2e/"
+      regression: "tests/regression/"
+      forensic: "tests/forensic/"
+      fixtures: "tests/fixtures/"
+      performance: "tests/performance/"
+    allowed_extensions: [".py", ".md", ".json", ".yaml", ".txt"]
+    owner: "qa_team"
+
+  scripts:
+    path: "scripts/"
+    description: "Operational maintenance, data seeding, benchmark and deployment utilities."
+    allowed_extensions: [".py", ".ps1", ".sh", ".bat", ".cmd"]
+    owner: "operations_team"
+
+  governance:
+    path: "governance/"
+    description: "Architecture, file governance, naming, and lifecycle policies (EAFGS)."
+    allowed_extensions: [".yaml", ".yml", ".json", ".py", ".md"]
+    owner: "repository_governor"
+
+  workspace:
+    path: ".work/"
+    description: "AI agent and developer temporary investigation, probe, and experiment workspace."
+    subdirectories:
+      investigations: ".work/investigations/"
+      experiments: ".work/experiments/"
+      probes: ".work/probes/"
+      generated: ".work/generated/"
+      sessions: ".work/sessions/"
+    allowed_extensions: [".*"]
+    owner: "ai_developer"
+    retention: "temporary"

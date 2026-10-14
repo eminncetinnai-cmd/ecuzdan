@@ -13,14 +13,14 @@ GL Kodu Aralıkları (Türk Muhasebe Standartları + IFRS):
   python database/migrations/sprint04_gl_code_normalization.py
 """
 
-import sys
-import os
 import logging
+import os
+import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from shared.db import db
 from models import Category
+from shared.db import db
 
 logger = logging.getLogger("Migration_Sprint04")
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
@@ -162,7 +162,7 @@ def run_sprint04_migration():
     db.session.commit()
 
     logger.info("=" * 60)
-    logger.info(f"Migration Tamamlandı:")
+    logger.info("Migration Tamamlandı:")
     logger.info(f"  ✅ Yeni oluşturulan kategori : {created}")
     logger.info(f"  🔄 Güncellenen kategori      : {updated}")
     logger.info(f"  🔧 Bulk GL kodu düzeltmesi   : {bulk_fixed}")

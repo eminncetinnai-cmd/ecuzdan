@@ -39,8 +39,8 @@ class AuthApplicationService(ApplicationService):
                 full_name, email, password, confirm_password
             )
         )
-        from domain.users.events import UserCreatedEvent
         from domain.tenant.events import TenantCreatedEvent
+        from domain.users.events import UserCreatedEvent
         if self._outbox:
             self._outbox.save(TenantCreatedEvent(tenant_id=tenant_id, name=full_name))
             self._outbox.save(UserCreatedEvent(user_id=user.id, username=user.username, tenant_id=tenant_id))

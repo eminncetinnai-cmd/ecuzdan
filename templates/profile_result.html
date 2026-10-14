@@ -1,265 +1,245 @@
 {% extends "layout.html" %}
+{% from 'macros/buttons.html' import button_primary, button_secondary %}
 
-{% block title %}Profil Sonuçları - E-Cüzdan{% endblock %}
+{% block title %}{{ _('profile_result_title') }} - {{ brand }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static_asset_url('css/profile.css') }}">
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="page-header">
-        <h1>Profil Sonuçları</h1>
-        <p>Yatırımcı profiliniz ve öneriler</p>
+<div class="profile-page-container">
+    <!-- Header -->
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200/60 dark:border-slate-800">
+        <div class="flex items-center gap-3">
+            <span class="p-2.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+            </span>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">{{ _('profile_result_title') }}</h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">{{ _('profile_result_subtitle') }}</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button data-macro="button_secondary" type="button" onclick="window.print()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold transition hover:bg-slate-50 dark:hover:bg-slate-700" title="Raporu Yazdır / PDF">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                <span>Yazdır</span>
+            </button>
+            {{ button_secondary(_('profile_back'), url='/profile', extra_classes='text-xs') }}
+            {{ button_primary(_('profile_retake'), url='/profile/start', extra_classes='text-xs') }}
+        </div>
     </div>
     
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h3>Radar Chart</h3>
-                </div>
-                <div class="card-body">
-                    <canvas id="radarChart"></canvas>
-                </div>
+    <!-- Top Row: Radar Chart + Summary -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+        <!-- Radar Chart Card -->
+        <div class="lg:col-span-6 profile-hero-card flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ _('profile_radar_chart') }}</h2>
+                <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">5 Boyutlu Model</span>
+            </div>
+            <div class="radar-chart-shell py-2">
+                <canvas id="radarChart"></canvas>
             </div>
         </div>
         
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h3>Profil Özeti</h3>
+        <!-- Summary Card -->
+        <div class="lg:col-span-6 profile-hero-card flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ _('profile_result_summary') }}</h2>
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
+                        {{ profile.final_risk_level }}
+                    </span>
                 </div>
-                <div class="card-body">
-                    <div class="profile-summary">
-                        <h4>Nihai Risk: {{ profile.final_risk_level }}</h4>
-                        <p><strong>Skor:</strong> {{ "%.1f"|format(profile.base_risk_score) }}/100</p>
-                        <p><strong>Güven Skoru:</strong> %{{ "%.1f"|format(profile.confidence_score) }}</p>
-                        
-                        {% if profile.risk_warnings %}
-                        <div class="alert alert-warning mt-3">
-                            <strong>Uyarılar:</strong>
-                            <ul>
-                                {% for warning in profile.risk_warnings %}
-                                <li>{{ warning }}</li>
-                                {% endfor %}
-                            </ul>
+
+                <div class="space-y-4">
+                    <div class="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">{{ _('profile_score') }}</span>
+                            <p class="text-2xl font-black text-slate-900 dark:text-white mt-0.5">{{ "%.1f"|format(base_risk_score) }} <span class="text-xs font-semibold text-slate-400">/ 100</span></p>
                         </div>
-                        {% endif %}
-                        
-                        <div class="mt-3">
-                            <p><strong>Test Tarihi:</strong> {{ profile.test_date.strftime('%d.%m.%Y %H:%M') }}</p>
-                            <p><strong>Geçerlilik:</strong> {{ profile.validity_date.strftime('%d.%m.%Y') if profile.validity_date else 'Belirsiz' }}</p>
+                        <div class="text-right">
+                            <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">{{ _('profile_confidence') }}</span>
+                            <p class="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">%{{ "%.1f"|format(profile.confidence_score) }}</p>
                         </div>
                     </div>
+
+                    {% if risk_warnings %}
+                    <div class="p-4 rounded-2xl border border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200 text-xs font-semibold">
+                        <strong class="block font-black mb-1.5 flex items-center gap-1.5 text-amber-800 dark:text-amber-300">
+                            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            {{ _('profile_warnings') }}
+                        </strong>
+                        <ul class="list-disc list-inside space-y-1 text-[11px] leading-relaxed">
+                            {% for warning in risk_warnings %}
+                            <li>{{ warning }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
                 </div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 space-y-1 font-medium">
+                <p class="flex justify-between">
+                    <span>{{ _('profile_test_date') }}:</span>
+                    <strong class="text-slate-700 dark:text-slate-300">{{ profile.test_date.strftime('%d.%m.%Y %H:%M') }}</strong>
+                </p>
+                <p class="flex justify-between">
+                    <span>{{ _('ui_auto_dd1f23bcdf34') }}</span>
+                    <strong class="text-slate-700 dark:text-slate-300">{{ profile.validity_date.strftime('%d.%m.%Y') if profile.validity_date else _('profile_unknown') }}</strong>
+                </p>
             </div>
         </div>
     </div>
     
-    <div class="row mt-4">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h3>Güçlü Yönler</h3>
-                </div>
-                <div class="card-body">
-                    <ul class="strengths">
-                        {% if profile.literacy_score >= 70 %}
-                        <li>✓ Finansal okuryazarlık</li>
-                        {% endif %}
-                        {% if profile.behavioral_score >= 70 %}
-                        <li>✓ Davranışal kontrol</li>
-                        {% endif %}
-                        {% if profile.capacity_score >= 70 %}
-                        <li>✓ Risk kapasitesi</li>
-                        {% endif %}
-                        {% if profile.tolerance_score >= 70 %}
-                        <li>✓ Risk toleransı</li>
-                        {% endif %}
-                        {% if profile.experience_score >= 70 %}
-                        <li>✓ Yatırım deneyimi</li>
-                        {% endif %}
-                        {% if profile.literacy_score < 70 and profile.behavioral_score < 70 and profile.capacity_score < 70 and profile.tolerance_score < 70 and profile.experience_score < 70 %}
-                        <li>Henüz belirgin güçlü yön yok</li>
-                        {% endif %}
-                    </ul>
-                </div>
+    <!-- Middle Row: Strengths & Development -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <!-- Strengths -->
+        <div class="profile-hero-card">
+            <div class="flex items-center gap-2 mb-3 pb-2 border-b border-slate-100 dark:border-slate-800">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <h3 class="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">{{ _('profile_strengths') }}</h3>
             </div>
+            <ul class="space-y-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                {% if profile.literacy_score >= 70 %}
+                <li class="flex items-center gap-2 text-emerald-700 dark:text-emerald-400"><svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> {{ _('profile_literacy') }}</li>
+                {% endif %}
+                {% if profile.behavioral_score >= 70 %}
+                <li class="flex items-center gap-2 text-emerald-700 dark:text-emerald-400"><svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> {{ _('profile_behavioral') }}</li>
+                {% endif %}
+                {% if profile.capacity_score >= 70 %}
+                <li class="flex items-center gap-2 text-emerald-700 dark:text-emerald-400"><svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> {{ _('profile_capacity') }}</li>
+                {% endif %}
+                {% if profile.tolerance_score >= 70 %}
+                <li class="flex items-center gap-2 text-emerald-700 dark:text-emerald-400"><svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> {{ _('profile_tolerance') }}</li>
+                {% endif %}
+                {% if profile.experience_score >= 70 %}
+                <li class="flex items-center gap-2 text-emerald-700 dark:text-emerald-400"><svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> {{ _('profile_experience') }}</li>
+                {% endif %}
+                {% if profile.literacy_score < 70 and profile.behavioral_score < 70 and profile.capacity_score < 70 and profile.tolerance_score < 70 and profile.experience_score < 70 %}
+                <li class="text-slate-400 italic">{{ _('profile_no_strengths') }}</li>
+                {% endif %}
+            </ul>
         </div>
         
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h3>Geliştirme Alanları</h3>
-                </div>
-                <div class="card-body">
-                    <ul class="weaknesses">
-                        {% if profile.literacy_score < 50 %}
-                        <li>✗ Finansal okuryazarlık</li>
-                        {% endif %}
-                        {% if profile.behavioral_score < 50 %}
-                        <li>✗ Davranışal kontrol</li>
-                        {% endif %}
-                        {% if profile.capacity_score < 50 %}
-                        <li>✗ Risk kapasitesi</li>
-                        {% endif %}
-                        {% if profile.tolerance_score < 50 %}
-                        <li>✗ Risk toleransı</li>
-                        {% endif %}
-                        {% if profile.experience_score < 50 %}
-                        <li>✗ Yatırım deneyimi</li>
-                        {% endif %}
-                        {% if profile.literacy_score >= 50 and profile.behavioral_score >= 50 and profile.capacity_score >= 50 and profile.tolerance_score >= 50 and profile.experience_score >= 50 %}
-                        <li>Tüm alanlarda iyi durumda</li>
-                        {% endif %}
-                    </ul>
-                </div>
+        <!-- Development Areas -->
+        <div class="profile-hero-card">
+            <div class="flex items-center gap-2 mb-3 pb-2 border-b border-slate-100 dark:border-slate-800">
+                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                <h3 class="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">{{ _('profile_development') }}</h3>
             </div>
-        </div>
-    </div>
-    
-    <div class="card mt-4">
-        <div class="card-header">
-            <h3>Portföy Dağılım Önerisi</h3>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="allocation-item">
-                        <h4>Nakit</h4>
-                        <div class="progress">
-                            <div class="progress-bar bg-info" style="width: {{ portfolio_allocation.cash }}%">
-                                %{{ portfolio_allocation.cash }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="allocation-item">
-                        <h4>Tahvil</h4>
-                        <div class="progress">
-                            <div class="progress-bar bg-warning" style="width: {{ portfolio_allocation.bonds }}%">
-                                %{{ portfolio_allocation.bonds }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="allocation-item">
-                        <h4>Hisse</h4>
-                        <div class="progress">
-                            <div class="progress-bar bg-success" style="width: {{ portfolio_allocation.stocks }}%">
-                                %{{ portfolio_allocation.stocks }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="card mt-4">
-        <div class="card-header">
-            <h3>Eğitim Önerileri</h3>
-        </div>
-        <div class="card-body">
-            <ul class="education-recommendations">
-                {% if profile.literacy_score < 60 %}
-                <li>📚 Finansal okuryazarlık eğitimi</li>
-                <li>📚 Temel yatırım kavramları kursu</li>
+            <ul class="space-y-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                {% if profile.literacy_score < 50 %}
+                <li class="flex items-center gap-2 text-amber-700 dark:text-amber-400"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> {{ _('profile_literacy') }}</li>
                 {% endif %}
-                {% if profile.behavioral_score < 60 %}
-                <li>📚 Davranışal finans eğitimi</li>
-                <li>📚 Psikolojik yatırımcılık kitabı</li>
+                {% if profile.behavioral_score < 50 %}
+                <li class="flex items-center gap-2 text-amber-700 dark:text-amber-400"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> {{ _('profile_behavioral') }}</li>
                 {% endif %}
-                {% if profile.experience_score < 60 %}
-                <li>📚 Yatırım fonları eğitimi</li>
-                <li>📚 Portföy yönetimi kursu</li>
+                {% if profile.capacity_score < 50 %}
+                <li class="flex items-center gap-2 text-amber-700 dark:text-amber-400"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> {{ _('profile_capacity') }}</li>
                 {% endif %}
-                {% if profile.capacity_score < 60 %}
-                <li>📚 Bütçe yönetimi eğitimi</li>
-                <li>📚 Acil durum fonu planlama</li>
+                {% if profile.tolerance_score < 50 %}
+                <li class="flex items-center gap-2 text-amber-700 dark:text-amber-400"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> {{ _('profile_tolerance') }}</li>
                 {% endif %}
-                {% if profile.literacy_score >= 60 and profile.behavioral_score >= 60 and profile.experience_score >= 60 and profile.capacity_score >= 60 %}
-                <li>✅ Mevcut bilgi seviyeniz iyi, ileri seviye eğitimler önerebiliriz</li>
+                {% if profile.experience_score < 50 %}
+                <li class="flex items-center gap-2 text-amber-700 dark:text-amber-400"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> {{ _('profile_experience') }}</li>
+                {% endif %}
+                {% if profile.literacy_score >= 50 and profile.behavioral_score >= 50 and profile.capacity_score >= 50 and profile.tolerance_score >= 50 and profile.experience_score >= 50 %}
+                <li class="text-emerald-600 dark:text-emerald-400 flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> {{ _('profile_all_good') }}</li>
                 {% endif %}
             </ul>
         </div>
     </div>
     
-    <div class="mt-4">
-        <a href="/profile" class="btn btn-primary">Profile Dön</a>
-        <a href="/profile/start" class="btn btn-outline-secondary">Yeniden Test Et</a>
+    <!-- Portfolio Allocation Recommendation -->
+    <div class="profile-hero-card mb-6">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+            <h3 class="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ _('profile_portfolio_allocation') }}</h3>
+            <span class="text-[10px] font-bold text-slate-400">Hedef Portföy Modeli</span>
+        </div>
+        <div class="portfolio-allocation-grid">
+            <div class="portfolio-allocation-item">
+                <div class="flex justify-between items-baseline mb-2">
+                    <span class="text-xs font-extrabold text-slate-800 dark:text-white">{{ _('profile_cash') }}</span>
+                    <strong class="text-sm font-black text-sky-600 dark:text-sky-400">%{{ portfolio_allocation.cash }}</strong>
+                </div>
+                <div class="profile-score-track">
+                    <div class="profile-score-fill bg-sky-500" data-width="{{ portfolio_allocation.cash }}" role="progressbar" aria-valuenow="{{ portfolio_allocation.cash }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ portfolio_allocation.cash }}%"></div>
+                </div>
+            </div>
+            <div class="portfolio-allocation-item">
+                <div class="flex justify-between items-baseline mb-2">
+                    <span class="text-xs font-extrabold text-slate-800 dark:text-white">{{ _('profile_bonds') }}</span>
+                    <strong class="text-sm font-black text-amber-600 dark:text-amber-400">%{{ portfolio_allocation.bonds }}</strong>
+                </div>
+                <div class="profile-score-track">
+                    <div class="profile-score-fill bg-amber-500" data-width="{{ portfolio_allocation.bonds }}" role="progressbar" aria-valuenow="{{ portfolio_allocation.bonds }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ portfolio_allocation.bonds }}%"></div>
+                </div>
+            </div>
+            <div class="portfolio-allocation-item">
+                <div class="flex justify-between items-baseline mb-2">
+                    <span class="text-xs font-extrabold text-slate-800 dark:text-white">{{ _('profile_stocks') }}</span>
+                    <strong class="text-sm font-black text-emerald-600 dark:text-emerald-400">%{{ portfolio_allocation.stocks }}</strong>
+                </div>
+                <div class="profile-score-track">
+                    <div class="profile-score-fill bg-emerald-500" data-width="{{ portfolio_allocation.stocks }}" role="progressbar" aria-valuenow="{{ portfolio_allocation.stocks }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ portfolio_allocation.stocks }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Education Recommendations -->
+    <div class="profile-hero-card mb-6">
+        <div class="flex items-center gap-2 mb-3 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <span class="text-sm">📚</span>
+            <h3 class="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">{{ _('profile_education_recommendations') }}</h3>
+        </div>
+        <ul class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-semibold text-slate-600 dark:text-slate-300">
+            {% if profile.literacy_score < 60 %}
+            <li class="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800">📚 {{ _('profile_literacy_training') }}</li>
+            <li class="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800">📚 {{ _('profile_basic_investing_course') }}</li>
+            {% endif %}
+            {% if profile.behavioral_score < 60 %}
+            <li class="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800">📚 {{ _('profile_behavioral_training') }}</li>
+            <li class="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800">📚 {{ _('profile_investing_psychology_book') }}</li>
+            {% endif %}
+            {% if profile.experience_score < 60 %}
+            <li class="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800">📚 {{ _('profile_funds_training') }}</li>
+            <li class="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800">📚 {{ _('profile_portfolio_course') }}</li>
+            {% endif %}
+            {% if profile.capacity_score < 60 %}
+            <li class="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800">📚 {{ _('profile_budget_training') }}</li>
+            <li class="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800">📚 {{ _('profile_emergency_fund') }}</li>
+            {% endif %}
+            {% if profile.literacy_score >= 60 and profile.behavioral_score >= 60 and profile.experience_score >= 60 and profile.capacity_score >= 60 %}
+            <li class="col-span-full p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 text-emerald-800 dark:text-emerald-300">✅ {{ _('profile_advanced_training') }}</li>
+            {% endif %}
+        </ul>
     </div>
 </div>
 
-<style>
-.profile-summary {
-    background: #f8fafc;
-    padding: 20px;
-    border-radius: 8px;
-}
-
-.strengths, .weaknesses, .education-recommendations {
-    list-style: none;
-    padding: 0;
-}
-
-.strengths li, .weaknesses li, .education-recommendations li {
-    padding: 8px 0;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.allocation-item {
-    margin-bottom: 15px;
-}
-
-.allocation-item h4 {
-    font-size: 14px;
-    margin-bottom: 5px;
-}
-</style>
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const ctx = document.getElementById('radarChart').getContext('2d');
-    
-    new Chart(ctx, {
-        type: 'radar',
-        data: {
-            labels: ['Finansal Okuryazarlık', 'Risk Kapasitesi', 'Risk Toleransı', 'Davranışal Finans', 'Yatırım Deneyimi'],
-            datasets: [{
-                label: 'Profil Skorları',
-                data: [
-                    {{ profile.literacy_score }},
-                    {{ profile.capacity_score }},
-                    {{ profile.tolerance_score }},
-                    {{ profile.behavioral_score }},
-                    {{ profile.experience_score }}
-                ],
-                backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                borderColor: 'rgba(59, 130, 246, 1)',
-                borderWidth: 2,
-                pointBackgroundColor: 'rgba(59, 130, 246, 1)',
-                pointBorderColor: '#fff',
-                pointHoverBackgroundColor: '#fff',
-                pointHoverBorderColor: 'rgba(59, 130, 246, 1)'
-            }]
-        },
-        options: {
-            scales: {
-                r: {
-                    beginAtZero: true,
-                    max: 100,
-                    ticks: {
-                        stepSize: 20
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: false
-                }
-            }
-        }
-    });
-});
+window.profileChartData = {
+    label: {{ _('profile_result_radar')|tojson }},
+    labels: [
+        {{ _('profile_literacy')|tojson }},
+        {{ _('profile_capacity')|tojson }},
+        {{ _('profile_tolerance')|tojson }},
+        {{ _('profile_behavioral')|tojson }},
+        {{ _('profile_experience')|tojson }}
+    ],
+    scores: [
+        {{ profile.literacy_score }},
+        {{ profile.capacity_score }},
+        {{ profile.tolerance_score }},
+        {{ profile.behavioral_score }},
+        {{ profile.experience_score }}
+    ]
+};
 </script>
+<script src="{{ static_asset_url('js/profile.js') }}" defer></script>
 {% endblock %}

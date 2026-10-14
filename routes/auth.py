@@ -1,24 +1,25 @@
 """Authentication routes."""
 
 import logging
-import os
 import secrets
 from datetime import datetime
 
 from flask import current_app, flash, g, jsonify, redirect, render_template, request, session, url_for
 
-from bootstrap.container import get_container
 from infrastructure.i18n import i18n
-from utils.audit import (ACTION_LOGIN, ACTION_LOGIN_FAILED, ACTION_LOGOUT,
-                         ACTION_REGISTER, audit_log)
+from utils.audit import ACTION_LOGIN, ACTION_LOGIN_FAILED, ACTION_LOGOUT, audit_log
 from utils.financial_insights import get_daily_insight
 from utils.log_redaction import mask_email, mask_identifier, mask_provider_id
 
 logger = logging.getLogger(__name__)
 
 
+def get_container():
+    from bootstrap.container import get_container as _gc
+    return _gc()
+
+
 def _get_auth_service():
-    from bootstrap.container import get_container
     return get_container().applications.auth()
 
 
@@ -43,6 +44,7 @@ def register_auth_routes(bp):
                     session['user_id'] = user.id
                     session['username'] = user.username
                     session['lang'] = user.language
+                    session['lang_source'] = 'user'
                     session['csrf_token'] = secrets.token_hex(16)
                     session['app_boot_id'] = current_app.config.get('APP_BOOT_ID')
                     session['session_created_at'] = datetime.now().isoformat()
@@ -94,15 +96,25 @@ def register_auth_routes(bp):
             flash('Çıkış yapıldı.', 'success')
             return redirect(url_for('auth.login'))
 
-    @bp.route('/set_language/<lang>', methods=['GET'])
+    @bp.route('/set_language/<lang>', methods=['POST'])
     def set_language(lang):
         if lang in i18n.translations:
             session['lang'] = lang
+            session['lang_source'] = 'explicit'
             g.lang = lang
             if 'user_id' in session:
                 auth_service.set_language(session['user_id'], lang)
-            return jsonify({'status': 'success', 'message': i18n.gettext('language_changed_success')})
-        return jsonify({'status': 'error', 'message': i18n.gettext('language_not_supported')}), 400
+            return jsonify({
+                'status': 'success',
+                'success': True,
+                'language': lang,
+                'message': 'Language updated successfully.',
+            })
+        return jsonify({
+            'status': 'error',
+            'success': False,
+            'message': i18n.gettext('language_not_supported'),
+        }), 400
 
     @bp.route('/register', methods=['GET', 'POST'])
     def register():
@@ -140,35 +152,36 @@ def register_auth_routes(bp):
             if provider != 'google':
                 flash('Desteklenmeyen kimlik doğrulama sağlayıcısı.', 'error')
                 return redirect(url_for('auth.login'))
-            
+
             # Get Google OAuth provider from container
-            from infrastructure.auth.google_provider import GoogleOAuthProvider
             from flask import current_app
+
+            from infrastructure.auth.google_provider import GoogleOAuthProvider
 
             google_client_id = current_app.config.get('GOOGLE_CLIENT_ID')
             google_client_secret = current_app.config.get('GOOGLE_CLIENT_SECRET')
-            
+
             if not google_client_id or not google_client_secret:
                 logger.error("Google OAuth credentials not configured")
                 flash('Google OAuth yapılandırması eksik. Lütfen sistem yöneticisi ile iletişime geçin.', 'error')
                 return redirect(url_for('auth.login'))
-            
+
             google_provider = GoogleOAuthProvider(google_client_id, google_client_secret)
-            
+
             # Generate CSRF state
             state = secrets.token_urlsafe(32)
             session['oauth_state'] = state
             session['oauth_provider'] = provider
-            
+
             # Generate redirect URI
             redirect_uri = url_for('auth.oauth_callback', provider=provider, _external=True)
-            
+
             # Get authorization URL
             auth_url = google_provider.get_authorization_url(redirect_uri, state)
-            
+
             logger.info(f"Redirecting to Google OAuth: provider={provider}")
             return redirect(auth_url)
-            
+
         except Exception as e:
             logger.exception(f"OAuth login error: {e}")
             flash('OAuth girişi başlatılırken bir hata oluştu.', 'error')
@@ -181,7 +194,7 @@ def register_auth_routes(bp):
         Args:
             provider: OAuth provider name (e.g., 'google')
         """
-        logger.info(f"OAuth callback invoked - Provider: {provider}, Request args: {dict(request.args)}")
+        logger.info(f"OAuth callback invoked - Provider: {provider}, Args count: {len(request.args)}")
         try:
             if provider != 'google':
                 flash('Desteklenmeyen kimlik doğrulama sağlayıcısı.', 'error')
@@ -190,12 +203,16 @@ def register_auth_routes(bp):
             # Validate state parameter (CSRF protection)
             state = request.args.get('state')
             session_state = session.get('oauth_state')
-            logger.info(f"OAuth state validation - Request state: {state}, Session state: {session_state}")
+            logger.info(f"OAuth state validation - Match: {bool(state and state == session_state)}")
 
             if not state or state != session_state:
-                logger.warning(f"OAuth state validation failed - Request: {state}, Session: {session_state}")
+                logger.warning("OAuth state validation failed - state mismatch or missing")
                 flash('OAuth doğrulaması başarısız. Lütfen tekrar deneyin.', 'error')
                 return redirect(url_for('auth.login'))
+
+            # Clear OAuth state immediately upon validation (one-time CSRF token)
+            session.pop('oauth_state', None)
+            session.pop('oauth_provider', None)
 
             # Get authorization code
             code = request.args.get('code')
@@ -207,8 +224,9 @@ def register_auth_routes(bp):
                 return redirect(url_for('auth.login'))
 
             # Get Google OAuth provider
-            from infrastructure.auth.google_provider import GoogleOAuthProvider
             from flask import current_app
+
+            from infrastructure.auth.google_provider import GoogleOAuthProvider
 
             google_client_id = current_app.config.get('GOOGLE_CLIENT_ID')
             google_client_secret = current_app.config.get('GOOGLE_CLIENT_SECRET')
@@ -234,21 +252,22 @@ def register_auth_routes(bp):
             user_info = google_provider.verify_token_and_get_user_info(access_token)
 
             # Check if user already exists by oauth_id (most reliable for OAuth users)
-            from models import User
+            from repositories import UserRepository
+            user_repo = UserRepository()
             logger.info(
                 "Checking for existing user - Email: %s, Provider ID: %s",
                 mask_email(user_info.email),
                 mask_provider_id(user_info.provider_id),
             )
-            existing_user = User.query.filter_by(
-                auth_provider=user_info.provider.upper(),
-                oauth_id=user_info.provider_id
-            ).first()
+            existing_user = user_repo.find_user_by_oauth_id(
+                provider=user_info.provider.upper(),
+                oauth_id=user_info.provider_id,
+            )
 
             # If not found by oauth_id, check by email (for account linking)
             if not existing_user:
                 logger.info(f"User not found by oauth_id, checking by email: {mask_email(user_info.email)}")
-                existing_user = User.query.filter_by(email=user_info.email).first()
+                existing_user = user_repo.find_user_by_email(user_info.email)
 
             logger.info(f"User check result - Existing user: {existing_user is not None}")
             if existing_user:
@@ -334,6 +353,8 @@ def register_auth_routes(bp):
         to complete their account with username and password.
         """
         from datetime import datetime
+
+        from repositories import UserRepository
         logger.info(f"OAuth signup route invoked - Method: {request.method}, Session keys: {list(session.keys())}")
         try:
             # Check if OAuth signup info exists in session
@@ -421,8 +442,8 @@ def register_auth_routes(bp):
                         provider_id=oauth_info['provider_id'])
 
                 # Check if username already exists
-                from models import User
-                if User.query.filter_by(username=username).first():
+                from repositories import UserRepository
+                if UserRepository().username_exists(username):
                     logger.warning(f"[OAuthSignup] Validation failed - Username already exists: {username}")
                     flash('Bu kullanıcı adı zaten kullanımda.', 'error')
                     return render_template('oauth_signup.html',
@@ -440,11 +461,13 @@ def register_auth_routes(bp):
                     profile_image_path = download_profile_image(oauth_info['avatar_url'])
 
                 # Create tenant
-                from models import Tenant
-                from shared.db import db
-                from werkzeug.security import generate_password_hash
                 import secrets
                 from datetime import datetime
+
+                from werkzeug.security import generate_password_hash
+
+                from models import Tenant
+                from shared.db import db
 
                 logger.info("[OAuthSignup] Creating tenant")
                 tenant_id = f"tenant_{oauth_info['email'].split('@')[0]}_{secrets.token_hex(8)}"
@@ -474,7 +497,8 @@ def register_auth_routes(bp):
 
                 # Create user
                 logger.info("[OAuthSignup] Creating user")
-                user = User(
+                user_repo = UserRepository()
+                user = user_repo.add_user(
                     username=username,
                     email=oauth_info['email'],
                     password=generate_password_hash(password),
@@ -494,8 +518,7 @@ def register_auth_routes(bp):
                     city=city,
                     phone=phone
                 )
-                db.session.add(user)
-                db.session.commit()
+                user_repo.commit()
 
                 logger.info(
                     f"[OAuthSignup] User created successfully - user_id={user.id}, email={mask_email(oauth_info['email'])}"

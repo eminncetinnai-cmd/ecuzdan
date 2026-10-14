@@ -1,0 +1,68 @@
+name: Design System Consistency Check
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'templates/**'
+      - 'static/css/**'
+      - 'utils/ui_components.py'
+
+jobs:
+  design-system-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run Design System Checker
+      run: |
+        python scripts/check_design_system.py --verbose
+    
+    - name: Check for inline styles
+      run: |
+        python scripts/check_design_system.py --directory templates
+    
+    - name: Generate Design System Report
+      if: always()
+      run: |
+        python scripts/check_design_system.py --verbose > design_system_report.txt
+    
+    - name: Upload Design System Report
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: design-system-report
+        path: design_system_report.txt
+    
+    - name: Comment PR with results
+      if: github.event_name == 'pull_request' && always()
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          let report = '';
+          try {
+            report = fs.readFileSync('design_system_report.txt', 'utf8');
+          } catch (e) {
+            report = 'Design system check completed but report not available.';
+          }
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `## Design System Check Results\n\n\`\`\`\n${report}\n\`\`\``
+          });

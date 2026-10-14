@@ -10,16 +10,16 @@ Scale: 4 decimal places for currency (supports 0.0001 precision)
 
 Usage:
     from shared.decimal_precision import Decimal, get_decimal_context
-    
+
     # Use Decimal for all financial values
     amount = Decimal('100.50')
     result = amount * Decimal('0.18')  # VAT calculation
-    
+
     # For currency display (4 decimal places)
     formatted = quantize_to_currency(amount)
 """
 
-from decimal import Decimal, ROUND_HALF_EVEN, getcontext, Context
+from decimal import ROUND_HALF_EVEN, Context, Decimal, getcontext
 from typing import Union
 
 # Financial Decimal Context - Banking Grade Standards
@@ -54,14 +54,14 @@ def get_decimal_context() -> Context:
 def to_decimal(value: Union[str, int, float, Decimal], scale: int = 4) -> Decimal:
     """
     Convert a value to Decimal with proper precision.
-    
+
     Args:
         value: Value to convert (string, int, float, or Decimal)
         scale: Number of decimal places (default: 4 for currency)
-    
+
     Returns:
         Decimal: Quantized Decimal value
-    
+
     Examples:
         >>> to_decimal('100.50')
         Decimal('100.5000')
@@ -79,18 +79,18 @@ def to_decimal(value: Union[str, int, float, Decimal], scale: int = 4) -> Decima
         decimal_value = Decimal(str(value))
     else:
         raise TypeError(f"Cannot convert {type(value)} to Decimal")
-    
+
     return quantize(decimal_value, scale=scale)
 
 
 def quantize(value: Decimal, scale: int = 4) -> Decimal:
     """
     Quantize a Decimal to specified scale using financial rounding.
-    
+
     Args:
         value: Decimal value to quantize
         scale: Number of decimal places
-    
+
     Returns:
         Decimal: Quantized value
     """
@@ -101,10 +101,10 @@ def quantize(value: Decimal, scale: int = 4) -> Decimal:
 def quantize_to_currency(value: Union[str, int, float, Decimal]) -> Decimal:
     """
     Quantize value to currency precision (4 decimal places).
-    
+
     Args:
         value: Value to quantize
-    
+
     Returns:
         Decimal: Value quantized to 4 decimal places
     """
@@ -114,39 +114,39 @@ def quantize_to_currency(value: Union[str, int, float, Decimal]) -> Decimal:
 def quantize_to_percentage(value: Union[str, int, float, Decimal]) -> Decimal:
     """
     Quantize value to percentage precision (2 decimal places).
-    
+
     Args:
         value: Value to quantize
-    
+
     Returns:
         Decimal: Value quantized to 2 decimal places
     """
     return to_decimal(value, scale=2)
 
 
-def safe_divide(numerator: Union[str, int, float, Decimal], 
+def safe_divide(numerator: Union[str, int, float, Decimal],
                 denominator: Union[str, int, float, Decimal],
                 scale: int = 4) -> Decimal:
     """
     Safe division with Decimal precision.
-    
+
     Args:
         numerator: Numerator value
         denominator: Denominator value
         scale: Result scale
-    
+
     Returns:
         Decimal: Division result
-    
+
     Raises:
         ZeroDivisionError: If denominator is zero
     """
     num = to_decimal(numerator, scale)
     den = to_decimal(denominator, scale)
-    
+
     if den == 0:
         raise ZeroDivisionError("Cannot divide by zero")
-    
+
     result = num / den
     return quantize(result, scale=scale)
 
@@ -156,12 +156,12 @@ def safe_multiply(a: Union[str, int, float, Decimal],
                   scale: int = 4) -> Decimal:
     """
     Safe multiplication with Decimal precision.
-    
+
     Args:
         a: First operand
         b: Second operand
         scale: Result scale
-    
+
     Returns:
         Decimal: Multiplication result
     """
@@ -176,12 +176,12 @@ def safe_add(a: Union[str, int, float, Decimal],
              scale: int = 4) -> Decimal:
     """
     Safe addition with Decimal precision.
-    
+
     Args:
         a: First operand
         b: Second operand
         scale: Result scale
-    
+
     Returns:
         Decimal: Addition result
     """
@@ -196,12 +196,12 @@ def safe_subtract(a: Union[str, int, float, Decimal],
                   scale: int = 4) -> Decimal:
     """
     Safe subtraction with Decimal precision.
-    
+
     Args:
         a: First operand
         b: Second operand
         scale: Result scale
-    
+
     Returns:
         Decimal: Subtraction result
     """

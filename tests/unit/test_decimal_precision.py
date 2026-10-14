@@ -3,19 +3,21 @@ Unit Tests - Decimal Precision
 Financial Precision Module - Decimal Context for Financial Calculations tests
 """
 
+from decimal import ROUND_HALF_EVEN, Decimal
+
 import pytest
-from decimal import Decimal, ROUND_HALF_EVEN
+
 from shared.decimal_precision import (
+    FINANCIAL_CONTEXT,
     get_decimal_context,
-    to_decimal,
     quantize,
     quantize_to_currency,
     quantize_to_percentage,
+    safe_add,
     safe_divide,
     safe_multiply,
-    safe_add,
     safe_subtract,
-    FINANCIAL_CONTEXT,
+    to_decimal,
 )
 
 
@@ -31,7 +33,7 @@ def test_decimal_precision_module_imports():
 def test_decimal_precision_module_structure():
     """Test decimal_precision module structure"""
     import shared.decimal_precision as precision_module
-    
+
     # Check for expected exports
     assert hasattr(precision_module, 'Decimal')
     assert hasattr(precision_module, 'get_decimal_context')
@@ -430,7 +432,7 @@ def test_classic_float_issue():
     # Float version (fails): 0.1 + 0.2 == 0.30000000000000004
     float_result = 0.1 + 0.2
     assert float_result != 0.3, "Float has precision issue"
-    
+
     # Decimal version (passes)
     dec_result = to_decimal('0.1') + to_decimal('0.2')
     assert dec_result == to_decimal('0.3'), "Decimal has exact precision"
@@ -483,7 +485,7 @@ def test_kdv_calculation():
     tax_rate = to_decimal('0.18')
     tax = safe_multiply(amount, tax_rate)
     total = safe_add(amount, tax)
-    
+
     assert tax == Decimal('18.0000')
     assert total == Decimal('118.0000')
 
@@ -495,7 +497,7 @@ def test_commission_calculation():
     commission_rate = to_decimal('0.005')
     commission = safe_multiply(amount, commission_rate)
     net_amount = safe_subtract(amount, commission)
-    
+
     assert commission == Decimal('50.0000')
     assert net_amount == Decimal('9950.0000')
 
@@ -507,7 +509,7 @@ def test_interest_calculation():
     rate = to_decimal('0.40')
     interest = safe_multiply(principal, rate)
     total = safe_add(principal, interest)
-    
+
     assert interest == Decimal('4000.0000')
     assert total == Decimal('14000.0000')
 
@@ -518,7 +520,7 @@ def test_currency_conversion():
     usd_amount = to_decimal('100')
     exchange_rate = to_decimal('32.50')
     try_amount = safe_multiply(usd_amount, exchange_rate)
-    
+
     assert try_amount == Decimal('3250.0000')
 
 
@@ -528,7 +530,7 @@ def test_gold_gram_calculation():
     gram_price = to_decimal('2500.50')
     grams = to_decimal('5.5')
     total = safe_multiply(gram_price, grams)
-    
+
     assert total == Decimal('13752.7500')
 
 
@@ -538,7 +540,7 @@ def test_fund_calculation():
     fund_price = to_decimal('15.75')
     units = to_decimal('100.5')
     total = safe_multiply(fund_price, units)
-    
+
     assert total == Decimal('1582.8750')
 
 
@@ -548,7 +550,7 @@ def test_crypto_calculation():
     btc_price = to_decimal('60000')
     btc_amount = to_decimal('0.5')
     total = safe_multiply(btc_price, btc_amount)
-    
+
     assert total == Decimal('30000.0000')
 
 
@@ -558,7 +560,7 @@ def test_stock_calculation():
     stock_price = to_decimal('150.25')
     shares = to_decimal('100')
     total = safe_multiply(stock_price, shares)
-    
+
     assert total == Decimal('15025.0000')
 
 
@@ -569,17 +571,17 @@ def test_weighted_average_cost():
     buy1_qty = to_decimal('100')
     buy1_price = to_decimal('10')
     buy1_cost = safe_multiply(buy1_qty, buy1_price)
-    
+
     # Buy 50 units at 15
     buy2_qty = to_decimal('50')
     buy2_price = to_decimal('15')
     buy2_cost = safe_multiply(buy2_qty, buy2_price)
-    
+
     # Calculate weighted average
     total_qty = safe_add(buy1_qty, buy2_qty)
     total_cost = safe_add(buy1_cost, buy2_cost)
     avg_cost = safe_divide(total_cost, total_qty)
-    
+
     assert avg_cost == Decimal('11.6667')
 
 
@@ -591,7 +593,7 @@ def test_roi_calculation():
     profit = safe_subtract(current_value, purchase_cost)
     roi = safe_divide(profit, purchase_cost, scale=4)
     roi_pct = safe_multiply(roi, to_decimal('100'))
-    
+
     assert roi_pct == Decimal('20.0000')
 
 
@@ -601,11 +603,11 @@ def test_realized_gain():
     buy_price = to_decimal('100')
     sell_price = to_decimal('120')
     quantity = to_decimal('10')
-    
+
     buy_cost = safe_multiply(buy_price, quantity)
     sell_revenue = safe_multiply(sell_price, quantity)
     gain = safe_subtract(sell_revenue, buy_cost)
-    
+
     assert gain == Decimal('200.0000')
 
 
@@ -648,14 +650,14 @@ def test_complex_calculation():
     asset1_value = to_decimal('10000')
     asset2_value = to_decimal('25000')
     asset3_value = to_decimal('15000')
-    
+
     total = safe_add(asset1_value, asset2_value)
     total = safe_add(total, asset3_value)
-    
+
     assert total == Decimal('50000.0000')
-    
+
     # Calculate percentages
     pct1 = safe_divide(asset1_value, total, scale=4)
     pct1 = safe_multiply(pct1, to_decimal('100'))
-    
+
     assert pct1 == Decimal('20.0000')

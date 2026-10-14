@@ -1,12 +1,13 @@
 {% extends "layout.html" %}
+{% from 'macros/buttons.html' import button_primary, button_secondary %}
 
 {% block title %}Kullanıcı Davet Et - E-Cüzdan{% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="page-header">
-        <h1>Kullanıcı Davet Et</h1>
-        <p>Yeni kullanıcılarınızı tenant'a davet edin</p>
+        <h1>{{ _('ui_auto_d7c97f44a647') }}</h1>
+        <p>{{ _('ui_auto_90fe7ade5d81') }}</p>
     </div>
     
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -21,42 +22,42 @@
     
     <div class="card">
         <div class="card-header">
-            <h2>Yeni Davet Oluştur</h2>
+            <h2>{{ _('ui_auto_532a05f56737') }}</h2>
         </div>
         
         <form method="POST" action="{{ url_for('tenant.invite') }}" class="invite-form">
             <div class="form-group">
-                <label for="email">E-posta Adresi</label>
-                <input type="email" id="email" name="email" required placeholder="ornek@email.com">
+                <label for="email">{{ _('ui_auto_3b08c2247a43') }}</label>
+                <input type="email" id="email" name="email" required placeholder="{{ _('ui_auto_50d5e055ccae') }}">
             </div>
             
             <div class="form-group">
                 <label for="role">Rol</label>
                 <select id="role" name="role" required>
-                    <option value="kullanici">Kullanıcı</option>
-                    <option value="tenant_admin">Tenant Admin</option>
+                    <option value="kullanici">{{ _('ui_auto_07075bae9ab2') }}</option>
+                    <option value="tenant_admin">{{ _('ui_auto_7cbbc6ca9723') }}</option>
                 </select>
             </div>
             
-            <button type="submit" class="btn btn-primary">Davet Oluştur</button>
+            {{ button_primary(_('ui_auto_47e322d3c959'), submit=True) }}
         </form>
         
         {% if invite_link %}
         <div class="invite-link-section">
-            <h3>Davet Linki</h3>
+            <h3>{{ _('ui_auto_1accaa281ce8') }}</h3>
             <div class="invite-link-box">
                 <input type="text" value="{{ invite_link }}" readonly id="inviteLink">
-                <button type="button" onclick="copyInviteLink()">Kopyala</button>
+                <button data-macro="button_secondary" type="button" onclick="copyInviteLink()">{{ _('ui_auto_0b613a663b04') }}</button>
             </div>
-            <p class="invite-note">Bu linki davet ettiğiniz kişiye gönderin. Link 24 saat geçerlidir.</p>
+            <p class="invite-note">{{ _('ui_auto_16508ae975dd') }}</p>
         </div>
         {% endif %}
     </div>
     
     <div class="card">
         <div class="card-header">
-            <h2>Davet Geçmişi</h2>
-            <a href="{{ url_for('tenant.invites') }}" class="btn btn-secondary">Tüm Davetleri Gör</a>
+            <h2>{{ _('ui_auto_6d6a023f6abb') }}</h2>
+            {{ button_secondary(_('ui_auto_9424dadde8d2'), url=url_for('tenant.invites')) }}
         </div>
     </div>
 </div>
@@ -65,7 +66,7 @@
 .container {
     max-width: 800px;
     margin: 0 auto;
-    padding: 20px;
+    padding: var(--space-pad-20, 20px);
 }
 
 .page-header {
@@ -74,24 +75,24 @@
 
 .page-header h1 {
     margin: 0 0 10px 0;
-    color: #333;
+    color: var(--c, #333);
 }
 
 .page-header p {
     margin: 0;
-    color: #666;
+    color: var(--c, #666);
 }
 
 .card {
     background: white;
-    border-radius: 8px;
+    border-radius: var(--border-radius-8, 8px);
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     margin-bottom: 20px;
 }
 
 .card-header {
-    padding: 20px;
-    border-bottom: 1px solid #eee;
+    padding: var(--space-pad-20, 20px);
+    border-bottom: 1px solid var(--c, #eee);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -99,11 +100,11 @@
 
 .card-header h2 {
     margin: 0;
-    color: #333;
+    color: var(--c, #333);
 }
 
 .invite-form {
-    padding: 20px;
+    padding: var(--space-pad-20, 20px);
 }
 
 .form-group {
@@ -113,62 +114,62 @@
 .form-group label {
     display: block;
     margin-bottom: 8px;
-    color: #333;
+    color: var(--c, #333);
     font-weight: 500;
 }
 
 .form-group input,
 .form-group select {
     width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
+    padding: var(--space-pad-10, 10px);
+    border: 1px solid var(--c, #ddd);
+    border-radius: var(--border-radius-4, 4px);
+    font-size: var(--font-size-14, 14px);
 }
 
 .form-group input:focus,
 .form-group select:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--c, #667eea);
 }
 
 .btn {
-    padding: 8px 16px;
+    padding: var(--space-pad-8, 8px) 16px;
     border: none;
-    border-radius: 4px;
+    border-radius: var(--border-radius-4, 4px);
     cursor: pointer;
-    font-size: 14px;
+    font-size: var(--font-size-14, 14px);
     transition: background-color 0.3s;
     text-decoration: none;
     display: inline-block;
 }
 
 .btn-primary {
-    background-color: #667eea;
+    background-color: var(--c, #667eea);
     color: white;
 }
 
 .btn-primary:hover {
-    background-color: #5568d3;
+    background-color: var(--c, #5568d3);
 }
 
 .btn-secondary {
-    background-color: #6c757d;
+    background-color: var(--c, #6c757d);
     color: white;
 }
 
 .btn-secondary:hover {
-    background-color: #5a6268;
+    background-color: var(--c, #5a6268);
 }
 
 .invite-link-section {
-    padding: 20px;
-    border-top: 1px solid #eee;
+    padding: var(--space-pad-20, 20px);
+    border-top: 1px solid var(--c, #eee);
 }
 
 .invite-link-section h3 {
     margin: 0 0 15px 0;
-    color: #333;
+    color: var(--c, #333);
 }
 
 .invite-link-box {
@@ -179,40 +180,40 @@
 
 .invite-link-box input {
     flex: 1;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
+    padding: var(--space-pad-10, 10px);
+    border: 1px solid var(--c, #ddd);
+    border-radius: var(--border-radius-4, 4px);
+    font-size: var(--font-size-14, 14px);
 }
 
 .invite-note {
     margin: 0;
-    color: #666;
-    font-size: 14px;
+    color: var(--c, #666);
+    font-size: var(--font-size-14, 14px);
 }
 
 .alert {
-    padding: 12px;
-    border-radius: 4px;
+    padding: var(--space-pad-12, 12px);
+    border-radius: var(--border-radius-4, 4px);
     margin-bottom: 20px;
 }
 
 .alert-error {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
+    background-color: var(--c, #f8d7da);
+    color: var(--c, #721c24);
+    border: 1px solid var(--c, #f5c6cb);
 }
 
 .alert-success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
+    background-color: var(--c, #d4edda);
+    color: var(--c, #155724);
+    border: 1px solid var(--c, #c3e6cb);
 }
 
 .alert-warning {
-    background-color: #fff3cd;
-    color: #856404;
-    border: 1px solid #ffeaa7;
+    background-color: var(--color-white, var(--color-white, #ffffff)f)3cd;
+    color: var(--c, #856404);
+    border: 1px solid var(--c, #ffeaa7);
 }
 </style>
 

@@ -1,7 +1,9 @@
 """SQLAlchemy model for the Outbox pattern."""
 
 from datetime import datetime, timezone
+
 from shared.db import db
+
 
 def utcnow_naive():
     return datetime.now(timezone.utc).replace(tzinfo=None)

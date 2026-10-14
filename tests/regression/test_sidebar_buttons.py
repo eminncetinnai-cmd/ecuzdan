@@ -67,12 +67,12 @@ def test_quick_actions_panel_links(client):
     """
     Test quick actions panel links
     - Hızlı İşlem link should work
-    - Plan Ekle link should work  
+    - Plan Ekle link should work
     - Varlık Ekle link should work
     """
     # These are the same as the main buttons, just testing they're consistent
     response = client.get('/plans')
     assert response.status_code in [200, 302, 403, 404]
-    
+
     response = client.get('/assets')
     assert response.status_code in [200, 302, 403, 404]

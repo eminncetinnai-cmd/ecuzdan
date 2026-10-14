@@ -1,459 +1,107 @@
 {% extends "layout.html" %}
 
-{% block title %}Yatırımcı Profil Testi - E-Cüzdan{% endblock %}
+{% block title %}{{ _('profile_test_title') }} - {{ brand }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static_asset_url('css/profile.css') }}">
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="page-header">
-        <h1>Yatırımcı Profil Testi</h1>
-        <p>5 boyutlu analiz ile risk profilinizi belirleyin</p>
+<div class="profile-page-container">
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200/60 dark:border-slate-800">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">{{ _('profile_test_title') }}</h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">{{ _('profile_subtitle') }}</p>
+        </div>
+        <div>
+            <a href="{{ url_for('profile.index') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold transition hover:bg-slate-50 dark:hover:bg-slate-700">
+                &larr; {{ _('profile_back') if _('profile_back') != 'profile_back' else 'Profile Dön' }}
+            </a>
+        </div>
     </div>
     
-    <div class="card">
-        <div class="card-header">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h3>Test Adımları</h3>
-                    <p class="mb-0">Adım {{ current_step }} / {{ total_steps }}</p>
-                </div>
-                <div class="progress" style="width: 300px;">
-                    <div class="progress-bar" role="progressbar" data-width="{{ (current_step / total_steps) * 100 }}" aria-valuenow="{{ current_step }}" aria-valuemin="0" aria-valuemax="{{ total_steps }}">
-                        {{ (current_step / total_steps) * 100 }}%
-                    </div>
+    <div class="profile-hero-card">
+        <div class="flex flex-wrap items-center justify-between gap-4 pb-4 mb-5 border-b border-slate-100 dark:border-slate-800">
+            <div>
+                <h3 class="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ _('profile_test_steps') }}</h3>
+                <p id="stepLabel" class="text-sm font-black text-slate-800 dark:text-white mt-0.5">{{ _('profile_step_label') }} {{ current_step }} / {{ total_steps }}</p>
+            </div>
+            <div class="w-full sm:w-64">
+                <div class="profile-score-track">
+                    <div id="wizardProgressBar" class="profile-score-fill bg-indigo-600 progress-bar" data-width="{{ (current_step / total_steps) * 100 }}" style="width: {{ (current_step / total_steps) * 100 }}%"></div>
                 </div>
             </div>
         </div>
         
-        <div class="card-body">
+        <div class="py-2">
             <div id="wizard-container">
                 <!-- Sorular buraya AJAX ile yüklenecek -->
-                <div class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="sr-only">Yükleniyor...</span>
+                <div class="text-center py-10">
+                    <div class="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" role="status">
+                        <span class="sr-only">{{ _('loading') }}</span>
                     </div>
-                    <p>Sorular yükleniyor...</p>
+                    <p class="text-xs font-bold text-slate-500 dark:text-slate-400">{{ _('profile_test_loading') }}</p>
                 </div>
             </div>
         </div>
         
-        <div class="card-footer">
-            <div class="d-flex justify-content-between">
-                <button type="button" id="btn-back" onclick="goBack()" disabled>Geri</button>
-                <button type="button" id="btn-next" onclick="goNext()" disabled>İleri</button>
-                <button type="button" id="btn-submit" onclick="submitTest()" style="display: none;">Testi Tamamla</button>
+        <div class="flex items-center justify-between gap-3 pt-5 mt-6 border-t border-slate-100 dark:border-slate-800">
+            <button data-macro="button_secondary" type="button" id="btn-back" onclick="goBack()" disabled class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold transition hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed">{{ _('profile_test_back') }}</button>
+            <div class="flex items-center gap-2">
+                <button data-macro="button_secondary" type="button" id="btn-next" onclick="goNext()" disabled class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-md shadow-indigo-200 dark:shadow-none transition disabled:opacity-40 disabled:cursor-not-allowed">{{ _('profile_test_next') }}</button>
+                <button data-macro="button_secondary" type="button" id="btn-submit" onclick="submitTest()" class="hidden px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-md shadow-emerald-200 dark:shadow-none transition disabled:opacity-40 disabled:cursor-not-allowed">{{ _('profile_test_complete') }}</button>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-/* Premium Progress Bar */
-.progress {
-    height: 8px;
-    background-color: #e2e8f0;
-    border-radius: 9999px;
-    overflow: hidden;
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.progress-bar {
-    background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
-    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
-}
-
-/* Premium Step Header */
-.step-header {
-    margin-bottom: 24px;
-    animation: fadeInDown 0.5s ease-out;
-}
-
-.step-header h4 {
-    font-size: 22px;
-    font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 6px;
-    letter-spacing: -0.5px;
-}
-
-.step-header p {
-    font-size: 14px;
-    color: #64748b;
-    line-height: 1.6;
-}
-
-/* Premium Question Card */
-.question-card {
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-    padding: 20px;
-    border-radius: 16px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    border: 1px solid #e2e8f0;
-    transition: all 0.3s ease;
-    animation: fadeInUp 0.5s ease-out;
-}
-
-.question-card:hover {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    transform: translateY(-2px);
-}
-
-.question-card h5 {
-    font-size: 15px;
-    font-weight: 600;
-    color: #1e293b;
-    margin-bottom: 16px;
-    line-height: 1.5;
-}
-
-/* Premium Option Buttons */
-.option-btn {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    padding: 12px 16px;
-    margin-bottom: 10px;
-    border: 2px solid #e2e8f0;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-    text-align: left;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    font-size: 14px;
-    font-weight: 500;
-    color: #475569;
-    position: relative;
-    overflow: hidden;
-}
-
-.option-btn::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 4px;
-    height: 100%;
-    background: #3b82f6;
-    border-radius: 12px 0 0 12px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.option-btn:hover {
-    border-color: #3b82f6;
-    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-    color: #1e40af;
-    transform: translateX(4px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-}
-
-.option-btn:hover::before {
-    opacity: 1;
-}
-
-.option-btn.selected {
-    border-color: #3b82f6;
-    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-    color: #1e40af;
-    font-weight: 600;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
-}
-
-.option-btn.selected::before {
-    opacity: 1;
-}
-
-.option-btn.selected::after {
-    content: '✓';
-    position: absolute;
-    right: 20px;
-    color: #3b82f6;
-    font-weight: 700;
-    font-size: 18px;
-}
-
-/* Premium Buttons */
-#btn-back, #btn-next, #btn-submit {
-    padding: 12px 28px;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: none;
-    cursor: pointer;
-    text-transform: uppercase;
-    position: relative;
-    overflow: hidden;
-}
-
-#btn-back {
-    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-    color: #475569;
-    border: 1px solid #cbd5e1;
-}
-
-#btn-back:hover:not(:disabled) {
-    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
-    color: #1e293b;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-#btn-back:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-#btn-next {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    color: white;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-#btn-next:hover:not(:disabled) {
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
-}
-
-#btn-next:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-#btn-submit {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    color: white;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
-
-#btn-submit:hover:not(:disabled) {
-    background: linear-gradient(135deg, #059669 0%, #047857 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
-}
-
-#btn-submit:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* Premium Explanation */
-.explanation {
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-    padding: 20px;
-    border-radius: 12px;
-    margin-top: 16px;
-    display: none;
-    border-left: 4px solid #f59e0b;
-    animation: fadeIn 0.3s ease-out;
-}
-
-.explanation.show {
-    display: block;
-}
-
-.explanation-toggle {
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-    border: 1px solid #f59e0b;
-    color: #92400e;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    margin-top: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.explanation-toggle:hover {
-    background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%);
-    transform: translateY(-1px);
-}
-
-/* Premium Summary */
-.summary {
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    padding: 32px;
-    border-radius: 16px;
-    border: 1px solid #e2e8f0;
-}
-
-.summary h5 {
-    font-size: 24px;
-    font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 24px;
-    letter-spacing: -0.5px;
-}
-
-.dimension-summary {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    margin-bottom: 16px;
-    border: 1px solid #e2e8f0;
-}
-
-.dimension-summary h6 {
-    font-size: 18px;
-    font-weight: 600;
-    color: #3b82f6;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-}
-
-.dimension-summary h6::before {
-    content: '';
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    background: #3b82f6;
-    border-radius: 50%;
-    margin-right: 12px;
-}
-
-.dimension-summary p {
-    font-size: 14px;
-    color: #475569;
-    margin-bottom: 8px;
-    line-height: 1.6;
-}
-
-/* Premium Welcome Screen */
-.welcome-screen {
-    text-align: center;
-    padding: 48px 32px;
-    animation: fadeIn 0.6s ease-out;
-}
-
-.welcome-emoji {
-    font-size: 80px;
-    margin-bottom: 24px;
-    animation: bounce 2s infinite;
-}
-
-.welcome-screen h5 {
-    font-size: 28px;
-    font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 16px;
-    letter-spacing: -0.5px;
-}
-
-.welcome-screen p {
-    font-size: 16px;
-    color: #64748b;
-    line-height: 1.8;
-    margin-bottom: 12px;
-}
-
-/* Premium Alert */
-.alert {
-    border-radius: 12px;
-    border: none;
-    padding: 16px 20px;
-    font-weight: 500;
-}
-
-.alert-info {
-    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-    color: #1e40af;
-    border-left: 4px solid #3b82f6;
-}
-
-.alert-warning {
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-    color: #92400e;
-    border-left: 4px solid #f59e0b;
-}
-
-/* Animations */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes fadeInDown {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-}
-
-/* Loading State */
-.loading-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 48px;
-}
-
-.spinner-border {
-    width: 48px;
-    height: 48px;
-    border-width: 3px;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .step-header h4 {
-        font-size: 22px;
-    }
-    
-    .question-card {
-        padding: 20px;
-    }
-    
-    .option-btn {
-        padding: 14px 16px;
-        font-size: 14px;
-    }
-    
-    #btn-back, #btn-next, #btn-submit {
-        padding: 12px 24px;
-        font-size: 14px;
-    }
-    
-    .welcome-emoji {
-        font-size: 64px;
-    }
-    
-    .welcome-screen h5 {
-        font-size: 22px;
-    }
-}
-</style>
-
 <script>
+const profileI18n = {
+    questionsError: {{ _('profile_questions_error')|tojson }},
+    unknownError: {{ _('profile_unknown_error')|tojson }},
+    stepTitles: [
+        {{ _('profile_step_intro')|tojson }},
+        {{ _('profile_step_literacy')|tojson }},
+        {{ _('profile_step_capacity')|tojson }},
+        {{ _('profile_step_tolerance')|tojson }},
+        {{ _('profile_step_behavioral')|tojson }},
+        {{ _('profile_step_experience')|tojson }},
+        {{ _('profile_step_summary')|tojson }}
+    ],
+    stepDescriptions: [
+        {{ _('profile_step_intro_desc')|tojson }},
+        {{ _('profile_step_literacy_desc')|tojson }},
+        {{ _('profile_step_capacity_desc')|tojson }},
+        {{ _('profile_step_tolerance_desc')|tojson }},
+        {{ _('profile_step_behavioral_desc')|tojson }},
+        {{ _('profile_step_experience_desc')|tojson }},
+        {{ _('profile_step_summary_desc')|tojson }}
+    ],
+    welcomeTitle: {{ _('profile_welcome_title')|tojson }},
+    welcomeDuration: {{ _('profile_welcome_duration')|tojson }},
+    welcomePrivacy: {{ _('profile_welcome_privacy')|tojson }},
+    attention: {{ _('profile_attention')|tojson }},
+    welcomeAttention: {{ _('profile_welcome_attention')|tojson }},
+    answerSummary: {{ _('profile_answer_summary')|tojson }},
+    unanswered: {{ _('profile_unanswered')|tojson }},
+    answeredCount: {{ _('profile_answered_count')|tojson }},
+    completeWarning: {{ _('profile_complete_warning')|tojson }},
+    stepIncomplete: {{ _('profile_step_incomplete')|tojson }},
+    submitting: {{ _('profile_submitting')|tojson }},
+    created: {{ _('profile_created')|tojson }},
+    submitError: {{ _('profile_submit_error')|tojson }},
+    submitRequestError: {{ _('profile_submit_request_error')|tojson }},
+    testComplete: {{ _('profile_test_complete')|tojson }},
+    rankingHint: {{ _('profile_ranking_hint')|tojson }},
+    moveUp: {{ _('profile_move_up')|tojson }},
+    moveDown: {{ _('profile_move_down')|tojson }}
+};
+
 let currentStep = 1;
 let totalSteps = 7;
 let answers = {};
 let questions = {};
+let rankingDragState = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     // Set initial progress bar width from data-width attribute
@@ -465,13 +113,50 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Add keyboard navigation support
+    // Add enhanced keyboard navigation support
     document.addEventListener('keydown', function(e) {
+        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+
         if (e.key === 'Enter' || e.key === ' ') {
             const focusedBtn = document.activeElement;
-            if (focusedBtn && focusedBtn.classList.contains('option-btn')) {
+            if (focusedBtn && (focusedBtn.classList.contains('option-btn') || focusedBtn.classList.contains('ranking-move-btn'))) {
                 e.preventDefault();
                 focusedBtn.click();
+            }
+        } else if (e.key >= '1' && e.key <= '5') {
+            const num = parseInt(e.key, 10);
+            let card = document.activeElement ? document.activeElement.closest('.question-card') : null;
+            if (!card) {
+                const cards = document.querySelectorAll('.question-card');
+                for (const c of cards) {
+                    if (!c.querySelector('.option-btn.selected')) {
+                        card = c;
+                        break;
+                    }
+                }
+                if (!card && cards.length) card = cards[0];
+            }
+            if (card) {
+                const options = card.querySelectorAll('.option-btn');
+                if (options[num - 1]) {
+                    e.preventDefault();
+                    options[num - 1].click();
+                    options[num - 1].focus();
+                }
+            }
+        } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            const focusedBtn = document.activeElement;
+            if (focusedBtn && focusedBtn.classList.contains('option-btn')) {
+                const card = focusedBtn.closest('.question-card');
+                if (card) {
+                    const options = Array.from(card.querySelectorAll('.option-btn'));
+                    const idx = options.indexOf(focusedBtn);
+                    if (idx !== -1) {
+                        e.preventDefault();
+                        const nextIdx = e.key === 'ArrowDown' ? Math.min(options.length - 1, idx + 1) : Math.max(0, idx - 1);
+                        options[nextIdx].focus();
+                    }
+                }
             }
         }
     });
@@ -482,7 +167,7 @@ document.addEventListener('DOMContentLoaded', function() {
 async function loadQuestions() {
     try {
         console.log('Loading questions from /profile/api/questions...');
-        const response = await fetch('/profile/api/questions');
+        const response = await fetch(ECuzdanEndpoints.profile.questions);
         console.log('Response status:', response.status);
         console.log('Response ok:', response.ok);
         
@@ -491,10 +176,11 @@ async function loadQuestions() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
         console.log('Response data:', data);
         
-        if (data.success) {
+        if (response.ok && data.success && Array.isArray(data.questions) && data.questions.length > 0) {
+                ECuzdanApi.dto.profileQuestions(data);
             // Soruları boyut bazlı grupla
             questions = {};
             data.questions.forEach(q => {
@@ -508,38 +194,22 @@ async function loadQuestions() {
             renderStep(currentStep);
         } else {
             console.error('API returned success=false:', data);
-            if(typeof window.showToast === 'function') window.showToast('Sorular yüklenirken hata oluştu: ' + (data.message || 'Bilinmeyen hata'), 'error');
-            else alert('Sorular yüklenirken hata oluştu: ' + (data.message || 'Bilinmeyen hata'));
+            if(typeof window.showToast === 'function') window.showToast(profileI18n.questionsError + ': ' + (data.message || profileI18n.unknownError), 'error');
+            else alert(profileI18n.questionsError + ': ' + (data.message || profileI18n.unknownError));
         }
     } catch (error) {
         console.error('Error loading questions:', error);
         console.error('Error details:', error.message, error.stack);
-        if(typeof window.showToast === 'function') window.showToast('Sorular yüklenirken hata oluştu: ' + error.message, 'error');
-        else alert('Sorular yüklenirken hata oluştu: ' + error.message);
+        if(typeof window.showToast === 'function') window.showToast(profileI18n.questionsError + ': ' + error.message, 'error');
+        else alert(profileI18n.questionsError + ': ' + error.message);
     }
 }
 
 function renderStep(step) {
     const container = document.getElementById('wizard-container');
-    const stepTitles = [
-        'Giriş',
-        'Finansal Okuryazarlık',
-        'Risk Kapasitesi',
-        'Risk Toleransı',
-        'Davranışsal Finans',
-        'Yatırım Deneyimi',
-        'Özet ve Gönderim'
-    ];
+    const stepTitles = profileI18n.stepTitles;
     
-    const stepDescriptions = [
-        'Bu test, yatırım profilinizi belirlemek için 5 farklı boyutta analiz yapacaktır.',
-        'Finansal temel kavramlar hakkında bilginizi ölçeceğiz.',
-        'Finansal durumunuz ve risk kapasitenizi analiz edeceğiz.',
-        'Risk toleransınız ve kayıp durumunda davranışınızı değerlendireceğiz.',
-        'Yatırım kararlarınızı etkileyen davranışsal faktörleri inceleyeceğiz.',
-        'Yatırım deneyiminizi ve kullandığınız araçları değerlendireceğiz.',
-        'Cevaplarınızı gözden geçirin ve profilinizi oluşturun.'
-    ];
+    const stepDescriptions = profileI18n.stepDescriptions;
     
     let html = `
         <div class="step-header">
@@ -552,11 +222,11 @@ function renderStep(step) {
         html += `
             <div class="welcome-screen">
                 <div class="welcome-emoji">📊</div>
-                <h5>Yatırımcı Profili</h5>
-                <p>Bu test yaklaşık 5-10 dakika sürecektir.</p>
-                <p>Tüm cevaplarınız gizli tutulacak ve sadece profil oluşturma için kullanılacaktır.</p>
+                <h5>${profileI18n.welcomeTitle}</h5>
+                <p>${profileI18n.welcomeDuration}</p>
+                <p>${profileI18n.welcomePrivacy}</p>
                 <div class="alert alert-info mt-4">
-                    <strong>Dikkat:</strong> Lütfen tüm soruları dürüstçe cevaplayın. Bu, size en uygun yatırım önerilerini sunmamızı sağlayacaktır.
+                    <strong>${profileI18n.attention}:</strong> ${profileI18n.welcomeAttention}
                 </div>
             </div>
         `;
@@ -605,21 +275,69 @@ function renderStep(step) {
     }
 }
 
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, character => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&var(--c, #039);'
+    }[character]));
+}
+
+function hasAnswer(question) {
+    const answer = answers[question.id];
+    if (question.type === 'ranking') {
+        return Array.isArray(answer) && answer.length === question.options.length;
+    }
+    return answer !== undefined;
+}
+
 function renderQuestion(question, index) {
+    const questionText = escapeHtml(question.question);
     let optionsHtml = '';
-    question.options.forEach(option => {
-        const isSelected = answers[question.id] === option.value ? 'selected' : '';
-        optionsHtml += `
-            <button type="button" class="option-btn ${isSelected}" onclick="selectOption('${question.id}', ${option.value}, this)" role="option" aria-selected="${isSelected === 'selected'}">
-                ${option.text}
-            </button>
-        `;
-    });
-    
+    let optionsRole = 'radiogroup';
+
+    if (question.type === 'ranking') {
+        optionsRole = 'list';
+        const defaultOrder = question.options.map(option => option.text);
+        const selectedOrder = Array.isArray(answers[question.id]) && answers[question.id].length === question.options.length
+            ? answers[question.id]
+            : defaultOrder;
+        const optionByText = new Map(question.options.map(option => [String(option.text), option]));
+        optionsHtml = selectedOrder.map((text, position) => {
+            const option = optionByText.get(String(text)) || { text };
+            const escapedText = escapeHtml(option.text);
+            return `
+                <div class="ranking-option" draggable="true" role="listitem" data-ranking-index="${position}"
+                     ondragstart="beginRankingDrag(event, '${question.id}', ${position})"
+                     ondragover="event.preventDefault()"
+                     ondrop="dropRankingOption(event, '${question.id}', ${position})">
+                    <span class="ranking-position" aria-hidden="true">${position + 1}</span>
+                    <span class="ranking-option-text">${escapedText}</span>
+                    <span class="ranking-controls">
+                        <button data-macro="button_secondary" type="button" class="ranking-move-btn" onclick="moveRankingOption('${question.id}', ${position}, -1)" ${position === 0 ? 'disabled' : ''} aria-label="${escapeHtml(profileI18n.moveUp)}">↑</button>
+                        <button data-macro="button_secondary" type="button" class="ranking-move-btn" onclick="moveRankingOption('${question.id}', ${position}, 1)" ${position === selectedOrder.length - 1 ? 'disabled' : ''} aria-label="${escapeHtml(profileI18n.moveDown)}">↓</button>
+                    </span>
+                </div>
+            `;
+        }).join('');
+    } else {
+        question.options.forEach(option => {
+            const isSelected = answers[question.id] === option.value ? 'selected' : '';
+            optionsHtml += `
+                <button data-macro="button_secondary" type="button" class="option-btn ${isSelected}" onclick="selectOption('${question.id}', ${option.value}, this)" role="radio" aria-checked="${isSelected === 'selected'}">
+                    ${escapeHtml(option.text)}
+                </button>
+            `;
+        });
+    }
+
     return `
         <div class="question-card" id="question-${question.id}" role="group" aria-labelledby="question-label-${question.id}">
-            <h5 id="question-label-${question.id}">${index + 1}. ${question.question}</h5>
-            <div class="options" role="radiogroup">
+            <h5 id="question-label-${question.id}">${index + 1}. ${questionText}</h5>
+            ${question.type === 'ranking' ? `<p class="ranking-hint">${escapeHtml(profileI18n.rankingHint)}</p>` : ''}
+            <div class="options ${question.type === 'ranking' ? 'ranking-options' : ''}" role="${optionsRole}" aria-label="${question.type === 'ranking' ? escapeHtml(profileI18n.rankingHint) : ''}">
                 ${optionsHtml}
             </div>
         </div>
@@ -628,13 +346,13 @@ function renderQuestion(question, index) {
 
 function renderSummary() {
     let html = '<div class="summary">';
-    html += '<h5>Cevap Özeti</h5>';
+    html += `<h5>${profileI18n.answerSummary}</h5>`;
     
     const dimensionNames = {
         'literacy': 'Finansal Okuryazarlık',
         'capacity': 'Risk Kapasitesi',
         'tolerance': 'Risk Toleransı',
-        'behavioral': 'Davranışsal Finans',
+        'behavioral': 'Davranişsal Finans',
         'experience': 'Yatırım Deneyimi'
     };
     
@@ -648,10 +366,16 @@ function renderSummary() {
         
         dimensionQuestions.forEach(q => {
             totalCount++;
-            if (answers[q.id] !== undefined) {
+            if (hasAnswer(q)) {
                 answeredCount++;
-                const selectedOption = q.options.find(o => o.value === answers[q.id]);
-                html += `<p><strong>${q.question}</strong>: ${selectedOption ? selectedOption.text : 'Cevaplanmadı'}</p>`;
+                const answer = answers[q.id];
+                const answerText = q.type === 'ranking'
+                    ? answer.map((text, position) => `${position + 1}. ${escapeHtml(text)}`).join(' → ')
+                    : (() => {
+                        const selectedOption = q.options.find(o => o.value === answer);
+                        return selectedOption ? escapeHtml(selectedOption.text) : escapeHtml(profileI18n.unanswered);
+                    })();
+                html += `<p><strong>${escapeHtml(q.question)}</strong>: ${answerText}</p>`;
             }
         });
         
@@ -659,12 +383,12 @@ function renderSummary() {
     });
     
     html += `<div class="alert alert-info">`;
-    html += `<strong>${answeredCount}/${totalCount}</strong> soru cevaplandı.`;
+    html += `<strong>${answeredCount}/${totalCount}</strong> ${profileI18n.answeredCount}`;
     html += `</div>`;
     
     if (answeredCount < totalCount) {
         html += `<div class="alert alert-warning">`;
-        html += `Tüm soruları cevaplamadan testi tamamlayamazsınız. Lütfen geri dönüp eksik soruları cevaplayın.`;
+        html += profileI18n.completeWarning;
         html += `</div>`;
         document.getElementById('btn-submit').disabled = true;
     } else {
@@ -677,16 +401,58 @@ function renderSummary() {
 
 function selectOption(questionId, value, buttonElement) {
     answers[questionId] = value;
-    
+
     // Seçimi görsel olarak güncelle
     const container = document.getElementById(`question-${questionId}`);
     const buttons = container.querySelectorAll('.option-btn');
     buttons.forEach(btn => {
         btn.classList.remove('selected');
-        btn.setAttribute('aria-selected', 'false');
+        btn.setAttribute('aria-checked', 'false');
     });
     buttonElement.classList.add('selected');
-    buttonElement.setAttribute('aria-selected', 'true');
+    buttonElement.setAttribute('aria-checked', 'true');
+}
+
+function setRankingOrder(questionId, order) {
+    answers[questionId] = order.slice();
+    renderStep(currentStep);
+}
+
+function moveRankingOption(questionId, position, direction) {
+    const question = Object.values(questions).flat().find(item => String(item.id) === String(questionId));
+    if (!question || question.type !== 'ranking') return;
+    const currentOrder = Array.isArray(answers[questionId]) && answers[questionId].length === question.options.length
+        ? answers[questionId].slice()
+        : question.options.map(option => option.text);
+    const targetPosition = position + direction;
+    if (targetPosition < 0 || targetPosition >= currentOrder.length) return;
+    [currentOrder[position], currentOrder[targetPosition]] = [currentOrder[targetPosition], currentOrder[position]];
+    setRankingOrder(questionId, currentOrder);
+}
+
+function beginRankingDrag(event, questionId, position) {
+    rankingDragState = { questionId: String(questionId), position };
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', `${questionId}:${position}`);
+}
+
+function dropRankingOption(event, questionId, targetPosition) {
+    event.preventDefault();
+    const dragState = rankingDragState || {};
+    const [dragQuestionId, dragPosition] = String(event.dataTransfer?.getData('text/plain') || '').split(':');
+    const sourceQuestionId = dragState.questionId || dragQuestionId;
+    const sourcePosition = Number.isInteger(dragState.position) ? dragState.position : Number(dragPosition);
+    rankingDragState = null;
+    if (!sourceQuestionId || sourceQuestionId !== String(questionId) || !Number.isInteger(sourcePosition)) return;
+
+    const question = Object.values(questions).flat().find(item => String(item.id) === String(questionId));
+    if (!question || sourcePosition === targetPosition) return;
+    const currentOrder = Array.isArray(answers[questionId]) && answers[questionId].length === question.options.length
+        ? answers[questionId].slice()
+        : question.options.map(option => option.text);
+    const [movedItem] = currentOrder.splice(sourcePosition, 1);
+    currentOrder.splice(targetPosition, 0, movedItem);
+    setRankingOrder(questionId, currentOrder);
 }
 
 function toggleExplanation(questionId) {
@@ -701,10 +467,15 @@ function toggleExplanation(questionId) {
     }
 }
 
+function scrollWizardToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 function goBack() {
     if (currentStep > 1) {
         currentStep--;
         renderStep(currentStep);
+        scrollWizardToTop();
     }
 }
 
@@ -718,16 +489,16 @@ function goNext() {
             
             let unansweredQuestions = [];
             dimensionQuestions.forEach(q => {
-                if (answers[q.id] === undefined) {
+                if (!hasAnswer(q)) {
                     unansweredQuestions.push(q.question);
                 }
             });
             
             if (unansweredQuestions.length > 0) {
                 if(typeof window.showToast === 'function') {
-                    window.showToast('Lütfen bu adımdaki tüm soruları cevaplayın.', 'error');
+                    window.showToast(profileI18n.stepIncomplete, 'error');
                 } else {
-                    alert('Lütfen bu adımdaki tüm soruları cevaplayın.');
+                    alert(profileI18n.stepIncomplete);
                 }
                 return;
             }
@@ -735,32 +506,34 @@ function goNext() {
         
         currentStep++;
         renderStep(currentStep);
+        scrollWizardToTop();
     }
 }
 
 async function submitTest() {
     const submitBtn = document.getElementById('btn-submit');
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Gönderiliyor...';
+    submitBtn.textContent = profileI18n.submitting;
     
     try {
         // Cevapları API formatına dönüştür
         const answersData = [];
         Object.keys(questions).forEach(dimension => {
             questions[dimension].forEach(q => {
-                if (answers[q.id] !== undefined) {
-                    const selectedOption = q.options.find(o => o.value === answers[q.id]);
+                if (hasAnswer(q)) {
+                    const answer = answers[q.id];
+                    const selectedOption = q.options.find(o => o.value === answer);
                     answersData.push({
                         question_id: q.id,
                         dimension: q.dimension,
-                        value: answers[q.id],
-                        text: selectedOption ? selectedOption.text : ''
+                        value: answer,
+                        text: q.type === 'ranking' ? answer.join(' → ') : (selectedOption ? selectedOption.text : '')
                     });
                 }
             });
         });
         
-        const response = await fetch('/profile/api/submit', {
+        const response = await fetch(ECuzdanEndpoints.profile.submit, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -769,24 +542,24 @@ async function submitTest() {
             body: JSON.stringify({ answers: answersData })
         });
         
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
         
-        if (data.success) {
-            if(typeof window.showToast === 'function') window.showToast('Profil başarıyla oluşturuldu!', 'success');
-            else alert('Profil başarıyla oluşturuldu!');
+        if (response.ok && data.success && data.profile_id) {
+            if(typeof window.showToast === 'function') window.showToast(profileI18n.created, 'success');
+            else alert(profileI18n.created);
             window.location.href = `/profile/result/${data.profile_id}`;
         } else {
-            if(typeof window.showToast === 'function') window.showToast('Profil oluşturulurken hata oluştu: ' + data.message, 'error');
-            else alert('Profil oluşturulurken hata oluştu: ' + data.message);
+            if(typeof window.showToast === 'function') window.showToast(profileI18n.submitError + ': ' + data.message, 'error');
+            else alert(profileI18n.submitError + ': ' + data.message);
             submitBtn.disabled = false;
-            submitBtn.textContent = 'Testi Tamamla';
+            submitBtn.textContent = profileI18n.testComplete;
         }
     } catch (error) {
         console.error('Error submitting test:', error);
-        if(typeof window.showToast === 'function') window.showToast('Profil gönderilirken hata oluştu.', 'error');
-        else alert('Profil gönderilirken hata oluştu.');
+        if(typeof window.showToast === 'function') window.showToast(profileI18n.submitRequestError, 'error');
+        else alert(profileI18n.submitRequestError);
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Testi Tamamla';
+        submitBtn.textContent = profileI18n.testComplete;
     }
 }
 </script>

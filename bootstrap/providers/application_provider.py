@@ -56,6 +56,14 @@ class ApplicationProvider:
 
         return self._get_or_create('portfolio_app', _factory)
 
+    def notifications(self):
+        from application.notifications.notification_application import NotificationApplicationService
+        from domain.notifications.services.notification_service import NotificationService
+        def _factory():
+            notification_service = NotificationService(repository=self.domains.repositories.notification())
+            return NotificationApplicationService(notification_service=notification_service)
+        return self._get_or_create('notifications_app', _factory)
+
     def users(self):
         from application.users.user_application import UserApplicationService
         def _factory():

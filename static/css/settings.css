@@ -1,0 +1,46 @@
+/* ==========================================================================
+   E-Cüzdan — Settings & System Configuration Styles (static/css/settings.css)
+   Clean, User-Friendly, Premium UI & Dark Mode Synchronized
+   ========================================================================== */
+
+.settings-section {
+    transition: var(--transition-spring, all 0.2s cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+.password-strength-bar {
+    height: 4px;
+    border-radius: var(--radius-sm, 4px);
+    transition: var(--transition-normal, all 0.2s ease);
+}
+
+.settings-tab {
+    transition: var(--transition-normal, all 0.2s ease);
+    white-space: nowrap;
+}
+
+.settings-tab[aria-selected="true"] {
+    background: linear-gradient(to right, var(--color-primary, #4f46e5), var(--color-primary-hover, #4338ca));
+    color: var(--color-surface, #ffffff);
+    box-shadow: 0 4px 14px -4px rgba(79, 70, 229, 0.6);
+}
+
+.settings-tab[aria-selected="false"]:hover {
+    background: var(--slate-100, #f1f5f9);
+    color: var(--slate-900, #0f172a);
+}
+
+.dark .settings-tab[aria-selected="false"]:hover {
+    background: rgba(51, 65, 85, 0.6);
+    color: #ffffff;
+}
+
+.currency-option input:checked + div {
+    border-color: var(--color-primary, #4f46e5);
+    background: rgba(79, 70, 229, 0.06);
+    box-shadow: inset 0 0 0 1px var(--color-primary, #4f46e5);
+}
+
+.dark .currency-option input:checked + div {
+    background: rgba(79, 70, 229, 0.2);
+    border-color: #818cf8;
+}

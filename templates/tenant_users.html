@@ -6,29 +6,41 @@
 /* ── Tenant Users Page ───────────────────────────────────────────── */
 .tu-badge {
   display: inline-flex; align-items: center; gap: 5px;
-  padding: 3px 10px; border-radius: 999px;
-  font-size: 10px; font-weight: 800; letter-spacing: .04em;
+  padding: var(--space-pad-3, 3px) 10px; border-radius: var(--border-radius-999, 999px);
+  font-size: var(--font-size-10, 10px); font-weight: 800; letter-spacing: .04em;
 }
-.tu-badge-superadmin { background:rgba(245,158,11,.15); color:#fbbf24; border:1px solid rgba(245,158,11,.25); }
-.tu-badge-admin      { background:rgba(124,58,237,.14); color:#a78bfa; border:1px solid rgba(124,58,237,.22); }
-.tu-badge-member     { background:rgba(99,102,241,.12); color:#818cf8; border:1px solid rgba(99,102,241,.20); }
-.tu-badge-you        { background:rgba(16,185,129,.12); color:#34d399; border:1px solid rgba(16,185,129,.20); }
+.tu-badge-superadmin { background:rgba(245,158,11,.15); color:var(--amber-400); border:1px solid rgba(245,158,11,.25); }
+.tu-badge-admin      { background:rgba(124,58,237,.14); color:var(--violet-400); border:1px solid rgba(124,58,237,.22); }
+.tu-badge-member     { background:rgba(99,102,241,.12); color:var(--indigo-400); border:1px solid rgba(99,102,241,.20); }
+.tu-badge-you        { background:rgba(16,185,129,.12); color:var(--emerald-400); border:1px solid rgba(16,185,129,.20); }
 
 .stat-card {
   background:rgba(255,255,255,.025);
   border:1px solid rgba(255,255,255,.07);
-  border-radius:16px; padding:1.25rem 1.5rem;
+  border-radius: var(--border-radius-16, 16px); padding:1.25rem 1.5rem;
   display:flex; flex-direction:column; gap:.25rem;
 }
-.stat-label { font-size:9px; font-weight:800; color:rgba(255,255,255,.3); text-transform:uppercase; letter-spacing:.14em; }
-.stat-value { font-size:28px; font-weight:900; color:#fff; letter-spacing:-.04em; line-height:1; }
-.stat-sub   { font-size:10px; color:rgba(255,255,255,.3); margin-top:.15rem; }
+.stat-card-purple { border-top:2px solid var(--violet-600); }
+.stat-card-amber { border-top:2px solid var(--amber-500); }
+.stat-card-indigo { border-top:2px solid var(--indigo-500); }
+.stat-card-emerald { border-top:2px solid var(--emerald-500); }
+.stat-label { font-size: var(--font-size-9, 9px); font-weight:800; color:rgba(255,255,255,.3); text-transform:uppercase; letter-spacing:.14em; }
+.stat-value { font-size: var(--font-size-28, 28px); font-weight:900; color:var(--color-surface); letter-spacing:-.04em; line-height:1; }
+.stat-sub   { font-size: var(--font-size-10, 10px); color:rgba(255,255,255,.3); margin-top:.15rem; }
+
+/* ── Invite Card ───────────────────────────────────────────────── */
+.invite-icon { font-size: var(--font-size-18, 18px); }
+.btn-sm-copy { font-size: var(--font-size-10, 10px); }
+.user-list-bg { background:rgba(255,255,255,.018); }
+.user-actions { display:flex;gap:.4rem;align-items:center;flex-shrink:0; }
+.btn-sm-emerald { border-color:rgba(16,185,129,.3);color:var(--emerald-400); }
+.btn-sm-amber { border-color:rgba(245,158,11,.25);color:var(--amber-400); }
 
 .user-row {
   display:grid;
   grid-template-columns: 42px 1fr auto auto;
   align-items:center; gap:1rem;
-  padding:.9rem 1.1rem; border-radius:14px;
+  padding:.9rem 1.1rem; border-radius: var(--border-radius-14, 14px);
   background:rgba(255,255,255,.018);
   border:1px solid rgba(255,255,255,.055);
   margin-bottom:.5rem;
@@ -41,53 +53,53 @@
 }
 
 .user-avatar {
-  width:42px; height:42px; border-radius:12px;
+  width:42px; height:42px; border-radius: var(--border-radius-12, 12px);
   display:flex; align-items:center; justify-content:center;
-  font-size:16px; font-weight:900; color:#fff;
+  font-size: var(--font-size-16, 16px); font-weight:900; color:var(--color-white, var(--color-white, #ffffff)f);
   flex-shrink:0; position:relative;
 }
 .user-avatar-online::after {
   content:''; position:absolute; bottom:2px; right:2px;
   width:8px; height:8px; border-radius:50%;
-  background:#10b981; border:2px solid #0d1129;
+  background:var(--color-emerald-500, var(--color-emerald-500, #10b981)); border:2px solid var(--color-night-850, var(--color-night-850, #0d1129));
 }
 
-.user-name  { font-size:14px; font-weight:800; color:#e2e8f0; }
-.user-meta  { font-size:10px; color:rgba(255,255,255,.32); margin-top:2px; display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; }
+.user-name  { font-size: var(--font-size-14, 14px); font-weight:800; color:var(--color-slate-200, var(--color-slate-200, #e2e8f0)); }
+.user-meta  { font-size: var(--font-size-10, 10px); color:rgba(255,255,255,.32); margin-top:2px; display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; }
 
 .btn-sm {
-  padding:6px 11px; border-radius:9px;
+  padding: var(--space-pad-6, 6px) 11px; border-radius: var(--border-radius-9, 9px);
   border:1px solid rgba(255,255,255,.09);
   background:rgba(255,255,255,.04); color:rgba(255,255,255,.58);
-  cursor:pointer; font-size:11px; font-weight:700;
+  cursor:pointer; font-size: var(--font-size-11, 11px); font-weight:700;
   transition:all .18s; display:inline-flex; align-items:center; gap:5px;
   white-space:nowrap;
 }
-.btn-sm:hover       { background:rgba(124,58,237,.18); border-color:rgba(124,58,237,.35); color:#c4b5fd; }
-.btn-sm-danger:hover{ background:rgba(239,68,68,.15);  border-color:rgba(239,68,68,.30);  color:#fca5a5; }
+.btn-sm:hover       { background:rgba(124,58,237,.18); border-color:rgba(124,58,237,.35); color:var(--color-violet-300, var(--color-violet-300, #c4b5fd)); }
+.btn-sm-danger:hover{ background:rgba(239,68,68,.15);  border-color:rgba(239,68,68,.30);  color:var(--color-rose-300, var(--color-rose-300, #fca5a5)); }
 .btn-sm-invite {
-  background:linear-gradient(135deg,#10b981,#059669);
-  border:none; color:#fff; font-weight:800;
+  background:linear-gradient(135deg,var(--color-emerald-500, var(--color-emerald-500, #10b981)),var(--c, var(--color-emerald-600, #059669))9);
+  border:none; color:var(--color-white, var(--color-white, #ffffff)f); font-weight:800;
   box-shadow:0 4px 14px rgba(16,185,129,.28);
 }
-.btn-sm-invite:hover { opacity:.9; transform:translateY(-1px); color:#fff; }
+.btn-sm-invite:hover { opacity:.9; transform:translateY(-1px); color:var(--color-white, var(--color-white, #ffffff)f); }
 
 .invite-card {
   background:rgba(16,185,129,.05);
   border:1px solid rgba(16,185,129,.18);
-  border-radius:16px; padding:1.25rem 1.5rem;
+  border-radius: var(--border-radius-16, 16px); padding:1.25rem 1.5rem;
 }
 .invite-link-box {
   background:rgba(0,0,0,.3); border:1px solid rgba(255,255,255,.08);
-  border-radius:10px; padding:10px 14px;
-  font-size:11px; color:#6ee7b7; font-family:monospace;
+  border-radius: var(--border-radius-10, 10px); padding: var(--space-pad-10, 10px) 14px;
+  font-size: var(--font-size-11, 11px); color:var(--color-emerald-300, var(--color-emerald-300, #6ee7b7)); font-family:monospace;
   word-break:break-all; margin-top:.65rem; user-select:all;
 }
 
 /* Search */
 .search-input {
   background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.09);
-  border-radius:10px; padding:8px 14px; font-size:12px; color:#cbd5e1;
+  border-radius: var(--border-radius-10, 10px); padding: var(--space-pad-8, 8px) 14px; font-size: var(--font-size-12, 12px); color:var(--color-slate-300, var(--color-slate-300, #cbd5e1));
   outline:none; width:220px; transition:border-color .18s;
 }
 .search-input:focus { border-color:rgba(124,58,237,.45); }
@@ -95,8 +107,8 @@
 
 /* Delete confirm modal */
 #deleteModal .modal-box {
-  background:#0d1129; border:1px solid rgba(239,68,68,.25);
-  border-radius:20px; padding:1.75rem;
+  background:var(--color-night-850, var(--color-night-850, #0d1129)); border:1px solid rgba(239,68,68,.25);
+  border-radius: var(--border-radius-20, 20px); padding:1.75rem;
   box-shadow:0 30px 60px rgba(0,0,0,.6);
 }
 </style>
@@ -107,35 +119,35 @@
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
     <div>
       <h2 class="text-2xl font-black text-slate-100 tracking-tight">Kullanıcı Yönetimi</h2>
-      <p class="text-sm text-slate-400 mt-1">Tenant üyelerini yönet, rollerini değiştir, yeni üye davet et.</p>
+      <p class="text-sm text-slate-400 mt-1">{{ _('ui_auto_c7b32e6c4150') }}</p>
     </div>
     <a href="{{ url_for('tenant.invite') }}" class="btn-sm btn-sm-invite">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-      Kullanıcı Davet Et
+      {{ _('ui_auto_d7c97f44a647') }}
     </a>
   </div>
 
   <!-- ── İstatistik Kartları ── -->
   <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-    <div class="stat-card" style="border-top:2px solid #7c3aed;">
-      <div class="stat-label">Toplam Üye</div>
+    <div class="stat-card stat-card-purple">
+      <div class="stat-label">{{ _('ui_auto_4f9bacbf1537') }}</div>
       <div class="stat-value">{{ users|length }}</div>
-      <div class="stat-sub">Bu workspace'de</div>
+      <div class="stat-sub">{{ _('ui_auto_a99d8d355daa') }}</div>
     </div>
-    <div class="stat-card" style="border-top:2px solid #f59e0b;">
-      <div class="stat-label">Yönetici</div>
+    <div class="stat-card stat-card-amber">
+      <div class="stat-label">{{ _('ui_auto_8459a48382a3') }}</div>
       <div class="stat-value">{{ users|selectattr('role','in',['tenant_admin','sistem_yoneticisi','yonetici'])|list|length }}</div>
-      <div class="stat-sub">Admin yetkili</div>
+      <div class="stat-sub">{{ _('ui_auto_87a47fcbeaa9') }}</div>
     </div>
-    <div class="stat-card" style="border-top:2px solid #6366f1;">
-      <div class="stat-label">Standart</div>
+    <div class="stat-card stat-card-indigo">
+      <div class="stat-label">{{ _('ui_auto_cffc747c8943') }}</div>
       <div class="stat-value">{{ users|selectattr('role','equalto','kullanici')|list|length }}</div>
-      <div class="stat-sub">Normal üye</div>
+      <div class="stat-sub">{{ _('ui_auto_a41514758e3e') }}</div>
     </div>
-    <div class="stat-card" style="border-top:2px solid #10b981;">
+    <div class="stat-card stat-card-emerald">
       <div class="stat-label">OAuth</div>
       <div class="stat-value">{{ users|selectattr('auth_provider','ne','LOCAL')|list|length }}</div>
-      <div class="stat-sub">Sosyal giriş</div>
+      <div class="stat-sub">{{ _('ui_auto_feac4e803e8d') }}</div>
     </div>
   </div>
 
@@ -143,24 +155,24 @@
   {% if invite_link %}
   <div class="invite-card">
     <div class="flex items-center gap-2 mb-1">
-      <span style="font-size:18px;">🔗</span>
-      <span class="text-sm font-bold text-emerald-300">Davet Linki Oluşturuldu</span>
+      <span class="invite-icon">🔗</span>
+      <span class="text-sm font-bold text-emerald-300">{{ _('ui_auto_4790c11b9b00') }}</span>
     </div>
-    <p class="text-xs text-slate-400">Bu linki davet etmek istediğin kişiyle paylaş. <strong>24 saat geçerlidir.</strong></p>
+    <p class="text-xs text-slate-400">{{ _('ui_auto_8a902fda5be6') }} <strong>{{ _('ui_auto_2a23c4a951dc') }}</strong></p>
     <div class="invite-link-box" id="inviteLinkBox">{{ invite_link }}</div>
-    <button type="button" onclick="copyInviteLink()" class="btn-sm mt-2" style="font-size:10px;">
-      📋 Kopyala
+    <button data-macro="button_secondary" type="button" onclick="copyInviteLink()" class="btn-sm btn-sm-copy mt-2">
+      {{ _('ui_auto_6d6de4f27e93') }}
     </button>
   </div>
   {% endif %}
 
   <!-- ── Kullanıcı Listesi ── -->
-  <div class="rounded-2xl border border-white/[.055] overflow-hidden" style="background:rgba(255,255,255,.018);">
+  <div class="rounded-2xl border border-white/[.055] overflow-hidden user-list-bg">
 
     <!-- Liste başlığı + arama -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-white/[.055]">
       <h3 class="text-xs font-black text-slate-300 uppercase tracking-widest">
-        Üye Listesi <span class="text-slate-500 font-medium normal-case ml-1">({{ users|length }} kullanıcı)</span>
+        {{ _('ui_auto_f5b676e42180') }} <span id="tenantUserCountBadge" class="text-slate-500 font-medium normal-case ml-1">({{ users|length }} kullanıcı)</span>
       </h3>
       <input
         type="text"
@@ -174,47 +186,43 @@
     <!-- Kullanıcı satırları -->
     <div class="p-4 space-y-1" id="userList">
       {% if not users %}
-      <div class="text-center py-10 text-slate-500 text-sm">Henüz üye yok.</div>
+      <div class="text-center py-10 text-slate-500 text-sm">{{ _('ui_auto_6bdf7e2aca7b') }}</div>
       {% endif %}
 
       {% for user in users %}
       <div class="user-row" data-username="{{ user.username|lower }}">
 
         <!-- Avatar -->
-        <div class="user-avatar {% if user.id == current_user.id %}user-avatar-online{% endif %}"
-             style="background:linear-gradient(135deg,
-               {% if user.is_super_admin %}#f59e0b,#d97706
-               {% elif user.role in ['tenant_admin','yonetici'] %}#7c3aed,#6366f1
-               {% else %}#475569,#334155{% endif %});">
+        <div class="user-avatar {% if user.id == current_user.id %}user-avatar-online{% endif %} {% if user.is_super_admin %}bg-gradient-to-br from-amber-500 to-amber-600{% elif user.role in ['tenant_admin','yonetici'] %}bg-gradient-to-br from-violet-600 to-indigo-500{% else %}bg-gradient-to-br from-slate-600 to-slate-700{% endif %}">
           {{ user.username[0]|upper }}
         </div>
 
         <!-- Bilgi -->
         <div>
-          <div class="user-name" style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;">
+          <div class="user-name flex items-center gap-1.5 flex-wrap">
             {{ user.username }}
             {% if user.id == current_user.id %}
-              <span class="tu-badge tu-badge-you">Sen</span>
+              <span class="tu-badge tu-badge-you">{{ _('ui_auto_f422ba85db54') }}</span>
             {% endif %}
             {% if user.is_super_admin %}
-              <span class="tu-badge tu-badge-superadmin">Platform Sahibi</span>
+              <span class="tu-badge tu-badge-superadmin">{{ _('ui_auto_81a857495415') }}</span>
             {% elif user.role in ['yonetici','tenant_admin'] %}
-              <span class="tu-badge tu-badge-admin">Tenant Admin</span>
+              <span class="tu-badge tu-badge-admin">{{ _('ui_auto_7cbbc6ca9723') }}</span>
             {% else %}
-              <span class="tu-badge tu-badge-member">Üye</span>
+              <span class="tu-badge tu-badge-member">{{ _('ui_auto_49efb2d86a1d') }}</span>
             {% endif %}
             {% if user.auth_provider != 'LOCAL' %}
-              <span style="font-size:9px;color:rgba(255,255,255,.3);font-weight:700;">{{ user.auth_provider }}</span>
+              <span class="text-[9px] text-white/30 font-bold">{{ user.auth_provider }}</span>
             {% endif %}
           </div>
           <div class="user-meta">
             <span>🌐 {{ user.language|upper }}</span>
             {% if user.last_login_at %}
-              <span title="{{ user.last_login_at }}">
+              <span title="{{ _('ui_auto_50b66b7a6686') }}">
                 🕐 Son giriş: {{ user.last_login_at.strftime('%d.%m.%Y %H:%M') }}
               </span>
             {% else %}
-              <span>🕐 Hiç giriş yapmadı</span>
+              <span>{{ _('ui_auto_98225df9c0c2') }}</span>
             {% endif %}
             <span>🆔 #{{ user.id }}</span>
           </div>
@@ -226,11 +234,11 @@
         </div>
 
         <!-- Eylemler -->
-        <div style="display:flex;gap:.4rem;align-items:center;flex-shrink:0;">
+        <div class="user-actions">
           {% if user.id != current_user.id and not user.is_super_admin %}
             <!-- Rol değiştir -->
-            <button type="button" onclick="openRoleModal({{ user.id }}, '{{ user.role }}')"
-              class="btn-sm" title="Rol değiştir">
+            <button data-macro="button_secondary" type="button" onclick="openRoleModal({{ user.id }}, '{{ user.role }}')"
+              class="btn-sm" title="{{ _('ui_auto_e41f3613d5d8') }}">
               <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                 <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
               </svg>
@@ -238,8 +246,8 @@
             </button>
 
             <!-- Kullanıcı sil -->
-            <button type="button" onclick="openDeleteModal({{ user.id }}, '{{ user.username }}')"
-              class="btn-sm btn-sm-danger" title="Kullanıcıyı sil">
+            <button data-macro="button_secondary" type="button" onclick="openDeleteModal({{ user.id }}, '{{ user.username }}')"
+              class="btn-sm btn-sm-danger" title="{{ _('ui_auto_049a8ee325e9') }}">
               <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                 <path d="M3 6h18m-2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
               </svg>
@@ -255,7 +263,7 @@
 
       <!-- Arama sonucu yok mesajı -->
       <div id="noResults" class="hidden text-center py-8 text-slate-500 text-sm">
-        Arama kriterine uygun kullanıcı bulunamadı.
+        {{ _('ui_auto_9762f0ac667f') }}
       </div>
     </div>
   </div>
@@ -263,14 +271,14 @@
   <!-- ── Hızlı Navigasyon ── -->
   <div class="flex flex-wrap gap-2">
     <a href="{{ url_for('tenant.invite') }}"
-       class="btn-sm" style="border-color:rgba(16,185,129,.3);color:#34d399;">
+       class="btn-sm btn-sm-emerald">
       <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-      Yeni Davet
+      {{ _('ui_auto_ab7dafca2df7') }}
     </a>
     <a href="{{ url_for('tenant.invites') }}"
-       class="btn-sm" style="border-color:rgba(245,158,11,.25);color:#fbbf24;">
+       class="btn-sm btn-sm-amber">
       <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-      Davet Listesi
+      {{ _('ui_auto_d649a19271c7') }}
     </a>
     <a href="{{ url_for('settings.settings') }}"
        class="btn-sm">
@@ -286,35 +294,31 @@
      ROL DEĞİŞTİR MODAL
 ═════════════════════════════════════════════════════════════════════ -->
 <div id="roleModal"
-     class="fixed inset-0 z-50 hidden items-center justify-center"
-     style="background:rgba(0,0,0,.65);backdrop-filter:blur(5px);"
+     class="fixed inset-0 z-50 hidden items-center justify-center bg-black/65 backdrop-blur-[5px]"
      role="dialog" aria-modal="true" aria-labelledby="roleModalTitle">
-  <div class="w-full max-w-sm mx-4 rounded-2xl border border-white/10 p-6"
-       style="background:#0d1129;box-shadow:0 30px 60px rgba(0,0,0,.55);">
+  <div class="w-full max-w-sm mx-4 rounded-2xl border border-white/10 p-6 bg-slate-900 shadow-2xl">
     <div class="flex items-center justify-between mb-4">
-      <h3 id="roleModalTitle" class="text-base font-black text-white">Rol Değiştir</h3>
-      <button type="button" onclick="closeRoleModal()" class="text-slate-500 hover:text-white transition-colors text-xl leading-none" aria-label="Kapat">✕</button>
+      <h3 id="roleModalTitle" class="text-base font-black text-white">{{ _('ui_auto_78e1704b99a2') }}</h3>
+      <button data-macro="button_secondary" type="button" onclick="closeRoleModal()" class="text-slate-500 hover:text-white transition-colors text-xl leading-none" aria-label="Kapat">✕</button>
     </div>
-    <p class="text-xs text-slate-400 mb-4">Kullanıcının tenant içindeki rolünü güncelle.</p>
+    <p class="text-xs text-slate-400 mb-4">{{ _('ui_auto_72d398c654dd') }}</p>
     <form method="POST" id="roleForm">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="mb-4">
-        <label class="block text-xs font-800 text-slate-300 mb-2 uppercase tracking-wide" for="roleSelect">Yeni Rol</label>
+        <label class="block text-xs font-800 text-slate-300 mb-2 uppercase tracking-wide" for="roleSelect">{{ _('ui_auto_bcc124562fd2') }}</label>
         <select id="roleSelect" name="role"
-                class="w-full rounded-xl border border-white/10 px-4 py-3 text-sm font-600 text-white focus:outline-none focus:border-violet-500"
-                style="background:#182142;">
-          <option value="kullanici">👤 Standart Üye — kendi verilerini yönetir</option>
-          <option value="tenant_admin">🛡 Tenant Admin — üye yönetimi ve davet yetkisi</option>
+                class="w-full rounded-xl border border-white/10 px-4 py-3 text-sm font-semibold text-white focus:outline-none focus:border-violet-500 bg-slate-900">
+          <option value="kullanici">{{ _('ui_auto_de23e12f1c4f') }}</option>
+          <option value="tenant_admin">{{ _('ui_auto_2b29866d7496') }}</option>
         </select>
       </div>
       <div class="flex gap-3 justify-end">
-        <button type="button" onclick="closeRoleModal()"
+        <button data-macro="button_secondary" type="button" onclick="closeRoleModal()"
                 class="px-4 py-2 rounded-xl text-sm font-600 text-slate-400 border border-white/10 hover:border-white/20 transition-colors">
           İptal
         </button>
-        <button type="submit"
-                class="px-5 py-2 rounded-xl text-sm font-800 text-white transition-all hover:-translate-y-px"
-                style="background:linear-gradient(135deg,#7c3aed,#6366f1);box-shadow:0 4px 14px rgba(124,58,237,.35);">
+        <button data-macro="button_secondary" type="submit"
+                class="px-5 py-2 rounded-xl text-sm font-800 text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 transition-all hover:-translate-y-px">
           Kaydet
         </button>
       </div>
@@ -327,38 +331,36 @@
      KULLANICI SİL MODAL (CSRF-KORUMAL I)
 ═════════════════════════════════════════════════════════════════════ -->
 <div id="deleteModal"
-     class="fixed inset-0 z-50 hidden items-center justify-center"
-     style="background:rgba(0,0,0,.65);backdrop-filter:blur(5px);"
+     class="fixed inset-0 z-50 hidden items-center justify-center bg-black/65 backdrop-blur-[5px]"
      role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
   <div class="modal-box w-full max-w-sm mx-4">
     <div class="flex items-center justify-between mb-4">
       <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:rgba(239,68,68,.15);">
-          <svg width="18" height="18" fill="none" stroke="#f87171" stroke-width="2.5" viewBox="0 0 24 24">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center bg-rose-500/15">
+          <svg width="18" height="18" fill="none" stroke="var(--color-rose-400, var(--color-rose-400, #f87171))" stroke-width="2.5" viewBox="0 0 24 24">
             <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
           </svg>
         </div>
-        <h3 id="deleteModalTitle" class="text-base font-black text-white">Kullanıcıyı Sil</h3>
+        <h3 id="deleteModalTitle" class="text-base font-black text-white">{{ _('ui_auto_f24f4f11c0a5') }}</h3>
       </div>
-      <button type="button" onclick="closeDeleteModal()" class="text-slate-500 hover:text-white transition-colors text-xl leading-none" aria-label="Kapat">✕</button>
+      <button data-macro="button_secondary" type="button" onclick="closeDeleteModal()" class="text-slate-500 hover:text-white transition-colors text-xl leading-none" aria-label="Kapat">✕</button>
     </div>
 
     <p class="text-sm text-slate-300 mb-1">
-      <strong id="deleteTargetName" class="text-rose-300"></strong> adlı kullanıcı tenant'tan çıkarılacak.
+      <strong id="deleteTargetName" class="text-rose-300"></strong> {{ _('ui_auto_224ab03a01cb') }}
     </p>
-    <p class="text-xs text-slate-500 mb-5">Bu işlem geri alınamaz. Kullanıcının tüm oturum bilgileri silinir.</p>
+    <p class="text-xs text-slate-500 mb-5">{{ _('ui_auto_a28b5e97b5c8') }}</p>
 
     <form method="POST" id="deleteForm">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="flex gap-3 justify-end">
-        <button type="button" onclick="closeDeleteModal()"
+        <button data-macro="button_secondary" type="button" onclick="closeDeleteModal()"
                 class="px-4 py-2 rounded-xl text-sm font-600 text-slate-400 border border-white/10 hover:border-white/20 transition-colors">
-          Vazgeç
+          {{ _('ui_auto_14d2482077ea') }}
         </button>
-        <button type="submit"
-                class="px-5 py-2 rounded-xl text-sm font-800 text-white"
-                style="background:linear-gradient(135deg,#ef4444,#dc2626);box-shadow:0 4px 14px rgba(239,68,68,.35);">
-          Evet, Sil
+        <button data-macro="button_secondary" type="submit"
+                class="px-5 py-2 rounded-xl text-sm font-800 text-white bg-rose-600 hover:bg-rose-700 shadow-lg shadow-rose-500/20 transition-all hover:-translate-y-px">
+          {{ _('ui_auto_b3f37835376a') }}
         </button>
       </div>
     </form>
@@ -390,6 +392,8 @@ function _openModal(id) {
   m.classList.remove('hidden');
   m.classList.add('flex');
   document.body.style.overflow = 'hidden';
+  const firstFocusable = m.querySelector('select, input:not([type="hidden"]), button[type="submit"], button:not([disabled])');
+  if (firstFocusable) firstFocusable.focus();
 }
 function _closeModal(id) {
   const m = document.getElementById(id);
@@ -424,7 +428,10 @@ function filterUsers(query) {
     row.style.display = show ? '' : 'none';
     if (show) visible++;
   });
-  document.getElementById('noResults').classList.toggle('hidden', visible > 0);
+  const noRes = document.getElementById('noResults');
+  if (noRes) noRes.classList.toggle('hidden', visible > 0);
+  const countBadge = document.getElementById('tenantUserCountBadge');
+  if (countBadge) countBadge.textContent = `(${visible} kullanıcı)`;
 }
 
 {% if invite_link %}

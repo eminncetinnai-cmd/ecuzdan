@@ -3,21 +3,23 @@ Unit Tests - Audit
 Audit trail logging utility functions
 """
 
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+
 from utils.audit import (
-    audit_log,
-    ACTION_LOGIN,
-    ACTION_LOGOUT,
-    ACTION_REGISTER,
-    ACTION_TENANT_CREATED,
     ACTION_DATA_EXPORT,
+    ACTION_INVITE_CREATED,
+    ACTION_LOGIN,
+    ACTION_LOGIN_FAILED,
+    ACTION_LOGOUT,
+    ACTION_PW_CHANGED,
+    ACTION_REGISTER,
     ACTION_RESET_DATA,
     ACTION_ROLE_CHANGED,
+    ACTION_TENANT_CREATED,
     ACTION_USER_DELETED,
-    ACTION_INVITE_CREATED,
-    ACTION_LOGIN_FAILED,
-    ACTION_PW_CHANGED,
+    audit_log,
 )
 
 
@@ -43,14 +45,14 @@ def test_audit_log_basic():
     with patch('models.db') as mock_db:
         mock_session = MagicMock()
         mock_db.session = mock_session
-        
+
         audit_log(
             ACTION_LOGIN,
             user_id='123',
             username='testuser',
             tenant_id='tenant_123'
         )
-        
+
         assert mock_session.add.called
         assert mock_session.flush.called
 
@@ -61,7 +63,7 @@ def test_audit_log_with_details():
     with patch('models.db') as mock_db:
         mock_session = MagicMock()
         mock_db.session = mock_session
-        
+
         details = {'ip': '192.168.1.1', 'method': 'POST'}
         audit_log(
             ACTION_LOGIN,
@@ -70,7 +72,7 @@ def test_audit_log_with_details():
             tenant_id='tenant_123',
             details=details
         )
-        
+
         assert mock_session.add.called
         assert mock_session.flush.called
 
@@ -81,7 +83,7 @@ def test_audit_log_with_entity():
     with patch('models.db') as mock_db:
         mock_session = MagicMock()
         mock_db.session = mock_session
-        
+
         audit_log(
             ACTION_USER_DELETED,
             user_id='123',
@@ -90,7 +92,7 @@ def test_audit_log_with_entity():
             entity_type='user',
             entity_id='456'
         )
-        
+
         assert mock_session.add.called
         assert mock_session.flush.called
 
@@ -110,11 +112,11 @@ def test_audit_log_with_flask_request():
     with patch('models.db') as mock_db:
         mock_session = MagicMock()
         mock_db.session = mock_session
-        
+
         mock_request = Mock()
         mock_request.remote_addr = '192.168.1.1'
         mock_request.headers.get = Mock(return_value='Mozilla/5.0')
-        
+
         with patch('flask.request', mock_request):
             audit_log(
                 ACTION_LOGIN,
@@ -122,15 +124,27 @@ def test_audit_log_with_flask_request():
                 username='testuser',
                 tenant_id='tenant_123'
             )
-        
+
         assert mock_session.add.called
         assert mock_session.flush.called
 
 
 @pytest.mark.unit
 def test_audit_log_without_flask_context():
-    """Test audit_log without Flask request context - skipped due to complex import mocking"""
-    pytest.skip("Requires complex import mocking for Flask request context")
+    """Audit logging tolerates a background/service call without request context."""
+    with patch('models.db') as mock_db:
+        mock_session = MagicMock()
+        mock_db.session = mock_session
+
+        audit_log(
+            ACTION_LOGIN,
+            user_id='123',
+            username='testuser',
+            tenant_id='tenant_123',
+        )
+
+        assert mock_session.add.called
+        assert mock_session.flush.called
 
 
 @pytest.mark.unit
@@ -140,7 +154,7 @@ def test_audit_log_exception_handling():
         mock_session = MagicMock()
         mock_session.add = Mock(side_effect=Exception("DB Error"))
         mock_db.session = mock_session
-        
+
         # Should not raise exception
         audit_log(
             ACTION_LOGIN,
@@ -158,7 +172,7 @@ def test_audit_log_exception_with_rollback():
         mock_session.add = Mock(side_effect=Exception("DB Error"))
         mock_session.rollback = Mock()
         mock_db.session = mock_session
-        
+
         # Should not raise exception
         audit_log(
             ACTION_LOGIN,
@@ -166,7 +180,7 @@ def test_audit_log_exception_with_rollback():
             username='testuser',
             tenant_id='tenant_123'
         )
-        
+
         # Rollback should be attempted
         mock_session.rollback.assert_called()
 
@@ -177,13 +191,13 @@ def test_audit_log_user_agent_truncation():
     with patch('models.db') as mock_db:
         mock_session = MagicMock()
         mock_db.session = mock_session
-        
+
         mock_request = Mock()
         mock_request.remote_addr = '192.168.1.1'
         # User agent longer than 300 characters
         long_ua = 'A' * 400
         mock_request.headers.get = Mock(return_value=long_ua)
-        
+
         with patch('flask.request', mock_request):
             audit_log(
                 ACTION_LOGIN,
@@ -191,7 +205,7 @@ def test_audit_log_user_agent_truncation():
                 username='testuser',
                 tenant_id='tenant_123'
             )
-        
+
         assert mock_session.add.called
         assert mock_session.flush.called
 
@@ -202,7 +216,7 @@ def test_audit_log_with_none_entity_id():
     with patch('models.db') as mock_db:
         mock_session = MagicMock()
         mock_db.session = mock_session
-        
+
         audit_log(
             ACTION_LOGIN,
             user_id='123',
@@ -211,7 +225,7 @@ def test_audit_log_with_none_entity_id():
             entity_type='user',
             entity_id=None
         )
-        
+
         assert mock_session.add.called
         assert mock_session.flush.called
 
@@ -222,7 +236,7 @@ def test_audit_log_with_numeric_entity_id():
     with patch('models.db') as mock_db:
         mock_session = MagicMock()
         mock_db.session = mock_session
-        
+
         audit_log(
             ACTION_USER_DELETED,
             user_id='123',
@@ -231,7 +245,7 @@ def test_audit_log_with_numeric_entity_id():
             entity_type='user',
             entity_id=456
         )
-        
+
         assert mock_session.add.called
         assert mock_session.flush.called
 

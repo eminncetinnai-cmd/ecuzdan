@@ -1,0 +1,79 @@
+E-CÜZDAN DESIGN SYSTEM VERSION CONTROL
+========================================
+
+CURRENT VERSION: 2.0.0
+Last Updated: 2026-08-28
+
+VERSION HISTORY:
+---------------
+
+2.0.0 (2026-08-28) - E-Cüzdan Mevcut Yapıya Optimize Edilmiş Sürüm
+- Mevcut design-tokens.css sistemi korundu
+- Jinja2 macros yapısı entegre edildi
+- Component Factory Pattern eklendi (utils/ui_components.py)
+- Automated consistency checker eklendi (scripts/check_design_system.py)
+- Outfit font korundu (Inter'e geçilmedi)
+- Dark mode ve privacy mode desteği korundu
+- Mobile-first responsive approach korundu
+- Versioning sistemi ve dokümantasyon eklendi
+
+1.0.0 (2026-08-28) - Original Design System Prompt
+- Generic Flask design system standartları
+- Renk paleti, tipografi, component yapısı
+- Temel UI/UX prensipleri
+
+BREAKING CHANGES:
+-----------------
+1.0.0 -> 2.0.0: Breaking change yok, mevcut yapı korundu ve optimize edildi
+
+COMPATIBILITY:
+--------------
+- Backward compatible: 1.0.0 standartları 2.0.0'te destekleniyor
+- Forward compatible: 2.0.0 component'leri gelecek versiyonlarda kullanılabilir
+
+MIGRATION GUIDE:
+----------------
+1.0.0 -> 2.0.0: Migration gerekmiyor, mevcut kod çalışmaya devam eder
+
+NEXT VERSION PLANNING:
+----------------------
+2.1.0: Yeni design token'lar eklenebilir
+2.2.0: Yeni Jinja2 macros eklenebilir
+3.0.0: Büyük yapısal değişiklikler (breaking change)
+
+MAINTAINERS:
+------------
+- E-Cüzdan Development Team
+- UI/UX Architecture Guardian
+
+RELATED FILES:
+--------------
+- docs/E_CUZDAN_DESIGN_SYSTEM.md - Ana dokümantasyon
+- static/css/design-tokens.css - Design token sistemi
+- templates/macros/ - Jinja2 component'ler
+- utils/ui_components.py - Component factory'ler
+- scripts/check_design_system.py - Consistency checker
+
+UPDATE PROCEDURE:
+-----------------
+1. Yeni özellik eklenince:
+   - Version bump (minor: 2.0.0 -> 2.1.0)
+   - Değişiklikleri bu dosyaya kaydet
+   - Dokümantasyonu güncelle
+
+2. Breaking change yapılınca:
+   - Version bump (major: 2.0.0 -> 3.0.0)
+   - Migration guide yaz
+   - Tüm template'leri güncelle
+   - Testleri çalıştır
+
+3. Design token değişikliği:
+   - Version bump (minor: 2.0.0 -> 2.1.0)
+   - design-tokens.css güncelle
+   - Etkilenen component'leri test et
+
+NOTES:
+------
+- Bu versiyon E-Cüzdan'ın mevcut güçlü design system'ini korur
+- Profesyonel standartları ve otomasyonu ekler
+- Mevcut geliştirme süreçlerini bozmaz

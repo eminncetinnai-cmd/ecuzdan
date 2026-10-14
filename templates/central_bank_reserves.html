@@ -1,0 +1,516 @@
+{% extends "layout.html" %}
+{% from "macros/buttons.html" import button_primary, button_secondary %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static_asset_url('css/central_bank_reserves.css') }}">
+{% endblock %}
+
+{% block content %}
+{% set kpis = data.kpis if (data is defined and data.kpis is defined) else {} %}
+{% set gross_total = kpis.latest_gross_total if kpis.latest_gross_total is defined else 168.5 %}
+{% set gross_fx = kpis.latest_gross_fx if kpis.latest_gross_fx is defined else 97.1 %}
+{% set gold_usd = kpis.latest_gold_usd if kpis.latest_gold_usd is defined else 71.4 %}
+{% set gold_tonnes = kpis.latest_gold_tonnes if kpis.latest_gold_tonnes is defined else 758.2 %}
+{% set gold_share_pct = kpis.latest_gold_share_pct if kpis.latest_gold_share_pct is defined else 42.4 %}
+{% set net_ex_swap = kpis.latest_net_ex_swap if kpis.latest_net_ex_swap is defined else 38.2 %}
+{% set gross_yoy_pct = kpis.gross_yoy_pct if kpis.gross_yoy_pct is defined else 14.8 %}
+{% set net_ex_swap_mom = kpis.net_ex_swap_mom_change_usd if kpis.net_ex_swap_mom_change_usd is defined else 2.7 %}
+{% set gross_mom_usd = kpis.gross_mom_change_usd if kpis.gross_mom_change_usd is defined else 2.7 %}
+{% set date_display = kpis.latest_date_display if kpis.latest_date_display is defined else 'Ağustos 2026' %}
+{% set prev_date_display = kpis.prev_date_display if kpis.prev_date_display is defined else 'Temmuz 2026' %}
+{% set prev_gross_total = kpis.prev_gross_total if kpis.prev_gross_total is defined else 165.8 %}
+{% set prev_gross_fx = kpis.prev_gross_fx if kpis.prev_gross_fx is defined else 96.0 %}
+{% set prev_gold_tonnes = kpis.prev_gold_tonnes if kpis.prev_gold_tonnes is defined else 745.0 %}
+{% set prev_net_ex_swap = kpis.prev_net_ex_swap if kpis.prev_net_ex_swap is defined else 35.5 %}
+
+<div class="reserves-modern-workspace">
+
+    <!-- ── 1. Page Header & Live Status ──────────────────────────────────── -->
+    <header class="workspace-header-ribbon">
+        <div class="workspace-title-group">
+            <div class="workspace-badge-bar">
+                <span class="live-pulse-badge">
+                    <span class="live-pulse-dot" aria-hidden="true"></span> Canlı Veri • {{ date_display }}
+                </span>
+                <span class="workspace-source-tag">TCMB EVDS & World Gold Council (Aylık Resmi Seri)</span>
+            </div>
+            <h1 class="workspace-main-heading">
+                {{ _('nav_central_bank_reserves') }}
+            </h1>
+            <p class="workspace-sub-heading">
+                TCMB Rezerv Kompozisyonu, Likit Yabancı Para, Altın Varlıkları ve Küresel Merkez Bankaları Karşılaştırması
+            </p>
+        </div>
+        <div class="workspace-actions">
+            <button data-macro="button_secondary" type="button" id="btnOpenReserveBriefing" class="filter-chip-btn active" title="Kurumsal TCMB Rezerv Raporu & Brifingi">
+                📄 Rezerv Brifingi
+            </button>
+            {{ button_secondary(text="TCMB CSV", url="/central-bank-reserves/api/export?type=tcmb", icon="📥") }}
+            {{ button_secondary(text="Küresel Ligi İndir", url="/central-bank-reserves/api/export?type=global", icon="🌍") }}
+        </div>
+    </header>
+
+    <!-- Segmented Navigation Hub -->
+    <div class="mb-6 flex flex-wrap items-center gap-2 border-b border-slate-200/80 pb-4 dark:border-slate-800">
+        <a href="{{ url_for('analysis.analysis_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'analysis.analysis_dashboard' or request.path.startswith('/analysis') %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            <span>Finansal Sağlık &amp; Karne</span>
+        </a>
+        <a href="{{ url_for('dashboard.financial_freedom') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'dashboard.financial_freedom' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <span>Finansal Özgürlük (FIRE)</span>
+        </a>
+        <a href="{{ url_for('strategy.strategy') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'strategy.strategy' or request.path.startswith('/strategy') %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            <span>Portföy Stratejisi</span>
+        </a>
+        <a href="{{ url_for('dashboard.financial_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'dashboard.financial_dashboard' or request.path.startswith('/financial_dashboard') %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <span>Piyasa &amp; Kantitatif Analiz</span>
+        </a>
+        <a href="{{ url_for('global_ratios.global_ratios_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'global_ratios.global_ratios_dashboard' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>Küresel Rasyolar (Makro)</span>
+        </a>
+        <a href="{{ url_for('central_bank_reserves.central_bank_reserves_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'central_bank_reserves.central_bank_reserves_dashboard' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            <span>TCMB Rezervleri &amp; Altın</span>
+        </a>
+    </div>
+
+    <!-- ── 2. Primary Financial KPI Row ──────────────────────────────────── -->
+    <section class="modern-kpi-row" aria-label="Finansal Rezerv Temel Göstergeleri">
+        <!-- KPI 1: Toplam Brüt -->
+        <article class="modern-kpi-tile">
+            <div class="kpi-tile-top">
+                <span class="kpi-tile-title">Toplam Brüt Rezerv</span>
+                <span class="fin-pill {% if gross_yoy_pct >= 0 %}positive{% else %}negative{% endif %}">
+                    {% if gross_yoy_pct > 0 %}+{% endif %}{{ gross_yoy_pct }}% YoY
+                </span>
+            </div>
+            <div class="kpi-tile-number">
+                {{ gross_total }}<span class="kpi-tile-unit">Mr $</span>
+            </div>
+            <div class="kpi-tile-bottom">
+                <span class="kpi-tile-meta">Önceki: {{ prev_gross_total }} Mr $ ({{ prev_date_display }})</span>
+                <span class="kpi-flow-tag {% if gross_mom_usd >= 0 %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
+                    {% if gross_mom_usd >= 0 %}▲ +{% else %}▼ {% endif %}{{ gross_mom_usd }} Mr $ MoM
+                </span>
+            </div>
+        </article>
+
+        <!-- KPI 2: Brüt Döviz -->
+        <article class="modern-kpi-tile">
+            <div class="kpi-tile-top">
+                <span class="kpi-tile-title">Brüt Döviz Rezervi</span>
+                <span class="fin-pill neutral">
+                    %{{ (100 - gold_share_pct)|round(1) }} Pay
+                </span>
+            </div>
+            <div class="kpi-tile-number text-sky-600 dark:text-sky-400">
+                {{ gross_fx }}<span class="kpi-tile-unit">Mr $</span>
+            </div>
+            <div class="kpi-tile-bottom">
+                <span class="kpi-tile-meta">Önceki: {{ prev_gross_fx }} Mr $ • Likit YP</span>
+                <span class="kpi-flow-tag text-slate-500 dark:text-slate-400">TCMB Likidite Portföyü</span>
+            </div>
+        </article>
+
+        <!-- KPI 3: Altın Rezervi -->
+        <article class="modern-kpi-tile">
+            <div class="kpi-tile-top">
+                <span class="kpi-tile-title">Resmi Altın Rezervi</span>
+                <span class="fin-pill gold">
+                    %{{ gold_share_pct }} Pay
+                </span>
+            </div>
+            <div class="kpi-tile-number text-amber-600 dark:text-amber-400">
+                {{ gold_usd }}<span class="kpi-tile-unit">Mr $</span>
+            </div>
+            <div class="kpi-tile-bottom">
+                <span class="kpi-tile-meta">Önceki: {{ prev_gold_tonnes }} Ton</span>
+                <span class="kpi-flow-tag font-bold text-amber-600 dark:text-amber-400">{{ gold_tonnes }} Ton Fiziki</span>
+            </div>
+        </article>
+
+        <!-- KPI 4: Swap Hariç Net -->
+        <article class="modern-kpi-tile">
+            <div class="kpi-tile-top">
+                <span class="kpi-tile-title">Swap Hariç Net Rezerv</span>
+                <span class="fin-pill {% if net_ex_swap >= 0 %}positive{% else %}negative{% endif %}">
+                    {% if net_ex_swap >= 0 %}Pozitif Bölge{% else %}Negatif Bölge{% endif %}
+                </span>
+            </div>
+            <div class="kpi-tile-number {% if net_ex_swap >= 0 %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
+                {% if net_ex_swap > 0 %}+{% endif %}{{ net_ex_swap }}<span class="kpi-tile-unit">Mr $</span>
+            </div>
+            <div class="kpi-tile-bottom">
+                <span class="kpi-tile-meta">Önceki: {{ prev_net_ex_swap }} Mr $</span>
+                <span class="kpi-flow-tag {% if net_ex_swap_mom >= 0 %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
+                    {% if net_ex_swap_mom > 0 %}▲ +{% else %}▼ {% endif %}{{ net_ex_swap_mom }} Mr $ Akım
+                </span>
+            </div>
+        </article>
+    </section>
+
+    <!-- ── 3. Main Analytical View — 70/30 Hero Split ─────────────────────── -->
+    <section class="analytical-split-grid" aria-label="Analitik Rezerv Trendi ve Pazar İçgörüsü">
+        <!-- Left (70%): Interactive TCMB Reserves Chart Surface -->
+        <div class="modern-chart-surface">
+            <div class="chart-surface-toolbar">
+                <div class="chart-title-area">
+                    <h2 class="chart-surface-title">
+                        TCMB Rezerv Dağılımı ve Swap Hariç Net Trendi
+                    </h2>
+                    <p class="chart-surface-subtitle">
+                        Aylık bazda Brüt Döviz ($ Mr), Altın Rezervi ($ Mr) ve Net Rezerv eğilimi
+                    </p>
+                </div>
+                <div class="chart-controls-cluster">
+                    <!-- Interactive Series Toggles -->
+                    <div class="series-toggle-group" role="group" aria-label="Seri Görünürlük Kontrolleri">
+                        <button data-macro="button_secondary" type="button" class="series-toggle-btn active" data-dataset-index="1" aria-pressed="true">
+                            <span class="series-dot bg-sky-500"></span> Döviz
+                        </button>
+                        <button data-macro="button_secondary" type="button" class="series-toggle-btn active" data-dataset-index="2" aria-pressed="true">
+                            <span class="series-dot bg-amber-500"></span> Altın
+                        </button>
+                        <button data-macro="button_secondary" type="button" class="series-toggle-btn active" data-dataset-index="0" aria-pressed="true">
+                            <span class="series-dot bg-emerald-500"></span> Net Rezerv
+                        </button>
+                    </div>
+
+                    <!-- Timeframe Range Selector -->
+                    <div class="chart-pill-selector" role="group" aria-label="Zaman Dilimi Seçici">
+                        <button data-macro="button_secondary" type="button" class="timeframe-pill-btn" data-range="6m">6 Ay</button>
+                        <button data-macro="button_secondary" type="button" class="timeframe-pill-btn" data-range="1y">1 Yıl</button>
+                        <button data-macro="button_secondary" type="button" class="timeframe-pill-btn" data-range="2y">2 Yıl</button>
+                        <button data-macro="button_secondary" type="button" class="timeframe-pill-btn active" data-range="all">Tümü (2023-26)</button>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-canvas-wrapper">
+                <canvas id="tcmbReservesChart" aria-label="TCMB Rezerv Dağılım Grafiği" role="img"></canvas>
+            </div>
+        </div>
+
+        <!-- Right (30%): Authentic Market Insight & Strategic Reserves Card -->
+        <aside class="market-insight-card" aria-label="Piyasa & Rezerv İçgörüsü">
+            <div class="insight-header">
+                <div class="insight-badge">
+                    <span class="insight-dot"></span> TCMB REZERV ANALİZİ
+                </div>
+                <span class="insight-timestamp">{{ date_display }}</span>
+            </div>
+
+            <div class="insight-metric-block">
+                <div class="insight-metric-label">Altın Ağırlıklı Koruma</div>
+                <div class="insight-metric-val">%{{ gold_share_pct }} Altın Payı</div>
+                <p class="insight-metric-desc">
+                    TCMB, toplam brüt rezervlerinin %{{ gold_share_pct }}'ini fiziki altın olarak tutarak küresel merkez bankaları ortalamasının üzerinde bir jeopolitik koruma seviyesindedir.
+                </p>
+            </div>
+
+            <div class="insight-divider"></div>
+
+            <div class="insight-metric-block">
+                <div class="insight-metric-label">Net Rezerv İyileşmesi</div>
+                <div class="insight-metric-val text-emerald-600 dark:text-emerald-400">
+                    {% if net_ex_swap > 0 %}+{% endif %}{{ net_ex_swap }} Mr $
+                </div>
+                <p class="insight-metric-desc">
+                    2023 Mayıs dip seviyesinden (-60.5 Mr $) günümüze swap hariç net rezervlerde kesintisiz toparlanma sürerek pozitif bölgede konsolide olmaktadır.
+                </p>
+            </div>
+
+            <div class="insight-divider"></div>
+
+            <div class="insight-ranking-mini">
+                <div class="insight-metric-label">Küresel Altın Ligi Konumu</div>
+                <div class="insight-rank-row">
+                    <span class="insight-rank-badge">Dünya #10</span>
+                    <span class="insight-rank-tonnes">{{ gold_tonnes }} Ton</span>
+                </div>
+                <p class="insight-metric-desc">
+                    Son 1 yılda net +{{ kpis.gold_tonnes_1y_change }} Ton alımla Türkiye, Hollanda ve Polonya'nın önünde ilk 10'da yer almaktadır.
+                </p>
+            </div>
+        </aside>
+    </section>
+
+    <!-- ── 4. Global League & Central Bank Matrix Table ───────────────────── -->
+    <section class="modern-table-surface" aria-label="Dünya Merkez Bankaları Resmi Rezerv Matrisi">
+        <div class="table-surface-header">
+            <div>
+                <h2 class="table-surface-title">
+                    Dünya Merkez Bankaları Resmi Rezerv Matrisi
+                </h2>
+                <p class="table-surface-subtitle">
+                    World Gold Council (WGC) & IMF IFS Resmi Veritabanı • Sütun başlıklarına tıklayarak sıralayabilirsiniz
+                </p>
+            </div>
+            <span id="matrixFilterCount" class="matrix-filter-count">
+                {{ data.global_table|length }} Ülke Listelendi
+            </span>
+        </div>
+
+        <div class="table-filter-bar">
+            <div class="search-input-wrapper">
+                <svg class="search-icon-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <input type="text" id="globalTableSearch" class="search-input-field" placeholder="Ülke veya merkez bankası ara..." aria-label="Tabloda ülke ara">
+            </div>
+            <div class="category-chips-row" role="group" aria-label="Tablo Hızlı Filtreleri">
+                <button data-macro="button_secondary" type="button" class="filter-chip-btn active" data-filter="all">Tümü ({{ data.global_table|length }})</button>
+                <button data-macro="button_secondary" type="button" class="filter-chip-btn" data-filter="top5">Top 5</button>
+                <button data-macro="button_secondary" type="button" class="filter-chip-btn" data-filter="top10">Top 10</button>
+                <button data-macro="button_secondary" type="button" class="filter-chip-btn" data-filter="g7">G7 Ülkeleri</button>
+                <button data-macro="button_secondary" type="button" class="filter-chip-btn" data-filter="em">Gelişen Piyasalar (EM)</button>
+                <button data-macro="button_secondary" type="button" class="filter-chip-btn" data-filter="high_gold">Altın Payı > %50</button>
+                <button data-macro="button_secondary" type="button" class="filter-chip-btn" data-filter="buyers">Net Alıcılar</button>
+            </div>
+        </div>
+
+        <div class="fin-table-scroll">
+            <table class="fin-matrix-table" id="globalReservesTable">
+                <thead>
+                    <tr>
+                        <th class="th-center sortable" data-sort="rank" aria-sort="ascending">
+                            Sıra <span class="sort-icon">▲</span>
+                        </th>
+                        <th class="th-left sortable sticky-col-1" data-sort="country">
+                            Ülke <span class="sort-icon">↕</span>
+                        </th>
+                        <th class="th-left sortable" data-sort="bank">
+                            Merkez Bankası <span class="sort-icon">↕</span>
+                        </th>
+                        <th class="th-right sortable" data-sort="total">
+                            Toplam Rezerv <span class="sort-icon">↕</span>
+                        </th>
+                        <th class="th-right sortable" data-sort="tonnes">
+                            Altın Stoku (Ton) <span class="sort-icon">↕</span>
+                        </th>
+                        <th class="th-right sortable" data-sort="goldusd">
+                            Altın Değeri ($) <span class="sort-icon">↕</span>
+                        </th>
+                        <th class="th-right sortable" data-sort="share">
+                            Altın Payı (%) <span class="sort-icon">↕</span>
+                        </th>
+                        <th class="th-right sortable" data-sort="fx">
+                            Döviz Rezervi <span class="sort-icon">↕</span>
+                        </th>
+                        <th class="th-right sortable" data-sort="change">
+                            1Y Net Değişim <span class="sort-icon">↕</span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="globalTableBody">
+                    {% for row in data.global_table %}
+                    <tr class="{% if row.country_code == 'TR' %}turkey-accent-row{% endif %}"
+                        data-country="{{ row.country_name|lower }}"
+                        data-bank="{{ row.central_bank_name|lower }}"
+                        data-code="{{ row.country_code }}"
+                        data-rank="{{ row.rank }}"
+                        data-total="{{ row.total_reserves }}"
+                        data-tonnes="{{ row.gold_tonnes }}"
+                        data-goldusd="{{ row.gold_usd }}"
+                        data-share="{{ row.gold_share_pct }}"
+                        data-fx="{{ row.fx_reserves }}"
+                        data-change="{{ row.net_change_1y_tonnes }}">
+                        <td class="td-center">
+                            <span class="rank-badge-podium {% if row.rank == 1 %}rank-gold{% elif row.rank == 2 %}rank-silver{% elif row.rank == 3 %}rank-bronze{% elif row.country_code == 'TR' %}rank-tr{% else %}rank-standard{% endif %}">
+                                {% if row.rank == 1 %}🥇 1{% elif row.rank == 2 %}🥈 2{% elif row.rank == 3 %}🥉 3{% else %}{{ row.rank }}{% endif %}
+                            </span>
+                        </td>
+                        <td class="td-left sticky-col-1">
+                            <div class="flex items-center gap-2">
+                                <span class="text-base" aria-hidden="true">{{ row.flag_emoji }}</span>
+                                <div class="flex flex-col">
+                                    <span class="font-bold text-slate-900 dark:text-slate-100">{{ row.country_name }}</span>
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase">{{ row.country_code }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="td-left text-slate-600 dark:text-slate-300 font-medium">{{ row.central_bank_name }}</td>
+                        <td class="td-right font-bold text-slate-900 dark:text-slate-100">{{ row.total_reserves|round(1) }} Mr $</td>
+                        <td class="td-right font-extrabold text-amber-600 dark:text-amber-400">{{ row.gold_tonnes|round(1) }} Ton</td>
+                        <td class="td-right font-medium">{{ row.gold_usd|round(1) }} Mr $</td>
+                        <td class="td-right"><span class="fin-pill gold">%{{ row.gold_share_pct }}</span></td>
+                        <td class="td-right font-medium">{{ row.fx_reserves|round(1) }} Mr $</td>
+                        <td class="td-right">
+                            {% if row.net_change_1y_tonnes > 0 %}
+                            <span class="fin-pill positive">+{{ row.net_change_1y_tonnes }} Ton</span>
+                            {% elif row.net_change_1y_tonnes < 0 %}
+                            <span class="fin-pill negative">{{ row.net_change_1y_tonnes }} Ton</span>
+                            {% else %}
+                            <span class="text-xs text-slate-400 font-semibold">▬ 0.0 Ton</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ── 5. Historical Audit Log — Collapsible TCMB Monthly Time Series ──── -->
+    <section class="modern-table-surface" aria-label="TCMB Tarihsel Zaman Serisi">
+        <div class="table-surface-header cursor-pointer" id="tcmbToggleCollapseHeader">
+            <div>
+                <h2 class="table-surface-title flex items-center gap-2">
+                    <span>TCMB Detaylı Aylık Zaman Serisi (2023 - 2026)</span>
+                    <span class="text-xs text-slate-400 font-normal">(44 Dönem Kayıt)</span>
+                </h2>
+                <p class="table-surface-subtitle">Resmi brüt döviz, altın ve net rezerv dökümü</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="category-chips-row" role="group" aria-label="Yıl Filtreleri">
+                    <button data-macro="button_secondary" type="button" class="filter-chip-btn active" data-year-filter="all">Tüm Yıllar</button>
+                    <button data-macro="button_secondary" type="button" class="filter-chip-btn" data-year-filter="2026">2026</button>
+                    <button data-macro="button_secondary" type="button" class="filter-chip-btn" data-year-filter="2025">2025</button>
+                    <button data-macro="button_secondary" type="button" class="filter-chip-btn" data-year-filter="2024">2024</button>
+                    <button data-macro="button_secondary" type="button" class="filter-chip-btn" data-year-filter="2023">2023</button>
+                </div>
+                <button data-macro="button_secondary" type="button" id="btnToggleHistoricalTcmb" class="btn btn-secondary text-xs" aria-expanded="true">
+                    Gizle / Göster
+                </button>
+            </div>
+        </div>
+        <div class="fin-table-scroll" id="tcmbHistoricalTableWrap">
+            <table class="fin-matrix-table" id="tcmbMonthlyTable">
+                <thead>
+                    <tr>
+                        <th class="th-left sortable sticky-col-1" data-sort="date">Dönem <span class="sort-icon">↕</span></th>
+                        <th class="th-right sortable" data-sort="gross">Toplam Brüt ($) <span class="sort-icon">↕</span></th>
+                        <th class="th-right sortable" data-sort="fx">Brüt Döviz ($) <span class="sort-icon">↕</span></th>
+                        <th class="th-right sortable" data-sort="goldusd">Altın Rezervi ($) <span class="sort-icon">↕</span></th>
+                        <th class="th-right sortable" data-sort="tonnes">Altın Stoku (Ton) <span class="sort-icon">↕</span></th>
+                        <th class="th-right sortable" data-sort="goldshare">Altın Payı (%) <span class="sort-icon">↕</span></th>
+                        <th class="th-right sortable" data-sort="net">Swap Hariç Net ($) <span class="sort-icon">↕</span></th>
+                        <th class="th-right sortable" data-sort="mom">Aylık Değişim <span class="sort-icon">↕</span></th>
+                        <th class="th-right sortable" data-sort="yoy">Yıllık Değişim <span class="sort-icon">↕</span></th>
+                    </tr>
+                </thead>
+                <tbody id="tcmbMonthlyTableBody">
+                    {% for row in data.monthly_table %}
+                    <tr data-year="{{ row.date.split('-')[0] }}"
+                        data-date="{{ row.date }}"
+                        data-gross="{{ row.gross_total }}"
+                        data-fx="{{ row.gross_fx }}"
+                        data-goldusd="{{ row.gold_usd }}"
+                        data-tonnes="{{ row.gold_tonnes }}"
+                        data-goldshare="{{ row.gold_share }}"
+                        data-net="{{ row.net_ex_swap }}"
+                        data-mom="{{ row.mom_change }}"
+                        data-yoy="{{ row.yoy_change }}">
+                        <td class="td-left sticky-col-1"><span class="period-badge">{{ row.display_date }}</span></td>
+                        <td class="td-right font-bold text-slate-900 dark:text-slate-100">{{ row.gross_total }} Mr $</td>
+                        <td class="td-right text-sky-600 dark:text-sky-400 font-semibold">{{ row.gross_fx }} Mr $</td>
+                        <td class="td-right text-amber-600 dark:text-amber-400 font-semibold">{{ row.gold_usd }} Mr $</td>
+                        <td class="td-right font-bold text-amber-600 dark:text-amber-400">{{ row.gold_tonnes }} Ton</td>
+                        <td class="td-right"><span class="fin-pill gold">%{{ row.gold_share }}</span></td>
+                        <td class="td-right">
+                            <span class="fin-pill {% if row.net_ex_swap >= 0 %}positive{% else %}negative{% endif %}">
+                                {% if row.net_ex_swap > 0 %}+{% endif %}{{ row.net_ex_swap }} Mr $
+                            </span>
+                        </td>
+                        <td class="td-right">
+                            <span class="fin-pill {% if row.mom_change > 0 %}positive{% elif row.mom_change < 0 %}negative{% else %}neutral{% endif %}">
+                                {% if row.mom_change > 0 %}▲ +{% elif row.mom_change < 0 %}▼ {% endif %}{{ row.mom_change }}%
+                            </span>
+                        </td>
+                        <td class="td-right">
+                            <span class="fin-pill {% if row.yoy_change > 0 %}positive{% elif row.yoy_change < 0 %}negative{% else %}neutral{% endif %}">
+                                {% if row.yoy_change > 0 %}▲ +{% elif row.yoy_change < 0 %}▼ {% endif %}{{ row.yoy_change }}%
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ── 6. Executive Reserve Briefing Modal (Printable & Copyable) ────── -->
+    <div id="reserveBriefingModal" class="fin-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="reserveBriefingTitle">
+        <div class="fin-modal-card briefing-modal-card">
+            <div class="briefing-modal-header no-print">
+                <div class="flex items-center gap-2">
+                    <span class="briefing-badge">CENTRAL BANK OFFICIAL RESERVE REPORT</span>
+                    <span class="briefing-date">{{ date_display }} Raporu</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button data-macro="button_secondary" type="button" id="btnPrintReserveBriefing" class="modal-btn-action" title="Yazdır veya PDF Kaydet">
+                        🖨️ PDF / Yazdır
+                    </button>
+                    <button data-macro="button_secondary" type="button" id="btnCopyReserveBriefing" class="modal-btn-action" title="Metni Panoya Kopyala">
+                        📋 Metni Kopyala
+                    </button>
+                    <button data-macro="button_secondary" type="button" id="btnCloseReserveBriefing" class="modal-btn-close" aria-label="Kapat">✕</button>
+                </div>
+            </div>
+
+            <div class="briefing-sheet-content" id="reserveBriefingPrintArea">
+                <div class="briefing-sheet-top">
+                    <div class="briefing-brand">
+                        <div class="brand-title" id="reserveBriefingTitle">TCMB RESMİ REZERV & ALTIN LİGİ RAPORU</div>
+                        <div class="brand-subtitle">Türkiye Cumhuriyet Merkez Bankası & Dünya Altın Konseyi (WGC) Analitiği</div>
+                    </div>
+                    <div class="briefing-meta-right">
+                        <div><strong>Rapor Dönemi:</strong> {{ date_display }}</div>
+                        <div><strong>Kaynak:</strong> TCMB EVDS & IMF IFS</div>
+                    </div>
+                </div>
+
+                <div class="briefing-headline-box">
+                    <div class="briefing-headline-title">Toplam Brüt Rezerv: {{ gross_total }} Milyar Dolar (Swap Hariç Net: +{{ net_ex_swap }} Mr $)</div>
+                    <div class="briefing-stance-pill">Net Rezerv Pozitif Bölgede Tahkim Ediliyor • %{{ gold_share_pct }} Altın Yoğunluğu</div>
+                </div>
+
+                <div class="briefing-grid-2col">
+                    <div class="briefing-section">
+                        <h3 class="briefing-section-title">1. TCMB REZERV KOMPOZİSYONU</h3>
+                        <table class="briefing-mini-table">
+                            <tr><td>Toplam Brüt Rezerv</td><td class="font-bold text-right">{{ gross_total }} Mr $ ({% if gross_yoy_pct > 0 %}+{% endif %}{{ gross_yoy_pct }}% YoY)</td></tr>
+                            <tr><td>Brüt Döviz Rezervi</td><td class="font-bold text-right">{{ gross_fx }} Mr $ (%{{ (100 - gold_share_pct)|round(1) }} Pay)</td></tr>
+                            <tr><td>Resmi Altın Rezervi (USD)</td><td class="font-bold text-right">{{ gold_usd }} Mr $ (%{{ gold_share_pct }} Pay)</td></tr>
+                            <tr><td>Fiziki Altın Rezervi (Ton)</td><td class="font-bold text-right">{{ gold_tonnes }} Ton (Dünya #10)</td></tr>
+                            <tr><td>Swap Hariç Net Rezerv</td><td class="font-bold text-right text-emerald-600">+{{ net_ex_swap }} Mr $ (Önceki: +{{ prev_net_ex_swap }} Mr $)</td></tr>
+                        </table>
+                    </div>
+
+                    <div class="briefing-section">
+                        <h3 class="briefing-section-title">2. KÜRESEL REZERV LİGİ (TOP 5 & TÜRKİYE)</h3>
+                        <table class="briefing-mini-table">
+                            <tr><td>🥇 1. ABD (Federal Reserve)</td><td class="font-bold text-right">8.133 Ton (%72.4)</td></tr>
+                            <tr><td>🥈 2. Almanya (Bundesbank)</td><td class="font-bold text-right">3.351 Ton (%71.5)</td></tr>
+                            <tr><td>🥉 3. İtalya (Banca d'Italia)</td><td class="font-bold text-right">2.451 Ton (%68.2)</td></tr>
+                            <tr><td>🇹🇷 10. TÜRKİYE (TCMB)</td><td class="font-bold text-right text-indigo-600">758.2 Ton (%42.4)</td></tr>
+                            <tr><td>Net 1 Yıllık Altın Alımı</td><td class="font-bold text-right text-emerald-600">+{{ kpis.gold_tonnes_1y_change }} Ton (Güçlü Alıcı)</td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="briefing-takeaway-box">
+                    <h3 class="takeaway-title">3. MAKRO STRATEJİK DEĞERLENDİRME</h3>
+                    <p class="takeaway-text">
+                        TCMB rezervleri, 2023 ortasındaki -60.5 milyar dolarlık swap hariç dip seviyeden günümüzdeki +{{ net_ex_swap }} milyar dolarlık pozitif seviyeye ulaşarak tarihsel bir toparlanma kaydetmiştir. Rezervlerin %{{ gold_share_pct }}'lik bölümünün fiziki altın olarak muhafaza edilmesi (758.2 Ton), küresel jeopolitik gerilimler ve küresel enflasyon risklerine karşı güçlü bir kurumsal kalkan sunmaktadır. Türkiye, dünya merkez bankaları altın liginde Hollanda ve Polonya'nın önünde 10. sıradaki stratejik konumunu korumaktadır.
+                    </p>
+                </div>
+
+                <div class="briefing-sheet-footer">
+                    <span>E-Cüzdan Finansal Veri Motoru • Resmi EVDS ve WGC verilerinden derlenmiştir.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Initial payload injection for client-side rendering -->
+<script>
+    window.__RESERVES_INITIAL_DATA__ = {{ data|tojson|safe }};
+</script>
+<script src="{{ static_asset_url('js/central_bank_reserves.js') }}"></script>
+{% endblock %}

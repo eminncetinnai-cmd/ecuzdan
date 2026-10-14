@@ -14,7 +14,6 @@ from application.users.ports.oauth_provider import OAuthProvider, OAuthUserInfoD
 from domain.users.events import OAuthAccountLinkedEvent, UserLoggedInEvent
 from models import Tenant, User
 from shared.db import db
-
 from utils.log_redaction import mask_email
 
 logger = logging.getLogger(__name__)
@@ -72,6 +71,10 @@ class OAuthApplicationService:
 
         # Step 2: Verify token and get user info
         user_info = self.provider.verify_token_and_get_user_info(access_token)
+
+        # Unverified identities must never create or link a local account.
+        if not user_info.email_verified:
+            raise ValueError("OAuth e-posta adresi doğrulanmamış.")
 
         logger.info(
             f"OAuth login attempt: provider={user_info.provider}, "

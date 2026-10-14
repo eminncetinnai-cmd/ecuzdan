@@ -67,11 +67,16 @@ class ProfileService:
         )
         self.repository.commit()
         for answer in answers_data:
+            question = scoring_engine.questions.get(answer.get('question_id'), {})
+            is_ranking = question.get('type') == 'ranking'
+            answer_value = 5 if is_ranking else answer.get('value')
+            answer_order = json.dumps(answer.get('value'), ensure_ascii=False) if is_ranking else None
             self.repository.add_answer(
                 profile_id=profile.id,
                 question_id=answer['question_id'],
                 dimension=answer.get('dimension', ''),
-                answer_value=answer['value'],
+                answer_value=answer_value,
+                answer_order=answer_order,
                 answer_text=answer.get('text', ''),
                 question_version='1.0',
             )
@@ -82,10 +87,25 @@ class ProfileService:
         profile = self.repository.get_profile(profile_id, tenant_id)
         if not profile:
             return None
+        try:
+            risk_warnings = json.loads(profile.risk_warnings or '[]')
+            if not isinstance(risk_warnings, list):
+                risk_warnings = []
+        except (TypeError, ValueError):
+            risk_warnings = []
+        risk_summary = scoring_engine.calculate_final_risk_level(
+            float(profile.literacy_score),
+            float(profile.capacity_score),
+            float(profile.tolerance_score),
+            float(profile.behavioral_score),
+            float(profile.experience_score),
+        )
         return {
             'profile': profile,
             'answers': self.repository.list_answers(profile_id),
             'portfolio_allocation': scoring_engine.get_portfolio_allocation(profile.final_risk_level),
+            'risk_warnings': risk_warnings,
+            'base_risk_score': risk_summary['base_risk_score'],
         }
 
     def profile_payload(self, profile_id, tenant_id):
@@ -102,9 +122,9 @@ class ProfileService:
             'experience_score': profile.experience_score,
             'final_risk_level': profile.final_risk_level,
             'confidence_score': profile.confidence_score,
-            'risk_warnings': json.loads(profile.risk_warnings) if profile.risk_warnings else [],
-            'test_date': profile.test_date.isoformat() if profile.test_date else None,
+            'risk_warnings': context['risk_warnings'],
             'validity_date': profile.validity_date.isoformat() if profile.validity_date else None,
+            'base_risk_score': context['base_risk_score'],
             'portfolio_allocation': context['portfolio_allocation'],
         }
 
@@ -125,10 +145,10 @@ class ProfileService:
         """Compare two profiles and return differences"""
         profile1 = self.repository.get_profile(profile_id1, tenant_id)
         profile2 = self.repository.get_profile(profile_id2, tenant_id)
-        
+
         if not profile1 or not profile2:
             return None
-        
+
         comparison = {
             'profile1': {
                 'id': profile1.id,
@@ -161,20 +181,20 @@ class ProfileService:
             'risk_level_change': self._get_risk_level_change(profile1.final_risk_level, profile2.final_risk_level),
             'improvement_summary': self._get_improvement_summary(profile1, profile2)
         }
-        
+
         return comparison
 
     def _get_risk_level_change(self, level1, level2):
         """Get description of risk level change"""
         risk_order = ['Korumacı', 'Muhafazakar', 'Temkinli', 'Dengeli', 'Büyüme Odaklı', 'Agresif', 'Spekülatif']
-        
+
         if level1 == level2:
             return {'changed': False, 'direction': 'none', 'description': 'Risk seviyesi değişmedi'}
-        
+
         try:
             idx1 = risk_order.index(level1)
             idx2 = risk_order.index(level2)
-            
+
             if idx2 > idx1:
                 return {
                     'changed': True,
@@ -195,35 +215,35 @@ class ProfileService:
     def _get_improvement_summary(self, profile1, profile2):
         """Get summary of score improvements"""
         improvements = []
-        
+
         if profile2.literacy_score > profile1.literacy_score:
             improvements.append(f'Finansal okuryazarlık +{profile2.literacy_score - profile1.literacy_score:.1f} puan')
         elif profile2.literacy_score < profile1.literacy_score:
             improvements.append(f'Finansal okuryazarlık -{profile1.literacy_score - profile2.literacy_score:.1f} puan')
-        
+
         if profile2.capacity_score > profile1.capacity_score:
             improvements.append(f'Risk kapasitesi +{profile2.capacity_score - profile1.capacity_score:.1f} puan')
         elif profile2.capacity_score < profile1.capacity_score:
             improvements.append(f'Risk kapasitesi -{profile1.capacity_score - profile2.capacity_score:.1f} puan')
-        
+
         if profile2.tolerance_score > profile1.tolerance_score:
             improvements.append(f'Risk toleransı +{profile2.tolerance_score - profile1.tolerance_score:.1f} puan')
         elif profile2.tolerance_score < profile1.tolerance_score:
             improvements.append(f'Risk toleransı -{profile1.tolerance_score - profile2.tolerance_score:.1f} puan')
-        
+
         return improvements
 
     def export_profile(self, profile_id, tenant_id):
         """Export profile data as JSON"""
         import json
         from datetime import datetime, timezone
-        
+
         profile = self.repository.get_profile(profile_id, tenant_id)
         if not profile:
             return None
-        
+
         answers = self.repository.list_answers(profile_id)
-        
+
         export_data = {
             'version': '1.0',
             'export_date': datetime.now(timezone.utc).isoformat(),
@@ -251,21 +271,21 @@ class ProfileService:
                 for answer in answers
             ]
         }
-        
+
         return export_data
 
     def import_profile(self, tenant_id, user_id, import_data):
         """Import profile data from JSON"""
         import json
-        from datetime import datetime, timezone, timedelta
-        
+        from datetime import datetime, timedelta, timezone
+
         try:
             profile_data = import_data.get('profile', {})
             answers_data = import_data.get('answers', [])
-            
+
             # Deactivate active profiles
             self.repository.deactivate_active_profiles(tenant_id, user_id)
-            
+
             # Create new profile from imported data
             profile = self.repository.add_profile(
                 tenant_id=tenant_id,
@@ -283,7 +303,7 @@ class ProfileService:
                 is_active=True,
             )
             self.repository.commit()
-            
+
             # Import answers
             for answer_data in answers_data:
                 self.repository.add_answer(
@@ -295,9 +315,9 @@ class ProfileService:
                     question_version='1.0',
                 )
             self.repository.commit()
-            
+
             return profile, {'success': True, 'message': 'Profil başarıyla içe aktarıldı'}
-            
+
         except Exception as e:
             self.repository.rollback()
             return None, {'success': False, 'message': f'İçe aktarma hatası: {str(e)}'}

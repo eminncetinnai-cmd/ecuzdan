@@ -6,10 +6,19 @@ All configuration settings are managed in one place for easier maintenance.
 import os
 
 from dotenv import load_dotenv
+
 from shared.decimal_precision import to_decimal
 
 # Project root directory
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+
+def _bounded_int_env(name: str, default: int, minimum: int, maximum: int) -> int:
+    try:
+        return max(minimum, min(int(os.getenv(name, str(default))), maximum))
+    except (TypeError, ValueError):
+        return default
+
 
 # Load environment variables from .env file in project root
 load_dotenv(os.path.join(BASE_DIR, '.env'))
@@ -23,6 +32,8 @@ class Config:
 
     # Database Configuration
     DATABASE_URL = os.getenv('DATABASE_URL', f'sqlite:///{os.path.join(BASE_DIR, "e_cuzdan_v15.db")}')
+    if DATABASE_URL.startswith('postgres://'):
+        DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Flask Security
@@ -33,6 +44,45 @@ class Config:
         # Re-read dynamically from environment to support container/runtime injection
         self.FLASK_ENV = os.getenv('FLASK_ENV', self.FLASK_ENV)
         self.SECRET_KEY = os.getenv('SECRET_KEY', self.SECRET_KEY)
+        db_url = os.getenv('DATABASE_URL', self.DATABASE_URL)
+        if db_url.startswith('postgres://'):
+            db_url = db_url.replace('postgres://', 'postgresql://', 1)
+        self.DATABASE_URL = db_url
+        self.GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', self.GOOGLE_CLIENT_ID)
+        self.GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET', self.GOOGLE_CLIENT_SECRET)
+        self.HTTPS_ENABLED = os.getenv('HTTPS_ENABLED', str(self.HTTPS_ENABLED).lower()).lower() == 'true'
+        self.FORCE_HTTPS = os.getenv('FORCE_HTTPS', str(self.FORCE_HTTPS).lower()).lower() == 'true'
+        self.BACKGROUND_SERVICE_ENABLED = os.getenv(
+            'BACKGROUND_SERVICE_ENABLED', str(self.BACKGROUND_SERVICE_ENABLED).lower()
+        ).lower() == 'true'
+        self.FX_PROVIDER_CHAIN_ENABLED = os.getenv(
+            'FX_PROVIDER_CHAIN_ENABLED', str(self.FX_PROVIDER_CHAIN_ENABLED)
+        ).lower() == 'true'
+        self.FX_PROVIDER_TIMEOUT_SECONDS = _bounded_int_env(
+            'FX_PROVIDER_TIMEOUT_SECONDS', self.FX_PROVIDER_TIMEOUT_SECONDS, 2, 30
+        )
+        self.FX_PROVIDER_RETRIES = _bounded_int_env(
+            'FX_PROVIDER_RETRIES', self.FX_PROVIDER_RETRIES, 0, 3
+        )
+        self.RATELIMIT_STORAGE_URI = os.getenv('RATELIMIT_STORAGE_URI', self.RATELIMIT_STORAGE_URI)
+        self.RATELIMIT_KEY_PREFIX = os.getenv('RATELIMIT_KEY_PREFIX', self.RATELIMIT_KEY_PREFIX)
+        self.RATELIMIT_REDIS_SOCKET_TIMEOUT_SECONDS = _bounded_int_env(
+            'RATELIMIT_REDIS_SOCKET_TIMEOUT_SECONDS',
+            self.RATELIMIT_REDIS_SOCKET_TIMEOUT_SECONDS,
+            1,
+            10,
+        )
+        self.RATELIMIT_REDIS_CONNECT_TIMEOUT_SECONDS = _bounded_int_env(
+            'RATELIMIT_REDIS_CONNECT_TIMEOUT_SECONDS',
+            self.RATELIMIT_REDIS_CONNECT_TIMEOUT_SECONDS,
+            1,
+            10,
+        )
+        self.RATELIMIT_IN_MEMORY_FALLBACK_ENABLED = os.getenv(
+            'RATELIMIT_IN_MEMORY_FALLBACK_ENABLED',
+            str(self.RATELIMIT_IN_MEMORY_FALLBACK_ENABLED),
+        ).lower() == 'true'
+        self.TRUST_PROXY_HOPS = int(os.getenv('TRUST_PROXY_HOPS', str(self.TRUST_PROXY_HOPS)))
 
         # Hard security validation in production
         if self.FLASK_ENV not in ('development', 'testing'):
@@ -44,6 +94,19 @@ class Config:
             if len(self.SECRET_KEY) < 32:
                 raise ValueError(
                     "CRITICAL SECURITY ERROR: SECRET_KEY must be at least 32 characters long."
+                )
+            if not self.HTTPS_ENABLED or not self.FORCE_HTTPS:
+                raise ValueError(
+                    "CRITICAL SECURITY ERROR: HTTPS_ENABLED and FORCE_HTTPS must both be true in production."
+                )
+            if not os.getenv('DATABASE_URL'):
+                raise ValueError(
+                    "CRITICAL CONFIGURATION ERROR: DATABASE_URL must be explicitly set in production."
+                )
+            allow_single_instance = os.getenv('ALLOW_SINGLE_INSTANCE_RATELIMIT', 'false').lower() == 'true'
+            if self.RATELIMIT_STORAGE_URI.startswith('memory://') and not allow_single_instance:
+                raise ValueError(
+                    "CRITICAL CONFIGURATION ERROR: RATELIMIT_STORAGE_URI must use a shared persistent backend in production (or set ALLOW_SINGLE_INSTANCE_RATELIMIT=true for single-container deployment)."
                 )
 
     # OAuth Settings
@@ -71,12 +134,34 @@ class Config:
     INFLATION_RATE = to_decimal(os.getenv('INFLATION_RATE', '0.40'))
 
     # Service Configuration
-    BACKGROUND_SERVICE_ENABLED = os.getenv('BACKGROUND_SERVICE_ENABLED', 'true').lower() == 'true'
-    MARKET_DATA_UPDATE_INTERVAL = int(os.getenv('MARKET_DATA_UPDATE_INTERVAL', '3600'))  # 1 hour
+    BACKGROUND_SERVICE_ENABLED = os.getenv(
+        'BACKGROUND_SERVICE_ENABLED', 'false' if FLASK_ENV == 'production' else 'true'
+    ).lower() == 'true'
+    BACKGROUND_WORKER_OWNER = os.getenv(
+        'BACKGROUND_WORKER_OWNER', 'worker' if FLASK_ENV == 'production' else 'web'
+    ).strip().lower()
+    # Public FX/metals provider resilience (indicative/local-staging data only).
+    FX_PROVIDER_CHAIN_ENABLED = os.getenv('FX_PROVIDER_CHAIN_ENABLED', 'true').lower() == 'true'
+    FX_PROVIDER_TIMEOUT_SECONDS = _bounded_int_env('FX_PROVIDER_TIMEOUT_SECONDS', 8, 2, 30)
+    FX_PROVIDER_RETRIES = _bounded_int_env('FX_PROVIDER_RETRIES', 1, 0, 3)
+
+    # Production reverse proxy and rate limiting
+    # Redis is the canonical shared backend; local/test may opt into bounded
+    # in-memory fallback when the local Redis service is not running.
+    RATELIMIT_STORAGE_URI = os.getenv('RATELIMIT_STORAGE_URI', 'redis://127.0.0.1:6379/0')
+    RATELIMIT_KEY_PREFIX = os.getenv('RATELIMIT_KEY_PREFIX', 'ecuzdan:v15')
+    RATELIMIT_REDIS_SOCKET_TIMEOUT_SECONDS = _bounded_int_env(
+        'RATELIMIT_REDIS_SOCKET_TIMEOUT_SECONDS', 1, 1, 10
+    )
+    RATELIMIT_REDIS_CONNECT_TIMEOUT_SECONDS = _bounded_int_env(
+        'RATELIMIT_REDIS_CONNECT_TIMEOUT_SECONDS', 1, 1, 10
+    )
+    RATELIMIT_IN_MEMORY_FALLBACK_ENABLED = FLASK_ENV in ('development', 'testing')
+    TRUST_PROXY_HOPS = int(os.getenv('TRUST_PROXY_HOPS', '0'))
 
     # Logging Configuration
     LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
-    LOG_DIR = os.path.join(BASE_DIR, 'logs')
+    LOG_DIR = os.path.abspath(os.getenv('ECUZDAN_LOG_DIR', os.path.join(BASE_DIR, 'logs')))
     LOG_FILE = os.path.join(LOG_DIR, 'e_cuzdan.log')
 
     # Observability (opt-in)

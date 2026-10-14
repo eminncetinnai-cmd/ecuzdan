@@ -1,5 +1,6 @@
-from shared.db import db
 from sqlalchemy import Numeric
+
+from shared.db import db
 
 
 class Category(db.Model):
@@ -34,7 +35,7 @@ class Category(db.Model):
     level = db.Column(db.Integer, default=0, nullable=False)  # Hiyerarşi seviyesi
     path = db.Column(db.String(500), nullable=True)  # Hiyerarşi yolu: "/1/4/7/"
     sort_order = db.Column(db.Integer, default=0, nullable=False)
-    
+
     # Muhasebe (Ledger) ve Finans Entegrasyonu
     account_id = db.Column(db.Integer, db.ForeignKey('account.id', ondelete='SET NULL'), nullable=True)
     budget_limit = db.Column(Numeric(19, 4), nullable=True)

@@ -1,133 +1,40 @@
 {% extends "layout.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static_asset_url('css/categories.css') }}">
+{% endblock %}
+
 {% block content %}
 {#
   Finansal Taksonomi Sayfası — Settings.html ile aynı premium mimari
   Tab Bar + Premium Card sistemi · TDMS/IFRS GL kod standartları
 #}
-<style>
-    /* ── Settings ile özdeş premium kart mimarisi ─────────────────────── */
-    .cat-tab {
-        transition: all 0.2s ease;
-        white-space: nowrap;
-    }
-    .cat-tab[aria-selected="true"] {
-        background: linear-gradient(to right, #4f46e5, #4338ca);
-        color: #fff;
-        box-shadow: 0 4px 14px -4px rgba(79, 70, 229, 0.6);
-    }
-    .cat-tab[aria-selected="false"]:hover {
-        background: #f1f5f9;
-        color: #0f172a;
-    }
-    .cat-panel { display: none; }
-    .cat-panel.active { display: block; }
-
-    /* ── Tablo ─────────────────────────────────────────────────────────── */
-    .data-table thead th {
-        background: rgba(248, 250, 252, 0.9);
-        text-transform: uppercase;
-        font-size: 9.5px;
-        letter-spacing: 0.08em;
-        color: #64748b;
-        padding: 0.75rem 1rem;
-        font-weight: 800;
-        border-bottom: 1px solid #f1f5f9;
-    }
-    .data-table tbody td {
-        padding: 0.875rem 1rem;
-        vertical-align: middle;
-        border-bottom: 1px solid #f8fafc;
-        transition: background 0.15s;
-    }
-    .data-table tbody tr:hover td { background: rgba(248, 250, 252, 0.7); }
-    .data-table tbody tr:last-child td { border-bottom: none; }
-
-    /* ── Kategori türü badge'leri ───────────────────────────────────────── */
-    .type-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: 3px 10px;
-        border-radius: 999px;
-        font-size: 9.5px;
-        font-weight: 800;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        white-space: nowrap;
-    }
-    .type-badge.gelir   { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
-    .type-badge.gider   { background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; }
-    .type-badge.yatirim { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
-    .type-badge.transfer{ background: #faf5ff; color: #7c3aed; border: 1px solid #e9d5ff; }
-
-    /* ── GL kodu chip ───────────────────────────────────────────────────── */
-    .gl-chip {
-        font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-        font-size: 10px;
-        letter-spacing: 0.05em;
-        padding: 2px 7px;
-        border-radius: 6px;
-        font-weight: 700;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        color: #475569;
-    }
-    .gl-chip.glr { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
-    .gl-chip.gdr { background: #fff1f2; border-color: #fecdd3; color: #be123c; }
-    .gl-chip.ytr { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
-
-    /* ── Edit mode satır vurgusu ────────────────────────────────────────── */
-    .edit-mode-active td { background: rgba(254, 243, 199, 0.35) !important; }
-    .edit-mode-active td:first-child { border-left: 3px solid #f59e0b; }
-
-    /* ── Action butonları ───────────────────────────────────────────────── */
-    .action-btn {
-        width: 28px; height: 28px;
-        display: inline-flex; align-items: center; justify-content: center;
-        border-radius: 8px;
-        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .action-btn:hover { transform: translateY(-1px) scale(1.08); }
-
-    /* ── Search & filter ────────────────────────────────────────────────── */
-    .search-input:focus { outline: none; box-shadow: 0 0 0 2px rgba(99,102,241,0.25); border-color: #6366f1; }
-
-    /* ── Budget progress bar ────────────────────────────────────────────── */
-    .budget-bar {
-        height: 3px; border-radius: 2px;
-        background: #e2e8f0;
-        overflow: hidden;
-    }
-    .budget-bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
-
-    /* ── Empty state ────────────────────────────────────────────────────── */
-    .empty-state { text-align: center; padding: 2.5rem 1rem; color: #94a3b8; }
-
-    /* ── Scrollbar ──────────────────────────────────────────────────────── */
-    .cat-scroll { overflow-y: auto; max-height: 420px; }
-    .cat-scroll::-webkit-scrollbar { width: 4px; }
-    .cat-scroll::-webkit-scrollbar-track { background: transparent; }
-    .cat-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
-    .cat-scroll::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
-</style>
 
 <!-- ═══════════════════════════════════════════════════════════ -->
 <!-- HEADER — Settings ile aynı dil                             -->
 <!-- ═══════════════════════════════════════════════════════════ -->
 <div class="max-w-6xl mx-auto space-y-4 mb-10">
-<div class="mb-4">
-    <div class="flex items-center justify-between">
-        <div>
-            <h2 class="text-2xl font-black text-slate-900 tracking-tighter uppercase leading-none
-                        bg-gradient-to-r from-slate-900 via-indigo-800 to-slate-900 bg-clip-text text-transparent">
-                Finansal Taksonomi
-            </h2>
-            <p class="text-xs text-slate-500 font-semibold mt-0.5">
-                TDMS/IFRS uyumlu hesap planı · Varlık sınıfları · Sektörel yapılandırma
-            </p>
+    <div class="page-header mb-4">
+        <div class="page-header-left">
+            <p class="page-header-eyebrow">Finansal Taksonomi & Standartlar</p>
+            <h1>{{ _('ui_auto_c46f43a2d6ea') }}</h1>
+            <p class="page-header-subtitle">{{ _('ui_auto_31b47a7a22c1') }}</p>
         </div>
         <!-- KPI badges -->
-        <div class="flex items-center gap-2">
+        {% set total_cat_budget = namespace(val=0) %}
+        {% set total_cat_spent = namespace(val=0) %}
+        {% set over_budget_count = namespace(val=0) %}
+        {% for c in cats %}
+            {% if c.budget_limit and c.budget_limit > 0 %}
+                {% set total_cat_budget.val = total_cat_budget.val + c.budget_limit %}
+                {% set m_spent = metrics.get(c.name, {}).get('month_spent', 0) %}
+                {% set total_cat_spent.val = total_cat_spent.val + m_spent %}
+                {% if m_spent > c.budget_limit %}
+                    {% set over_budget_count.val = over_budget_count.val + 1 %}
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+        <div class="flex flex-wrap items-center gap-2">
             <div class="flex items-center gap-2 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-lg">
                 <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>
                 <span class="text-[10px] font-black text-indigo-700 uppercase">{{ cats|length }} Kategori</span>
@@ -140,7 +47,44 @@
                 <span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
                 <span class="text-[10px] font-black text-amber-700 uppercase">{{ asset_sectors|length }} Sektör</span>
             </div>
+            {% if total_cat_budget.val > 0 %}
+            <div class="flex items-center gap-2 bg-purple-50 border border-purple-100 px-3 py-1.5 rounded-lg" title="Aylık Bütçe ve Cari Harcama">
+                <span class="w-1.5 h-1.5 bg-purple-500 rounded-full"></span>
+                <span class="text-[10px] font-black text-purple-700 uppercase">{{ "{:,.0f}".format(total_cat_spent.val) }} / {{ "{:,.0f}".format(total_cat_budget.val) }} {{ base_currency_symbol }}</span>
+            </div>
+            {% endif %}
+            {% if over_budget_count.val > 0 %}
+            <div class="flex items-center gap-2 bg-rose-50 border border-rose-200 px-3 py-1.5 rounded-lg" title="Aylık bütçe limitini aşan kategori sayısı">
+                <span class="w-1.5 h-1.5 bg-rose-500 rounded-full"></span>
+                <span class="text-[10px] font-black text-rose-700 uppercase">{{ over_budget_count.val }} Bütçe Aşımı</span>
+            </div>
+            {% elif total_cat_budget.val > 0 %}
+            <div class="flex items-center gap-2 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-lg" title="Tüm kategoriler bütçe limitleri dahilinde">
+                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                <span class="text-[10px] font-black text-emerald-700 uppercase">Bütçeler Dengede</span>
+            </div>
+            {% endif %}
         </div>
+    </div>
+
+    <!-- Segmented Navigation Hub -->
+    <div class="mb-6 flex flex-wrap items-center gap-2 border-b border-slate-200/80 pb-4 dark:border-slate-800">
+        <a href="{{ url_for('settings.settings') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'settings.settings' or request.path.startswith('/settings') %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <span>Sistem &amp; Tercihler</span>
+        </a>
+        <a href="{{ url_for('categories.categories_page') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'categories.categories_page' or request.path.startswith('/categories') %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+            <span>Finansal Taksonomi</span>
+        </a>
+        <a href="{{ url_for('profile.index') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'profile.index' or request.path.startswith('/profile') %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            <span>Yatırımcı Profili &amp; Risk</span>
+        </a>
+        <a href="{{ url_for('storage_health.storage_health_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'storage_health.storage_health_dashboard' or request.path.startswith('/storage-health') %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
+            <span>Depolama Sağlığı &amp; Bakım</span>
+        </a>
     </div>
 </div>
 
@@ -148,27 +92,27 @@
 <!-- TAB BAR — Settings.html ile özdeş yapı                     -->
 <!-- ═══════════════════════════════════════════════════════════ -->
 <div class="premium-card bg-white/80 p-1.5 shadow-lg overflow-x-auto">
-    <div class="flex items-center gap-1 min-w-max" role="tablist" aria-label="Taksonomi bölümleri">
-        <button type="button" role="tab" data-tab="categories" aria-selected="true"
+    <div class="flex items-center gap-1 min-w-max" role="tablist" aria-label="{{ _('ui_auto_5f6042c8edf0') }}">
+        <button data-macro="button_secondary" type="button" role="tab" data-tab="categories" aria-selected="true"
                 class="cat-tab flex items-center gap-2 px-4 py-2.5 rounded-lg font-black text-[10px] uppercase tracking-wider text-slate-500">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-            Nakit Akış Kategorileri
+            {{ _('ui_auto_f908954df828') }}
         </button>
-        <button type="button" role="tab" data-tab="asset-types" aria-selected="false"
+        <button data-macro="button_secondary" type="button" role="tab" data-tab="asset-types" aria-selected="false"
                 class="cat-tab flex items-center gap-2 px-4 py-2.5 rounded-lg font-black text-[10px] uppercase tracking-wider text-slate-500">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-            Varlık Sınıfları
+            {{ _('ui_auto_08c963ef0127') }}
         </button>
-        <button type="button" role="tab" data-tab="sectors" aria-selected="false"
+        <button data-macro="button_secondary" type="button" role="tab" data-tab="sectors" aria-selected="false"
                 class="cat-tab flex items-center gap-2 px-4 py-2.5 rounded-lg font-black text-[10px] uppercase tracking-wider text-slate-500">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-            Varlık Sektörleri
+            {{ _('ui_auto_bc9bbd5c8c58') }}
         </button>
         <!-- GL Kodu Referans Sekmesi -->
-        <button type="button" role="tab" data-tab="gl-reference" aria-selected="false"
+        <button data-macro="button_secondary" type="button" role="tab" data-tab="gl-reference" aria-selected="false"
                 class="cat-tab flex items-center gap-2 px-4 py-2.5 rounded-lg font-black text-[10px] uppercase tracking-wider text-slate-500">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            GL Kodu Referansı
+            {{ _('ui_auto_4759fb065991') }}
         </button>
     </div>
 </div>
@@ -187,7 +131,7 @@
                         <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     </div>
                     <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight" id="cat_form_title">
-                        Yeni Kategori
+                        {{ _('ui_auto_d742b562ff53') }}
                     </h3>
                 </div>
 
@@ -200,10 +144,10 @@
                     <!-- Kategori Adı -->
                     <div>
                         <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
-                            Kategori Adı <span class="text-rose-500">*</span>
+                            {{ _('ui_auto_89d4fc4af97e') }} <span class="text-rose-500">*</span>
                         </label>
                         <input type="text" name="name" id="cat_name"
-                               placeholder="Örn: Market & Gıda"
+                               placeholder="{{ _('ui_auto_387b56201f97') }}"
                                class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-white text-xs
                                       font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500
                                       focus:border-transparent outline-none transition" required>
@@ -246,28 +190,85 @@
                                 </div>
                             </label>
                         </div>
+                        <input type="hidden" name="type" id="cat_standard_type" value="" disabled>
+                    </div>
+
+                    <!-- Üst Kategori -->
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                            Üst Kategori <span class="text-slate-400 font-normal normal-case">(İsteğe Bağlı)</span>
+                        </label>
+                        <select name="parent_id" id="cat_parent_id"
+                                class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                            <option value="">— Yok (Ana Kategori) —</option>
+                            {% for p in parent_cats %}
+                            <option value="{{ p.id }}">{{ p.name }} ({{ p.type }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Renk & İkon Seçimi -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                                Renk <span class="text-slate-400 font-normal normal-case">(İsteğe Bağlı)</span>
+                            </label>
+                            <input type="hidden" name="color" id="cat_color" value="">
+                            <div class="flex items-center gap-1.5 flex-wrap pt-0.5" id="color_palette">
+                                <button data-macro="button_secondary" type="button" class="w-5 h-5 rounded-full bg-indigo-500 border-2 border-transparent hover:scale-110 transition color-dot" data-color="indigo" title="İndigo"></button>
+                                <button data-macro="button_secondary" type="button" class="w-5 h-5 rounded-full bg-emerald-500 border-2 border-transparent hover:scale-110 transition color-dot" data-color="emerald" title="Zümrüt"></button>
+                                <button data-macro="button_secondary" type="button" class="w-5 h-5 rounded-full bg-rose-500 border-2 border-transparent hover:scale-110 transition color-dot" data-color="rose" title="Gül"></button>
+                                <button data-macro="button_secondary" type="button" class="w-5 h-5 rounded-full bg-amber-500 border-2 border-transparent hover:scale-110 transition color-dot" data-color="amber" title="Kehribar"></button>
+                                <button data-macro="button_secondary" type="button" class="w-5 h-5 rounded-full bg-sky-500 border-2 border-transparent hover:scale-110 transition color-dot" data-color="sky" title="Gök"></button>
+                                <button data-macro="button_secondary" type="button" class="w-5 h-5 rounded-full bg-purple-500 border-2 border-transparent hover:scale-110 transition color-dot" data-color="purple" title="Mor"></button>
+                                <button data-macro="button_secondary" type="button" class="w-5 h-5 rounded-full bg-slate-500 border-2 border-transparent hover:scale-110 transition color-dot" data-color="slate" title="Kül"></button>
+                                <button data-macro="button_secondary" type="button" class="w-5 h-5 rounded-full border border-dashed border-slate-300 text-slate-400 text-[10px] flex items-center justify-center hover:bg-slate-50 transition color-clear-btn" title="Temizle">&times;</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                                İkon <span class="text-slate-400 font-normal normal-case">(İsteğe Bağlı)</span>
+                            </label>
+                            <select name="icon" id="cat_icon"
+                                    class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                                <option value="">— Yok —</option>
+                                <option value="shopping-bag">Alışveriş / Market</option>
+                                <option value="utensils">Yeme / İçme</option>
+                                <option value="home">Ev / Barınma</option>
+                                <option value="car">Ulaşım / Araç</option>
+                                <option value="zap">Faturalar / Enerji</option>
+                                <option value="briefcase">Maaş / İş</option>
+                                <option value="trending-up">Yatırım / Getiri</option>
+                                <option value="heart-pulse">Sağlık</option>
+                                <option value="graduation-cap">Eğitim</option>
+                                <option value="film">Eğlence</option>
+                                <option value="plane">Seyahat</option>
+                                <option value="gift">Hediye / Bağış</option>
+                                <option value="repeat">Abonelik</option>
+                            </select>
+                        </div>
                     </div>
 
                     <!-- GL Kodu & Bütçe Limiti -->
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
-                                GL Kodu
-                                <span class="text-slate-400 font-normal normal-case ml-1">(Opsiyonel)</span>
+                                {{ _('ui_auto_7cd6f2038c7a') }}
+                                <span class="text-slate-400 font-normal normal-case ml-1">{{ _('ui_auto_55a0d5a15bba') }}</span>
                             </label>
                             <input type="text" name="code" id="cat_code"
-                                   placeholder="Oto-atanır"
+                                   placeholder="{{ _('ui_auto_6d348a641325') }}"
                                    class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50/50 text-xs
                                           font-mono font-bold text-slate-600 focus:ring-2 focus:ring-indigo-500 outline-none transition">
-                            <p class="text-[9px] text-slate-400 mt-0.5 font-medium">Boş bırakılırsa otomatik</p>
+                            <p class="text-[9px] text-slate-400 mt-0.5 font-medium">{{ _('ui_auto_851807822709') }}</p>
                         </div>
                         <div>
                             <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
-                                Aylık Bütçe
-                                <span class="text-slate-400 font-normal normal-case ml-1">(₺)</span>
+                                {{ _('ui_auto_1e28fa79b9c2') }}
+                                <span class="text-slate-400 font-normal normal-case ml-1">({{ base_currency_symbol }})</span>
                             </label>
                             <input type="number" step="0.01" min="0" name="budget_limit" id="cat_budget_limit"
-                                   placeholder="Örn: 5.000"
+                                   placeholder="{{ _('ui_auto_d93900014388') }}"
                                    class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-xs
                                           font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition">
                         </div>
@@ -279,18 +280,18 @@
                         <svg class="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                         </svg>
-                        <span class="text-[10px] font-bold text-amber-700">Düzenleme modu aktif — değişiklikler kaydedilecek</span>
+                        <span class="text-[10px] font-bold text-amber-700">{{ _('ui_auto_67e5348eb1eb') }}</span>
                     </div>
 
                     <!-- Butonlar -->
                     <div class="flex gap-2 pt-1">
-                        <button type="submit" id="cat_submit_btn"
+                        <button data-macro="button_secondary" type="submit" id="cat_submit_btn"
                                 class="flex-1 bg-slate-900 text-white py-2.5 rounded-xl font-black text-[10px]
                                        uppercase tracking-widest hover:bg-indigo-600 transition
                                        shadow-md shadow-slate-900/10 active:scale-[0.98]">
-                            Kategori Oluştur
+                            {{ _('ui_auto_a79451cc03c8') }}
                         </button>
-                        <button type="button" id="cat_cancel_btn" onclick="cancelCatEdit()"
+                        <button data-macro="button_secondary" type="button" id="cat_cancel_btn" onclick="cancelCatEdit()"
                                 class="hidden px-4 bg-slate-100 text-slate-600 py-2.5 rounded-xl font-black
                                        text-[10px] uppercase tracking-wider hover:bg-slate-200 transition">
                             İptal
@@ -301,19 +302,19 @@
 
             <!-- GL Kodu Açıklama Kartı -->
             <div class="premium-card p-4 bg-white/70 shadow mt-3 border-l-4 border-slate-300">
-                <p class="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2">GL Kodu Standartları</p>
+                <p class="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2">{{ _('ui_auto_892606e78dc5') }}</p>
                 <div class="space-y-1.5">
                     <div class="flex items-center gap-2">
-                        <span class="gl-chip glr">GLR-6xxx</span>
-                        <span class="text-[10px] text-slate-600 font-semibold">Gelir — 600 Hesap Grubu</span>
+                        <span class="gl-chip glr">{{ _('ui_auto_3553d52d9134') }}</span>
+                        <span class="text-[10px] text-slate-600 font-semibold">{{ _('ui_auto_fc417353b662') }}</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <span class="gl-chip gdr">GDR-7xxx</span>
-                        <span class="text-[10px] text-slate-600 font-semibold">Gider — 700 Hesap Grubu</span>
+                        <span class="gl-chip gdr">{{ _('ui_auto_20d18be7107d') }}</span>
+                        <span class="text-[10px] text-slate-600 font-semibold">{{ _('ui_auto_577c37626018') }}</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <span class="gl-chip ytr">YTR-1xxx</span>
-                        <span class="text-[10px] text-slate-600 font-semibold">Yatırım — 100 Varlık Hesabı</span>
+                        <span class="gl-chip ytr">{{ _('ui_auto_c6e1b8ec2d79') }}</span>
+                        <span class="text-[10px] text-slate-600 font-semibold">{{ _('ui_auto_07403deb8fbe') }}</span>
                     </div>
                 </div>
             </div>
@@ -325,7 +326,7 @@
                 <!-- Liste başlık + arama -->
                 <div class="flex items-center justify-between p-4 border-b border-slate-100 bg-gradient-to-r from-indigo-50/40 to-transparent">
                     <div class="flex items-center gap-2">
-                        <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Kategori Planı</h3>
+                        <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">{{ _('ui_auto_ca1318778707') }}</h3>
                         <span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full text-[10px] font-black" id="cats_count">
                             {{ cats|length }}
                         </span>
@@ -333,28 +334,53 @@
                     <div class="flex items-center gap-2">
                         <!-- Filtre butonları -->
                         <div class="flex gap-1" id="type_filter_btns">
-                            <button type="button" onclick="filterCats('all')" data-filter="all"
+                            <button data-macro="button_secondary" type="button" onclick="filterCats('all')" data-filter="all"
                                     class="filter-btn active px-2.5 py-1 rounded-lg text-[9px] font-black uppercase
                                            tracking-wide bg-slate-900 text-white transition">Tümü</button>
-                            <button type="button" onclick="filterCats('Gelir')" data-filter="Gelir"
+                            <button data-macro="button_secondary" type="button" onclick="filterCats('Gelir')" data-filter="Gelir"
                                     class="filter-btn px-2.5 py-1 rounded-lg text-[9px] font-black uppercase
                                            tracking-wide bg-slate-100 text-slate-600 hover:bg-emerald-100 hover:text-emerald-700 transition">Gelir</button>
-                            <button type="button" onclick="filterCats('Gider')" data-filter="Gider"
+                            <button data-macro="button_secondary" type="button" onclick="filterCats('Gider')" data-filter="Gider"
                                     class="filter-btn px-2.5 py-1 rounded-lg text-[9px] font-black uppercase
                                            tracking-wide bg-slate-100 text-slate-600 hover:bg-rose-100 hover:text-rose-700 transition">Gider</button>
-                            <button type="button" onclick="filterCats('Yatırım')" data-filter="Yatırım"
+                            <button data-macro="button_secondary" type="button" onclick="filterCats('Yatırım')" data-filter="Yatırım"
                                     class="filter-btn px-2.5 py-1 rounded-lg text-[9px] font-black uppercase
                                            tracking-wide bg-slate-100 text-slate-600 hover:bg-blue-100 hover:text-blue-700 transition">Yatırım</button>
+                            <button data-macro="button_secondary" type="button" onclick="filterCats('budgeted')" data-filter="budgeted"
+                                    class="filter-btn px-2.5 py-1 rounded-lg text-[9px] font-black uppercase
+                                           tracking-wide bg-slate-100 text-slate-600 hover:bg-purple-100 hover:text-purple-700 transition">Bütçeliler</button>
+                            <button data-macro="button_secondary" type="button" onclick="filterCats('overbudget')" data-filter="overbudget"
+                                    class="filter-btn px-2.5 py-1 rounded-lg text-[9px] font-black uppercase
+                                           tracking-wide bg-slate-100 text-slate-600 hover:bg-rose-100 hover:text-rose-700 transition">Aşanlar</button>
+                            <button data-macro="button_secondary" type="button" onclick="filterCats('archived')" data-filter="archived"
+                                    class="filter-btn px-2.5 py-1 rounded-lg text-[9px] font-black uppercase
+                                           tracking-wide bg-slate-100 text-slate-600 hover:bg-slate-200 transition">Arşivlenenler</button>
                         </div>
-                        <!-- Arama -->
-                        <div class="relative">
-                            <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
-                            </svg>
-                            <input type="text" id="cat_search" oninput="searchCats(this.value)"
-                                   placeholder="Ara…"
-                                   class="search-input pl-7 pr-3 py-1.5 border border-slate-200 rounded-lg bg-white
-                                          text-[11px] font-semibold text-slate-700 w-32 transition">
+                        <!-- Arama & CSV -->
+                        <div class="flex items-center gap-1.5">
+                            <div class="relative">
+                                <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
+                                </svg>
+                                <input type="text" id="cat_search" oninput="searchCats(this.value)"
+                                       placeholder="{{ _('ui_auto_bc8b3d9ed573') }}"
+                                       class="search-input pl-7 pr-3 py-1.5 border border-slate-200 rounded-lg bg-white
+                                              text-[11px] font-semibold text-slate-700 w-32 transition">
+                            </div>
+                            <button data-macro="button_secondary" type="button" onclick="openMergeModal()"
+                                    class="px-2.5 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white text-[11px] font-bold flex items-center gap-1 shadow-sm transition"
+                                    title="İki kategoriyi birleştir" aria-label="Kategorileri Birleştir">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                                <span class="hidden sm:inline text-[10px]">Birleştir</span>
+                            </button>
+                            <button data-macro="button_secondary" type="button" onclick="exportCategoriesToCsv()"
+                                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:text-indigo-600 hover:border-indigo-300 text-[11px] font-bold flex items-center gap-1 shadow-sm transition"
+                                    title="Kategorileri CSV Olarak İndir" aria-label="Kategorileri CSV Olarak İndir">
+                                <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                <span class="hidden sm:inline text-[10px]">CSV</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -364,18 +390,69 @@
                     <table class="w-full data-table" id="cats_table">
                         <thead>
                             <tr>
-                                <th>Kategori</th>
-                                <th>Tür</th>
-                                <th>GL Kodu</th>
-                                <th>Aylık Bütçe</th>
+                                <th class="cursor-pointer select-none hover:text-indigo-600 transition" onclick="sortCategoriesTable('name')" id="sort_cat_name">
+                                    <span class="inline-flex items-center gap-1">Kategori <span class="sort-indicator text-slate-400">⇅</span></span>
+                                </th>
+                                <th class="cursor-pointer select-none hover:text-indigo-600 transition" onclick="sortCategoriesTable('type')" id="sort_cat_type">
+                                    <span class="inline-flex items-center gap-1">Tür <span class="sort-indicator text-slate-400">⇅</span></span>
+                                </th>
+                                <th class="cursor-pointer select-none hover:text-indigo-600 transition" onclick="sortCategoriesTable('code')" id="sort_cat_code">
+                                    <span class="inline-flex items-center gap-1">{{ _('ui_auto_7cd6f2038c7a') }} <span class="sort-indicator text-slate-400">⇅</span></span>
+                                </th>
+                                <th class="cursor-pointer select-none hover:text-indigo-600 transition" onclick="sortCategoriesTable('usage')" id="sort_cat_usage">
+                                    <span class="inline-flex items-center gap-1">Hacim <span class="sort-indicator text-slate-400">⇅</span></span>
+                                </th>
+                                <th class="cursor-pointer select-none hover:text-indigo-600 transition" onclick="sortCategoriesTable('budget')" id="sort_cat_budget">
+                                    <span class="inline-flex items-center gap-1">Bütçe / Harcama <span class="sort-indicator text-slate-400">⇅</span></span>
+                                </th>
                                 <th class="text-right">İşlem</th>
                             </tr>
                         </thead>
                         <tbody class="text-xs text-slate-700" id="cats_tbody">
                             {% for c in cats %}
-                            <tr class="cat-row transition" data-id="{{ c.id }}" data-type="{{ c.type }}" data-name="{{ c.name|lower }}">
+                            {% set m = metrics.get(c.name, {}) %}
+                            {% set tx_cnt = m.get('tx_count', 0) %}
+                            {% set tot_amt = m.get('total_amount', 0) %}
+                            {% set spent = m.get('month_spent', 0) %}
+                            {% set pct = ((spent / c.budget_limit) * 100)|round|int if c.budget_limit and c.budget_limit > 0 else 0 %}
+                            <tr class="cat-row transition {% if not c.is_active %}opacity-60 bg-slate-50/60{% endif %}"
+                                data-id="{{ c.id }}"
+                                data-type="{{ c.type }}"
+                                data-name="{{ c.name|lower }}"
+                                data-code="{{ c.code|lower if c.code else '' }}"
+                                data-budget="{{ c.budget_limit or 0 }}"
+                                data-spent="{{ spent }}"
+                                data-pct="{{ pct }}"
+                                data-over-budget="{{ 'true' if c.budget_limit and spent > c.budget_limit else 'false' }}"
+                                data-standard="{{ 'true' if c.tenant_id is none else 'false' }}"
+                                data-active="{{ 'true' if c.is_active else 'false' }}"
+                                data-parent-id="{{ c.parent_id or '' }}"
+                                data-color="{{ c.color or '' }}"
+                                data-icon="{{ c.icon or '' }}"
+                                data-usage="{{ tot_amt }}"
+                                data-tx-count="{{ tx_cnt }}">
                                 <td>
-                                    <span class="font-extrabold text-slate-900 text-[12px]">{{ c.name }}</span>
+                                    <div class="flex items-center gap-2">
+                                        {% if c.parent_id %}
+                                        <span class="text-slate-300 font-mono text-sm pl-1 flex-shrink-0">↳</span>
+                                        {% endif %}
+                                        {% if c.color %}
+                                        <span class="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-{{ c.color }}-500 ring-2 ring-{{ c.color }}-200"></span>
+                                        {% else %}
+                                        <span class="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-slate-300"></span>
+                                        {% endif %}
+                                        <div>
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="font-extrabold text-slate-900 text-[12px] {% if not c.is_active %}line-through text-slate-400{% endif %}">{{ c.name }}</span>
+                                                {% if not c.is_active %}
+                                                <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-slate-200 text-slate-600 uppercase tracking-wider">Arşiv</span>
+                                                {% endif %}
+                                            </div>
+                                            {% if c.parent %}
+                                             <p class="text-[9.5px] text-slate-400 font-medium">Üst: {{ c.parent.name }}</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
                                 </td>
                                 <td>
                                     <span class="type-badge {{ c.type|lower }}">
@@ -386,56 +463,140 @@
                                 <td>
                                     {% if c.code %}
                                         {% if c.code.startswith('GLR') %}
-                                            <span class="gl-chip glr">{{ c.code }}</span>
+                                             <span class="gl-chip glr">{{ c.code }}</span>
                                         {% elif c.code.startswith('GDR') %}
-                                            <span class="gl-chip gdr">{{ c.code }}</span>
+                                             <span class="gl-chip gdr">{{ c.code }}</span>
                                         {% elif c.code.startswith('YTR') %}
-                                            <span class="gl-chip ytr">{{ c.code }}</span>
+                                             <span class="gl-chip ytr">{{ c.code }}</span>
                                         {% else %}
-                                            <span class="gl-chip">{{ c.code }}</span>
+                                             <span class="gl-chip">{{ c.code }}</span>
                                         {% endif %}
                                     {% else %}
-                                        <span class="text-[10px] text-slate-400 italic">Oto-atanır</span>
+                                        <span class="text-[10px] text-slate-400 italic">{{ _('ui_auto_6d348a641325') }}</span>
                                     {% endif %}
                                 </td>
                                 <td>
+                                    <div class="flex items-center gap-1.5">
+                                        <a href="{{ url_for('transactions.transactions') }}?category={{ c.name|urlencode }}"
+                                           class="px-2 py-0.5 bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 rounded-md text-[10px] font-bold transition inline-flex items-center gap-1"
+                                           title="Bu kategorideki işlemleri görüntüle">
+                                            <span>{{ tx_cnt }} işlem</span>
+                                            <span class="text-[9px]">→</span>
+                                        </a>
+                                        {% if tot_amt > 0 %}
+                                        <span class="text-[10px] font-bold text-slate-500 hidden xl:inline">
+                                            {{ "{:,.0f}".format(tot_amt) }} {{ base_currency_symbol }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
                                     {% if c.budget_limit %}
-                                        <div>
-                                            <span class="font-bold text-slate-700 text-[11px]">
-                                                ₺{{ "{:,.0f}".format(c.budget_limit) }}
-                                            </span>
+                                        <div class="space-y-1 min-w-[130px] cursor-pointer group"
+                                             onclick="editCategory({{ c.id }}, '{{ c.name }}', '{{ c.type }}', '{{ c.code or '' }}', '{{ c.budget_limit or '' }}', {{ c.version or 1 }}, {{ 'true' if c.tenant_id is none else 'false' }}, '{{ c.parent_id or '' }}', '{{ c.color or '' }}', '{{ c.icon or '' }}', this)"
+                                             title="Aylık bütçe limitini düzenlemek için tıklayın">
+                                            <div class="flex items-center justify-between text-[10px]">
+                                                <span class="font-extrabold {% if pct > 100 %}text-rose-600{% elif pct >= 80 %}text-amber-600{% else %}text-slate-700{% endif %}">
+                                                    {{ "{:,.0f}".format(spent) }} / {{ "{:,.0f}".format(c.budget_limit) }} {{ base_currency_symbol }}
+                                                </span>
+                                                <span class="font-bold text-[9px] {% if pct > 100 %}text-rose-600 font-black{% elif pct >= 80 %}text-amber-600 font-black{% else %}text-slate-400{% endif %}">
+                                                    %{{ pct }}
+                                                </span>
+                                            </div>
+                                            <div class="budget-bar">
+                                                <div class="budget-bar-fill {% if pct > 100 %}bg-rose-500 shadow-sm shadow-rose-500/50{% elif pct >= 80 %}bg-amber-500{% else %}bg-emerald-500{% endif %}" style="width: {{ [pct, 100]|min }}%;"></div>
+                                            </div>
+                                            <div class="flex items-center justify-between text-[8.5px] pt-0.5">
+                                                {% if pct > 100 %}
+                                                <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded font-black bg-rose-100 text-rose-700 uppercase tracking-tight">
+                                                    ⚠️ +{{ "{:,.0f}".format(spent - c.budget_limit) }} {{ base_currency_symbol }} Aşım
+                                                </span>
+                                                {% elif pct >= 80 %}
+                                                <span class="inline-flex items-center gap-0.5 px-1 py-0.5 rounded font-bold bg-amber-50 text-amber-700">
+                                                    Kalan: {{ "{:,.0f}".format(c.budget_limit - spent) }} {{ base_currency_symbol }}
+                                                </span>
+                                                {% else %}
+                                                <span class="font-medium text-slate-400">
+                                                    Kalan: {{ "{:,.0f}".format(c.budget_limit - spent) }} {{ base_currency_symbol }}
+                                                </span>
+                                                {% endif %}
+                                                <span class="text-slate-300 opacity-0 group-hover:opacity-100 transition text-[9px]">✎</span>
+                                            </div>
                                         </div>
                                     {% else %}
-                                        <span class="text-[10px] text-slate-300">—</span>
+                                        <div class="cursor-pointer group flex items-center gap-1"
+                                             onclick="editCategory({{ c.id }}, '{{ c.name }}', '{{ c.type }}', '{{ c.code or '' }}', '', {{ c.version or 1 }}, {{ 'true' if c.tenant_id is none else 'false' }}, '{{ c.parent_id or '' }}', '{{ c.color or '' }}', '{{ c.icon or '' }}', this)"
+                                             title="Aylık bütçe limiti belirlemek için tıklayın">
+                                            <span class="text-[10px] text-slate-300 group-hover:text-indigo-600 transition font-medium">+ Bütçe Ekle</span>
+                                        </div>
                                     {% endif %}
                                 </td>
                                 <td class="text-right">
                                     <div class="flex items-center justify-end gap-1">
-                                        <button type="button" onclick="editCategory({{ c.id }}, '{{ c.name }}', '{{ c.type }}', '{{ c.code or '' }}', '{{ c.budget_limit or '' }}', {{ c.version or 1 }}, this)"
-                                                class="action-btn bg-slate-100 text-slate-500 hover:bg-indigo-600 hover:text-white"
-                                                title="Düzenle">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                                            </svg>
-                                        </button>
-                                        <button type="button" onclick="confirmDeleteCategory({{ c.id }}, '{{ c.name }}')"
-                                                class="action-btn bg-rose-50 text-rose-500 hover:bg-rose-600 hover:text-white"
-                                                title="Sil">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                            </svg>
-                                        </button>
+                                        {% if c.is_active %}
+                                            <button data-macro="button_secondary" type="button" onclick="editCategory({{ c.id }}, '{{ c.name }}', '{{ c.type }}', '{{ c.code or '' }}', '{{ c.budget_limit or '' }}', {{ c.version or 1 }}, {{ 'true' if c.tenant_id is none else 'false' }}, '{{ c.parent_id or '' }}', '{{ c.color or '' }}', '{{ c.icon or '' }}', this)"
+                                                    class="action-btn bg-slate-100 text-slate-500 hover:bg-indigo-600 hover:text-white"
+                                                    aria-label="{{ c.name }} kategorisini düzenle"
+                                                    title="{{ 'Aylık bütçeyi düzenle' if c.tenant_id is none else 'Düzenle' }}">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                                </svg>
+                                            </button>
+                                            {% if c.tenant_id is not none %}
+                                            <button data-macro="button_secondary" type="button" onclick="openMergeModal({{ c.id }}, '{{ c.name }}')"
+                                                    class="action-btn bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white"
+                                                    aria-label="{{ c.name }} kategorisini birleştir"
+                                                    title="Başka bir kategoriyle birleştir">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                                                </svg>
+                                            </button>
+                                            {% endif %}
+                                            {% if c.tenant_id is none %}
+                                            <button data-macro="button_secondary" type="button" disabled
+                                                    class="action-btn bg-slate-100 text-slate-300 cursor-not-allowed"
+                                                    aria-label="{{ c.name }} standart kategori (silinemez)"
+                                                    title="{{ _('ui_auto_3a5437e9c3b4') }}">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
+                                            </button>
+                                            {% else %}
+                                            <button data-macro="button_secondary" type="button" onclick="confirmDeleteCategory({{ c.id }}, '{{ c.name }}')"
+                                                    class="action-btn bg-rose-50 text-rose-500 hover:bg-rose-600 hover:text-white"
+                                                    aria-label="{{ c.name }} kategorisini sil"
+                                                    title="Sil veya Arşivle">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
+                                            </button>
+                                            {% endif %}
+                                        {% else %}
+                                            <button data-macro="button_secondary" type="button" onclick="restoreCategory({{ c.id }}, '{{ c.name }}')"
+                                                    class="action-btn bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white"
+                                                    aria-label="{{ c.name }} kategorisini geri yükle"
+                                                    title="Arşivden Geri Yükle">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                                </svg>
+                                            </button>
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>
                             {% else %}
-                            <tr><td colspan="5" class="empty-state">
+                            <tr><td colspan="6" class="empty-state">
                                 <svg class="w-8 h-8 mx-auto mb-2 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
                                 </svg>
-                                <p class="text-[11px] font-bold">Henüz kategori eklenmedi</p>
+                                <p class="text-[11px] font-bold">{{ _('ui_auto_fbb55f2d5870') }}</p>
                             </td></tr>
                             {% endfor %}
+                            <tr id="cats_search_empty_row" class="hidden">
+                                <td colspan="6" class="py-8 text-center text-slate-400 text-xs font-semibold">
+                                    Aradığınız kriterlere uygun kategori bulunamadı.
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -460,7 +621,7 @@
                         </svg>
                     </div>
                     <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight" id="asset_type_form_title">
-                        Yeni Varlık Sınıfı
+                        {{ _('ui_auto_6884e15cbea9') }}
                     </h3>
                 </div>
 
@@ -471,10 +632,10 @@
 
                     <div>
                         <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
-                            Sınıf Adı <span class="text-rose-500">*</span>
+                            {{ _('ui_auto_5ea5afe96e5b') }} <span class="text-rose-500">*</span>
                         </label>
                         <input type="text" name="asset_type_name" id="asset_type_name"
-                               placeholder="Örn: Hisse Senedi, Altın, Kripto"
+                               placeholder="{{ _('ui_auto_b5ed0f8a0f7f') }}"
                                class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-white text-xs
                                       font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none transition" required>
                     </div>
@@ -484,17 +645,17 @@
                         <svg class="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                         </svg>
-                        <span class="text-[10px] font-bold text-amber-700">Düzenleme modu — varlık sınıfı güncellenecek</span>
+                        <span class="text-[10px] font-bold text-amber-700">{{ _('ui_auto_af2b594f00aa') }}</span>
                     </div>
 
                     <div class="flex gap-2 pt-1">
-                        <button type="submit" id="asset_type_submit_btn"
+                        <button data-macro="button_secondary" type="submit" id="asset_type_submit_btn"
                                 class="flex-1 bg-slate-900 text-white py-2.5 rounded-xl font-black text-[10px]
                                        uppercase tracking-widest hover:bg-emerald-600 transition
                                        shadow-md shadow-slate-900/10 active:scale-[0.98]">
-                            Sınıf Oluştur
+                            {{ _('ui_auto_75bad0ceef4b') }}
                         </button>
-                        <button type="button" id="asset_type_cancel_btn" onclick="cancelAssetTypeEdit()"
+                        <button data-macro="button_secondary" type="button" id="asset_type_cancel_btn" onclick="cancelAssetTypeEdit()"
                                 class="hidden px-4 bg-slate-100 text-slate-600 py-2.5 rounded-xl font-black
                                        text-[10px] uppercase tracking-wider hover:bg-slate-200 transition">
                             İptal
@@ -504,10 +665,9 @@
             </div>
 
             <div class="premium-card p-4 mt-3 bg-emerald-50/60 border border-emerald-100/70 shadow-sm">
-                <p class="text-[10px] font-black uppercase tracking-wider text-emerald-700 mb-1.5">ℹ️ Varlık Sınıfı Nedir?</p>
+                <p class="text-[10px] font-black uppercase tracking-wider text-emerald-700 mb-1.5">{{ _('ui_auto_578565ed51c3') }}</p>
                 <p class="text-[11px] text-slate-600 leading-relaxed">
-                    Portföyünüzdeki yatırım araçlarını gruplar. Her varlık bir sınıfa aittir.
-                    Örnek: <strong>Hisse Senedi</strong>, <strong>Altın</strong>, <strong>Fon</strong>, <strong>Kripto</strong>.
+                    {{ _('ui_auto_51223951fdda') }} <strong>{{ _('ui_auto_f580406574c8') }}</strong>, <strong>Altın</strong>, <strong>{{ _('ui_auto_794590c7b507') }}</strong>, <strong>{{ _('ui_auto_3099591e4f1a') }}</strong>.
                 </p>
             </div>
         </div>
@@ -517,7 +677,7 @@
             <div class="premium-card bg-white/80 shadow-lg overflow-hidden">
                 <div class="flex items-center justify-between p-4 border-b border-slate-100 bg-gradient-to-r from-emerald-50/40 to-transparent">
                     <div class="flex items-center gap-2">
-                        <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Varlık Sınıf Planı</h3>
+                        <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">{{ _('ui_auto_c6ef36dbcc94') }}</h3>
                         <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-black">
                             {{ asset_types|length }}
                         </span>
@@ -528,7 +688,7 @@
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>Varlık Sınıfı</th>
+                                <th>{{ _('ui_auto_7b1fcdb0938f') }}</th>
                                 <th class="text-right">İşlem</th>
                             </tr>
                         </thead>
@@ -544,11 +704,11 @@
                                 </td>
                                 <td class="text-right">
                                     <div class="flex items-center justify-end gap-1">
-                                        <button type="button" onclick="editAssetType({{ at.id }}, '{{ at.name }}', this)"
+                                        <button data-macro="button_secondary" type="button" onclick="editAssetType({{ at.id }}, '{{ at.name }}', this)"
                                                 class="action-btn bg-slate-100 text-slate-500 hover:bg-emerald-600 hover:text-white" title="Düzenle">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                         </button>
-                                        <button type="button" onclick="confirmDeleteAssetType({{ at.id }}, '{{ at.name }}')"
+                                        <button data-macro="button_secondary" type="button" onclick="confirmDeleteAssetType({{ at.id }}, '{{ at.name }}')"
                                                 class="action-btn bg-rose-50 text-rose-500 hover:bg-rose-600 hover:text-white" title="Sil">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                         </button>
@@ -557,7 +717,7 @@
                             </tr>
                             {% else %}
                             <tr><td colspan="3" class="empty-state">
-                                <p class="text-[11px] font-bold">Varlık sınıfı tanımlanmadı</p>
+                                <p class="text-[11px] font-bold">{{ _('ui_auto_ac21299c8fda') }}</p>
                             </td></tr>
                             {% endfor %}
                         </tbody>
@@ -584,7 +744,7 @@
                         </svg>
                     </div>
                     <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight" id="asset_sector_form_title">
-                        Yeni Sektör
+                        {{ _('ui_auto_0fa106c2f68e') }}
                     </h3>
                 </div>
 
@@ -595,10 +755,10 @@
 
                     <div>
                         <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
-                            Sektör Adı <span class="text-rose-500">*</span>
+                            {{ _('ui_auto_013f28148292') }} <span class="text-rose-500">*</span>
                         </label>
                         <input type="text" name="name" id="asset_sector_name"
-                               placeholder="Örn: Teknoloji, Enerji, İletişim"
+                               placeholder="{{ _('ui_auto_88b1ad4fb298') }}"
                                class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-white text-xs
                                       font-bold text-slate-900 focus:ring-2 focus:ring-amber-500 outline-none transition" required>
                     </div>
@@ -608,17 +768,17 @@
                         <svg class="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                         </svg>
-                        <span class="text-[10px] font-bold text-amber-700">Düzenleme modu — sektör güncellenecek</span>
+                        <span class="text-[10px] font-bold text-amber-700">{{ _('ui_auto_31c26b865395') }}</span>
                     </div>
 
                     <div class="flex gap-2 pt-1">
-                        <button type="submit" id="asset_sector_submit_btn"
+                        <button data-macro="button_secondary" type="submit" id="asset_sector_submit_btn"
                                 class="flex-1 bg-slate-900 text-white py-2.5 rounded-xl font-black text-[10px]
                                        uppercase tracking-widest hover:bg-amber-600 transition
                                        shadow-md shadow-slate-900/10 active:scale-[0.98]">
-                            Sektör Oluştur
+                            {{ _('ui_auto_8b615364c251') }}
                         </button>
-                        <button type="button" id="asset_sector_cancel_btn" onclick="cancelAssetSectorEdit()"
+                        <button data-macro="button_secondary" type="button" id="asset_sector_cancel_btn" onclick="cancelAssetSectorEdit()"
                                 class="hidden px-4 bg-slate-100 text-slate-600 py-2.5 rounded-xl font-black
                                        text-[10px] uppercase tracking-wider hover:bg-slate-200 transition">
                             İptal
@@ -628,10 +788,9 @@
             </div>
 
             <div class="premium-card p-4 mt-3 bg-amber-50/60 border border-amber-100/70 shadow-sm">
-                <p class="text-[10px] font-black uppercase tracking-wider text-amber-700 mb-1.5">ℹ️ Sektör Nedir?</p>
+                <p class="text-[10px] font-black uppercase tracking-wider text-amber-700 mb-1.5">{{ _('ui_auto_2ec305272c89') }}</p>
                 <p class="text-[11px] text-slate-600 leading-relaxed">
-                    Portföy çeşitlendirme analizinde kullanılır. Her varlık bir sektöre bağlanabilir.
-                    Örnek: <strong>Teknoloji</strong>, <strong>Enerji</strong>, <strong>Finans</strong>.
+                    {{ _('ui_auto_c8be1e4d31b4') }} <strong>{{ _('ui_auto_36507444d6e9') }}</strong>, <strong>{{ _('ui_auto_58de6fcb76ec') }}</strong>, <strong>{{ _('ui_auto_5a456730e0f1') }}</strong>.
                 </p>
             </div>
         </div>
@@ -641,7 +800,7 @@
             <div class="premium-card bg-white/80 shadow-lg overflow-hidden">
                 <div class="flex items-center justify-between p-4 border-b border-slate-100 bg-gradient-to-r from-amber-50/40 to-transparent">
                     <div class="flex items-center gap-2">
-                        <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Sektör Planı</h3>
+                        <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">{{ _('ui_auto_659ae267b910') }}</h3>
                         <span class="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-[10px] font-black">
                             {{ asset_sectors|length }}
                         </span>
@@ -652,7 +811,7 @@
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>Sektör</th>
+                                <th>{{ _('ui_auto_19da5231f860') }}</th>
                                 <th class="text-right">İşlem</th>
                             </tr>
                         </thead>
@@ -668,11 +827,11 @@
                                 </td>
                                 <td class="text-right">
                                     <div class="flex items-center justify-end gap-1">
-                                        <button type="button" onclick="editAssetSector({{ s.id }}, '{{ s.name }}', this)"
+                                        <button data-macro="button_secondary" type="button" onclick="editAssetSector({{ s.id }}, '{{ s.name }}', this)"
                                                 class="action-btn bg-slate-100 text-slate-500 hover:bg-amber-600 hover:text-white" title="Düzenle">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                         </button>
-                                        <button type="button" onclick="confirmDeleteAssetSector({{ s.id }}, '{{ s.name }}')"
+                                        <button data-macro="button_secondary" type="button" onclick="confirmDeleteAssetSector({{ s.id }}, '{{ s.name }}')"
                                                 class="action-btn bg-rose-50 text-rose-500 hover:bg-rose-600 hover:text-white" title="Sil">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                         </button>
@@ -681,7 +840,7 @@
                             </tr>
                             {% else %}
                             <tr><td colspan="3" class="empty-state">
-                                <p class="text-[11px] font-bold">Sektör tanımlanmadı</p>
+                                <p class="text-[11px] font-bold">{{ _('ui_auto_79bb2c3da61c') }}</p>
                             </td></tr>
                             {% endfor %}
                         </tbody>
@@ -705,8 +864,8 @@
                     <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/></svg>
                 </div>
                 <div>
-                    <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Gelir Hesapları</h3>
-                    <p class="text-[9px] text-slate-400 font-bold uppercase">GLR-6xxx · 600 Hesap Grubu</p>
+                    <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">{{ _('ui_auto_27301040d334') }}</h3>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase">{{ _('ui_auto_541e02f7e28e') }}</p>
                 </div>
             </div>
             <div class="space-y-1.5">
@@ -717,7 +876,7 @@
                     <span class="gl-chip glr">{{ c.code or '—' }}</span>
                 </div>
                 {% else %}
-                <p class="text-[11px] text-slate-400 italic">Gelir kategorisi yok</p>
+                <p class="text-[11px] text-slate-400 italic">{{ _('ui_auto_aa96e3b5aa5b') }}</p>
                 {% endfor %}
             </div>
         </div>
@@ -729,8 +888,8 @@
                     <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"/></svg>
                 </div>
                 <div>
-                    <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Gider Hesapları</h3>
-                    <p class="text-[9px] text-slate-400 font-bold uppercase">GDR-7xxx · 700 Hesap Grubu</p>
+                    <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">{{ _('ui_auto_68ed94299a3c') }}</h3>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase">{{ _('ui_auto_adbbc7d5abe9') }}</p>
                 </div>
             </div>
             <div class="space-y-1.5 max-h-80 overflow-y-auto cat-scroll pr-1">
@@ -741,7 +900,7 @@
                     <span class="gl-chip gdr">{{ c.code or '—' }}</span>
                 </div>
                 {% else %}
-                <p class="text-[11px] text-slate-400 italic">Gider kategorisi yok</p>
+                <p class="text-[11px] text-slate-400 italic">{{ _('ui_auto_821a6a19a4f3') }}</p>
                 {% endfor %}
             </div>
         </div>
@@ -753,8 +912,8 @@
                     <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
                 </div>
                 <div>
-                    <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Yatırım Hesapları</h3>
-                    <p class="text-[9px] text-slate-400 font-bold uppercase">YTR-1xxx · 100 Varlık Grubu</p>
+                    <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">{{ _('ui_auto_c88a43badefe') }}</h3>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase">{{ _('ui_auto_1dd2480761bd') }}</p>
                 </div>
             </div>
             <div class="space-y-1.5">
@@ -765,229 +924,105 @@
                     <span class="gl-chip ytr">{{ c.code or '—' }}</span>
                 </div>
                 {% else %}
-                <p class="text-[11px] text-slate-400 italic">Yatırım kategorisi yok</p>
+                <p class="text-[11px] text-slate-400 italic">{{ _('ui_auto_296b1afdab91') }}</p>
                 {% endfor %}
             </div>
             <!-- Standart not -->
             <div class="mt-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
                 <p class="text-[9.5px] text-blue-700 font-semibold leading-relaxed">
-                    ⚠️ Yatırım transferleri muhasebede <strong>Gelir/Gider değil</strong>, Bilanço Varlık hesabıdır.
-                    YTR-1xxx serisi bu nedenle 100 (Dönen Varlıklar) hesap grubunu kullanır.
+                    {{ _('ui_auto_dad663ed6fe6') }} <strong>{{ _('ui_auto_5ff49298fed1') }}</strong>{{ _('ui_auto_c62489551850') }}
                 </p>
             </div>
         </div>
     </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- MODAL: KATEGORİ BİRLEŞTİR                                   -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="merge_modal" class="modal-overlay hidden">
+    <div class="modal-content modal-md max-w-lg p-6 bg-white rounded-2xl shadow-2xl space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div class="flex items-center gap-2">
+                <div class="p-2 bg-indigo-100 text-indigo-700 rounded-xl">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Kategorileri Birleştir</h3>
+                    <p class="text-[10px] text-slate-500 font-semibold">Tüm işlem ve planları hedef kategoriye aktarır</p>
+                </div>
+            </div>
+            <button data-macro="button_secondary" type="button" class="text-slate-400 hover:text-slate-700 text-lg font-bold" onclick="closeModal('merge_modal')">&times;</button>
+        </div>
+
+        <form id="merge_form" method="POST" action="/merge_categories" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div>
+                <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                    Kaynak Kategori <span class="text-rose-500">* (Aktarılacak ve Arşivlenecek)</span>
+                </label>
+                <select name="source_id" id="merge_source_id" required
+                        class="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-white text-xs font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none transition"
+                        onchange="updateMergeTargetOptions()">
+                    <option value="">— Kaynak Kategori Seçin —</option>
+                    {% for c in cats %}
+                        {% if c.tenant_id is not none and c.is_active %}
+                        <option value="{{ c.id }}">{{ c.name }} ({{ c.type }})</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                    Hedef Kategori <span class="text-emerald-600">* (Tüm Verilerin Birleşeceği Kategori)</span>
+                </label>
+                <select name="target_id" id="merge_target_id" required
+                        class="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-white text-xs font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    <option value="">— Hedef Kategori Seçin —</option>
+                    {% for c in cats %}
+                        {% if c.is_active %}
+                        <option value="{{ c.id }}">{{ c.name }} ({{ c.type }})</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="p-3 bg-amber-50 rounded-xl border border-amber-200/80 text-[11px] text-amber-800 space-y-1">
+                <p class="font-bold flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    Dikkat Edilmesi Gerekenler:
+                </p>
+                <p class="text-amber-700">Kaynak kategoriye ait geçmiş tüm harcama/gelir kayıtları ve tekrarlayan ödeme planları anında hedef kategoriye taşınır. Kaynak kategori otomatik olarak arşivlendi statüsüne alınır.</p>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <button data-macro="button_secondary" type="button" onclick="closeModal('merge_modal')"
+                        class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold hover:bg-slate-200 transition">
+                    İptal
+                </button>
+                <button data-macro="button_secondary" type="submit"
+                        class="px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-black uppercase tracking-wider hover:bg-indigo-700 transition shadow-md shadow-indigo-600/20">
+                    Kategorileri Birleştir
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 </div><!-- /max-w-6xl -->
 
-<!-- ═══════════════════════════════════════════════════════════ -->
-<!-- JAVASCRIPT                                                  -->
-<!-- ═══════════════════════════════════════════════════════════ -->
-<script>
-// ── Tab sistemi ───────────────────────────────────────────────────────────
-document.querySelectorAll('.cat-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-        const target = tab.dataset.tab;
-        document.querySelectorAll('.cat-tab').forEach(t => t.setAttribute('aria-selected', 'false'));
-        document.querySelectorAll('.cat-panel').forEach(p => p.classList.remove('active'));
-        tab.setAttribute('aria-selected', 'true');
-        document.querySelector(`[data-panel="${target}"]`).classList.add('active');
-    });
-});
-
-// ── Tür seçici (radio buton görsel) ──────────────────────────────────────
-function updateTypeVisual() {
-    document.querySelectorAll('input[name="type"]').forEach(radio => {
-        const div = radio.nextElementSibling;
-        if (radio.checked) {
-            div.classList.add('border-current', 'shadow-sm');
-        } else {
-            div.classList.remove('border-current', 'shadow-sm');
-        }
-    });
-}
-document.querySelectorAll('input[name="type"]').forEach(radio => {
-    radio.addEventListener('change', updateTypeVisual);
-});
-updateTypeVisual();
-
-// ── Kategori arama ────────────────────────────────────────────────────────
-function searchCats(q) {
-    const rows = document.querySelectorAll('#cats_tbody .cat-row');
-    const lq = q.toLowerCase();
-    rows.forEach(row => {
-        const name = row.dataset.name || '';
-        row.style.display = name.includes(lq) ? '' : 'none';
-    });
-}
-
-// ── Kategori filtrele (Gelir/Gider/Yatırım) ──────────────────────────────
-let activeFilter = 'all';
-function filterCats(type) {
-    activeFilter = type;
-    const rows = document.querySelectorAll('#cats_tbody .cat-row');
-    rows.forEach(row => {
-        row.style.display = (type === 'all' || row.dataset.type === type) ? '' : 'none';
-    });
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        const active = btn.dataset.filter === type;
-        btn.classList.toggle('bg-slate-900', active);
-        btn.classList.toggle('text-white', active);
-        btn.classList.toggle('bg-slate-100', !active);
-        btn.classList.toggle('text-slate-600', !active);
-    });
-}
-
-// ── Kategori Düzenle ──────────────────────────────────────────────────────
-let currentCatRow = null;
-
-function editCategory(id, name, type, code, budgetLimit, version, btn) {
-    if (currentCatRow) currentCatRow.classList.remove('edit-mode-active');
-    const row = btn.closest('tr');
-    row.classList.add('edit-mode-active');
-    currentCatRow = row;
-
-    document.getElementById('cat_id').value = id;
-    document.getElementById('cat_name').value = name;
-    document.getElementById('cat_code').value = code || '';
-    document.getElementById('cat_budget_limit').value = budgetLimit || '';
-    document.getElementById('cat_version').value = version || 1;
-    document.getElementById('cat_action').value = 'update_cat';
-    document.getElementById('cat_form').action = '/update_category/' + id;
-
-    // Radio güncelle
-    document.querySelectorAll('input[name="type"]').forEach(r => {
-        r.checked = (r.value === type);
-    });
-    updateTypeVisual();
-
-    document.getElementById('cat_form_title').textContent = 'Kategoriyi Düzenle';
-    document.getElementById('cat_edit_hint').classList.remove('hidden');
-    const btn2 = document.getElementById('cat_submit_btn');
-    btn2.textContent = 'KATEGORİYİ GÜNCELLE';
-    btn2.classList.add('bg-amber-600'); btn2.classList.remove('hover:bg-indigo-600');
-    document.getElementById('cat_cancel_btn').classList.remove('hidden');
-
-    // Form'a scroll
-    document.getElementById('cat_form').scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function cancelCatEdit() {
-    if (currentCatRow) { currentCatRow.classList.remove('edit-mode-active'); currentCatRow = null; }
-    const form = document.getElementById('cat_form');
-    form.reset();
-    ['cat_id','cat_code','cat_budget_limit','cat_version'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('cat_action').value = 'add_cat';
-    form.action = '/categories';
-    document.getElementById('cat_form_title').textContent = 'Yeni Kategori';
-    document.getElementById('cat_edit_hint').classList.add('hidden');
-    const btn = document.getElementById('cat_submit_btn');
-    btn.textContent = 'Kategori Oluştur';
-    btn.classList.remove('bg-amber-600'); btn.classList.add('hover:bg-indigo-600');
-    document.getElementById('cat_cancel_btn').classList.add('hidden');
-    updateTypeVisual();
-}
-
-function confirmDeleteCategory(id, name) {
-    const execute = () => {
-        fetch('/delete_category/' + id, {
-            method: 'DELETE',
-            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json' }
-        }).then(res => {
-            if (res.ok) window.location.reload();
-            else window.location.href = '/delete_category/' + id;
-        }).catch(() => window.location.href = '/delete_category/' + id);
-    };
-    if (typeof window.showGlobalConfirm === 'function') {
-        window.showGlobalConfirm('Kategori Sil', `"${name}" kategorisini silmek istediğinizden emin misiniz?`, execute, true);
-    } else if (confirm(`"${name}" kategorisini silmek istiyor musunuz?`)) { execute(); }
-}
-
-// ── Varlık Sınıfı ─────────────────────────────────────────────────────────
-let currentAssetTypeRow = null;
-
-function editAssetType(id, name, btn) {
-    if (currentAssetTypeRow) currentAssetTypeRow.classList.remove('edit-mode-active');
-    const row = btn.closest('tr');
-    row.classList.add('edit-mode-active');
-    currentAssetTypeRow = row;
-
-    document.getElementById('asset_type_id').value = id;
-    document.getElementById('asset_type_name').value = name;
-    document.getElementById('asset_type_action').value = 'update_asset_type';
-    document.getElementById('asset_type_form').action = '/update_asset_type/' + id;
-
-    document.getElementById('asset_type_form_title').textContent = 'Varlık Sınıfını Düzenle';
-    document.getElementById('asset_type_edit_hint').classList.remove('hidden');
-    const btn2 = document.getElementById('asset_type_submit_btn');
-    btn2.textContent = 'SINIFI GÜNCELLE';
-    btn2.classList.add('bg-amber-600'); btn2.classList.remove('hover:bg-emerald-600');
-    document.getElementById('asset_type_cancel_btn').classList.remove('hidden');
-}
-
-function cancelAssetTypeEdit() {
-    if (currentAssetTypeRow) { currentAssetTypeRow.classList.remove('edit-mode-active'); currentAssetTypeRow = null; }
-    const form = document.getElementById('asset_type_form');
-    form.reset();
-    document.getElementById('asset_type_id').value = '';
-    document.getElementById('asset_type_action').value = 'add_asset_type';
-    form.action = '/categories';
-    document.getElementById('asset_type_form_title').textContent = 'Yeni Varlık Sınıfı';
-    document.getElementById('asset_type_edit_hint').classList.add('hidden');
-    const btn = document.getElementById('asset_type_submit_btn');
-    btn.textContent = 'Sınıf Oluştur';
-    btn.classList.remove('bg-amber-600'); btn.classList.add('hover:bg-emerald-600');
-    document.getElementById('asset_type_cancel_btn').classList.add('hidden');
-}
-
-function confirmDeleteAssetType(id, name) {
-    if (typeof window.showGlobalConfirm === 'function') {
-        window.showGlobalConfirm('Varlık Sınıfı Sil', `"${name}" sınıfını silmek istediğinizden emin misiniz?`, () => window.location.href='/delete_asset_type/' + id, true);
-    } else if (confirm(`"${name}" sınıfını silmek istiyor musunuz?`)) { window.location.href = '/delete_asset_type/' + id; }
-}
-
-// ── Varlık Sektörü ─────────────────────────────────────────────────────────
-let currentAssetSectorRow = null;
-
-function editAssetSector(id, name, btn) {
-    if (currentAssetSectorRow) currentAssetSectorRow.classList.remove('edit-mode-active');
-    const row = btn.closest('tr');
-    row.classList.add('edit-mode-active');
-    currentAssetSectorRow = row;
-
-    document.getElementById('asset_sector_id').value = id;
-    document.getElementById('asset_sector_name').value = name;
-    document.getElementById('asset_sector_action').value = 'update_asset_sector';
-    document.getElementById('asset_sector_form').action = '/update_asset_sector/' + id;
-
-    document.getElementById('asset_sector_form_title').textContent = 'Sektörü Düzenle';
-    document.getElementById('asset_sector_edit_hint').classList.remove('hidden');
-    const btn2 = document.getElementById('asset_sector_submit_btn');
-    btn2.textContent = 'SEKTÖRÜ GÜNCELLE';
-    btn2.classList.add('bg-amber-600'); btn2.classList.remove('hover:bg-amber-600');
-    document.getElementById('asset_sector_cancel_btn').classList.remove('hidden');
-}
-
-function cancelAssetSectorEdit() {
-    if (currentAssetSectorRow) { currentAssetSectorRow.classList.remove('edit-mode-active'); currentAssetSectorRow = null; }
-    const form = document.getElementById('asset_sector_form');
-    form.reset();
-    document.getElementById('asset_sector_id').value = '';
-    document.getElementById('asset_sector_action').value = 'add_asset_sector';
-    form.action = '/categories';
-    document.getElementById('asset_sector_form_title').textContent = 'Yeni Sektör';
-    document.getElementById('asset_sector_edit_hint').classList.add('hidden');
-    const btn = document.getElementById('asset_sector_submit_btn');
-    btn.textContent = 'Sektör Oluştur';
-    btn.classList.remove('bg-amber-600');
-    document.getElementById('asset_sector_cancel_btn').classList.add('hidden');
-}
-
-function confirmDeleteAssetSector(id, name) {
-    if (typeof window.showGlobalConfirm === 'function') {
-        window.showGlobalConfirm('Sektör Sil', `"${name}" sektörünü silmek istediğinizden emin misiniz?`, () => window.location.href='/delete_asset_sector/' + id, true);
-    } else if (confirm(`"${name}" sektörünü silmek istiyor musunuz?`)) { window.location.href = '/delete_asset_sector/' + id; }
-}
-</script>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+    // Frontend-Backend Endpoint contract bridge:
+    window.__categoryEndpointBridge = {
+        deleteCategory: (id) => ECuzdanEndpoints.categories.delete(id),
+        deleteAssetSector: (id) => ECuzdanEndpoints.categories.deleteAssetSector(id),
+    };
+</script>
+<script src="{{ static_asset_url('js/categories.js') }}"></script>
+{% endblock %}
+

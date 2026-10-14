@@ -55,18 +55,30 @@ export function generateBreadcrumbs() {
     const segments = path.split('/').filter(Boolean);
     const pathMap = {
         'transactions': 'İşlemler',
+        'plans': 'Düzenli İşlemler',
         'monthly_dashboard': 'Aylık Dashboard',
         'payment_calendar': 'Ödeme Takvimi',
+        'reconciliation': 'Mutabakat',
+        'assets': 'Varlık Yönetimi',
         'assets_management': 'Varlık Yönetimi',
         'assets_view': 'Varlık Görünümü',
         'investment_performance': 'Yatırım Performansı',
         'analysis': 'Finansal Sağlık',
-        'financial_freedom': 'Financial Freedom',
+        'financial_freedom': 'Finansal Özgürlük',
         'strategy': 'Strateji Paneli',
         'financial_dashboard': 'Piyasa Analizi',
+        'logbook': 'Yatırım Günlüğü',
+        'central-bank-reserves': 'Merkez Bankası Rezervleri',
+        'global-ratios': 'Küresel Rasyolar',
+        'profile': 'Yatırımcı Profili',
+        'notifications': 'Bildirimler',
         'categories': 'Kategoriler',
         'settings': 'Ayarlar',
-        'user_guide': 'Kullanıcı Rehberi'
+        'user_guide': 'Kullanıcı Rehberi',
+        'financial_education': 'Finansal Eğitim',
+        'monitoring': 'İzleme',
+        'storage-health': 'Depolama Sağlığı',
+        'admin': 'Yönetim Paneli'
     };
     
     let currentPath = '';
@@ -167,6 +179,11 @@ export function renderRecentlyVisited(containerId, maxItems = 5) {
 // Quick Navigation Shortcuts
 export function initKeyboardShortcuts() {
     document.addEventListener('keydown', (e) => {
+        const activeTag = document.activeElement ? document.activeElement.tagName : '';
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(activeTag) || (document.activeElement && document.activeElement.isContentEditable)) {
+            return;
+        }
+
         // Alt + H - Home
         if (e.altKey && e.key === 'h') {
             e.preventDefault();
@@ -188,7 +205,7 @@ export function initKeyboardShortcuts() {
         // Alt + A - Assets
         if (e.altKey && e.key === 'a') {
             e.preventDefault();
-            window.location.href = '/assets_management';
+            window.location.href = '/assets';
         }
         
         // Alt + S - Settings
@@ -210,6 +227,11 @@ export function initCollapsibleNavigation() {
     const sectionTitles = document.querySelectorAll('.nav-section-title');
     
     sectionTitles.forEach(title => {
+        // Skip sections already managed by layout-shell.js (which use data-target + .collapsible)
+        if (title.classList.contains('collapsible') || title.hasAttribute('data-target') || title.dataset.collapsibleBound === 'true') {
+            return;
+        }
+        title.dataset.collapsibleBound = 'true';
         title.style.cursor = 'pointer';
         title.addEventListener('click', () => {
             const nextElement = title.nextElementSibling;

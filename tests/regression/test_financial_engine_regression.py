@@ -19,7 +19,7 @@ from engines.financial_engine import (
     get_financial_freedom_analysis,
     get_monthly_dashboard_data,
 )
-from models import Asset, RecurringPlan, Transaction, db
+from models import Asset, Payment, PlanOccurrence, RecurringPlan, Transaction, db
 
 
 class TestFinancialEngineRegression:
@@ -32,7 +32,9 @@ class TestFinancialEngineRegression:
             # Create tables if they don't exist
             db.create_all()
 
-            # Clear existing data
+            # Clear dependent rows before their parent rows to honor SQLite FKs.
+            PlanOccurrence.query.delete()
+            Payment.query.delete()
             Transaction.query.delete()
             Asset.query.delete()
             RecurringPlan.query.delete()

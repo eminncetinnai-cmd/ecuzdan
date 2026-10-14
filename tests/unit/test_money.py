@@ -3,8 +3,10 @@ Unit Tests - Money Class
 Financial operations with proper precision and currency support
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
+
 from shared.money import Money, money, sum_money
 
 
@@ -59,7 +61,7 @@ def test_money_scale_property():
     """Test Money scale property"""
     m_try = Money('100.50', 'TRY')
     assert m_try.scale == 2
-    
+
     m_btc = Money('0.5', 'BTC')
     assert m_btc.scale == 8
 

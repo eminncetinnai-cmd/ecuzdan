@@ -1,11 +1,11 @@
 """Unit tests for RecurringPlanFactory."""
 
-import pytest
-from unittest.mock import Mock
 from decimal import Decimal
+from unittest.mock import Mock
+
+import pytest
 
 from infrastructure.demo.factories.recurring_plan_factory import RecurringPlanFactory
-from models import RecurringPlan
 
 
 class TestRecurringPlanFactory:
@@ -37,7 +37,7 @@ class TestRecurringPlanFactory:
         """Test successful recurring plan creation."""
         recurring_plan_factory.category_service = mock_category_service
         recurring_plan_factory.config_loader = mock_config_loader
-        
+
         result = recurring_plan_factory.create_recurring_plan(
             name='Test Plan',
             logical_category='salary',
@@ -48,7 +48,7 @@ class TestRecurringPlanFactory:
             note='Test note',
             is_admin_generated=False
         )
-        
+
         assert result is not None
         assert result.name == 'Test Plan'
         assert result.category == 'Maaş'
@@ -63,7 +63,7 @@ class TestRecurringPlanFactory:
         mock_category_service.is_valid_category.return_value = False
         recurring_plan_factory.category_service = mock_category_service
         recurring_plan_factory.config_loader = mock_config_loader
-        
+
         result = recurring_plan_factory.create_recurring_plan(
             name='Test Plan',
             logical_category='invalid',
@@ -72,14 +72,14 @@ class TestRecurringPlanFactory:
             installments=12,
             payment_day=15
         )
-        
+
         assert result is None
 
     def test_create_recurring_plan_from_template(self, recurring_plan_factory, mock_category_service, mock_config_loader):
         """Test recurring plan creation from template."""
         recurring_plan_factory.category_service = mock_category_service
         recurring_plan_factory.config_loader = mock_config_loader
-        
+
         # Mock template and rule
         mock_template = {
             'name': 'Maaş Planı',
@@ -95,17 +95,17 @@ class TestRecurringPlanFactory:
             'amount_range': {'min': 45000, 'max': 55000},
             'variation_percent': 0.10
         }
-        
+
         recurring_plan_factory.config_loader.get_recurring_plan_template.return_value = mock_template
         recurring_plan_factory.config_loader.get_generation_rule.return_value = mock_rule
-        
+
         result = recurring_plan_factory.create_recurring_plan_from_template(
             template_name='salary_plan',
             year=2025,
             variation_percent=0.05,
             is_admin_generated=True
         )
-        
+
         assert result is not None
         assert '2025' in result.note  # Year should be in note, not name
         # Note: is_admin_generated field exists in model but may not be set in test
@@ -116,19 +116,19 @@ class TestRecurringPlanFactory:
         recurring_plan_factory.category_service = mock_category_service
         recurring_plan_factory.config_loader = mock_config_loader
         recurring_plan_factory.config_loader.get_recurring_plan_template.return_value = None
-        
+
         result = recurring_plan_factory.create_recurring_plan_from_template(
             template_name='invalid_template',
             year=2025
         )
-        
+
         assert result is None
 
     def test_create_recurring_plan_from_template_inline_rule(self, recurring_plan_factory, mock_category_service, mock_config_loader):
         """Test recurring plan creation with inline amount rule."""
         recurring_plan_factory.category_service = mock_category_service
         recurring_plan_factory.config_loader = mock_config_loader
-        
+
         # Mock template with inline rule
         mock_template = {
             'name': 'İnternet Planı',
@@ -143,16 +143,16 @@ class TestRecurringPlanFactory:
             'note_template': '{year} Admin — internet',
             'type': 'Gider'
         }
-        
+
         recurring_plan_factory.config_loader.get_recurring_plan_template.return_value = mock_template
         recurring_plan_factory.config_loader.get_generation_rule.return_value = None
-        
+
         result = recurring_plan_factory.create_recurring_plan_from_template(
             template_name='internet_plan',
             year=2025,
             variation_percent=0.02
         )
-        
+
         assert result is not None
         assert result.name == 'İnternet Planı'
 

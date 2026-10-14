@@ -3,8 +3,10 @@ Unit Tests - Export Routes
 Export route functions
 """
 
+from unittest.mock import Mock
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+
 from routes.export import (
     register_export_routes,
 )
@@ -15,9 +17,9 @@ def test_register_export_routes():
     """Test register_export_routes function"""
     mock_bp = Mock()
     mock_bp.route = Mock(return_value=lambda f: f)
-    
+
     register_export_routes(mock_bp)
-    
+
     assert mock_bp.route.called
 
 
@@ -27,7 +29,7 @@ def test_export_imports():
     from routes.export import (
         register_export_routes,
     )
-    
+
     assert callable(register_export_routes)
 
 
@@ -35,10 +37,10 @@ def test_export_imports():
 def test_export_routes_structure():
     """Test export routes module structure"""
     import routes.export as export_module
-    
+
     # Check for expected functions
     assert hasattr(export_module, 'register_export_routes')
-    
+
     # Check for expected imports
     assert hasattr(export_module, 'logging')
     assert hasattr(export_module, 'datetime')
@@ -57,7 +59,7 @@ def test_export_routes_structure():
 def test_export_routes_module_has_required_imports():
     """Test export module has required imports"""
     import routes.export as export_module
-    
+
     # Flask imports
     assert hasattr(export_module, 'flash')
     assert hasattr(export_module, 'make_response')
@@ -66,7 +68,7 @@ def test_export_routes_module_has_required_imports():
     assert hasattr(export_module, 'request')
     assert hasattr(export_module, 'session')
     assert hasattr(export_module, 'url_for')
-    
+
     # Custom imports
     assert hasattr(export_module, 'ExportService')
     assert hasattr(export_module, 'pisa')
@@ -75,9 +77,10 @@ def test_export_routes_module_has_required_imports():
 @pytest.mark.unit
 def test_export_routes_exist():
     """Test export routes exist in module"""
-    import routes.export as export_module
     import inspect
-    
+
+    import routes.export as export_module
+
     source = inspect.getsource(export_module)
     assert '/export_pdf' in source
     assert '/export_tenant_json' in source
@@ -86,9 +89,10 @@ def test_export_routes_exist():
 @pytest.mark.unit
 def test_export_error_handling():
     """Test export routes have error handling"""
-    import routes.export as export_module
     import inspect
-    
+
+    import routes.export as export_module
+
     source = inspect.getsource(export_module)
     assert 'except Exception' in source or 'try:' in source
 
@@ -104,14 +108,15 @@ def test_export_logger():
 @pytest.mark.unit
 def test_export_route_registration():
     """Test register_export_routes registers routes"""
-    from routes.export import register_export_routes
     from unittest.mock import Mock
-    
+
+    from routes.export import register_export_routes
+
     mock_bp = Mock()
     mock_bp.route = Mock(return_value=lambda f: f)
-    
+
     register_export_routes(mock_bp)
-    
+
     # Should register multiple routes
     assert mock_bp.route.call_count >= 2
 
@@ -119,12 +124,13 @@ def test_export_route_registration():
 @pytest.mark.unit
 def test_export_blueprint_parameter():
     """Test register_export_routes accepts blueprint parameter"""
-    from routes.export import register_export_routes
     from unittest.mock import Mock
-    
+
+    from routes.export import register_export_routes
+
     mock_bp = Mock()
     mock_bp.route = Mock(return_value=lambda f: f)
-    
+
     # Should not raise exception
     register_export_routes(mock_bp)
 
@@ -159,9 +165,9 @@ def test_register_export_routes_route_registration():
     """Test register_export_routes registers routes"""
     mock_bp = Mock()
     mock_bp.route = Mock(return_value=lambda f: f)
-    
+
     register_export_routes(mock_bp)
-    
+
     # Should register multiple routes
     assert mock_bp.route.call_count >= 4
 
@@ -170,7 +176,7 @@ def test_register_export_routes_route_registration():
 def test_export_module_has_required_imports():
     """Test export module has required imports"""
     import routes.export as export_module
-    
+
     # Flask imports
     assert hasattr(export_module, 'flash')
     assert hasattr(export_module, 'make_response')
@@ -179,23 +185,23 @@ def test_export_module_has_required_imports():
     assert hasattr(export_module, 'request')
     assert hasattr(export_module, 'session')
     assert hasattr(export_module, 'url_for')
-    
+
     # Standard library imports
     assert hasattr(export_module, 'logging')
     assert hasattr(export_module, 'datetime')
     assert hasattr(export_module, 'BytesIO')
-    
+
     # Custom imports
     assert hasattr(export_module, 'pisa')
     assert hasattr(export_module, 'ExportService')
 
 
 @pytest.mark.unit
-def test_export_blueprint_parameter():
+def test_export_blueprint_parameter_duplicate():
     """Test register_export_routes accepts blueprint parameter"""
     mock_bp = Mock()
     mock_bp.route = Mock(return_value=lambda f: f)
-    
+
     # Should not raise exception
     register_export_routes(mock_bp)
 
@@ -203,9 +209,10 @@ def test_export_blueprint_parameter():
 @pytest.mark.unit
 def test_export_pdf_route_exists():
     """Test export PDF route exists"""
-    import routes.export as export_module
     import inspect
-    
+
+    import routes.export as export_module
+
     source = inspect.getsource(export_module)
     assert '/export_pdf' in source
 
@@ -213,9 +220,10 @@ def test_export_pdf_route_exists():
 @pytest.mark.unit
 def test_export_tenant_json_route_exists():
     """Test export tenant JSON route exists"""
-    import routes.export as export_module
     import inspect
-    
+
+    import routes.export as export_module
+
     source = inspect.getsource(export_module)
     assert '/export_tenant_json' in source
 
@@ -223,9 +231,10 @@ def test_export_tenant_json_route_exists():
 @pytest.mark.unit
 def test_export_db_json_route_exists():
     """Test export DB JSON route exists"""
-    import routes.export as export_module
     import inspect
-    
+
+    import routes.export as export_module
+
     source = inspect.getsource(export_module)
     assert '/export_db_json' in source
 
@@ -233,9 +242,10 @@ def test_export_db_json_route_exists():
 @pytest.mark.unit
 def test_import_db_json_route_exists():
     """Test import DB JSON route exists"""
-    import routes.export as export_module
     import inspect
-    
+
+    import routes.export as export_module
+
     source = inspect.getsource(export_module)
     assert '/import_db_json' in source
 
@@ -243,9 +253,10 @@ def test_import_db_json_route_exists():
 @pytest.mark.unit
 def test_export_error_handling_structure():
     """Test export routes have error handling"""
-    import routes.export as export_module
     import inspect
-    
+
+    import routes.export as export_module
+
     # Check that the module has error handling patterns
     source = inspect.getsource(export_module)
     assert 'except Exception' in source or 'try:' in source
@@ -254,9 +265,10 @@ def test_export_error_handling_structure():
 @pytest.mark.unit
 def test_export_permission_error_handling():
     """Test export routes handle PermissionError"""
-    import routes.export as export_module
     import inspect
-    
+
+    import routes.export as export_module
+
     source = inspect.getsource(export_module)
     assert 'PermissionError' in source
 
@@ -264,9 +276,10 @@ def test_export_permission_error_handling():
 @pytest.mark.unit
 def test_export_flash_messaging():
     """Test export routes use flash messaging"""
-    import routes.export as export_module
     import inspect
-    
+
+    import routes.export as export_module
+
     source = inspect.getsource(export_module)
     assert 'flash' in source
 
@@ -274,9 +287,10 @@ def test_export_flash_messaging():
 @pytest.mark.unit
 def test_export_pdf_generation():
     """Test export routes use PDF generation"""
-    import routes.export as export_module
     import inspect
-    
+
+    import routes.export as export_module
+
     source = inspect.getsource(export_module)
     assert 'pisa' in source or 'pdf' in source
 
@@ -284,9 +298,10 @@ def test_export_pdf_generation():
 @pytest.mark.unit
 def test_export_json_export():
     """Test export routes use JSON export"""
-    import routes.export as export_module
     import inspect
-    
+
+    import routes.export as export_module
+
     source = inspect.getsource(export_module)
     assert 'json' in source
 
@@ -294,9 +309,10 @@ def test_export_json_export():
 @pytest.mark.unit
 def test_export_encryption():
     """Test export routes support encryption"""
-    import routes.export as export_module
     import inspect
-    
+
+    import routes.export as export_module
+
     source = inspect.getsource(export_module)
     assert 'encrypt' in source or 'password' in source
 
@@ -304,9 +320,10 @@ def test_export_encryption():
 @pytest.mark.unit
 def test_export_session_usage():
     """Test export routes use session"""
-    import routes.export as export_module
     import inspect
-    
+
+    import routes.export as export_module
+
     source = inspect.getsource(export_module)
     assert 'session' in source
 
@@ -314,9 +331,10 @@ def test_export_session_usage():
 @pytest.mark.unit
 def test_export_file_upload():
     """Test export routes handle file upload"""
-    import routes.export as export_module
     import inspect
-    
+
+    import routes.export as export_module
+
     source = inspect.getsource(export_module)
     assert 'file' in source or 'files' in source
 
@@ -324,9 +342,10 @@ def test_export_file_upload():
 @pytest.mark.unit
 def test_export_response_headers():
     """Test export routes set response headers"""
-    import routes.export as export_module
     import inspect
-    
+
+    import routes.export as export_module
+
     source = inspect.getsource(export_module)
     assert 'Content-Type' in source or 'Content-Disposition' in source
 
@@ -334,9 +353,10 @@ def test_export_response_headers():
 @pytest.mark.unit
 def test_export_service_usage():
     """Test export routes use ExportService"""
-    import routes.export as export_module
     import inspect
-    
+
+    import routes.export as export_module
+
     source = inspect.getsource(export_module)
     assert 'export_service' in source
 
@@ -344,9 +364,10 @@ def test_export_service_usage():
 @pytest.mark.unit
 def test_export_logging():
     """Test export routes use logging"""
-    import routes.export as export_module
     import inspect
-    
+
+    import routes.export as export_module
+
     source = inspect.getsource(export_module)
     assert 'logger' in source
 
@@ -354,9 +375,10 @@ def test_export_logging():
 @pytest.mark.unit
 def test_export_make_response():
     """Test export routes use make_response"""
-    import routes.export as export_module
     import inspect
-    
+
+    import routes.export as export_module
+
     source = inspect.getsource(export_module)
     assert 'make_response' in source
 
@@ -364,9 +386,10 @@ def test_export_make_response():
 @pytest.mark.unit
 def test_export_redirects():
     """Test export routes use redirects"""
-    import routes.export as export_module
     import inspect
-    
+
+    import routes.export as export_module
+
     source = inspect.getsource(export_module)
     assert 'redirect' in source
 
@@ -374,9 +397,10 @@ def test_export_redirects():
 @pytest.mark.unit
 def test_export_period_parameter():
     """Test export PDF route accepts period parameter"""
-    import routes.export as export_module
     import inspect
-    
+
+    import routes.export as export_module
+
     source = inspect.getsource(export_module)
     assert 'period' in source
 
@@ -384,9 +408,10 @@ def test_export_period_parameter():
 @pytest.mark.unit
 def test_export_tenant_scope():
     """Test export routes have tenant scope"""
-    import routes.export as export_module
     import inspect
-    
+
+    import routes.export as export_module
+
     source = inspect.getsource(export_module)
     assert 'tenant' in source
 
@@ -394,8 +419,9 @@ def test_export_tenant_scope():
 @pytest.mark.unit
 def test_export_platform_scope():
     """Test export routes have platform scope"""
-    import routes.export as export_module
     import inspect
-    
+
+    import routes.export as export_module
+
     source = inspect.getsource(export_module)
     assert 'platform' in source or 'db' in source

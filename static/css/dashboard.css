@@ -1,0 +1,248 @@
+/* ==========================================================================
+   Dashboard & Cash Flow Styles (EAFGS Compliant & Premium)
+   ========================================================================== */
+
+.dash-card {
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 30px -8px rgba(15, 23, 42, 0.06);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.dash-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 36px -10px rgba(15, 23, 42, 0.10);
+    border-color: rgba(203, 213, 225, 0.9);
+}
+
+/* Dark Theme Support */
+[data-theme="dark"] .dash-card {
+    background: rgba(15, 23, 42, 0.82);
+    border-color: rgba(51, 65, 85, 0.7);
+    box-shadow: 0 8px 30px -8px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .dash-card:hover {
+    border-color: rgba(71, 85, 105, 0.9);
+    box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.55);
+}
+
+/* Hero Section */
+.dash-hero {
+    background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e1b4b 100%);
+    color: #ffffff;
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    border-radius: 1.75rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.2);
+}
+
+[data-theme="dark"] .dash-hero {
+    background: linear-gradient(135deg, #020617 0%, #090d16 50%, #17153a 100%);
+    border-color: rgba(99, 102, 241, 0.35);
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6);
+}
+
+/* Quick Action Buttons */
+.quick-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 1rem;
+    font-size: 0.8125rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+.quick-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+}
+
+.quick-action-btn:active {
+    transform: translateY(0);
+}
+
+/* Financial Pulse Badge */
+.pulse-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+}
+
+/* Chart Container */
+.dash-chart-container {
+    position: relative;
+    width: 100%;
+    height: 260px;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    border-radius: 1rem;
+    box-sizing: border-box;
+}
+
+[data-theme="dark"] .dash-chart-container {
+    background: rgba(30, 41, 59, 0.4);
+    border-color: rgba(51, 65, 85, 0.6);
+}
+
+.dash-chart-container canvas {
+    max-height: 245px !important;
+}
+
+/* Info Tooltips */
+.info-tip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: help;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.info-tip:hover {
+    background: #eef2ff;
+    color: #4f46e5;
+    border-color: #c7d2fe;
+}
+
+[data-theme="dark"] .info-tip {
+    background: #1e293b;
+    color: #94a3b8;
+    border-color: #334155;
+}
+
+[data-theme="dark"] .info-tip:hover {
+    background: #312e81;
+    color: #c7d2fe;
+    border-color: #6366f1;
+}
+
+/* Transaction List Item */
+.tx-item {
+    transition: all 0.2s ease;
+}
+
+.tx-item:hover {
+    transform: translateX(3px);
+}
+
+/* Edit Transaction Modal */
+.edit-modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+    padding: 1rem;
+}
+
+.edit-modal.hidden {
+    display: none !important;
+}
+
+.edit-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(8px);
+}
+
+.edit-modal-content {
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    z-index: 10;
+}
+
+.edit-modal-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 1.5rem;
+    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+    overflow: hidden;
+}
+
+[data-theme="dark"] .edit-modal-card {
+    background: #0f172a;
+    border-color: #334155;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+}
+
+.edit-modal-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+[data-theme="dark"] .edit-modal-header {
+    border-bottom-color: #1e293b;
+}
+
+.edit-modal-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.edit-modal-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.75rem;
+    background: #f8fafc;
+    color: #0f172a;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.edit-modal-input:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    background: #ffffff;
+}
+
+[data-theme="dark"] .edit-modal-input {
+    background: #1e293b;
+    border-color: #334155;
+    color: #f8fafc;
+}
+
+[data-theme="dark"] .edit-modal-input:focus {
+    background: #0f172a;
+    border-color: #818cf8;
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2);
+}
+
+.edit-modal-input-amount {
+    font-size: 1.25rem;
+    font-weight: 900;
+}

@@ -108,23 +108,29 @@ def _initialize_default_data():
     # -----------------------------------------------------------------------
     from scripts.seed_standard_categories import STANDARD_CATEGORIES
 
-    # Önce tüm sistem kategorilerini sil
+    # Standart kategoriler kalıcı referans veridir. Mevcut satırları silmek veya
+    # çekirdek alanlarını yeniden yazmak kullanıcı bütçelerini, işlem geçmişi
+    # bağlantılarını ve kategori kimliklerini bozabilir. Yalnızca eksik kodları
+    # varsayılan bütçeyle ekle; mevcut satırların tüm alanlarını koru.
     all_system_cats = Category.query.filter_by(tenant_id=None).all()
-    for cat in all_system_cats:
-        db.session.delete(cat)
-    
-    # Yeni kategorileri oluştur
+    by_code = {cat.code: cat for cat in all_system_cats if cat.code}
+    by_name = {cat.name: cat for cat in all_system_cats if cat.name}
+
     for code, name, type_, sort_order, budget_limit in STANDARD_CATEGORIES:
+        if code in by_code or name in by_name:
+            continue
         try:
             new_cat = Category(
                 name=name,
                 type=type_,
                 code=code,
                 tenant_id=None,
-                budget_limit=budget_limit
+                budget_limit=budget_limit,
             )
             db.session.add(new_cat)
             db.session.flush()
+            by_code[code] = new_cat
+            by_name[name] = new_cat
         except Exception:
             db.session.rollback()
 
@@ -133,6 +139,13 @@ def _initialize_default_data():
     except Exception as commit_err:
         db.session.rollback()
         logger.warning(f"Default reference data commit failed: {commit_err}")
+
+    try:
+        from database.seeds.quiz_questions_seed import seed_quiz_questions
+        seed_quiz_questions()
+    except Exception as quiz_seed_error:
+        db.session.rollback()
+        logger.warning(f"Quiz question seed failed: {quiz_seed_error}")
 
 
 
@@ -199,12 +212,90 @@ def _initialize_tenant_data():
         for tx in transactions_without_tenant:
             tx.tenant_id = default_tenant.id
         db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as commit_err:
+        db.session.rollback()
+        logger.warning(f"Default reference data commit failed: {commit_err}")
+
+    try:
+        from database.seeds.quiz_questions_seed import seed_quiz_questions
+        seed_quiz_questions()
+    except Exception as quiz_seed_error:
+        db.session.rollback()
+        logger.warning(f"Quiz question seed failed: {quiz_seed_error}")
+
+
+
+def _migrate_legacy_plans():
+    """Eski plan tablolarından RecurringPlan'a taşır (bir kez)"""
+    if RecurringPlan.query.first() is not None:
+        return
+    inspector = inspect(db.engine)
+    tables = inspector.get_table_names()
+
+    def _add_from_row(name, category, flow_type, amount, installments, payment_day, note, old_source, old_id):
+        plan = RecurringPlan(
+            name=name, category=category, flow_type=flow_type,
+            amount=amount, installments=installments, payment_day=payment_day, note=note
+        )
+        db.session.add(plan)
+        db.session.flush()
+        # _create_transactions_from_plan(plan)  # Bu fonksiyonun database.py'de tanımlı olduğunu varsayıyoruz
+        Transaction.query.filter_by(source_id=old_id, source_type=old_source).update(
+            {'source_id': plan.id, 'source_type': 'plan'}
+        )
+
+    if 'income_plan' in tables:
+        for row in db.session.execute(text('SELECT id, name, amount, payment_day, installments, type_cat FROM income_plan')):
+            _add_from_row(row.name, row.type_cat, 'Gelir', row.amount, row.installments, row.payment_day, None, 'income', row.id)
+
+    if 'fixed_payment' in tables:
+        for row in db.session.execute(text('SELECT id, name, amount, installments, payment_day FROM fixed_payment')):
+            _add_from_row(row.name, 'Aylık Sabit Gider', 'Gider', row.amount, row.installments, row.payment_day, None, 'fixed', row.id)
+
+    if 'loan' in tables:
+        for row in db.session.execute(text('SELECT id, name, bank, monthly, installments, payment_day FROM loan')):
+            _add_from_row(row.name, 'Kredi', 'Gider', row.monthly, row.installments, row.payment_day, row.bank, 'loan', row.id)
+
+    if 'credit_card' in tables:
+        for row in db.session.execute(text('SELECT id, name, debt, due_date FROM credit_card')):
+            day = min(int(row.due_date.split('-')[2]), 28)
+            _add_from_row(row.name, 'Kredi Kartı', 'Gider', row.debt, 1, day, None, 'card', row.id)
+
+    db.session.commit()
+
+def _initialize_tenant_data():
+    """
+    Mevcut verileri varsayılan tenant'a atar (migration)
+    Bu fonksiyon bir kez çalışır, mevcut verileri 'default' tenant'a bağlar
+    """
+    default_tenant = Tenant.query.filter_by(id='default').first()
+    if not default_tenant:
+        logger.warning("Varsayılan tenant bulunamadı, tenant verisi atanamadı")
+        return
+
+    # User tablosu için tenant_id ata
+    users_without_tenant = User.query.filter_by(tenant_id=None).all()
+    if users_without_tenant:
+        logger.debug(f"{len(users_without_tenant)} kullanıcıya varsayılan tenant atanıyor...")
+        for user in users_without_tenant:
+            user.tenant_id = default_tenant.id
+        db.session.commit()
+
+    # Transaction tablosu için tenant_id ata
+    transactions_without_tenant = Transaction.query.filter_by(tenant_id=None).all()
+    if transactions_without_tenant:
+        logger.debug(f"{len(transactions_without_tenant)} işleme varsayılan tenant atanıyor...")
+        for tx in transactions_without_tenant:
+            tx.tenant_id = default_tenant.id
+        db.session.commit()
 
     # Asset tablosu için tenant_id ata
     from models import Asset
     assets_without_tenant = Asset.query.filter_by(tenant_id=None).all()
     if assets_without_tenant:
-        logger.info(f"{len(assets_without_tenant)} varlığa varsayılan tenant atanıyor...")
+        logger.debug(f"{len(assets_without_tenant)} varlığa varsayılan tenant atanıyor...")
         for asset in assets_without_tenant:
             asset.tenant_id = default_tenant.id
         db.session.commit()
@@ -212,9 +303,9 @@ def _initialize_tenant_data():
     # RecurringPlan tablosu için tenant_id ata
     plans_without_tenant = RecurringPlan.query.filter_by(tenant_id=None).all()
     if plans_without_tenant:
-        logger.info(f"{len(plans_without_tenant)} plana varsayılan tenant atanıyor...")
+        logger.debug(f"{len(plans_without_tenant)} plana varsayılan tenant atanıyor...")
         for plan in plans_without_tenant:
             plan.tenant_id = default_tenant.id
         db.session.commit()
 
-    logger.info("Tenant verisi atama tamamlandı")
+    logger.debug("Tenant verisi atama tamamlandı")

@@ -1,0 +1,5 @@
+# E-Cüzdan E2E/browser acceptance profile.
+# Runtime dependencies are included; development-only lint/benchmark and production-only deployment packages stay separate.
+-r requirements-runtime.txt
+playwright>=1.62,<2
+pytest-playwright>=0.7,<1

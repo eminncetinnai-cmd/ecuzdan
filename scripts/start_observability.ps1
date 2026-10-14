@@ -33,4 +33,4 @@ Write-Host "  OTEL_ENABLED=true"
 Write-Host "  OTEL_EXPORTER_OTLP_ENDPOINT=localhost:4317"
 Write-Host ""
 Write-Host "Install Python packages:" -ForegroundColor Yellow
-Write-Host "  pip install -r requirements-observability.txt"
+Write-Host "  pip install -r configuration\dependencies\requirements-observability.txt"

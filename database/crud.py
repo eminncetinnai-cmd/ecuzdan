@@ -36,7 +36,21 @@ def get_pending_payments(start_date, end_date, tenant_id=None):
 
 # --- Transaction CRUD ---
 
-def add_transaction(date, category, description, type_, amount, status, note=None, source_id=None, source_type=None, installment_number=None, tenant_id=None):
+def add_transaction(
+    date,
+    category,
+    description,
+    type_,
+    amount,
+    status,
+    note=None,
+    source_id=None,
+    source_type=None,
+    installment_number=None,
+    tenant_id=None,
+    idempotency_key=None,
+    bank_account_id=None,
+):
     """
     UYARI: Bu fonksiyon çift-kayıt mantığını bypass eder, sadece sistem içi kullanım (seeding vb.) içindir. Route'lardan çağrılmamalıdır. Defter işlemleri için financial_ledger.py kullanın.
     """
@@ -53,7 +67,9 @@ def add_transaction(date, category, description, type_, amount, status, note=Non
         source_id=source_id,
         source_type=source_type,
         installment_number=installment_number,
+        idempotency_key=idempotency_key,
         tenant_id=tenant_id,
+        bank_account_id=bank_account_id,
     )
 
 

@@ -3,18 +3,19 @@ Unit Tests - Financial Insights
 Financial insights utility functions
 """
 
-import pytest
 import json
-import os
 from datetime import date
-from unittest.mock import patch, mock_open
+from unittest.mock import mock_open, patch
+
+import pytest
+
 from utils.financial_insights import (
+    INSIGHTS_FILE,
     _load_insights,
+    get_categories,
     get_daily_insight,
     get_insight_by_date,
     get_insight_count,
-    get_categories,
-    INSIGHTS_FILE,
 )
 
 
@@ -48,7 +49,7 @@ def test_load_insights_json_decode_error():
 def test_load_insights_success():
     """Test _load_insights with valid JSON"""
     test_data = {"insights": [{"id": 1, "text": "Test insight"}]}
-    
+
     with patch('builtins.open', mock_open(read_data=json.dumps(test_data))):
         result = _load_insights()
         assert result == test_data
@@ -57,15 +58,14 @@ def test_load_insights_success():
 @pytest.mark.unit
 def test_load_insights_caching():
     """Test _load_insights uses cache on same day"""
-    from utils import financial_insights
-    
+
     test_data = {"insights": [{"id": 1, "text": "Test insight"}]}
-    
+
     with patch('builtins.open', mock_open(read_data=json.dumps(test_data))):
         # First call loads from file
         result1 = _load_insights()
         assert result1 == test_data
-        
+
         # Second call should use cache (file not opened)
         result2 = _load_insights()
         assert result2 == test_data
@@ -89,7 +89,7 @@ def test_get_daily_insight_success():
             {"id": 3, "text": "Insight 3"},
         ]
     }
-    
+
     with patch('utils.financial_insights._load_insights', return_value=test_data):
         result = get_daily_insight()
         assert result is not None
@@ -105,7 +105,7 @@ def test_get_daily_insight_deterministic():
             {"id": 2, "text": "Insight 2"},
         ]
     }
-    
+
     with patch('utils.financial_insights._load_insights', return_value=test_data):
         result1 = get_daily_insight()
         result2 = get_daily_insight()
@@ -122,7 +122,7 @@ def test_get_insight_by_date():
             {"id": 3, "text": "Insight 3"},
         ]
     }
-    
+
     with patch('utils.financial_insights._load_insights', return_value=test_data):
         test_date = date(2025, 1, 1)
         result = get_insight_by_date(test_date)
@@ -147,7 +147,7 @@ def test_get_insight_by_date_deterministic():
             {"id": 2, "text": "Insight 2"},
         ]
     }
-    
+
     with patch('utils.financial_insights._load_insights', return_value=test_data):
         test_date = date(2025, 1, 1)
         result1 = get_insight_by_date(test_date)
@@ -165,7 +165,7 @@ def test_get_insight_by_date_different_dates():
             {"id": 3, "text": "Insight 3"},
         ]
     }
-    
+
     with patch('utils.financial_insights._load_insights', return_value=test_data):
         result1 = get_insight_by_date(date(2025, 1, 1))
         result2 = get_insight_by_date(date(2025, 1, 2))
@@ -184,7 +184,7 @@ def test_get_insight_count():
             {"id": 3, "text": "Insight 3"},
         ]
     }
-    
+
     with patch('utils.financial_insights._load_insights', return_value=test_data):
         count = get_insight_count()
         assert count == 3
@@ -212,7 +212,7 @@ def test_get_categories():
     test_data = {
         "categories": ["Budgeting", "Investing", "Saving"]
     }
-    
+
     with patch('utils.financial_insights._load_insights', return_value=test_data):
         categories = get_categories()
         assert categories == ["Budgeting", "Investing", "Saving"]
@@ -249,7 +249,7 @@ def test_insight_structure():
             {"id": 1, "category": "Budgeting", "text": "Test insight", "source": "Test"}
         ]
     }
-    
+
     with patch('utils.financial_insights._load_insights', return_value=test_data):
         result = get_daily_insight()
         assert result is not None
@@ -266,7 +266,7 @@ def test_date_calculation():
             {"id": 2, "text": "Insight 2"},
         ]
     }
-    
+
     with patch('utils.financial_insights._load_insights', return_value=test_data):
         test_date = date(2025, 1, 1)
         # Date number should be 20250101

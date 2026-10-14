@@ -2,7 +2,7 @@
 
 {% macro data_table(headers, rows, table_id='dataTable', extra_classes='') %}
 <div class="overflow-x-auto">
-    <table id="{{ table_id }}" class="data-table {{ extra_classes }}">
+    <table id="{{ table_id }}" class="data-table responsive-card-table {{ extra_classes }}">
         <thead>
             <tr>
                 {% for header in headers %}

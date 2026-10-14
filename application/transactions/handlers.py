@@ -1,7 +1,8 @@
 """Transaction event handlers."""
 
 import logging
-from domain.transactions.events import TransactionCreatedEvent, TransactionUpdatedEvent, TransactionDeletedEvent
+
+from domain.transactions.events import TransactionCreatedEvent, TransactionDeletedEvent, TransactionUpdatedEvent
 
 logger = logging.getLogger(__name__)
 
@@ -9,7 +10,7 @@ logger = logging.getLogger(__name__)
 def handle_transaction_created(event: TransactionCreatedEvent):
     """Handle side effects when a transaction is created."""
     logger.info(f"Side-effect processing for created transaction: {event.transaction_id} (Category: {event.category}, Amount: {event.amount})")
-    # In a real system, we could clear caches, update analytical models, 
+    # In a real system, we could clear caches, update analytical models,
     # or notify other bounded contexts via RabbitMQ/Kafka here.
 
 

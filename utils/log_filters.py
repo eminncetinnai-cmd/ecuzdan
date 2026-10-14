@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from utils.log_redaction import redact_message
+from utils.log_redaction import redact_log_record
 
 
 class RequestContextFilter(logging.Filter):
@@ -33,11 +33,10 @@ class PIIRedactionFilter(logging.Filter):
 
     def filter(self, record: logging.LogRecord) -> bool:  # noqa: A003
         try:
-            rendered = record.getMessage()
-            redacted = redact_message(rendered)
-            if redacted != rendered:
-                record.msg = redacted
-                record.args = ()
+            redact_log_record(record)
         except Exception:
-            pass
+            # Never emit the original value after a redaction failure.
+            record.msg = '[REDACTION_FAILED]'
+            record.args = ()
+            record._pii_redacted = True
         return True

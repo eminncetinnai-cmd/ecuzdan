@@ -3,31 +3,24 @@ Integration Tests - Notification System
 Tests for notification system integration with database and API
 """
 
-import pytest
-from datetime import datetime, timedelta
-from unittest.mock import Mock, patch
-from flask import url_for
+from datetime import datetime, timedelta, timezone
 
-from models import Notification, User, Tenant
-from repositories.notification_repository import NotificationRepository
-from domain.notifications.services.notification_service import NotificationService
-from application.notifications.notification_application import NotificationApplicationService
+import pytest
+
 from app import db
+from application.notifications.notification_application import NotificationApplicationService
+from domain.notifications.services.notification_service import NotificationService
+from models import Notification, Tenant, User
+from repositories.notification_repository import NotificationRepository
 
 
 @pytest.mark.integration
 class TestNotificationIntegration:
-    """Integration tests for notification system - SKIPPED due to fixture complexity"""
-
-    @pytest.fixture(autouse=True)
-    def skip_all(self):
-        """Skip all integration tests for now"""
-        pytest.skip("Integration tests skipped - fixture complexity, unit tests cover functionality")
+    """Integration tests for notification persistence and application services."""
 
     @pytest.fixture
     def db_session(self, app):
         """Create database session for testing"""
-        from app import db
         with app.app_context():
             db.create_all()
             yield db.session
@@ -62,7 +55,6 @@ class TestNotificationIntegration:
     @pytest.fixture
     def repository(self, app):
         """Create notification repository"""
-        from app import db
         with app.app_context():
             return NotificationRepository(database=db)
 
@@ -87,9 +79,9 @@ class TestNotificationIntegration:
             body='You have exceeded your budget',
             dedupe_key='budget:test:2026-08'
         )
-        
+
         db_session.commit()
-        
+
         assert notification.id is not None
         assert notification.user_id == test_user.id
         assert notification.tenant_id == test_tenant.id
@@ -109,11 +101,11 @@ class TestNotificationIntegration:
                 title=f'Notification {i}',
                 dedupe_key=f'budget:test:{i}'
             )
-        
+
         db_session.commit()
-        
+
         notifications = repository.list_notifications(test_user.id)
-        
+
         assert len(notifications) == 5
 
     def test_mark_read_integration(self, db_session, service, test_user, test_tenant):
@@ -128,11 +120,11 @@ class TestNotificationIntegration:
         )
         db_session.add(notification)
         db_session.commit()
-        
+
         service.mark_read(test_user.id, notification.id)
-        
+
         db_session.refresh(notification)
-        
+
         assert notification.is_read is True
         assert notification.read_at is not None
 
@@ -150,11 +142,11 @@ class TestNotificationIntegration:
             )
             db_session.add(notification)
         db_session.commit()
-        
+
         count = service.mark_all_read(test_user.id)
-        
+
         assert count == 3
-        
+
         # Verify all are read
         notifications = Notification.query.filter_by(user_id=test_user.id).all()
         for notif in notifications:
@@ -172,11 +164,11 @@ class TestNotificationIntegration:
         )
         db_session.add(notification)
         db_session.commit()
-        
+
         notification_id = notification.id
         service.delete(test_user.id, notification_id)
-        
-        deleted = Notification.query.get(notification_id)
+
+        deleted = db.session.get(Notification, notification_id)
         assert deleted is None
 
     def test_delete_read_notifications_integration(self, db_session, service, test_user, test_tenant):
@@ -194,11 +186,11 @@ class TestNotificationIntegration:
             )
             db_session.add(notification)
         db_session.commit()
-        
+
         count = service.delete_read(test_user.id)
-        
+
         assert count == 2  # 2 out of 3 were read
-        
+
         # Verify only unread remain
         notifications = Notification.query.filter_by(user_id=test_user.id).all()
         assert len(notifications) == 1
@@ -219,9 +211,9 @@ class TestNotificationIntegration:
             )
             db_session.add(notification)
         db_session.commit()
-        
+
         count = service.unread_count(test_user.id)
-        
+
         assert count == 3  # 3 unread out of 5
 
     def test_notification_expiration_integration(self, db_session, test_user, test_tenant):
@@ -233,9 +225,9 @@ class TestNotificationIntegration:
             severity='warning',
             title='Expired',
             dedupe_key='expired',
-            expires_at=datetime.utcnow() - timedelta(days=1)
+            expires_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=1)
         )
-        
+
         valid_notification = Notification(
             user_id=test_user.id,
             tenant_id=test_tenant.id,
@@ -243,13 +235,13 @@ class TestNotificationIntegration:
             severity='warning',
             title='Valid',
             dedupe_key='valid',
-            expires_at=datetime.utcnow() + timedelta(days=1)
+            expires_at=datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=1)
         )
-        
+
         db_session.add(expired_notification)
         db_session.add(valid_notification)
         db_session.commit()
-        
+
         assert expired_notification.is_expired() is True
         assert valid_notification.is_expired() is False
 
@@ -265,32 +257,32 @@ class TestNotificationIntegration:
         )
         db_session.add(notification)
         db_session.commit()
-        
+
         # Mark as sent
         notification.mark_sent()
         db_session.commit()
-        
+
         assert notification.delivery_status == 'sent'
         assert notification.sent_at is not None
-        
+
         # Mark as delivered
         notification.mark_delivered()
         db_session.commit()
-        
+
         assert notification.delivery_status == 'delivered'
         assert notification.delivered_at is not None
-        
+
         # Mark as read
         notification.mark_read()
         db_session.commit()
-        
+
         assert notification.delivery_status == 'read'
         assert notification.read_at is not None
 
     def test_priority_levels_integration(self, db_session, test_user, test_tenant):
         """Test priority levels"""
         priorities = ['low', 'normal', 'high', 'urgent']
-        
+
         for priority in priorities:
             notification = Notification(
                 user_id=test_user.id,
@@ -302,12 +294,12 @@ class TestNotificationIntegration:
                 priority=priority
             )
             db_session.add(notification)
-        
+
         db_session.commit()
-        
+
         notifications = Notification.query.filter_by(user_id=test_user.id).all()
         assert len(notifications) == 4
-        
+
         for notif in notifications:
             assert notif.priority in Notification.PRIORITIES
 
@@ -315,7 +307,7 @@ class TestNotificationIntegration:
         """Test application service integration"""
         notification = application_service.list_for_user(test_user.id)
         assert notification == []
-        
+
         # Create notification
         application_service.notification_service.repository.add_notification(
             user_id=test_user.id,
@@ -326,7 +318,7 @@ class TestNotificationIntegration:
             dedupe_key='test'
         )
         db_session.commit()
-        
+
         notifications = application_service.list_for_user(test_user.id)
         assert len(notifications) == 1
 
@@ -341,9 +333,9 @@ class TestNotificationIntegration:
             dedupe_key='budget:test:2026-08'
         )
         db_session.commit()
-        
+
         # Check if key exists
         existing = repository.existing_keys(test_user.id, ['budget:test:2026-08', 'new_key'])
-        
+
         assert 'budget:test:2026-08' in existing
         assert 'new_key' not in existing

@@ -1,65 +1,147 @@
 {% extends "layout.html" %}
+{% from 'macros/buttons.html' import button_primary, button_secondary, button_danger %}
+{% from 'macros/ui.html' import badge %}
 
 {% block title %}Kullanıcı Yönetimi - E-Cüzdan{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="page-header">
-        <h1>Kullanıcı Yönetimi</h1>
-        <p>Sistem kullanıcılarını görüntüleyin ve yönetin</p>
+<div class="max-w-7xl mx-auto space-y-6 mb-12">
+    <!-- Page Header -->
+    <div class="page-header mb-6">
+        <div class="page-header-left">
+            <p class="page-header-eyebrow">Hesap &amp; Yetki Yönetimi</p>
+            <h1>Kullanıcı Yönetimi</h1>
+            <p class="page-header-subtitle">{{ _('ui_auto_ea409fe770af') }}</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <button data-macro="button_primary" type="button" onclick="showCreateModal()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                <span>{{ _('ui_auto_76ee91b50aa7') }}</span>
+            </button>
+        </div>
     </div>
-    
+
+    <!-- Segmented Navigation Hub -->
+    <div class="mb-6 flex flex-wrap items-center gap-2 border-b border-slate-200/80 pb-4 dark:border-slate-800">
+        <a href="{{ url_for('admin.admin_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'admin.admin_dashboard' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
+            <span>Sistem Özeti &amp; Metrikler</span>
+        </a>
+        <a href="{{ url_for('admin.list_users') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint in ['admin.list_users', 'admin.create_user', 'admin.edit_user'] %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+            <span>Kullanıcı Yönetimi</span>
+        </a>
+        {% if current_user and current_user.is_super_admin %}
+        <a href="{{ url_for('admin.tenants') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint and request.endpoint.startswith('admin.tenants') or request.endpoint in ['admin.create_tenant', 'admin.edit_tenant'] %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5h.75m-.75 3h.75m-.75 3h.75"/></svg>
+            <span>Tenant &amp; Organizasyonlar</span>
+        </a>
+        {% endif %}
+        <a href="{{ url_for('admin.design_system') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'admin.design_system' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.39m3.421 5.01a15.98 15.98 0 001.622-3.39m0 0a15.994 15.994 0 003.388-1.62m-5.01-1.62c.38-.415.79-.806 1.228-1.17a15.996 15.996 0 015.01-3.39m-6.238 4.56a15.984 15.984 0 01-3.39-1.622m0 0a15.996 15.996 0 01-3.39-1.622m6.78 3.244a15.98 15.98 0 01-1.622-3.39m0 0A15.98 15.98 0 019 6.75"/></svg>
+            <span>Tasarım Sistemi Kataloğu</span>
+        </a>
+        <a href="{{ url_for('monitoring.monitoring_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint and request.endpoint.startswith('monitoring.') %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/></svg>
+            <span>Sistem İzleme &amp; Kaynaklar</span>
+        </a>
+        <a href="{{ url_for('settings.settings') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint and request.endpoint.startswith('settings.') %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <span>Sistem Tercihleri</span>
+        </a>
+    </div>
+
+    <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">
+                <div class="mb-5 rounded-2xl border px-4 py-3 text-xs font-bold {% if category == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300{% elif category == 'error' %}border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300{% else %}border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300{% endif %}">
                     {{ message }}
                 </div>
             {% endfor %}
         {% endif %}
     {% endwith %}
-    
-    <div class="card">
-        <div class="card-header">
-            <h2>Kullanıcı Listesi</h2>
-            <button type="button" onclick="showCreateModal()">Yeni Kullanıcı</button>
+
+    <!-- Users Table Card -->
+    <div class="premium-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+        <!-- Table Header & Controls -->
+        <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-900/50">
+            <div class="flex items-center gap-2">
+                <h2 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">{{ _('ui_auto_01ef4ec0945d') }}</h2>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300">
+                    {{ users|length }} Kullanıcı
+                </span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="relative">
+                    <input type="text" id="userSearchInput" oninput="filterAdminUsers(this.value)" placeholder="Kullanıcı ara…" class="w-56 px-3 py-1.5 pl-8 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </div>
+            </div>
         </div>
-        
-        <div class="table-responsive">
-            <table class="table">
+
+        <!-- Table Responsive Shell -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs" id="adminUsersTable">
                 <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Kullanıcı Adı</th>
-                        <th>Rol</th>
-                        <th>Tenant</th>
-                        <th>Dil</th>
-                        <th>Oluşturulma Tarihi</th>
-                        <th>İşlemler</th>
+                    <tr class="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                        <th class="px-5 py-3.5 cursor-pointer hover:text-slate-600 dark:hover:text-slate-200 select-none" onclick="sortAdminUsers('id')">ID <span id="sort-icon-id" class="text-[9px]">↕</span></th>
+                        <th class="px-5 py-3.5 cursor-pointer hover:text-slate-600 dark:hover:text-slate-200 select-none" onclick="sortAdminUsers('username')">Kullanıcı Adı <span id="sort-icon-username" class="text-[9px]">↕</span></th>
+                        <th class="px-5 py-3.5 cursor-pointer hover:text-slate-600 dark:hover:text-slate-200 select-none" onclick="sortAdminUsers('role')">Rol <span id="sort-icon-role" class="text-[9px]">↕</span></th>
+                        <th class="px-5 py-3.5 cursor-pointer hover:text-slate-600 dark:hover:text-slate-200 select-none" onclick="sortAdminUsers('tenant')">{{ _('ui_auto_3ca93c78f671') }} <span id="sort-icon-tenant" class="text-[9px]">↕</span></th>
+                        <th class="px-5 py-3.5">{{ _('ui_auto_e194b235675d') }}</th>
+                        <th class="px-5 py-3.5 text-right">İşlemler</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                     {% for user in users %}
-                    <tr>
-                        <td>{{ user.id }}</td>
-                        <td>{{ user.username }}</td>
-                        <td>
+                    <tr class="user-row hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition" data-id="{{ user.id }}" data-username="{{ user.username|lower }}" data-role="{{ user.role|lower }}" data-tenant="{{ (user.tenant_id or '')|lower }}">
+                        <td class="px-5 py-3 font-mono font-bold text-slate-500 dark:text-slate-400">#{{ user.id }}</td>
+                        <td class="px-5 py-3 font-black text-slate-800 dark:text-slate-200">
+                            <div class="flex items-center gap-2">
+                                <span class="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 font-black text-xs flex items-center justify-center">
+                                    {{ user.username[0]|upper }}
+                                </span>
+                                <span>{{ user.username }}</span>
+                            </div>
+                        </td>
+                        <td class="px-5 py-3">
                             {% if user.role == 'sistem_yoneticisi' %}
-                                <span class="badge badge-danger">Sistem Yöneticisi</span>
+                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-900/50">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                    {{ _('ui_auto_73e6a3ae810b') }}
+                                </span>
                             {% elif user.role == 'tenant_yoneticisi' %}
-                                <span class="badge badge-warning">Tenant Yöneticisi</span>
+                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-900/50">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                    {{ _('ui_auto_291c084c3a8f') }}
+                                </span>
                             {% else %}
-                                <span class="badge badge-info">Kullanıcı</span>
+                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-900/50">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                                    {{ _('ui_auto_07075bae9ab2') }}
+                                </span>
                             {% endif %}
                         </td>
-                        <td>{{ user.tenant_id }}</td>
-                        <td>{{ user.language }}</td>
-                        <td>-</td>
-                        <td>
-                            <button type="button" onclick="editUser('{{ user.id }}')">Düzenle</button>
-                            <form action="/admin/users/{{ user.id }}/delete" method="POST" style="display:inline;">
-                            <button type="button" class="btn btn-sm btn-danger" onclick="confirmUserDelete(this.form, '{{ user.username }}')">Sil</button>
-                        </form>
+                        <td class="px-5 py-3 font-mono text-slate-600 dark:text-slate-400 font-bold">{{ user.tenant_id or '-' }}</td>
+                        <td class="px-5 py-3 uppercase font-bold text-slate-500 dark:text-slate-400">{{ user.language or 'tr' }}</td>
+                        <td class="px-5 py-3 text-right">
+                            <div class="inline-flex items-center gap-1.5 justify-end">
+                                <button data-macro="button_secondary" type="button" onclick="editUser('{{ user.id }}')" class="px-2.5 py-1 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                                    Düzenle
+                                </button>
+                                <form action="/admin/users/{{ user.id }}/delete" method="POST" class="inline">
+                                    <button data-macro="button_danger" type="button" onclick="confirmUserDelete(this.form, '{{ user.username }}')" class="px-2.5 py-1 rounded-lg text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition">
+                                        Sil
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-5 py-8 text-center text-slate-400 text-xs font-medium">
+                            Kayıtlı kullanıcı bulunamadı.
                         </td>
                     </tr>
                     {% endfor %}
@@ -70,44 +152,42 @@
 </div>
 
 <!-- Create User Modal -->
-<div id="createModal" class="modal modal-overlay hidden">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Yeni Kullanıcı Oluştur</h3>
-            <button type="button" onclick="hideCreateModal()">&times;</button>
+<div id="createModal" class="modal modal-overlay hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="createModalTitle">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-md w-full p-6 space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+            <h3 id="createModalTitle" class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">{{ _('ui_auto_6b3320a02920') }}</h3>
+            <button data-macro="button_secondary" type="button" onclick="hideCreateModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg">&times;</button>
         </div>
-        <form action="/admin/users/create" method="POST">
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>Kullanıcı Adı:</label>
-                    <input type="text" name="username" required minlength="3" maxlength="50">
-                </div>
-                <div class="form-group">
-                    <label>Şifre:</label>
-                    <input type="password" name="password" required>
-                </div>
-                <div class="form-group">
-                    <label>Rol:</label>
-                    <select name="role" required>
-                        <option value="">Seçin...</option>
-                        <option value="sistem_yoneticisi">Sistem Yöneticisi</option>
-                        <option value="tenant_yoneticisi">Tenant Yöneticisi</option>
-                        <option value="kullanici">Kullanıcı</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Tenant:</label>
-                    <select name="tenant_id" required>
-                        <option value="">Seçin...</option>
-                        {% for tenant in tenants %}
-                        <option value="{{ tenant.id }}">{{ tenant.name }} ({{ tenant.id }})</option>
-                        {% endfor %}
-                    </select>
-                </div>
+        <form action="/admin/users/create" method="POST" class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{{ _('ui_auto_e815ba1ce65c') }}</label>
+                <input type="text" name="username" required minlength="3" maxlength="50" class="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition">
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="hideCreateModal()">İptal</button>
-                <button type="submit" class="btn btn-primary">Oluştur</button>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{{ _('ui_auto_76cf44374c29') }}</label>
+                <input type="password" name="password" required class="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{{ _('ui_auto_92bb0dc23f57') }}</label>
+                <select name="role" required class="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    <option value="">{{ _('ui_auto_e9ec20439692') }}</option>
+                    <option value="sistem_yoneticisi">{{ _('ui_auto_73e6a3ae810b') }}</option>
+                    <option value="tenant_yoneticisi">{{ _('ui_auto_291c084c3a8f') }}</option>
+                    <option value="kullanici">{{ _('ui_auto_07075bae9ab2') }}</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{{ _('ui_auto_be7b76c9f1f3') }}</label>
+                <select name="tenant_id" required class="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    <option value="">{{ _('ui_auto_e9ec20439692') }}</option>
+                    {% for tenant in tenants %}
+                    <option value="{{ tenant.id }}">{{ tenant.name }} ({{ tenant.id }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                {{ button_secondary('İptal', onclick='hideCreateModal()') }}
+                {{ button_primary(_('ui_auto_52d50fa16bda'), submit=True) }}
             </div>
         </form>
     </div>
@@ -115,42 +195,40 @@
 
 <!-- Edit User Modal -->
 {% if edit_user %}
-<div id="editModal" class="modal modal-overlay active">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Kullanıcı Düzenle: {{ edit_user.username }}</h3>
-            <button type="button" onclick="hideEditModal()">&times;</button>
+<div id="editModal" class="modal modal-overlay active fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-md w-full p-6 space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+            <h3 id="editModalTitle" class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Kullanıcı Düzenle: {{ edit_user.username }}</h3>
+            <button data-macro="button_secondary" type="button" onclick="hideEditModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg">&times;</button>
         </div>
-        <form action="/admin/users/{{ edit_user.id }}/edit" method="POST">
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>Kullanıcı Adı:</label>
-                    <input type="text" name="username" value="{{ edit_user.username }}" required minlength="3" maxlength="50">
-                </div>
-                <div class="form-group">
-                    <label>Şifre (boş bırakılırsa değiştirilmez):</label>
-                    <input type="password" name="password">
-                </div>
-                <div class="form-group">
-                    <label>Rol:</label>
-                    <select name="role" required>
-                        <option value="sistem_yoneticisi" {% if edit_user.role == 'sistem_yoneticisi' %}selected{% endif %}>Sistem Yöneticisi</option>
-                        <option value="tenant_yoneticisi" {% if edit_user.role == 'tenant_yoneticisi' %}selected{% endif %}>Tenant Yöneticisi</option>
-                        <option value="kullanici" {% if edit_user.role == 'kullanici' %}selected{% endif %}>Kullanıcı</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Tenant:</label>
-                    <select name="tenant_id" required>
-                        {% for tenant in tenants %}
-                        <option value="{{ tenant.id }}" {% if edit_user.tenant_id == tenant.id %}selected{% endif %}>{{ tenant.name }} ({{ tenant.id }})</option>
-                        {% endfor %}
-                    </select>
-                </div>
+        <form action="/admin/users/{{ edit_user.id }}/edit" method="POST" class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{{ _('ui_auto_e815ba1ce65c') }}</label>
+                <input type="text" name="username" value="{{ edit_user.username }}" required minlength="3" maxlength="50" class="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition">
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="window.location.href='/admin/users'">İptal</button>
-                <button type="submit" class="btn btn-primary">Güncelle</button>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{{ _('ui_auto_d8ed4968f413') }}</label>
+                <input type="password" name="password" placeholder="Değiştirmek istemiyorsanız boş bırakın" class="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{{ _('ui_auto_92bb0dc23f57') }}</label>
+                <select name="role" required class="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    <option value="sistem_yoneticisi" {% if edit_user.role == 'sistem_yoneticisi' %}selected{% endif %}>{{ _('ui_auto_73e6a3ae810b') }}</option>
+                    <option value="tenant_yoneticisi" {% if edit_user.role == 'tenant_yoneticisi' %}selected{% endif %}>{{ _('ui_auto_291c084c3a8f') }}</option>
+                    <option value="kullanici" {% if edit_user.role == 'kullanici' %}selected{% endif %}>{{ _('ui_auto_07075bae9ab2') }}</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{{ _('ui_auto_be7b76c9f1f3') }}</label>
+                <select name="tenant_id" required class="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    {% for tenant in tenants %}
+                    <option value="{{ tenant.id }}" {% if edit_user.tenant_id == tenant.id %}selected{% endif %}>{{ tenant.name }} ({{ tenant.id }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                {{ button_secondary('İptal', url='/admin/users') }}
+                {{ button_primary(_('ui_auto_e9a70334c9f7'), submit=True) }}
             </div>
         </form>
     </div>
@@ -160,6 +238,8 @@
 <script>
 function showCreateModal() {
     window.openModal('createModal');
+    const firstInput = document.querySelector('#createModal input[name="username"]');
+    if (firstInput) setTimeout(() => firstInput.focus(), 60);
 }
 
 function hideCreateModal() {
@@ -176,175 +256,93 @@ function hideEditModal() {
 
 function confirmUserDelete(formEl, username) {
     if (typeof window.showGlobalConfirm === 'function') {
-        window.showGlobalConfirm('Kullanıcı Silinecek', username + ' kullanıcısını silmek istediğinize emin misiniz?', function() {
+        window.showGlobalConfirm('Kullanıcı Silinecek', username + ' kullanıcısını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.', function() {
             formEl.submit();
         }, true);
     } else {
-        if (confirm(username + ' kullanıcısını silmek istediğinize emin misiniz?')) {
+        if (confirm(username + ' kullanıcısını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.')) {
             formEl.submit();
         }
     }
 }
 
+function filterAdminUsers(query) {
+    const q = (query || '').toLowerCase().trim();
+    const rows = document.querySelectorAll('#adminUsersTable tbody tr.user-row');
+    let visibleCount = 0;
+    rows.forEach(row => {
+        const username = row.getAttribute('data-username') || '';
+        const role = row.getAttribute('data-role') || '';
+        const tenant = row.getAttribute('data-tenant') || '';
+        if (!q || username.includes(q) || role.includes(q) || tenant.includes(q)) {
+            row.classList.remove('hidden');
+            visibleCount++;
+        } else {
+            row.classList.add('hidden');
+        }
+    });
+    const badge = document.querySelector('.p-5 .flex span.rounded-full');
+    if (badge) {
+        badge.textContent = visibleCount + ' Kullanıcı';
+    }
+}
+
+let sortState = { col: null, asc: true };
+function sortAdminUsers(col) {
+    const tbody = document.querySelector('#adminUsersTable tbody');
+    if (!tbody) return;
+    const rows = Array.from(tbody.querySelectorAll('tr.user-row'));
+    if (!rows.length) return;
+
+    if (sortState.col === col) {
+        sortState.asc = !sortState.asc;
+    } else {
+        sortState.col = col;
+        sortState.asc = true;
+    }
+
+    ['id', 'username', 'role', 'tenant'].forEach(c => {
+        const icon = document.getElementById('sort-icon-' + c);
+        if (icon) icon.textContent = c === col ? (sortState.asc ? '▲' : '▼') : '↕';
+    });
+
+    rows.sort((a, b) => {
+        let valA = a.getAttribute('data-' + col) || '';
+        let valB = b.getAttribute('data-' + col) || '';
+        if (col === 'id') {
+            return sortState.asc ? (Number(valA) - Number(valB)) : (Number(valB) - Number(valA));
+        }
+        return sortState.asc ? valA.localeCompare(valB, 'tr') : valB.localeCompare(valA, 'tr');
+    });
+
+    rows.forEach(row => tbody.appendChild(row));
+}
+
+// ESC Key listener
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const createM = document.getElementById('createModal');
+        const editM = document.getElementById('editModal');
+        if (createM && !createM.classList.contains('hidden') && createM.style.display !== 'none') {
+            hideCreateModal();
+            return;
+        }
+        if (editM && (editM.classList.contains('active') || (!editM.classList.contains('hidden') && editM.style.display !== 'none'))) {
+            hideEditModal();
+            return;
+        }
+        const sInput = document.getElementById('userSearchInput');
+        if (sInput && document.activeElement === sInput && sInput.value) {
+            sInput.value = '';
+            filterAdminUsers('');
+        }
+    }
+});
+
 if (document.getElementById('editModal')?.classList.contains('active')) {
     window.openModal('editModal');
+    const firstInput = document.querySelector('#editModal input[name="username"]');
+    if (firstInput) setTimeout(() => firstInput.focus(), 60);
 }
 </script>
-
-<style>
-.modal {
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-}
-
-.modal-content {
-    background-color: white;
-    margin: 5% auto;
-    padding: 20px;
-    border-radius: 5px;
-    width: 90%;
-    max-width: 500px;
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.close {
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.form-group {
-    margin-bottom: 15px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-
-.form-group input, .form-group select {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-.modal-footer {
-    margin-top: 20px;
-    text-align: right;
-}
-
-.btn {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-left: 10px;
-}
-
-.btn-primary {
-    background-color: #007bff;
-    color: white;
-}
-
-.btn-secondary {
-    background-color: #6c757d;
-    color: white;
-}
-
-.btn-danger {
-    background-color: #dc3545;
-    color: white;
-}
-
-.btn-sm {
-    padding: 4px 8px;
-    font-size: 12px;
-}
-
-.badge {
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-}
-
-.badge-danger {
-    background-color: #dc3545;
-    color: white;
-}
-
-.badge-warning {
-    background-color: #ffc107;
-    color: black;
-}
-
-.badge-info {
-    background-color: #17a2b8;
-    color: white;
-}
-
-.alert {
-    padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 4px;
-}
-
-.alert-error {
-    background-color: #f8d7da;
-    color: #721c24;
-}
-
-.alert-success {
-    background-color: #d4edda;
-    color: #155724;
-}
-
-.alert-warning {
-    background-color: #fff3cd;
-    color: #856404;
-}
-
-.card {
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    margin-bottom: 20px;
-}
-
-.card-header {
-    padding: 15px;
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #ddd;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.table th, .table td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
-
-.table th {
-    background-color: #f8f9fa;
-    font-weight: bold;
-}
-</style>
 {% endblock %}

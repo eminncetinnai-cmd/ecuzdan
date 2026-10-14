@@ -3,10 +3,12 @@ Test Configuration - Profesyonel Test Mimarisi
 Test ortamı, fixtures ve test yardımcıları
 """
 
+import logging
+import os
 import sys
 from pathlib import Path
+
 import pytest
-import os
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -15,6 +17,45 @@ os.environ['DISABLE_BACKGROUND_SERVICE'] = 'true'
 from app import app as app_factory
 from app import db
 from models import AssetSector, AssetType, Category, Tenant, Transaction, User
+
+
+def _is_file_sink_handler(h):
+    if isinstance(h, logging.FileHandler):
+        return True
+    if h.__class__.__name__ == 'StructuredLogHandler':
+        return True
+    inner = getattr(h, 'handler', None)
+    return isinstance(inner, logging.FileHandler)
+
+
+def _detach_production_log_file_handlers():
+    """Prevent tests from writing to production log files in logs/"""
+    root_logger = logging.getLogger()
+    for h in list(root_logger.handlers):
+        if _is_file_sink_handler(h):
+            try:
+                h.close()
+            except Exception:
+                pass
+            root_logger.removeHandler(h)
+    for h in list(app_factory.logger.handlers):
+        if _is_file_sink_handler(h):
+            try:
+                h.close()
+            except Exception:
+                pass
+            app_factory.logger.removeHandler(h)
+
+
+_detach_production_log_file_handlers()
+
+
+@pytest.fixture(autouse=True, scope='session')
+def isolate_test_logging():
+    """Ensure entire test session never appends to production log files."""
+    _detach_production_log_file_handlers()
+    yield
+    _detach_production_log_file_handlers()
 
 
 @pytest.fixture
@@ -41,13 +82,18 @@ def app():
 
     with app.app_context():
         # Manually create the in-memory engine and override the default engine bind
+        import uuid
+
         import sqlalchemy as sa
         from sqlalchemy.pool import QueuePool
-
         worker_id = os.environ.get('PYTEST_XDIST_WORKER', 'main')
-        db_path = Path(app.instance_path) / f'e_cuzdan_test_{worker_id}.db'
+        db_path = Path(app.instance_path) / f'e_cuzdan_test_{worker_id}_{uuid.uuid4().hex[:8]}.db'
         db_path.parent.mkdir(parents=True, exist_ok=True)
-        db_path.unlink(missing_ok=True)
+        # Dosyayı silerek temiz başlat
+        try:
+            db_path.unlink(missing_ok=True)
+        except OSError:
+            pass
         engine = sa.create_engine(
             f'sqlite:///{db_path.as_posix()}',
             connect_args={'check_same_thread': False},
@@ -61,17 +107,21 @@ def app():
             db.engines[None] = engine
 
         try:
-            db.drop_all()
+            # Yeni/boş dosyada tüm tabloları oluştur (checkfirst=True ile güvenli)
             db.create_all()
             _seed_test_data()
             yield app
         finally:
             db.session.remove()
             engine.dispose()
-            db_path.unlink(missing_ok=True)
+            try:
+                db_path.unlink(missing_ok=True)
+            except OSError:
+                pass
             if hasattr(db, 'engines'):
                 db.engines.clear()
                 db.engines.update(original_engines)
+
 
 
 def _seed_test_data():
@@ -181,6 +231,16 @@ def authenticated_admin_client(client, admin_user):
 
 
 @pytest.fixture
+def privileged_authenticated_client(client, app):
+    """Client authenticated with privileged system administrator rights (sistem_yoneticisi)"""
+    emin = User.query.filter_by(username='emin').first()
+    with client.session_transaction() as sess:
+        sess['user_id'] = emin.id
+        sess['username'] = emin.username
+    return client
+
+
+@pytest.fixture
 def container(app):
     """Composition Root container fixture for tests.
 
@@ -262,6 +322,7 @@ def mock_logger():
 def create_test_user(username='testuser', role='kullanici', tenant_id='default'):
     """Test kullanıcısı oluşturma yardımcısı"""
     from werkzeug.security import generate_password_hash
+
     from models import User
 
     user = User(

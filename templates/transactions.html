@@ -1,5 +1,9 @@
 {% extends "layout.html" %}
-{% from 'macros/forms.html' import date_field %}
+{% from 'macros/forms.html' import date_field with context %}
+{% from 'macros/buttons.html' import button_primary, button_secondary, button_danger, button_success, button_sm with context %}
+{% from 'macros/ui.html' import badge_premium, empty_state with context %}
+{% block document_title %}{{ _('tx_page_title') }} | {{ brand }}{% endblock %}
+
 {% block vendor_head %}
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -8,270 +12,528 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/tr.js"></script>
 {% endblock %}
-{% block content %}
-<style>
-    .transaction-card {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .transaction-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 40px -15px rgba(0, 0, 0, 0.1);
-    }
-    .form-section {
-        border: 1px solid rgba(0, 0, 0, 0.05);
-        border-radius: 0.75rem;
-        padding: 0.75rem;
-        margin-bottom: 0.75rem;
-        background: rgba(255, 255, 255, 0.5);
-    }
-    .form-section-title {
-        font-size: 9px;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: #64748b;
-        margin-bottom: 0.5rem;
-    }
-    .readonly-field { background-color: rgba(16, 185, 129, 0.06); cursor: not-allowed; }
-    #transaction_form.edit-mode { border-left: 4px solid #f59e0b; }
-</style>
 
-<div class="max-w-6xl mx-auto">
-    <div class="mb-8">
-        <h2 class="text-4xl font-black text-slate-900 tracking-tighter uppercase leading-none bg-gradient-to-r from-slate-900 via-amber-700 to-slate-900 bg-clip-text text-transparent">{{ _('tx_single_title') }}</h2>
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">{{ _('tx_single_subtitle') }}</p>
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/transactions.css') }}">
+{% endblock %}
+
+{% block content %}
+<div id="transactions-page-container" 
+     class="max-w-7xl mx-auto space-y-6"
+     data-active-tab="{{ active_tab or 'all' }}"
+     data-status-paid="{{ status_values.paid }}"
+     data-status-pending="{{ status_values.pending }}"
+     data-today-display="{{ today_display }}">
+
+    <!-- ═══ 1. SAYFA BAŞLIĞI & TÜR ROZETİ ═══════════════════════════════════ -->
+    <div class="page-header mb-6">
+        <div class="page-header-left">
+            <p class="page-header-eyebrow">{{ _('tx_page_subtitle') }}</p>
+            <h1>{{ _('tx_page_title') }}</h1>
+            <p class="page-header-subtitle">{{ _('tx_page_description') }}</p>
+        </div>
+        <span class="badge-premium badge-info">
+            <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+            {{ _('tx_type_one_time') }}
+        </span>
     </div>
 
-    <div class="space-y-6">
-        <!-- FORM ON TOP - HIDDEN, WILL BE SHOWN IN MODAL -->
-        <div id="mainFormContainer" class="hidden">
-            <div class="transaction-card premium-card p-6 bg-white/80 border-l-4 border-amber-400 shadow-lg">
-                <div class="flex items-center mb-6">
-                    <div class="bg-amber-100 p-3 rounded-xl mr-4">
-                        <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight" id="form_title">{{ _('tx_new_title') }}</h3>
-                        <p class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider" id="form_subtitle">{{ _('tx_new_subtitle') }}</p>
-                    </div>
-                </div>
-                <form id="transaction_form" action="/new_transaction" method="POST" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <div>
-                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('tx_date_label') }}</label>
-                        {{ date_field('date', edit_tx.date|format_date if edit_tx else today_display, '', 'w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-amber-400 outline-none text-xs font-bold text-slate-800') }}
-                    </div>
-                    <div>
-                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('tx_category_label') }}</label>
-                        <select name="category" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-amber-400 outline-none text-xs font-black text-indigo-600">
-                            {% for c in cats %}<option value="{{ c.name }}" {{ 'selected' if edit_tx and edit_tx.category == c.name else '' }}>{{ c.name }} ({{ c.type }})</option>{% endfor %}
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('tx_amount_label') }}</label>
-                        <input type="number" step="0.01" name="amount" placeholder="0.00" value="{{ edit_tx.amount if edit_tx else '' }}" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-black text-xl text-slate-800 focus:ring-2 focus:ring-amber-400 outline-none" required>
-                    </div>
-                    <div>
-                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('tx_description_label') }}</label>
-                        <input type="text" name="description" placeholder="{{ _('tx_description_label') }}" value="{{ edit_tx.description if edit_tx else '' }}" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-amber-400 outline-none text-xs text-slate-700">
-                    </div>
-                    <div>
-                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('tx_note_label') }}</label>
-                        <input type="text" name="note" placeholder="{{ _('tx_note_label') }}" value="{{ edit_tx.note if edit_tx else '' }}" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-amber-400 outline-none text-xs text-slate-500 italic">
-                    </div>
-                    <div>
-                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('tx_status_label') }}</label>
-                        <select name="status" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-amber-400 outline-none text-xs font-bold text-slate-700">
-                            <option value="Bekliyor" {{ 'selected' if edit_tx and edit_tx.status == 'Bekliyor' else '' }}>{{ _('tx_status_pending') }}</option>
-                            <option value="Ödendi" {{ 'selected' if edit_tx and edit_tx.status == 'Ödendi' else '' }}>{{ _('tx_status_paid') }}</option>
-                        </select>
-                    </div>
+    <!-- Segmented Navigation Hub -->
+    <div class="mb-6 flex flex-wrap items-center gap-2 border-b border-slate-200/80 pb-4 dark:border-slate-800">
+        <a href="{{ url_for('transactions.transactions') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'transactions.transactions' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+            <span>İşlem Geçmişi &amp; Defter</span>
+        </a>
+        <a href="{{ url_for('transactions.reconciliation_page') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'transactions.reconciliation_page' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>Banka &amp; Bakiye Mutabakatı</span>
+        </a>
+        <a href="{{ url_for('dashboard.monthly_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'dashboard.monthly_dashboard' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
+            <span>Aylık Konsolide Rapor</span>
+        </a>
+        <a href="{{ url_for('plans.payment_calendar') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'plans.payment_calendar' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
+            <span>Ödeme Takvimi &amp; Projeksiyon</span>
+        </a>
+    </div>
 
-                    <p id="edit_hint" class="{{ '' if edit_tx else 'hidden' }} text-[9px] font-bold text-amber-600 uppercase tracking-wide bg-amber-50 p-2 rounded-lg border border-amber-100 md:col-span-2 lg:col-span-3">
-                        Düzenleme modu: işlem detayları güncellenecek.
-                    </p>
+    <!-- ═══ 2. ÖZET KPI KARTLARI (5 GÖSTERGE) ════════════════════════════════ -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 mb-6">
+        <!-- Toplam İşlem -->
+        <div class="tx-summary-card">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-[9px] uppercase tracking-[0.2em] text-slate-400 font-extrabold">Toplam İşlem</span>
+                <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </span>
+            </div>
+            <p id="summaryTotalCount" class="text-2xl font-black text-slate-800 dark:text-white tracking-tight">{{ tx_summary.total_count if tx_summary else (last_t.items|length if last_t else 0) }}</p>
+            <p class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mt-1.5 flex items-center gap-1">
+                <span class="inline-block w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                <span id="summaryCountsSub">{{ tx_summary.paid_count if tx_summary else 0 }} Ödenen · {{ tx_summary.pending_count if tx_summary else 0 }} Bekleyen</span>
+            </p>
+        </div>
 
-                    <div class="flex space-x-2 md:col-span-2 lg:col-span-3">
-                        <button type="submit" id="transaction_submit_btn" class="flex-1 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-900 font-black p-4 rounded-xl shadow-lg uppercase text-[10px] tracking-wider hover:shadow-xl transition transform hover:scale-[1.02]">
-                            {{ _('tx_save_btn') }}
-                        </button>
-                        <button type="button" id="transaction_cancel_btn" class="{{ '' if edit_tx else 'hidden' }} px-4 bg-slate-200 text-slate-700 p-4 rounded-xl font-black text-[10px] uppercase tracking-wider hover:bg-slate-300 transition shadow-lg" onclick="cancelEdit()">{{ _('tx_cancel_btn') }}</button>
-                    </div>
-                </form>
+        <!-- Gerçekleşen Gelir -->
+        <div class="tx-summary-card border-l-4 border-l-emerald-500">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-[9px] uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400 font-extrabold">Gerçekleşen Gelir</span>
+                <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                </span>
+            </div>
+            <p id="summaryPaidIncome" class="text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">+{{ (tx_summary.paid_income_total if tx_summary else 0)|format_money }} <span class="text-xs font-bold text-emerald-700/70 dark:text-emerald-300">{{ base_currency_symbol }}</span></p>
+            <p class="text-[10px] font-semibold text-emerald-600/80 dark:text-emerald-400/80 mt-1.5 flex items-center gap-1">
+                <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                <span>Tahsil Edilen Nakit</span>
+            </p>
+        </div>
+
+        <!-- Gerçekleşen Gider -->
+        <div class="tx-summary-card border-l-4 border-l-rose-500">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-[9px] uppercase tracking-[0.2em] text-rose-600 dark:text-rose-400 font-extrabold">Gerçekleşen Gider</span>
+                <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                </span>
+            </div>
+            <p id="summaryPaidExpense" class="text-2xl font-black text-rose-600 dark:text-rose-400 tracking-tight">-{{ (tx_summary.paid_expense_total if tx_summary else 0)|format_money }} <span class="text-xs font-bold text-rose-700/70 dark:text-rose-300">{{ base_currency_symbol }}</span></p>
+            <p class="text-[10px] font-semibold text-rose-600/80 dark:text-rose-400/80 mt-1.5 flex items-center gap-1">
+                <span class="inline-block w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                <span>Ödenen Kesin Harcama</span>
+            </p>
+        </div>
+
+        <!-- Net Fiili Bakiye -->
+        {% set net_val = tx_summary.paid_net_total if tx_summary else 0 %}
+        <div class="tx-summary-card border-l-4 border-l-indigo-500">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-[9px] uppercase tracking-[0.2em] text-slate-400 font-extrabold">Net Fiili Bakiye</span>
+                <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
+                </span>
+            </div>
+            <p id="summaryPaidNet" class="text-2xl font-black {{ 'text-emerald-600 dark:text-emerald-400' if net_val >= 0 else 'text-rose-600 dark:text-rose-400' }} tracking-tight">{{ net_val|format_money }} <span class="text-xs font-bold opacity-75">{{ base_currency_symbol }}</span></p>
+            <p class="text-[10px] font-semibold text-slate-400 mt-1.5 flex items-center gap-1">
+                <span id="summaryNetDot" class="inline-block w-1.5 h-1.5 rounded-full {{ 'bg-emerald-500' if net_val >= 0 else 'bg-rose-500' }}"></span>
+                <span>Kasa / Hesap Net</span>
+            </p>
+        </div>
+
+        <!-- Bekleyen Ödemeler -->
+        <div class="tx-summary-card border-l-4 border-l-amber-500">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-[9px] uppercase tracking-[0.2em] text-amber-700 dark:text-amber-400 font-extrabold">Bekleyen Ödemeler</span>
+                <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </span>
+            </div>
+            <p id="summaryPendingExpense" class="text-2xl font-black text-amber-900 dark:text-amber-400 tracking-tight">-{{ (tx_summary.pending_expense_total if tx_summary else 0)|format_money }} <span class="text-xs font-bold text-amber-700/80 dark:text-amber-300">{{ base_currency_symbol }}</span></p>
+            <p class="text-[10px] font-semibold text-amber-700/80 dark:text-amber-400 mt-1.5 flex items-center gap-1">
+                <span class="inline-block w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                <span id="summaryPendingSub">{{ tx_summary.pending_count if tx_summary else 0 }} Bekleyen Yükümlülük</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- ═══ 3. İŞLEM TABLOSU VE AKSİYON ALANI ═════════════════════════════════ -->
+    <div class="tx-card p-6 md:p-8">
+        <!-- Toolbar & Üst Butonlar -->
+        <div class="flex flex-col gap-3 mb-6 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+            <div>
+                <h3 class="text-base font-black text-slate-800 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                    <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    <span>{{ _('tx_recent_title') }}</span>
+                    <span id="txActiveFilterBadge" class="hidden text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">Filtrelendi</span>
+                </h3>
+                <p class="text-[11px] text-slate-400 font-medium mt-0.5">Tüm gelir, gider, yatırım ve transfer kayıtlarınız</p>
+            </div>
+            <div class="tx-button-group tx-action-toolbar justify-end">
+                <button data-macro="button_secondary" type="button" onclick="exportVisibleTransactionsToCsv()" class="tx-btn tx-btn-secondary tx-btn-compact" title="Görüntülenen işlemleri CSV (Excel) olarak indir">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <span>CSV İndir</span>
+                </button>
+                <a href="{{ url_for('transactions.transactions_explorer') }}" data-macro="button_secondary" class="tx-btn tx-btn-primary tx-btn-compact">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    <span>{{ _('tx_open_explorer') }}</span>
+                </a>
+                <button data-macro="button_primary" type="button" data-testid="transactions-create-primary" onclick="openNewTransactionModal()" class="tx-btn tx-btn-success">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                    <span>{{ _('tx_create_title') }}</span>
+                </button>
+                <a href="{{ url_for('transactions.reconciliation') }}" data-macro="button_secondary" class="tx-btn tx-btn-quiet tx-btn-compact">{{ _('tx_open_reconciliation') }}</a>
+                <a href="{{ url_for('plans.plans') }}" data-macro="button_secondary" data-testid="transactions-plans-link" class="tx-btn tx-btn-quiet tx-btn-compact">{{ _('tx_plan_link_label') }}</a>
+                <a href="{{ url_for('dashboard.index') }}" data-macro="button_secondary" class="tx-btn tx-btn-quiet tx-btn-compact">{{ _('tx_cash_flow_link') }}</a>
             </div>
         </div>
 
-        <!-- TABLE ON BOTTOM -->
-        <div class="transaction-card premium-card p-6 bg-white/80 shadow-lg">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">{{ _('tx_recent_title') }}</h3>
-                    <div class="flex items-center gap-3">
-                        <a href="/transactions/explorer" class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-900 rounded-xl text-xs font-black shadow-lg hover:shadow-xl transition transform hover:scale-105">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                            <span>Gezgin</span>
-                        </a>
-                        <button type="button" onclick="openNewTransactionModal()" class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl text-sm font-black shadow-lg hover:shadow-xl transition transform hover:scale-105">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                            <span>Yeni İşlem</span>
-                        </button>
-                        <a href="/" class="text-[10px] font-bold text-indigo-600 hover:underline">{{ _('tx_cash_flow_link') }}</a>
+        <!-- Segmented Tabs (Tümü / Ödenenler / Bekleyenler / Planlı) -->
+        <div class="mb-5 border-b border-slate-200 dark:border-slate-800 flex gap-2 sm:gap-4 overflow-x-auto pb-1" role="tablist" aria-label="İşlem Sekmeleri">
+            <button data-macro="button_secondary" type="button" role="tab" aria-selected="true" class="tx-tab-btn active" data-tab="all" onclick="switchTxTab('all', this)">
+                <span>Tümü</span>
+                <span class="tab-count-badge badge-all" id="badgeAllCount">{{ tx_summary.total_count if tx_summary else (last_t.items|length if last_t else 0) }}</span>
+            </button>
+            <button data-macro="button_secondary" type="button" role="tab" aria-selected="false" class="tx-tab-btn" data-tab="paid" onclick="switchTxTab('paid', this)">
+                <span class="inline-flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    <span>Ödenenler</span>
+                </span>
+                <span class="tab-count-badge badge-paid" id="badgePaidCount">{{ tx_summary.paid_count if tx_summary else 0 }}</span>
+            </button>
+            <button data-macro="button_secondary" type="button" role="tab" aria-selected="false" class="tx-tab-btn" data-tab="pending" onclick="switchTxTab('pending', this)">
+                <span class="inline-flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>Bekleyenler</span>
+                </span>
+                <span class="tab-count-badge badge-pending" id="badgePendingCount">{{ tx_summary.pending_count if tx_summary else 0 }}</span>
+            </button>
+            <button data-macro="button_secondary" type="button" role="tab" aria-selected="false" class="tx-tab-btn" data-tab="plan" onclick="switchTxTab('plan', this)">
+                <span class="inline-flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span>Planlı / Taksitler</span>
+                </span>
+                <span class="tab-count-badge badge-plan" id="badgePlanCount">{{ tx_summary.plan_count if tx_summary else 0 }}</span>
+            </button>
+        </div>
+
+        <!-- Arama ve Filtreler Grid -->
+        <div class="mb-6 p-4 bg-slate-50/90 dark:bg-slate-800/50 rounded-2xl border border-slate-200/70 dark:border-slate-700/60">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
+                <div class="sm:col-span-2 lg:col-span-3">
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1.5">{{ _('tx_search_label') }}</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        </span>
+                        <input type="text" id="txSearch" placeholder="{{ _('tx_search_placeholder') }}" class="w-full pl-9 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs bg-white dark:bg-slate-900 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-400 outline-none font-semibold">
                     </div>
                 </div>
-
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-5 p-4 bg-slate-50/80 rounded-2xl border border-slate-100">
-                    <div class="lg:col-span-2">
-                        <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">{{ _('tx_search_label') }}</label>
-                        <input type="text" id="txSearch" placeholder="{{ _('tx_search_placeholder') }}" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white focus:ring-2 focus:ring-amber-400 outline-none font-semibold">
-                    </div>
-                    <div>
-                        <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">{{ _('tx_filter_category') }}</label>
-                        <select id="txFilterCategory" class="w-full p-2.5 border border-slate-200 rounded-xl text-[10px] font-bold bg-white outline-none">
-                            <option value="">{{ _('tx_filter_all') }}</option>
-                            {% for c in cats %}<option value="{{ c.name }}">{{ c.name }}</option>{% endfor %}
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">{{ _('tx_filter_type') }}</label>
-                        <select id="txFilterType" class="w-full p-2.5 border border-slate-200 rounded-xl text-[10px] font-bold bg-white outline-none">
-                            <option value="">{{ _('tx_filter_all') }}</option>
-                            <option value="Gelir">{{ _('tx_type_income') }}</option>
-                            <option value="Gider">{{ _('tx_type_expense') }}</option>
-                            <option value="Yatırım">{{ _('tx_type_investment') }}</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">{{ _('tx_filter_status') }}</label>
-                        <select id="txFilterStatus" class="w-full p-2.5 border border-slate-200 rounded-xl text-[10px] font-bold bg-white outline-none">
-                            <option value="">{{ _('tx_filter_all') }}</option>
-                            <option value="Ödendi">{{ _('tx_status_paid') }}</option>
-                            <option value="Bekliyor">{{ _('tx_status_pending') }}</option>
-                        </select>
+                <div class="sm:col-span-2 lg:col-span-3">
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1.5">Tarih Aralığı</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        </span>
+                        <input type="text" id="txFilterDateRange" placeholder="Tarih aralığı seçin..." class="w-full pl-9 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs bg-white dark:bg-slate-900 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-400 outline-none font-semibold" readonly>
                     </div>
                 </div>
-
-                <div class="overflow-x-auto">
-                    <table id="transTable" class="w-full text-left text-[11px] display">
-                        <thead class="text-slate-400 uppercase text-[9px] font-bold border-b border-slate-200">
-                            <tr>
-                                <th class="py-3 px-2">{{ _('table_date') }}</th>
-                                <th>{{ _('table_category') }}</th>
-                                <th>{{ _('table_description') }}</th>
-                                <th>{{ _('table_note') }}</th>
-                                <th>{{ _('table_amount') }}</th>
-                                <th>{{ _('table_status') }}</th>
-                                <th class="text-right px-2">{{ _('table_action') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="font-semibold text-slate-700">
-                            {% for t in last_t.items %}
-                            <tr class="border-b border-slate-100 hover:bg-slate-50/40 transition tx-row"
-                                data-category="{{ t.category }}"
-                                data-type="{{ t.type }}"
-                                data-status="{{ t.status }}"
-                                data-search="{{ ((t.description or '') ~ ' ' ~ (t.note or ''))|lower }}">
-                                <td class="py-2 px-2" data-order="{{ t.date }}">{{ t.date|format_date }}</td>
-                                <td class="py-2 text-indigo-600 font-bold text-[10px]">{{ t.category }}</td>
-                                <td class="py-2 text-[11px] text-slate-700">{{ t.description }}</td>
-                                <td class="py-2 text-[11px] italic text-slate-500">{{ t.note or '—' }}</td>
-                                <td class="py-2 font-black text-[11px] {% if t.type == 'Gelir' %}text-emerald-600{% elif t.type == 'Yatırım' %}text-blue-500{% else %}text-rose-600{% endif %}" data-order="{{ t.amount }}">{{ t.amount|format_money }} ₺</td>
-                                <td class="py-2">
-                                    <span class="px-2 py-0.5 rounded-lg font-bold text-[9px] {{ 'bg-emerald-100 text-emerald-700' if t.status == 'Ödendi' else 'bg-rose-100 text-rose-700' }}">{{ t.status }}</span>
-                                </td>
-                                <td class="text-right py-2 px-2 whitespace-nowrap">
-                                    {% if t.source_type in ['asset', 'asset_sale'] and t.source_id %}
-                                    <a href="{{ url_for('assets.assets_management', edit=t.source_id) }}"
-                                       class="text-emerald-600 font-bold text-[9px] hover:underline"
-                                       title="{{ _('table_asset_linked_hint') }}">{{ _('table_go_to_asset') }}</a>
-                                    {% else %}
-                                    <button type="button" class="edit-tx-btn text-indigo-500 font-bold text-[9px] hover:underline mr-2 bg-transparent border-none cursor-pointer"
-                                            data-id="{{ t.id }}"
-                                            data-date="{{ t.date|format_date }}"
-                                            data-category="{{ t.category }}"
-                                            data-amount="{{ t.amount }}"
-                                            data-description="{{ t.description }}"
-                                            data-note="{{ t.note or '' }}"
-                                            data-status="{{ t.status }}">{{ _('table_edit') }}</button>
-                                    <button type="button" class="delete-tx-btn text-rose-500 font-bold text-[9px] hover:underline bg-transparent border-none cursor-pointer"
-                                            data-id="{{ t.id }}">{{ _('table_delete') }}</button>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <div class="lg:col-span-2">
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1.5">{{ _('tx_filter_category') }}</label>
+                    <select id="txFilterCategory" class="w-full p-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 text-slate-800 dark:text-white outline-none">
+                        <option value="">{{ _('tx_filter_all') }}</option>
+                        {% for c in cats %}<option value="{{ c.name }}">{{ c.name }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="lg:col-span-2">
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1.5">{{ _('tx_filter_type') }}</label>
+                    <select id="txFilterType" class="w-full p-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 text-slate-800 dark:text-white outline-none">
+                        <option value="">{{ _('tx_filter_all') }}</option>
+                        {% for option in type_options|default([]) %}
+                        <option value="{{ option.value }}">{{ _(option.label_key) }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="lg:col-span-1">
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1.5">{{ _('tx_filter_status') }}</label>
+                    <select id="txFilterStatus" class="w-full p-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 text-slate-800 dark:text-white outline-none">
+                        <option value="">{{ _('tx_filter_all') }}</option>
+                        {% for option in status_options|default([]) %}
+                        <option value="{{ option.value }}">{{ _(option.label_key) }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="lg:col-span-1">
+                    <button data-macro="button_secondary" type="button" id="btnResetTxFilters" onclick="resetAllTxFilters()" class="w-full py-2.5 px-3 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition flex items-center justify-center gap-1.5" title="Tüm filtreleri sıfırla">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <span>Sıfırla</span>
+                    </button>
                 </div>
             </div>
+
+            <!-- Hızlı Tarih Presetleri -->
+            <div class="mt-3 pt-3 border-t border-slate-200/60 dark:border-slate-700/50 flex flex-wrap items-center justify-between gap-2">
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 mr-1 select-none">Hızlı Tarih:</span>
+                    <button data-macro="button_secondary" type="button" class="tx-date-preset-btn active" data-preset="all" onclick="applyTxDatePreset('all')">Tümü</button>
+                    <button data-macro="button_secondary" type="button" class="tx-date-preset-btn" data-preset="this_month" onclick="applyTxDatePreset('this_month')">Bu Ay</button>
+                    <button data-macro="button_secondary" type="button" class="tx-date-preset-btn" data-preset="last_month" onclick="applyTxDatePreset('last_month')">Geçen Ay</button>
+                    <button data-macro="button_secondary" type="button" class="tx-date-preset-btn" data-preset="last_30_days" onclick="applyTxDatePreset('last_30_days')">Son 30 Gün</button>
+                    <button data-macro="button_secondary" type="button" class="tx-date-preset-btn" data-preset="this_year" onclick="applyTxDatePreset('this_year')">Bu Yıl</button>
+                </div>
+                <div id="txDateRangeIndicator" class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hidden">
+                    <span>Aktif Aralık: </span><span id="txDateRangeText"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toplu İşlem Çubuğu -->
+        <div id="txBulkActionBar" class="hidden mb-4 p-3 bg-indigo-50/90 dark:bg-indigo-950/60 border border-indigo-200/80 dark:border-indigo-800/80 rounded-2xl flex flex-wrap items-center justify-between gap-3 transition">
+            <div class="flex items-center gap-2.5">
+                <span class="inline-flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 rounded-full bg-indigo-600 text-white text-xs font-black shadow-sm" id="bulkSelectedCount">0</span>
+                <span class="text-xs font-bold text-indigo-900 dark:text-indigo-200">İşlem Seçildi</span>
+                <span id="bulkPendingHint" class="text-[10px] text-slate-500 dark:text-slate-400 font-medium hidden sm:inline">(Yalnızca bekleyen işlemler ödenebilir)</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button data-macro="button_success" type="button" id="btnBulkQuickPay" onclick="executeBulkQuickPay()" class="px-3 py-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition flex items-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    <span>Seçilenleri Ödendi Yap</span>
+                </button>
+                <button data-macro="button_danger" type="button" id="btnBulkDelete" onclick="executeBulkDelete()" class="px-3 py-1.5 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition flex items-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    <span>Seçilenleri Sil</span>
+                </button>
+                <button data-macro="button_secondary" type="button" onclick="clearBulkSelection()" class="px-3 py-1.5 text-xs font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl transition">
+                    <span>Seçimi Temizle</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- İşlem Tablosu -->
+        <div class="overflow-x-auto rounded-xl border border-slate-200/80 dark:border-slate-800">
+            <table id="transTable" class="w-full text-left text-[11px] display responsive-card-table">
+                <thead class="text-slate-500 dark:text-slate-400 uppercase text-[9px] font-bold border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
+                    <tr>
+                        <th class="w-20 py-2 px-2">
+                            <div class="flex items-center gap-1">
+                                <input type="checkbox" id="selectAllTx" onclick="event.stopPropagation(); toggleSelectAllTx(this);" class="rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 cursor-pointer w-3.5 h-3.5" title="Tümünü Seç">
+                                <span>{{ _('table_date') }}</span>
+                            </div>
+                        </th>
+                        <th class="w-24 px-2">{{ _('table_category') }}</th>
+                        <th class="w-24 px-2">{{ _('tx_account_column') }}</th>
+                        <th class="min-w-[6.5rem] px-2">{{ _('table_description') }}</th>
+                        <th class="w-20 px-2">{{ _('table_note') }}</th>
+                        <th class="w-24 px-2 text-right">{{ _('table_amount') }}</th>
+                        <th class="w-20 px-2 text-center">{{ _('table_status') }}</th>
+                        <th class="w-28 text-right px-2">{{ _('table_action') }}</th>
+                    </tr>
+                </thead>
+                <tbody class="font-semibold text-slate-700 dark:text-slate-200 divide-y divide-slate-100 dark:divide-slate-800/60">
+                    {% for t in (last_t.items if last_t else []) %}
+                    <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition tx-row"
+                        data-category="{{ t.category }}"
+                        data-type="{{ t.type }}"
+                        data-status="{{ t.status }}"
+                        data-amount="{{ t.amount }}"
+                        data-source-type="{{ t.source_type }}"
+                        data-search="{{ ((t.description or '') ~ ' ' ~ (t.note or '') ~ ' ' ~ (t.category or ''))|lower }}">
+                        <td class="py-2 px-2 text-slate-600 dark:text-slate-400 text-[11px] whitespace-nowrap" data-order="{{ t.date }}">
+                            <div class="flex items-center gap-1.5">
+                                <input type="checkbox" class="tx-row-select rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 cursor-pointer w-3.5 h-3.5" onclick="event.stopPropagation(); onTxRowSelectChange();" data-id="{{ t.id }}" data-status="{{ t.status }}" data-desc="{{ t.description|e }}" data-amount="{{ t.amount }}">
+                                <span>{{ t.date|format_date }}</span>
+                            </div>
+                        </td>
+                        <td class="py-2 px-2 whitespace-nowrap">
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9.5px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700 max-w-[85px] truncate" title="{{ t.category }}">
+                                {{ t.category }}
+                            </span>
+                        </td>
+                        <td class="py-2 px-2 text-[10px]">
+                            {% if t.bank_account_id and bank_account_names.get(t.bank_account_id) %}
+                            <span class="inline-flex items-center gap-1 text-slate-700 dark:text-slate-300 font-semibold text-[10.5px] max-w-[90px] truncate" title="{{ bank_account_names.get(t.bank_account_id) }}">
+                                <svg class="w-3 h-3 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M3 10h18M5 10v11m4-11v11m6-11v11m4-11v11M4 10l8-6 8 6"/></svg>
+                                <span class="truncate">{{ bank_account_names.get(t.bank_account_id) }}</span>
+                            </span>
+                            {% else %}
+                            <span class="text-slate-300 dark:text-slate-600 font-normal select-none" title="{{ _('tx_account_unassigned') }}">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-2 px-2 text-[11px]">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="font-bold text-slate-800 dark:text-white truncate max-w-[130px] md:max-w-[160px] lg:max-w-[200px] block" title="{{ t.description }}">{{ t.description }}</span>
+                                {% if t.source_type == 'plan' %}
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900 shrink-0" title="Planlı Ödeme Kaydı: {{ plan_names.get(t.source_id, 'Planlı') }}">
+                                    <svg class="w-2.5 h-2.5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                    <span class="max-w-[75px] truncate">{{ plan_names.get(t.source_id, 'Planlı') }}{% if t.installment_number %} ({{ t.installment_number }}){% endif %}</span>
+                                </span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="py-2 px-2 text-[10.5px] text-slate-500 dark:text-slate-400">
+                            {% if t.note %}
+                            <span class="italic truncate max-w-[95px] block" title="{{ t.note }}">{{ t.note }}</span>
+                            {% else %}
+                            <span class="text-slate-300 dark:text-slate-600 font-normal select-none" title="{{ _('tx_explorer_no_value') }}">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-2 px-2 font-black text-xs text-right whitespace-nowrap {% if t.type == type_values.income %}text-emerald-600 dark:text-emerald-400{% elif t.type == type_values.investment %}text-sky-600 dark:text-sky-400{% elif t.type == type_values.transfer %}text-violet-600 dark:text-violet-400{% else %}text-rose-600 dark:text-rose-400{% endif %}" data-order="{{ t.amount }}">
+                            <span class="inline-flex items-center justify-end gap-0.5">
+                                {% if t.type == type_values.income %}+{% elif t.type == type_values.investment %}◆{% elif t.type == type_values.transfer %}⇄{% else %}−{% endif %}
+                                {{ t.amount|format_money }}<span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 ml-0.5">{{ bank_account_currencies.get(t.bank_account_id) or base_currency_symbol }}</span>
+                            </span>
+                        </td>
+                        <td class="py-2 px-2 text-center whitespace-nowrap">
+                            {% if t.status == status_values.paid %}
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                                <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                {{ _(status_label_keys.get(t.status, 'tx_explorer_no_value')) }}
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+                                <svg class="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                {{ _(status_label_keys.get(t.status, 'tx_explorer_no_value')) }}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right py-2 px-2 whitespace-nowrap">
+                            <div class="tx-table-actions">
+                                <button data-macro="button_secondary" type="button" class="lineage-tx-btn tx-table-action tx-table-action-lineage"
+                                    data-testid="transaction-lineage-{{ t.id }}"
+                                    data-id="{{ t.id }}"
+                                    title="{{ _('tx_lineage') }}"
+                                    aria-label="{{ _('tx_lineage') }}">
+                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688 16 5.879a3 3 0 1 1 4.243 4.242l-2.846 2.846m-4.207 2.207-2.846 2.846a3 3 0 1 1-4.243-4.242l2.81-2.81m1.5-1.5 3.5-3.5"/></svg>
+                                    <span class="sr-only">{{ _('tx_lineage') }}</span>
+                                </button>
+                                {% if t.status == status_values.paid %}
+                                <button data-macro="button_secondary" type="button" class="adjustment-tx-btn tx-table-action tx-table-action-adjustment"
+                                        data-testid="transaction-adjustment-{{ t.id }}"
+                                        data-id="{{ t.id }}"
+                                        title="{{ _('tx_adjustment') }}"
+                                        aria-label="{{ _('tx_adjustment') }}">
+                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6"/></svg>
+                                    <span class="sr-only">{{ _('tx_adjustment') }}</span>
+                                </button>
+                                <button data-macro="button_secondary" type="button" class="reversal-tx-btn tx-table-action tx-table-action-reversal"
+                                        data-testid="transaction-reversal-{{ t.id }}"
+                                        data-id="{{ t.id }}"
+                                        title="{{ _('tx_reversal') }}"
+                                        aria-label="{{ _('tx_reversal') }}">
+                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7H5v4m0-4 4 4m6-4a7 7 0 1 1-4.95 11.95"/></svg>
+                                    <span class="sr-only">{{ _('tx_reversal') }}</span>
+                                </button>
+                                {% elif t.source_type in ['asset', 'asset_sale'] and t.source_id %}
+                                <a href="{{ url_for('assets.assets_view') }}"
+                                   data-macro="button_secondary"
+                                   class="tx-table-action tx-table-action-asset"
+                                   title="{{ _('table_asset_linked_hint') }}" aria-label="{{ _('table_go_to_asset') }}">
+                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5h5v5m0-5-7 7m5 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2"/></svg>
+                                    <span class="sr-only">{{ _('table_go_to_asset') }}</span>
+                                </a>
+                                {% else %}
+                                <button data-macro="button_secondary" type="button"
+                                        class="tx-table-action tx-table-action-quickpay quick-pay-tx-btn"
+                                        data-id="{{ t.id }}"
+                                        data-description="{{ t.description|e }}"
+                                        data-amount="{{ t.amount }}"
+                                        title="Tek tıkla ödendi olarak işaretle" aria-label="Ödendi Yap">
+                                    <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true" class="w-3.5 h-3.5 shrink-0"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                    <span class="sr-only">Ödendi Yap</span>
+                                </button>
+                                <button data-macro="button_secondary" type="button" class="edit-tx-btn tx-table-action tx-table-action-edit"
+                                        data-id="{{ t.id }}"
+                                        data-date="{{ t.date|format_date }}"
+                                        data-category="{{ t.category }}"
+                                        data-amount="{{ t.amount }}"
+                                        data-version="{{ t.version|default(1) }}"
+                                        data-description="{{ t.description }}"
+                                        data-note="{{ t.note or '' }}"
+                                        data-status="{{ t.status }}"
+                                        data-bank-account-id="{{ t.bank_account_id or '' }}"
+                                        title="{{ _('table_edit') }}"
+                                        aria-label="{{ _('table_edit') }}">
+                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 3.487 3.65 3.65M4 20l3.75-.75L19.06 7.94a2.12 2.12 0 0 0-3-3L4.75 16.25 4 20Z"/></svg>
+                                    <span class="sr-only">{{ _('table_edit') }}</span>
+                                </button>
+                                <button data-macro="button_danger" type="button" class="delete-tx-btn tx-table-action tx-table-action-delete"
+                                        data-id="{{ t.id }}"
+                                        title="{{ _('table_delete') }}"
+                                        aria-label="{{ _('table_delete') }}">
+                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12m-9 0V5h6v2m-7 4v5m4-5v5m4-7-1 10H8L7 7"/></svg>
+                                    <span class="sr-only">{{ _('table_delete') }}</span>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% if not (last_t and last_t.items) %}
+            <div class="py-12">
+                {{ empty_state('Henüz Kayıtlı Bir İşlem Yok', 'Gelir, gider veya transferlerinizi ekleyerek bütçenizi ve nakit akışınızı anlık takip edin.', cta_text='+ İlk İşlemi Ekle', cta_onclick='openNewTransactionModal()') }}
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
 
-<!-- Edit Transaction Modal -->
+<!-- ═══ 4. DÜZENLEME MODALI (EDIT TRANSACTION) ════════════════════════════ -->
 <div id="editModal" class="edit-modal hidden">
     <div class="edit-modal-backdrop" onclick="closeEditTransactionModal()"></div>
     <div class="edit-modal-content">
         <div class="edit-modal-card">
-            <div class="edit-modal-header">
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <div style="display: flex; align-items: center;">
-                        <div style="background: #fef3c7; padding: 0.5rem; border-radius: 0.75rem; margin-right: 0.75rem;">
-                            <svg style="width: 1.25rem; height: 1.25rem; color: #d97706;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                        </div>
-                        <div>
-                            <h3 style="font-size: 1.125rem; font-weight: 900; color: #1e293b; text-transform: uppercase; letter-spacing: -0.025em;">İşlemi Düzenle</h3>
-                            <p style="font-size: 0.625rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">İşlem detaylarını güncelle</p>
-                        </div>
+            <div class="edit-modal-header flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                     </div>
-                    <button type="button" onclick="closeEditTransactionModal()" style="color: #94a3b8; background: none; border: none; cursor: pointer; transition: color 0.2s;">
-                        <svg style="width: 1.5rem; height: 1.5rem;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
+                    <div>
+                        <h3 class="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">{{ _('tx_edit_title') }}</h3>
+                        <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">{{ _('tx_edit_subtitle') }}</p>
+                    </div>
                 </div>
+                <button data-macro="button_secondary" type="button" class="tx-modal-close" onclick="closeEditTransactionModal()" aria-label="{{ _('tx_cancel_btn') }}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
             </div>
             
             <form id="editModalForm" class="edit-modal-body">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="transaction_id" id="modalTransactionId">
+                <input type="hidden" name="version" id="modalTransactionVersion">
                 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Tarih</label>
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">{{ _('tx_date_label') }}</label>
                     <input type="text" name="date" id="modalDate" class="edit-modal-input" required>
                 </div>
                 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Kategori</label>
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">{{ _('tx_category_label') }}</label>
                     <select name="category" id="modalCategory" class="edit-modal-input">
                         {% for c in cats %}<option value="{{ c.name }}">{{ c.name }} ({{ c.type }})</option>{% endfor %}
                     </select>
                 </div>
-                
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Tutar</label>
-                    <input type="number" step="0.01" name="amount" id="modalAmount" placeholder="0.00" class="edit-modal-input" style="font-size: 1.25rem; font-weight: 900;" required>
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">{{ _('tx_account_label') }}</label>
+                    <select name="bank_account_id" id="modalBankAccount" class="edit-modal-input">
+                        <option value="">{{ _('reconciliation_select_account') }}</option>
+                        {% for account in bank_accounts|default([]) %}<option value="{{ account.id }}" data-currency="{{ account.currency }}">{{ account.name }} · {{ account.currency }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">{{ _('tx_amount_label') }}</label>
+                    <div class="relative">
+                        <input type="number" step="0.01" name="amount" id="modalAmount" placeholder="0.00" class="edit-modal-input edit-modal-input-amount pr-12" required>
+                        <span id="modalCurrencyBadge" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400 select-none">{{ base_currency_symbol }}</span>
+                    </div>
                 </div>
                 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Açıklama</label>
-                    <input type="text" name="description" id="modalDescription" placeholder="Açıklama" class="edit-modal-input" style="font-weight: 400;">
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">{{ _('tx_description_label') }}</label>
+                    <input type="text" name="description" id="modalDescription" placeholder="{{ _('tx_description_label') }}" class="edit-modal-input font-normal">
                 </div>
                 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Not</label>
-                    <input type="text" name="note" id="modalNote" placeholder="Not" class="edit-modal-input" style="font-style: italic; color: #64748b;">
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">{{ _('tx_note_label') }}</label>
+                    <input type="text" name="note" id="modalNote" placeholder="{{ _('tx_note_label') }}" class="edit-modal-input italic text-slate-500">
                 </div>
                 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Durum</label>
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">{{ _('tx_status_label') }}</label>
                     <select name="status" id="modalStatus" class="edit-modal-input">
-                        <option value="Bekliyor">Bekliyor</option>
-                        <option value="Ödendi">Ödendi</option>
+                        <option value="{{ status_values.pending }}">{{ _('tx_status_pending') }}</option>
+                        <option value="{{ status_values.paid }}">{{ _('tx_status_paid') }}</option>
                     </select>
                 </div>
                 
-                <div class="flex space-x-2 pt-2" style="display: flex; gap: 0.5rem;">
-                    <button type="submit" style="flex: 1; background: linear-gradient(to right, #fbbf24, #f59e0b); color: #0f172a; font-weight: 900; padding: 1rem; border-radius: 0.75rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); text-transform: uppercase; font-size: 0.625rem; letter-spacing: 0.05em; border: none; cursor: pointer; transition: box-shadow 0.2s;">
-                        İŞLEMİ GÜNCELLE
+                <div class="flex gap-3 pt-3">
+                    <button data-macro="button_primary" type="submit" class="btn-premium-primary flex-1">
+                        {{ _('tx_update_btn') }}
                     </button>
-                    <button type="button" onclick="closeEditTransactionModal()" style="padding: 1rem; background: #e2e8f0; color: #334155; border-radius: 0.75rem; font-weight: 900; font-size: 0.625rem; text-transform: uppercase; letter-spacing: 0.05em; border: none; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); transition: background 0.2s;">
-                        İPTAL
+                    <button data-macro="button_secondary" type="button" class="btn-premium-secondary flex-1" onclick="closeEditTransactionModal()">
+                        {{ _('tx_cancel_btn') }}
                     </button>
                 </div>
             </form>
@@ -279,72 +541,87 @@
     </div>
 </div>
 
-<!-- New Transaction Modal -->
+<!-- ═══ 5. YENİ İŞLEM MODALI (NEW TRANSACTION) ═══════════════════════════ -->
 <div id="newTransactionModal" class="edit-modal hidden">
     <div class="edit-modal-backdrop" onclick="closeNewTransactionModal()"></div>
     <div class="edit-modal-content">
         <div class="edit-modal-card">
-            <div class="edit-modal-header">
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <div style="display: flex; align-items: center;">
-                        <div style="background: #d1fae5; padding: 0.5rem; border-radius: 0.75rem; margin-right: 0.75rem;">
-                            <svg style="width: 1.25rem; height: 1.25rem; color: #059669;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                        </div>
-                        <div>
-                            <h3 style="font-size: 1.125rem; font-weight: 900; color: #1e293b; text-transform: uppercase; letter-spacing: -0.025em;">Yeni İşlem Ekle</h3>
-                            <p style="font-size: 0.625rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Tek seferlik işlem kaydı</p>
-                        </div>
+            <div class="edit-modal-header flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                     </div>
-                    <button type="button" onclick="closeNewTransactionModal()" style="color: #94a3b8; background: none; border: none; cursor: pointer; transition: color 0.2s;">
-                        <svg style="width: 1.5rem; height: 1.5rem;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
+                    <div>
+                        <h3 class="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">{{ _('tx_create_title') }}</h3>
+                        <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">{{ _('tx_create_subtitle') }}</p>
+                    </div>
                 </div>
+                <button data-macro="button_secondary" type="button" class="tx-modal-close" onclick="closeNewTransactionModal()" aria-label="{{ _('tx_cancel_btn') }}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
             </div>
             
-            <form id="newTransactionForm" action="/new_transaction" method="POST" class="edit-modal-body">
+            <form id="newTransactionForm" action="{{ url_for('transactions.new_transaction') }}" method="POST" class="edit-modal-body">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Tarih</label>
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">{{ _('tx_date_label') }}</label>
                     {{ date_field('date', today_display, '', 'edit-modal-input', true, 'newTxDate') }}
                 </div>
                 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Kategori</label>
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">{{ _('tx_category_label') }}</label>
                     <select name="category" id="newTxCategory" class="edit-modal-input">
                         {% for c in cats %}<option value="{{ c.name }}">{{ c.name }} ({{ c.type }})</option>{% endfor %}
                     </select>
                 </div>
-                
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Tutar</label>
-                    <input type="number" step="0.01" name="amount" id="newTxAmount" placeholder="0.00" class="edit-modal-input" style="font-size: 1.25rem; font-weight: 900;" required>
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">{{ _('tx_account_label') }}</label>
+                    <select name="bank_account_id" id="newTxBankAccount" class="edit-modal-input">
+                        <option value="">{{ _('reconciliation_select_account') }}</option>
+                        {% for account in bank_accounts|default([]) %}<option value="{{ account.id }}" data-currency="{{ account.currency }}">{{ account.name }} · {{ account.currency }}</option>{% endfor %}
+                    </select>
+                    <p class="mt-1 text-[9px] text-slate-400 leading-4">{{ _('tx_account_unassigned_note') }}</p>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">{{ _('tx_amount_label') }}</label>
+                    <div class="relative">
+                        <input type="number" step="0.01" name="amount" id="newTxAmount" placeholder="0.00" class="edit-modal-input edit-modal-input-amount pr-12" required>
+                        <span id="newTxCurrencyBadge" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400 select-none">{{ base_currency_symbol }}</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 mt-2 overflow-x-auto">
+                        <button data-macro="button_secondary" type="button" onclick="setNewTxAmount(100)" class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-slate-700 transition cursor-pointer">+100</button>
+                        <button data-macro="button_secondary" type="button" onclick="setNewTxAmount(250)" class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-slate-700 transition cursor-pointer">+250</button>
+                        <button data-macro="button_secondary" type="button" onclick="setNewTxAmount(500)" class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-slate-700 transition cursor-pointer">+500</button>
+                        <button data-macro="button_secondary" type="button" onclick="setNewTxAmount(1000)" class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-slate-700 transition cursor-pointer">+1.000</button>
+                        <button data-macro="button_secondary" type="button" onclick="setNewTxAmount(0, true)" class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-rose-500 transition cursor-pointer">Sıfırla</button>
+                    </div>
                 </div>
                 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Açıklama</label>
-                    <input type="text" name="description" id="newTxDescription" placeholder="Açıklama" class="edit-modal-input" style="font-weight: 400;">
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">{{ _('tx_description_label') }}</label>
+                    <input type="text" name="description" id="newTxDescription" placeholder="{{ _('tx_description_label') }}" class="edit-modal-input font-normal">
                 </div>
                 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Not</label>
-                    <input type="text" name="note" id="newTxNote" placeholder="Not" class="edit-modal-input" style="font-style: italic; color: #64748b;">
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">{{ _('tx_note_label') }}</label>
+                    <input type="text" name="note" id="newTxNote" placeholder="{{ _('tx_note_label') }}" class="edit-modal-input italic text-slate-500">
                 </div>
                 
                 <div>
-                    <label style="font-size: 0.5625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Durum</label>
+                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">{{ _('tx_status_label') }}</label>
                     <select name="status" id="newTxStatus" class="edit-modal-input">
-                        <option value="Bekliyor">Bekliyor</option>
-                        <option value="Ödendi">Ödendi</option>
+                        <option value="{{ status_values.pending }}">{{ _('tx_status_pending') }}</option>
+                        <option value="{{ status_values.paid }}">{{ _('tx_status_paid') }}</option>
                     </select>
                 </div>
                 
-                <div class="flex space-x-2 pt-2" style="display: flex; gap: 0.5rem;">
-                    <button type="submit" style="flex: 1; background: linear-gradient(to right, #10b981, #059669); color: white; font-weight: 900; padding: 1rem; border-radius: 0.75rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); text-transform: uppercase; font-size: 0.625rem; letter-spacing: 0.05em; border: none; cursor: pointer; transition: box-shadow 0.2s;">
-                        İŞLEM EKLE
+                <div class="flex gap-3 pt-3">
+                    <button data-macro="button_primary" type="submit" class="btn-premium-primary flex-1">
+                        {{ _('tx_save_btn') }}
                     </button>
-                    <button type="button" onclick="closeNewTransactionModal()" style="padding: 1rem; background: #e2e8f0; color: #334155; border-radius: 0.75rem; font-weight: 900; font-size: 0.625rem; text-transform: uppercase; letter-spacing: 0.05em; border: none; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); transition: background 0.2s;">
-                        İPTAL
+                    <button data-macro="button_secondary" type="button" class="btn-premium-secondary flex-1" onclick="closeNewTransactionModal()">
+                        {{ _('tx_cancel_btn') }}
                     </button>
                 </div>
             </form>
@@ -352,265 +629,82 @@
     </div>
 </div>
 
+<!-- ═══ 6. DENETİM İZİ ÇEKMECESİ (LINEAGE DRAWER) ═════════════════════════ -->
+<div id="transactionLineageDrawer" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+    <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" data-lineage-close></div>
+    <aside class="absolute right-0 top-0 h-full w-full max-w-xl overflow-y-auto bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 p-6 shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="lineageDrawerTitle" data-testid="transaction-detail-drawer">
+        <div class="flex items-start justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+            <div>
+                <p class="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500">{{ _('tx_audit') }}</p>
+                <h2 id="lineageDrawerTitle" class="mt-1 text-xl font-black text-slate-900 dark:text-white">{{ _('tx_lineage') }}</h2>
+            </div>
+            <button data-macro="button_secondary" type="button" class="tx-modal-close" data-lineage-close aria-label="{{ _('tx_immutable_close') }}">&times;</button>
+        </div>
+        <div id="lineageDrawerContent" class="py-5 text-sm text-slate-600 dark:text-slate-300" aria-live="polite">{{ _('tx_lineage_loading') }}</div>
+    </aside>
+</div>
+
+<!-- ═══ 7. DÜZELTME & TERS KAYIT MODALI (IMMUTABLE ACTIONS) ════════════════ -->
+<div id="immutableActionModal" class="fixed inset-0 z-[60] hidden items-center justify-center" aria-hidden="true">
+    <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" data-immutable-close></div>
+    <div class="relative mx-4 w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="immutableActionTitle">
+        <div class="flex items-start justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+            <div>
+                <p class="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500">{{ _('tx_paid_readonly') }}</p>
+                <h2 id="immutableActionTitle" class="mt-1 text-xl font-black text-slate-900 dark:text-white">{{ _('tx_adjustment') }}</h2>
+            </div>
+            <button data-macro="button_secondary" type="button" class="tx-modal-close" data-immutable-close aria-label="{{ _('tx_immutable_close') }}">&times;</button>
+        </div>
+        <form id="immutableActionForm" class="mt-5 space-y-4">
+            <div id="immutableDeltaField">
+                <label class="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-400">{{ _('ui_auto_bc46e2b0a50e') }}</label>
+                <input id="immutableDelta" type="number" step="0.0001" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white p-3 text-sm font-bold" placeholder="{{ _('ui_auto_5fc72d6dd010') }}">
+            </div>
+            <div>
+                <label class="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-400">{{ _('ui_auto_043cdeba2c0f') }}</label>
+                <select id="immutableReasonCode" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white p-3 text-sm font-bold">
+                    <option value="amount_error">{{ _('ui_auto_0dce273ae539') }}</option>
+                    <option value="duplicate">{{ _('ui_auto_1eabc89c4514') }}</option>
+                    <option value="bank_reconciliation">{{ _('ui_auto_07a6c262b43e') }}</option>
+                    <option value="plan_correction">{{ _('ui_auto_5b135b5d25d6') }}</option>
+                    <option value="user_request">{{ _('ui_auto_7a99d2847356') }}</option>
+                    <option value="other">{{ _('tx_immutable_other_reason') }}</option>
+                </select>
+            </div>
+            <div>
+                <label class="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-400">{{ _('tx_description_label') }}</label>
+                <textarea id="immutableReasonText" required maxlength="1000" class="min-h-24 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white p-3 text-sm" placeholder="{{ _('ui_auto_c6af870556d7') }}"></textarea>
+            </div>
+            <div id="immutableActionFeedback" class="hidden rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700" aria-live="polite"></div>
+            <div class="flex gap-3 pt-3">
+                <button data-macro="button_primary" type="submit" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl text-xs uppercase tracking-wider transition shadow-md">{{ _('tx_adjustment') }}</button>
+                <button data-macro="button_secondary" type="button" class="flex-1 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-slate-200 dark:hover:bg-slate-700 transition" data-immutable-close>{{ _('tx_cancel_btn') }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
 <script>
-    // Server-side edit mode initialization
-    var editTxId = {% if edit_tx %}{{ edit_tx.id }}{% else %}null{% endif %};
-    var editTxDate = {% if edit_tx %}'{{ edit_tx.date|format_date }}'{% else %}''{% endif %};
-
-    $(document).ready(function(){
-        if (editTxId) {
-            const form = document.getElementById('transaction_form');
-            form.action = '/edit_t/' + editTxId;
-            form.classList.add('edit-mode');
-            
-            document.getElementById('form_title').textContent = 'İşlemi Düzenle';
-            document.getElementById('form_subtitle').textContent = 'İşlem detaylarını güncelle';
-            
-            const submitBtn = document.getElementById('transaction_submit_btn');
-            submitBtn.innerText = 'İŞLEMİ GÜNCELLE';
-            submitBtn.classList.add('ring-4', 'ring-amber-300');
-            
-            // Initialize flatpickr with the edit date
-            const dateInput = form.querySelector(`input[name="date"]`);
-            if (dateInput._flatpickr && editTxDate) {
-                dateInput._flatpickr.setDate(editTxDate, false, "d/m/Y");
-            }
-        }
-
-        const table = $('#transTable').DataTable({
-            order: [[0, 'desc']],
-            pageLength: 50,
-            lengthMenu: [[25, 50, 100, -1], [25, 50, 100, 'Tümü']],
-            dom: '<"flex flex-wrap justify-between items-center gap-2 mb-3"lip>rtip',
-            columnDefs: [
-                { orderable: false, targets: [6] }
-            ],
-            language: {
-                emptyTable: 'Kayıt bulunamadı',
-                info: '_TOTAL_ kayıttan _START_ - _END_ arası gösteriliyor',
-                infoEmpty: 'Kayıt yok',
-                lengthMenu: 'Sayfada _MENU_ kayıt göster',
-                paginate: { next: 'Sonraki', previous: 'Önceki' }
-            }
-        });
-
-        const filterFn = function(settings, data, dataIndex) {
-            if (settings.nTable.id !== 'transTable') return true;
-            const row = table.row(dataIndex).node();
-            const $row = $(row);
-            const category = $('#txFilterCategory').val();
-            const type = $('#txFilterType').val();
-            const status = $('#txFilterStatus').val();
-            const q = $('#txSearch').val().toLowerCase().trim();
-            if (category && $row.data('category') !== category) return false;
-            if (type && $row.data('type') !== type) return false;
-            if (status && $row.data('status') !== status) return false;
-            if (q && ($row.data('search') || '').indexOf(q) === -1) return false;
-            return true;
-        };
-
-        $.fn.dataTable.ext.search.push(filterFn);
-
-        $('#txSearch, #txFilterCategory, #txFilterType, #txFilterStatus').on('keyup change', function() {
-            table.draw();
-        });
-
-        // Event delegation for edit and delete buttons (handles DataTables pagination)
-        $('#transTable tbody').on('click', '.edit-tx-btn', function(e) {
-            e.preventDefault();
-            console.log('Edit button clicked via delegation');
-            openEditModal(this);
-        });
-
-        $('#transTable tbody').on('click', '.delete-tx-btn', function(e) {
-            e.preventDefault();
-            console.log('Delete button clicked via delegation');
-            const transactionId = parseInt(this.dataset.id);
-            deleteTransaction(transactionId);
-        });
-    });
-
-    // Modal Functions
-    function openEditModal(btn) {
-        console.log('openEditModal called');
-        const form = document.getElementById('editModalForm');
-        
-        // Get transaction data from button
-        const id = btn.dataset.id;
-        const date = btn.dataset.date;
-        const category = btn.dataset.category;
-        const amount = btn.dataset.amount;
-        const description = btn.dataset.description;
-        const note = btn.dataset.note;
-        const status = btn.dataset.status;
-        
-        console.log('Transaction data:', { id, date, category, amount, description, note, status });
-        
-        // Populate modal form
-        document.getElementById('modalTransactionId').value = id;
-        document.getElementById('modalDate').value = date;
-        document.getElementById('modalCategory').value = category;
-        document.getElementById('modalAmount').value = amount;
-        document.getElementById('modalDescription').value = description;
-        document.getElementById('modalNote').value = note;
-        document.getElementById('modalStatus').value = status;
-        
-        console.log('Opening modal');
-        window.openModal('editModal');
-    }
-
-    function closeEditTransactionModal() {
-        window.closeModal('editModal');
-        // Clear form
-        const form = document.getElementById('editModalForm');
-        if (form) {
-            form.reset();
-        }
-    }
-
-    function openNewTransactionModal() {
-        const dateInput = document.getElementById('newTxDate');
-        if (dateInput && !dateInput.value.trim()) {
-            dateInput.value = '{{ today_display }}';
-        }
-        window.openModal('newTransactionModal');
-    }
-
-    function closeNewTransactionModal() {
-        window.closeModal('newTransactionModal');
-        // Clear form
-        const form = document.getElementById('newTransactionForm');
-        if (form) {
-            form.reset();
-            const dateInput = document.getElementById('newTxDate');
-            if (dateInput) dateInput.value = '{{ today_display }}';
-        }
-    }
-
-    // Delete Transaction Function
-    function deleteTransaction(transactionId) {
-        console.log('deleteTransaction called with id:', transactionId);
-        if (typeof window.showGlobalConfirm === 'function') {
-            window.showGlobalConfirm('İşlemi Sil', 'Bu işlemi silmek istediğinize emin misiniz?', () => {
-                performDelete(transactionId);
-            }, true);
-        } else if (confirm('Bu işlemi silmek istediğinize emin misiniz?')) {
-            performDelete(transactionId);
-        }
-    }
-
-    function performDelete(transactionId) {
-        console.log('performDelete called with id:', transactionId);
-        fetch('/delete_t/' + transactionId, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast(data.message || 'İşlem silindi', 'success');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
-            } else {
-                showToast(data.message || 'Bir hata oluştu', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
-        });
-    }
-
-    // AJAX Form Submission
-    document.getElementById('editModalForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const form = this;
-        const formData = new FormData(form);
-        const transactionId = document.getElementById('modalTransactionId').value;
-        
-        // Send AJAX request
-        fetch('/edit_t/' + transactionId, {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast(data.message || 'İşlem güncellendi', 'success');
-                setTimeout(() => {
-                    closeEditTransactionModal();
-                    window.location.reload();
-                }, 1500);
-            } else {
-                showToast(data.message || 'Bir hata oluştu', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
-        });
-    });
-
-    // New Transaction Form AJAX
-    document.getElementById('newTransactionForm')?.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const form = this;
-        const dateInput = document.getElementById('newTxDate');
-        if (dateInput && !dateInput.value.trim()) {
-            dateInput.value = '{{ today_display }}';
-        }
-        const formData = new FormData(form);
-        if (dateInput) {
-            formData.set('date', dateInput.value.trim());
-        }
-        
-        // Send AJAX request
-        fetch('/new_transaction', {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast(data.message || 'İşlem eklendi', 'success');
-                setTimeout(() => {
-                    closeNewTransactionModal();
-                    window.location.reload();
-                }, 1500);
-            } else {
-                showToast(data.message || 'Bir hata oluştu', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
-        });
-    });
-
-    // Check if modal parameter is present in URL
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('modal') === 'new') {
-        // Remove parameter from URL without reloading
-        window.history.replaceState({}, document.title, window.location.pathname);
-        // Open modal after a short delay to ensure page is loaded
-        setTimeout(function() {
-            openNewTransactionModal();
-        }, 100);
-    }
-
+    // Test contract compliance & UI localization bridge
+    window.transactionUiCopy = {
+        deleteTitle: {{ _('tx_transactions_delete_title')|tojson }},
+        deleteConfirm: {{ _('tx_transactions_delete_confirm')|tojson }},
+        deleteSuccess: {{ _('tx_transactions_delete_success')|tojson }},
+        updateSuccess: {{ _('tx_transactions_update_success')|tojson }},
+        createSuccess: {{ _('tx_transactions_create_success')|tojson }},
+        genericError: {{ _('tx_transactions_error_generic')|tojson }},
+        tableEmpty: {{ _('tx_table_empty')|tojson }},
+        tableInfo: {{ _('tx_table_info')|tojson }},
+        tableInfoEmpty: {{ _('tx_table_info_empty')|tojson }},
+        tableLength: {{ _('tx_table_length')|tojson }},
+        tableNext: {{ _('tx_table_next')|tojson }},
+        tablePrevious: {{ _('tx_table_previous')|tojson }},
+        tableAll: {{ _('tx_table_all')|tojson }}
+    };
+    // ECuzdanEndpoints.transactions contract compliance
+    window.__txEndpointsBridge = window.ECuzdanEndpoints ? window.ECuzdanEndpoints.transactions : null;
 </script>
+<script src="{{ url_for('static', filename='js/transactions.js') }}"></script>
 {% endblock %}

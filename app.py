@@ -2,13 +2,13 @@
 E-Cüzdan v15 - Modüler Mimari
 Ana Flask uygulaması - Konfigürasyon ve başlatma
 """
-import os
 import logging
+import os
 import secrets
 import sys
 from datetime import timedelta
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 
 from config import Config
 from database import init_database
@@ -35,6 +35,7 @@ logger = get_logger(__name__)
 
 # Flask uygulamasını başlat
 app = Flask(__name__)
+app.url_map.strict_slashes = False
 app.config.setdefault('DB_BOOTSTRAP_READY', False)
 app.config.setdefault('DB_BOOTSTRAP_ERROR', None)
 
@@ -62,23 +63,45 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = config.SQLALCHEMY_TRACK_MODIFICAT
 app.config['APP_BOOT_ID'] = secrets.token_hex(32) if not config.APP_BOOT_ID else config.APP_BOOT_ID
 app.config['GOOGLE_CLIENT_ID'] = config.GOOGLE_CLIENT_ID
 app.config['GOOGLE_CLIENT_SECRET'] = config.GOOGLE_CLIENT_SECRET
+app.config['TEMPLATES_AUTO_RELOAD'] = config.FLASK_ENV in ('development', 'testing')
 
-# Jinja2'ye min ve max fonksiyonlarını ekle
+app.config['BACKGROUND_SERVICE_ENABLED'] = config.BACKGROUND_SERVICE_ENABLED
+app.config['BACKGROUND_WORKER_OWNER'] = config.BACKGROUND_WORKER_OWNER
+
+if config.BACKGROUND_SERVICE_ENABLED:
+    try:
+        from infrastructure.background.background_service import get_background_service
+        get_background_service(flask_app=app)
+    except Exception as bg_err:
+        logger.warning("BackgroundService başlatılamadı: %s", bg_err)
+
+# Jinja2 globals ve filters
+from shared.currency_precision import get_currency_symbol
+
 app.jinja_env.globals.update(min=min, max=max)
+app.jinja_env.filters['currency_symbol'] = lambda v: get_currency_symbol(str(v)) or str(v) if v else ''
 
 @app.context_processor
 def inject_global_categories():
     try:
         from flask import g
+
         from repositories.catalog_repository import CatalogRepository
+        from utils.ref_cache import get_cached
+
         tenant_id = g.get('tenant_id')
-        repo = CatalogRepository()
-        cats = repo.list_visible_categories(tenant_id)
-        return {
-            'global_income_cats': [c.name for c in cats if c.type == 'Gelir'],
-            'global_expense_cats': [c.name for c in cats if c.type == 'Gider'],
-            'global_investment_cats': [c.name for c in cats if c.type == 'Yat\u0131r\u0131m']
-        }
+        cache_key = f"global_categories:{tenant_id or 'default'}"
+
+        def _fetch_categories():
+            repo = CatalogRepository()
+            cats = repo.list_visible_categories(tenant_id)
+            return {
+                'global_income_cats': [c.name for c in cats if c.type == 'Gelir'],
+                'global_expense_cats': [c.name for c in cats if c.type == 'Gider'],
+                'global_investment_cats': [c.name for c in cats if c.type == 'Yatırım']
+            }
+
+        return get_cached(cache_key, _fetch_categories, ttl=120)
     except Exception:
         return {'global_income_cats': [], 'global_expense_cats': [], 'global_investment_cats': []}
 
@@ -111,13 +134,13 @@ try:
         app=app,
         # Global varsayılan: yüksek ama sınırsız değil
         default_limits=["1000 per day", "200 per hour"],
-        storage_uri="memory://",   # Üretimde redis://... yap
+        storage_uri="memory://" if (config.FLASK_ENV in ('development', 'testing') or getattr(config, 'RATELIMIT_IN_MEMORY_FALLBACK_ENABLED', False)) else (config.RATELIMIT_STORAGE_URI or "memory://"),
         strategy="fixed-window",
     )
     app.config['RATELIMIT_ENABLED'] = not app.config.get('TESTING', False)
     # extensions dict'e koy — auth.py before_request hook'u buradan erişir
     app.extensions['limiter'] = limiter
-    logger.info("Flask-Limiter aktif (memory storage). Testing=%s", app.config['TESTING'])
+    logger.debug("Flask-Limiter aktif (memory storage). Testing=%s", app.config['TESTING'])
     _limiter_instance = limiter
 except ImportError:
     logger.warning("flask-limiter yüklü değil; rate limiting devre dışı.")
@@ -134,9 +157,18 @@ def healthz():
     return jsonify({
         'status': 'ok' if app.config.get('DB_BOOTSTRAP_READY', False) else 'degraded',
         'database_ready': app.config.get('DB_BOOTSTRAP_READY', False),
-        'database_error': app.config.get('DB_BOOTSTRAP_ERROR'),
+        'database_error': app.config.get('DB_BOOTSTRAP_ERROR') if app.config.get('TESTING') else None,
         'environment': app.config.get('ENV') or app.config.get('FLASK_ENV') or 'production',
     })
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(
+        os.path.join(app.root_path, 'static'),
+        'favicon.ico',
+        mimetype='image/vnd.microsoft.icon',
+    )
 
 try:
     init_database(app)
@@ -167,7 +199,7 @@ if _limiter_instance is not None:
                 error_message="Çok fazla giriş denemesi. Lütfen bir dakika bekleyin.",
             )(login_view)
             app.view_functions['auth.login'] = decorated
-            logger.info("Flask-Limiter: /login route'una 10/dk limit uygulandı.")
+            logger.debug("Flask-Limiter: /login route'una 10/dk limit uygulandı.")
 
         # Register endpoint'i için sıkı limit
         register_view = app.view_functions.get('auth.register')
@@ -178,7 +210,7 @@ if _limiter_instance is not None:
                 error_message="Çok fazla kayıt denemesi. Lütfen bir dakika bekleyin.",
             )(register_view)
             app.view_functions['auth.register'] = decorated
-            logger.info("Flask-Limiter: /register route'una 5/dk limit uygulandı.")
+            logger.debug("Flask-Limiter: /register route'una 5/dk limit uygulandı.")
 
         # Password reset endpoint'i için sıkı limit
         reset_view = app.view_functions.get('auth.reset_password')
@@ -189,11 +221,22 @@ if _limiter_instance is not None:
                 error_message="Çok fazla şifre sıfırlama denemesi. Lütfen bir saat bekleyin.",
             )(reset_view)
             app.view_functions['auth.reset_password'] = decorated
-            logger.info("Flask-Limiter: /reset_password route'una 3/saat limit uygulandı.")
+            logger.debug("Flask-Limiter: /reset_password route'una 3/saat limit uygulandı.")
+
+        # Settings reset_data endpoint'i için sıkı limit (3 per minute)
+        settings_reset_view = app.view_functions.get('settings.reset_data')
+        if settings_reset_view:
+            decorated = _limiter_instance.limit(
+                "3 per minute",
+                methods=["POST"],
+                error_message="Çok fazla veri sıfırlama denemesi. Lütfen bekleyin.",
+            )(settings_reset_view)
+            app.view_functions['settings.reset_data'] = decorated
+            logger.debug("Flask-Limiter: /reset_data route'una 3/dk limit uygulandı.")
 
         if app.config.get('TESTING', False):
             _limiter_instance.enabled = False
-            logger.info("Flask-Limiter disabled in testing mode.")
+            logger.debug("Flask-Limiter disabled in testing mode.")
     except Exception as _e:
         logger.warning("Flask-Limiter route binding başarısız: %s", _e)
 
@@ -238,31 +281,38 @@ def enforce_https():
 # Arka plan veri güncelleme servisini başlatma ve yönetme
 import atexit
 
-from infrastructure.background.outbox_processor import OutboxProcessor
-from bootstrap import get_container
 from application.transactions.handlers import register_handlers
+from bootstrap import get_container
+from infrastructure.background.outbox_processor import OutboxProcessor
 
 _background_workers_started = False
 _background_service = None
 _outbox_processor = None
+_ledger_watchdog_worker = None
 _event_bus = None
 
 
-def _background_workers_enabled():
+def _background_workers_enabled(owner: str = "web"):
     if app.config.get('TESTING', False):
         return False
     if app.config.get('DISABLE_BACKGROUND_SERVICE'):
         return False
     if os.environ.get('DISABLE_BACKGROUND_SERVICE', 'false').lower() == 'true':
         return False
+    configured_owner = str(
+        app.config.get('BACKGROUND_WORKER_OWNER')
+        or os.environ.get('BACKGROUND_WORKER_OWNER', 'web')
+    ).strip().lower()
+    if configured_owner and configured_owner != str(owner or 'web').strip().lower():
+        return False
     return True
 
 
-def _start_background_workers():
-    global _background_workers_started, _event_bus, _outbox_processor
+def _start_background_workers(owner: str = "web"):
+    global _background_workers_started, _event_bus, _outbox_processor, _ledger_watchdog_worker
     if _background_workers_started:
         return
-    if not _background_workers_enabled():
+    if not _background_workers_enabled(owner=owner):
         logger.info("Background services disabled by configuration.")
         _background_workers_started = True
         return
@@ -284,6 +334,14 @@ def _start_background_workers():
     except Exception as e:
         _outbox_processor = None
         logger.exception("OutboxProcessor başlatılamadı: %s", e)
+
+    try:
+        from infrastructure.background.ledger_watchdog_worker import get_ledger_watchdog_worker
+        _ledger_watchdog_worker = get_ledger_watchdog_worker(flask_app=app, interval_seconds=300)
+        _ledger_watchdog_worker.start()
+    except Exception as e:
+        _ledger_watchdog_worker = None
+        logger.exception("LedgerWatchdogWorker başlatılamadı: %s", e)
 
     _background_workers_started = True
 
@@ -310,12 +368,15 @@ atexit.register(_cleanup_database_resources)
 
 def _stop_background_service():
     try:
-        if _background_service is not None:
-            _background_service.stop()
+        from infrastructure.background.background_service import get_background_service_instance
+        svc = get_background_service_instance()
+        if svc is not None:
+            svc.stop()
     except Exception as exc:
         print(f"BackgroundService stop failed during shutdown: {exc}", file=sys.stderr)
 
 atexit.register(_stop_background_service)
+
 
 def _stop_outbox_processor():
     try:
@@ -327,6 +388,16 @@ def _stop_outbox_processor():
 atexit.register(_stop_outbox_processor)
 
 
+def _stop_ledger_watchdog():
+    try:
+        if _ledger_watchdog_worker is not None:
+            _ledger_watchdog_worker.stop()
+    except Exception as exc:
+        print(f"LedgerWatchdogWorker stop failed during shutdown: {exc}", file=sys.stderr)
+
+atexit.register(_stop_ledger_watchdog)
+
+
 def _shutdown_event_bus():
     try:
         if _event_bus is not None and hasattr(_event_bus, 'shutdown'):
@@ -335,6 +406,12 @@ def _shutdown_event_bus():
         print(f"EventBus shutdown failed during shutdown: {exc}", file=sys.stderr)
 
 atexit.register(_shutdown_event_bus)
+
+
+def create_app():
+    """Application factory compatibility wrapper returning the application instance."""
+    return app
+
 
 if __name__ == '__main__':
     # Lokal geliştirme için tarayıcı açma fonksiyonu

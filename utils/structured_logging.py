@@ -6,6 +6,8 @@ import json
 import logging
 from datetime import datetime, timezone
 
+from utils.log_redaction import redact_message, redact_value
+
 
 class JSONFormatter(logging.Formatter):
     """JSON formatında log formatter"""
@@ -24,11 +26,15 @@ class JSONFormatter(logging.Formatter):
         Returns:
             JSON formatında string
         """
+        record_message = record.getMessage()
+        if not getattr(record, '_pii_redacted', False):
+            record_message = redact_message(record_message)
         log_data = {
             'timestamp': datetime.now(timezone.utc).strftime(self.timestamp_format),
             'level': record.levelname,
             'logger': record.name,
-            'message': record.getMessage(),
+            'message': record_message,
+
             'module': record.module,
             'function': record.funcName,
             'line': record.lineno,
@@ -44,16 +50,17 @@ class JSONFormatter(logging.Formatter):
         if hasattr(record, 'request_id') and record.request_id not in (None, '-'):
             log_data['request_id'] = record.request_id
         if hasattr(record, 'tenant_id') and record.tenant_id is not None:
-            log_data['tenant_id'] = record.tenant_id
+            log_data['tenant_id'] = record.tenant_id if getattr(record, '_pii_redacted', False) else redact_value(record.tenant_id, 'tenant_id')
         if hasattr(record, 'user_id') and record.user_id is not None:
-            log_data['user_id'] = record.user_id
+            log_data['user_id'] = record.user_id if getattr(record, '_pii_redacted', False) else redact_value(record.user_id, 'user_id')
 
         # Exception bilgisi ekle (varsa)
         if record.exc_info:
+            exception_message = getattr(record, 'redacted_exception_message', str(record.exc_info[1]))
             log_data['exception'] = {
                 'type': record.exc_info[0].__name__,
-                'message': str(record.exc_info[1]),
-                'traceback': self.formatException(record.exc_info)
+                'message': redact_message(exception_message),
+                'traceback': redact_message(self.formatException(record.exc_info)),
             }
 
         # Extra fields ekle
@@ -63,9 +70,9 @@ class JSONFormatter(logging.Formatter):
                           'lineno', 'funcName', 'created', 'msecs', 'relativeCreated',
                           'thread', 'threadName', 'processName', 'process', 'message',
                           'asctime', 'otel_trace_id', 'otel_span_id',
-                          'request_id', 'tenant_id', 'user_id']:
+                          'request_id', 'tenant_id', 'user_id', 'redacted_exception_message']:
                 if not key.startswith('_'):
-                    log_data[key] = value
+                    log_data[key] = value if getattr(record, '_pii_redacted', False) else redact_value(value, key)
 
         return json.dumps(log_data, default=str, ensure_ascii=False)
 

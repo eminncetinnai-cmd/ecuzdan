@@ -8,7 +8,6 @@ Usage:
 
 from __future__ import annotations
 
-import json
 import os
 import sys
 from pathlib import Path
@@ -122,7 +121,7 @@ def check_otel_packages() -> None:
 
         ok('OTel packages installed')
     except ImportError:
-        warn('OTel packages missing', 'pip install -r requirements-observability.txt')
+        warn('OTel packages missing', 'pip install -r configuration/dependencies/requirements-observability.txt')
 
 
 def check_otel_trace_propagation() -> None:
@@ -132,15 +131,16 @@ def check_otel_trace_propagation() -> None:
     os.environ['DISABLE_BACKGROUND_SERVICE'] = 'true'
 
     try:
-        from opentelemetry import trace
         import logging
+
+        from opentelemetry import trace
     except ImportError:
         warn('trace_id propagation', 'OTel packages missing (install requirements-observability.txt)')
         return
 
     try:
-        from infrastructure.observability.tracing import setup_tracing as init_tracing
         from infrastructure.observability.log_filter import TraceContextFilter
+        from infrastructure.observability.tracing import setup_tracing as init_tracing
     except ImportError as exc:
         warn('trace_id propagation', f'skipped: {exc}')
         return

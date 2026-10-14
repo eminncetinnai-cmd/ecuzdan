@@ -3,9 +3,7 @@ Comprehensive E-to-E Flow Tests for Income, Expense, Investment & Category Manag
 Verifies full CRUD interactions, Category v2 integration, and financial ledger integrity.
 """
 
-import pytest
-from models import Asset, AssetSector, AssetTransaction, Category, Transaction, db
-from repositories.catalog_repository import CatalogRepository
+from models import Asset, AssetSector, Transaction, db
 
 
 def test_income_expense_transaction_crud_flow(app, authenticated_client):
@@ -35,34 +33,37 @@ def test_income_expense_transaction_crud_flow(app, authenticated_client):
         'type': 'Gider',
         'amount': '4500.00',
         'description': 'Ev Kirası ve Fatura',
-        'status': 'Ödendi',
+        # Bekleyen kayıt düzenlenebilir; Ödendi kayıtlar immutable’dır.
+        'status': 'Bekliyor',
         'note': 'Kira'
     }, follow_redirects=True)
     assert res_expense.status_code == 200
 
     tx_expense = Transaction.query.filter_by(description='Ev Kirası ve Fatura').first()
     assert tx_expense is not None
+    expense_id = tx_expense.id
     assert float(tx_expense.amount) == 4500.00
     assert tx_expense.type == 'Gider'
 
     # 3. İşlem Güncelleme (POST /edit_t/<id>)
-    res_update = authenticated_client.post(f'/edit_t/{tx_expense.id}', data={
+    res_update = authenticated_client.post(f'/edit_t/{expense_id}', data={
         'date': '2026-08-05',
         'category': 'Aylık Sabit Gider',
         'amount': '4800.00',
         'description': 'Ev Kirası Güncellendi',
-        'status': 'Ödendi'
+        'status': 'Bekliyor'
     }, follow_redirects=True)
     assert res_update.status_code == 200
 
-    updated_tx = db.session.get(Transaction, tx_expense.id)
+    updated_tx = db.session.get(Transaction, expense_id)
     assert float(updated_tx.amount) == 4800.00
     assert updated_tx.description == 'Ev Kirası Güncellendi'
 
-    # 4. İşlem Silme (GET /delete_t/<id>)
-    res_delete = authenticated_client.get(f'/delete_t/{tx_expense.id}', follow_redirects=True)
+    # 4. İşlem Silme - GET reddedilmeli (405 Method Not Allowed), sadece POST kabul edilmeli
+    assert authenticated_client.get(f'/delete_t/{expense_id}').status_code == 405
+    res_delete = authenticated_client.post(f'/delete_t/{expense_id}', follow_redirects=True)
     assert res_delete.status_code == 200
-    assert db.session.get(Transaction, tx_expense.id) is None or db.session.get(Transaction, tx_expense.id).is_deleted
+    assert db.session.get(Transaction, expense_id) is None or db.session.get(Transaction, expense_id).is_deleted
 
 
 def test_investment_asset_and_cash_sync_flow(app, authenticated_client):

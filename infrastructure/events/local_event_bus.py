@@ -33,9 +33,9 @@ class LocalEventBus(EventBus):
         """Dispatch the event to all registered handlers synchronously."""
         event_type = type(event)
         handlers = self._handlers.get(event_type, [])
-        
+
         logger.info(f"Publishing event: {event.event_name}")
-        
+
         for handler in handlers:
             try:
                 handler(event)

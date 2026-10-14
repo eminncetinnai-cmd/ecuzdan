@@ -6,14 +6,44 @@ Flask uygulaması için konsolide edilmiş auth decorator'ları ve yardımcı fo
 import logging
 from functools import wraps
 
-from flask import flash, g, redirect, session, url_for
+from flask import flash, g, jsonify, redirect, request, session, url_for
 
 # TenantContext integration
 from domain.tenant.context import TenantContext
-from domain.tenant.resolver import resolve_from_request
+from infrastructure.i18n import i18n
 from models import User, db
+from utils.capabilities import Capability, has_capability, has_full_platform_access
 
 logger = logging.getLogger(__name__)
+
+
+def resolve_from_request() -> str | None:
+    """Try common request-based locations for tenant id."""
+    try:
+        if hasattr(request, 'tenant_id') and request.tenant_id:
+            return request.tenant_id
+    except Exception:
+        pass
+    try:
+        header = request.headers.get('X-Tenant-ID') if hasattr(request, 'headers') else None
+        if header:
+            return header
+    except Exception:
+        pass
+    try:
+        arg = request.args.get('tenant_id') if hasattr(request, 'args') else None
+        if arg:
+            return arg
+    except Exception:
+        pass
+    try:
+        if g is not None:
+            val = getattr(g, 'tenant_id', None)
+            if val:
+                return val
+    except Exception:
+        pass
+    return None
 
 
 def login_required(f):
@@ -40,13 +70,13 @@ def require_role(*roles):
             if 'user_id' not in session:
                 return redirect(url_for('auth.login'))
 
-            user = db.session.get(User, session['user_id'])
+            user = get_current_user()
             if not user:
-                flash('Kullanıcı bulunamadı.', 'error')
+                flash(i18n.gettext("ui_auto_fd71ebc8847d"), 'error')
                 return redirect(url_for('auth.login'))
 
-            if user.role not in roles:
-                flash('Bu sayfaya erişim yetkiniz yok.', 'error')
+            if user.role not in roles and not has_full_platform_access(user):
+                flash(i18n.gettext("ui_auto_4ee468fbbd2b"), 'error')
                 return redirect(url_for('dashboard.index'))
 
             return f(*args, **kwargs)
@@ -67,6 +97,8 @@ def get_current_user():
 
     # DB'den çek
     user = db.session.get(User, session['user_id'])
+    if user:
+        g.current_user = user
     return user
 
 
@@ -93,10 +125,18 @@ def set_tenant_context():
             except (AttributeError, RuntimeError):
                 pass
         else:
-            # Kullanıcı silinmiş olabilir
+            # Kullanıcı silinmiş olabilir. HTML akışında login'e yönlendir; API
+            # istemcilerinde redirect yerine makinece işlenebilir 401 dön.
             session.clear()
-            flash('Oturumunuz sonlandırıldı. Lütfen tekrar giriş yapın.', 'warning')
+            if request.endpoint == 'transactions.api_transactions':
+                return jsonify({
+                    'success': False,
+                    'error_code': 'authentication_required',
+                    'message': 'Oturum gerekli.',
+                }), 401
+            flash(i18n.gettext("ui_auto_62da31fe107e"), 'warning')
             return redirect(url_for('auth.login'))
+
     else:
         # No authenticated user — attempt to resolve tenant from request headers/args/g
         try:
@@ -112,11 +152,31 @@ def set_tenant_context():
             pass
 
 
+def capability_required(*capabilities):
+    """Require every named capability for an authenticated request."""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if 'user_id' not in session:
+                return redirect(url_for('auth.login'))
+
+            user = db.session.get(User, session['user_id'])
+            if not user:
+                flash(i18n.gettext("ui_auto_fd71ebc8847d"), 'error')
+                return redirect(url_for('auth.login'))
+
+            if not all(has_capability(user, capability) for capability in capabilities):
+                flash(i18n.gettext("ui_auto_100ea0058791"), 'error')
+                return redirect(url_for('dashboard.index'))
+
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+
 def superadmin_required(f):
-    """
-    Sadece sistem_yoneticisi için shortcut
-    """
-    return require_role('sistem_yoneticisi')(f)
+    """Require Emin-level platform access, including redeemed full-access codes."""
+    return capability_required(Capability.FULL_PLATFORM_ACCESS)(f)
 
 
 def tenant_admin_required(f):

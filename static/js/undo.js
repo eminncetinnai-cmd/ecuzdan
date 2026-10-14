@@ -51,45 +51,74 @@ export function undoLastAction() {
 }
 
 // Show Undo Toast
-export function showUndoToast(message, undoCallback, data = null, duration = 5000) {
+export function showUndoToast(message, undoCallback, data = null, duration = 6000) {
+    if (typeof window.showToast === 'function') {
+        window.showToast(message, 'info', duration, {
+            text: 'Geri Al',
+            onClick: () => {
+                if (typeof undoCallback === 'function') {
+                    try {
+                        undoCallback(data);
+                        window.showToast('İşlem geri alındı', 'success');
+                    } catch (error) {
+                        console.error('Undo failed:', error);
+                        window.showToast('Geri alma başarısız', 'error');
+                    }
+                }
+            }
+        });
+        return;
+    }
+
     const container = document.getElementById('toast-container');
     if (!container) return;
     
     const toast = document.createElement('div');
-    toast.className = 'toast-item bg-slate-800';
+    toast.className = 'toast-item bg-slate-800 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3';
     toast.innerHTML = `
-        <div class="flex items-center gap-3">
-            <span class="text-sm">${message}</span>
-            <button onclick="executeUndo(this)" class="text-emerald-400 font-bold text-xs hover:underline">
-                Geri Al
-            </button>
-        </div>
+        <span class="text-sm font-semibold">${message}</span>
+        <button type="button" class="undo-btn text-emerald-400 font-bold text-xs hover:underline cursor-pointer">
+            Geri Al
+        </button>
     `;
     
-    // Store undo data
-    toast.undoCallback = undoCallback;
-    toast.undoData = data;
+    const btn = toast.querySelector('.undo-btn');
+    if (btn) {
+        btn.addEventListener('click', () => {
+            if (typeof undoCallback === 'function') {
+                try {
+                    undoCallback(data);
+                    if (typeof window.showToast === 'function') {
+                        window.showToast('İşlem geri alındı', 'success');
+                    }
+                } catch (error) {
+                    console.error('Undo failed:', error);
+                }
+            }
+            toast.remove();
+        });
+    }
     
     container.appendChild(toast);
-    
-    // Auto-remove after duration
     setTimeout(() => {
-        if (toast.parentNode) {
-            toast.remove();
-        }
+        if (toast.parentNode) toast.remove();
     }, duration);
 }
 
 // Execute Undo from Toast
-function executeUndo(button) {
+export function executeUndo(button) {
     const toast = button.closest('.toast-item');
     if (toast && toast.undoCallback) {
         try {
             toast.undoCallback(toast.undoData);
-            showToast('İşlem geri alındı', 'success');
+            if (typeof window.showToast === 'function') {
+                window.showToast('İşlem geri alındı', 'success');
+            }
         } catch (error) {
             console.error('Undo failed:', error);
-            showToast('Geri alma başarısız', 'error');
+            if (typeof window.showToast === 'function') {
+                window.showToast('Geri alma başarısız', 'error');
+            }
         }
         toast.remove();
     }
@@ -187,6 +216,10 @@ export function clearRecentlyDeleted() {
 }
 
 // Export for global access
+window.showUndoToast = showUndoToast;
+window.executeUndo = executeUndo;
+window.restoreItem = restoreItem;
+
 window.ECuzdanUndo = {
     addToUndoQueue,
     getUndoQueue,

@@ -1,0 +1,105 @@
+# Production Docker Compose for E-Cüzdan Enterprise Stack
+# Services: Web (Gunicorn), Worker (Background), PostgreSQL 16, Redis 7
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: ecuzdan-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ecuzdan}
+      POSTGRES_USER: ${POSTGRES_USER:-ecuzdan_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_in_production}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ecuzdan_admin} -d ${POSTGRES_DB:-ecuzdan}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecuzdan-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: ecuzdan-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - ecuzdan-net
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ecuzdan-web
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      FLASK_ENV: production
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-ecuzdan_admin}:${POSTGRES_PASSWORD:-change_me_in_production}@db:5432/${POSTGRES_DB:-ecuzdan}
+      REDIS_URL: redis://redis:6379/0
+      RATELIMIT_STORAGE_URI: redis://redis:6379/1
+      SECRET_KEY: ${SECRET_KEY:-generate_a_secure_random_key_here}
+      SESSION_COOKIE_SECURE: "true"
+      SESSION_COOKIE_HTTPONLY: "true"
+      SESSION_COOKIE_SAMESITE: "Lax"
+    volumes:
+      - app_logs:/app/logs
+      - app_backups:/app/backups
+      - app_instance:/app/instance
+    ports:
+      - "5000:5000"
+    networks:
+      - ecuzdan-net
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ecuzdan-worker
+    restart: unless-stopped
+    command: ["python", "worker.py"]
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      FLASK_ENV: production
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-ecuzdan_admin}:${POSTGRES_PASSWORD:-change_me_in_production}@db:5432/${POSTGRES_DB:-ecuzdan}
+      REDIS_URL: redis://redis:6379/0
+      RATELIMIT_STORAGE_URI: redis://redis:6379/1
+      SECRET_KEY: ${SECRET_KEY:-generate_a_secure_random_key_here}
+    volumes:
+      - app_logs:/app/logs
+      - app_backups:/app/backups
+      - app_instance:/app/instance
+    networks:
+      - ecuzdan-net
+
+volumes:
+  postgres_data:
+  redis_data:
+  app_logs:
+  app_backups:
+  app_instance:
+
+networks:
+  ecuzdan-net:
+    driver: bridge

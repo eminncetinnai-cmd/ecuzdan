@@ -3,8 +3,9 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from shared.decimal_precision import to_decimal
 from werkzeug.security import check_password_hash, generate_password_hash
+
+from shared.decimal_precision import to_decimal
 
 if TYPE_CHECKING:
     pass
@@ -33,10 +34,15 @@ class SettingsService:
             self.repository.commit()
         return user
 
-    def change_password(self, user_id, new_password):
+    def change_password(self, user_id, new_password, current_password=None):
         if len(new_password) < 8:
             raise ValueError("Şifre en az 8 karakter olmalıdır.")
         user = self.repository.get_user(user_id)
+        if not user:
+            raise LookupError("Kullanıcı bulunamadı.")
+        if current_password is not None:
+            if not user.password or not check_password_hash(user.password, current_password):
+                raise ValueError("Mevcut şifre hatalı.")
         user.password = generate_password_hash(new_password)
         user.password_changed_at = datetime.now()
         self.repository.commit()
@@ -214,25 +220,25 @@ class SettingsService:
         """
         import logging
         logger = logging.getLogger(__name__)
-        
+
         current_user = self.repository.get_user(current_user_id)
         if not current_user:
             raise PermissionError("Yetkilendirme Başarısız!")
-        
+
         logger.info(
             "Reset data attempt for user %s, has_password_set=%s",
             current_user.username,
             bool(current_user.password),
         )
-        
+
         if not current_user.password:
             # OAuth hesaplarında lokal parola yoktur; şifreyle onay alınamaz.
             raise PermissionError("Bu işlem şifre onayı gerektirir; OAuth hesapları için kullanılamaz.")
-        
+
         if not check_password_hash(current_user.password, password):
             logger.warning(f"Password mismatch for user {current_user.username}")
             raise PermissionError("Yetkilendirme Başarısız! İşlemi onaylamak için şifrenizi doğru girmelisiniz.")
-        
+
         if not self.can_reset_data(current_user):
             raise PermissionError(
                 "Paylaşımlı bir workspace'i yalnızca yöneticisi sıfırlayabilir. "
@@ -242,6 +248,22 @@ class SettingsService:
         # NOT: Commit çağıran route seviyesinde yapılır (transaction bütünlüğü için)
         self.repository.reset_financial_data_for_tenant(current_user.tenant_id)
         return current_user
+
+    def apply_special_code(self, user_id, new_role, code_fingerprint):
+        """Kullanıcının özel kodla rolünü yükseltir ve kullanım kaydını düşer."""
+        user = self.repository.get_user(user_id)
+        if not user:
+            raise LookupError("Kullanıcı bulunamadı.")
+        user.role = new_role
+        user.special_code = code_fingerprint
+        user.special_code_used_at = datetime.now()
+        self.repository.commit()
+        return user
+
+    def commit(self):
+        """Veritabanı oturumundaki bekleyen değişiklikleri onaylar."""
+        self.repository.commit()
+
 
     def rollback(self):
         self.repository.rollback()

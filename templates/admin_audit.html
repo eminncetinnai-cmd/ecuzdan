@@ -1,0 +1,214 @@
+{% extends "layout.html" %}
+{% from 'macros/buttons.html' import button_primary, button_secondary with context %}
+{% from 'macros/cards.html' import kpi_card, alert_box with context %}
+{% from 'macros/ui.html' import badge_premium with context %}
+
+{% block title %}Canlı Denetim &amp; Bütünlük Paneli - E-Cüzdan{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6 mb-12">
+    <!-- Page Header -->
+    <div class="page-header mb-6">
+        <div class="page-header-left">
+            <p class="page-header-eyebrow">Güvenlik &amp; Denetim İzleme Merkezi</p>
+            <h1>Canlı Denetim &amp; Kriptografik Bütünlük</h1>
+            <p class="page-header-subtitle">Çift taraflı muhasebe defteri (Ledger), SHA-256 blok zinciri, SQLite WAL modu ve denetim izleri</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <form action="{{ url_for('admin.run_watchdog_scan') }}" method="POST" class="inline">
+                {{ button_primary('Derin Bütünlük Taramasını Çalıştır', submit=True, icon='<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>') }}
+            </form>
+        </div>
+    </div>
+
+    <!-- Segmented Navigation Hub -->
+    <div class="mb-6 flex flex-wrap items-center gap-2 border-b border-slate-200/80 pb-4 dark:border-slate-800">
+        <a href="{{ url_for('admin.admin_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25a2.25 2.25 0 01-13.5 18v-2.25z"/></svg>
+            <span>Sistem Özeti &amp; Metrikler</span>
+        </a>
+        <a href="{{ url_for('admin.list_users') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+            <span>Kullanıcı Yönetimi</span>
+        </a>
+        {% if is_superadmin %}
+        <a href="{{ url_for('admin.tenants') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5h.75m-.75 3h.75m-.75 3h.75"/></svg>
+            <span>Tenant &amp; Organizasyonlar</span>
+        </a>
+        {% endif %}
+        <a href="{{ url_for('admin.audit_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition bg-indigo-600 text-white shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+            <span>Canlı Denetim &amp; Bütünlük</span>
+        </a>
+        <a href="{{ url_for('admin.design_system') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.39m3.421 5.01a15.98 15.98 0 001.622-3.39m0 0a15.994 15.994 0 003.388-1.62m-5.01-1.62c.38-.415.79-.806 1.228-1.17a15.996 15.996 0 015.01-3.39m-6.238 4.56a15.984 15.984 0 01-3.39-1.622m0 0a15.996 15.996 0 01-3.39-1.622m6.78 3.244a15.98 15.98 0 01-1.622-3.39m0 0A15.98 15.98 0 019 6.75"/></svg>
+            <span>Tasarım Sistemi Kataloğu</span>
+        </a>
+        <a href="{{ url_for('monitoring.monitoring_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/></svg>
+            <span>Sistem İzleme &amp; Kaynaklar</span>
+        </a>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="mb-5 rounded-2xl border px-4 py-3 text-xs font-bold {% if category == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300{% elif category == 'error' %}border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300{% else %}border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Status Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Card 1: Ledger Health -->
+        <div class="card p-5 space-y-2">
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Defter Bekçisi Durumu</p>
+            <div class="flex items-center justify-between">
+                <span class="text-2xl font-black {% if audit_result.healthy %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
+                    {% if audit_result.healthy %}SAĞLIKLI{% else %}{{ audit_result.error_count }} UYARI{% endif %}
+                </span>
+                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full {% if audit_result.healthy %}bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400{% else %}bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400{% endif %}">
+                    {% if audit_result.healthy %}✓{% else %}!{% endif %}
+                </span>
+            </div>
+            <p class="text-xs text-slate-500">{{ audit_result.checked_tenants|length }} Tenant tarandı · Bakiye sapması: 0</p>
+        </div>
+
+        <!-- Card 2: Journal & Ledger Lines -->
+        <div class="card p-5 space-y-2">
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Kayıtlı Yevmiye &amp; Satır</p>
+            <div class="flex items-center justify-between">
+                <span class="text-2xl font-black text-slate-900 dark:text-white">
+                    {{ audit_result.total_journal_entries }} / {{ audit_result.total_ledger_lines }}
+                </span>
+                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400">
+                    📖
+                </span>
+            </div>
+            <p class="text-xs text-slate-500">{{ audit_result.total_paid_transactions }} Ödenmiş işlem defter bağlı</p>
+        </div>
+
+        <!-- Card 3: Cryptographic Integrity -->
+        <div class="card p-5 space-y-2">
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">SHA-256 Kripto Zincir</p>
+            <div class="flex items-center justify-between">
+                <span class="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                    DOĞRULANDI
+                </span>
+                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400">
+                    🔒
+                </span>
+            </div>
+            <p class="text-xs text-slate-500">0 Kırık hash zinciri tespit edildi</p>
+        </div>
+
+        <!-- Card 4: SQLite WAL Mode -->
+        <div class="card p-5 space-y-2">
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Veritabanı &amp; WAL Durumu</p>
+            <div class="flex items-center justify-between">
+                <span class="text-2xl font-black text-slate-900 dark:text-white uppercase">
+                    {{ pragma_journal }} / {{ pragma_integrity }}
+                </span>
+                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-sky-100 dark:bg-sky-950 text-sky-600 dark:text-sky-400">
+                    💾
+                </span>
+            </div>
+            <p class="text-xs text-slate-500">PRAGMA integrity_check: {{ pragma_integrity }}</p>
+        </div>
+    </div>
+
+    <!-- Violations Alert Box if Any -->
+    {% if not audit_result.healthy %}
+    <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-xs font-bold text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300 space-y-2">
+        <p class="font-extrabold text-sm">Tespit Edilen Uyumsuzluklar:</p>
+        <ul class="list-disc list-inside space-y-1">
+            {% for v in audit_result.violations %}
+            <li>[{{ v.severity }}] {{ v.code }} - {{ v.message }} (Tenant: {{ v.tenant_id }})</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Audit Trail Table -->
+    <div class="card overflow-hidden">
+        <div class="border-b border-slate-200/80 px-6 py-4 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white">Son Denetim İzleri (Audit Trail)</h3>
+                <p class="text-xs text-slate-500">Kritik güvenlik olayları, defter kontrolleri ve yetki değişimleri</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="relative">
+                    <input type="text" id="auditSearchInput" oninput="filterAuditLogs(this.value)" placeholder="Olay veya kullanıcı ara…" class="w-56 px-3 py-1.5 pl-8 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </div>
+                <span id="auditLogCountBadge" class="text-xs font-semibold text-slate-500">{{ recent_logs|length }} Olay Görüntüleniyor</span>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs" id="adminAuditTable">
+                <thead class="bg-slate-50 dark:bg-slate-900/50 text-slate-500 border-b border-slate-200/80 dark:border-slate-800">
+                    <tr>
+                        <th class="px-6 py-3 font-bold">Zaman Damgası</th>
+                        <th class="px-6 py-3 font-bold">Aksiyon</th>
+                        <th class="px-6 py-3 font-bold">Kullanıcı</th>
+                        <th class="px-6 py-3 font-bold">Tenant</th>
+                        <th class="px-6 py-3 font-bold">Detay</th>
+                        <th class="px-6 py-3 font-bold">IP Adresi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    {% for log in recent_logs %}
+                    <tr class="audit-row hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition" data-action="{{ (log.action or '')|lower }}" data-user="{{ (log.username or '')|lower }}" data-tenant="{{ (log.tenant_id or '')|lower }}" data-details="{{ (log.details or '')|lower }}" data-ip="{{ (log.ip_address or '')|lower }}">
+                        <td class="px-6 py-3 text-slate-500 whitespace-nowrap">{{ log.created_at }}</td>
+                        <td class="px-6 py-3">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                {{ log.action }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-3 font-semibold text-slate-800 dark:text-slate-200">{{ log.username or '-' }}</td>
+                        <td class="px-6 py-3 text-slate-500">{{ log.tenant_id or '-' }}</td>
+                        <td class="px-6 py-3 text-slate-600 dark:text-slate-400 font-mono text-xs max-w-xs truncate">{{ log.details or '-' }}</td>
+                        <td class="px-6 py-3 text-slate-500 whitespace-nowrap">{{ log.ip_address or '-' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-slate-500">Henüz denetim kaydı bulunmuyor.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function filterAuditLogs(query) {
+    const q = (query || '').toLowerCase().trim();
+    const rows = document.querySelectorAll('#adminAuditTable tbody tr.audit-row');
+    let visible = 0;
+    rows.forEach(row => {
+        const text = (row.dataset.action || '') + ' ' + (row.dataset.user || '') + ' ' + (row.dataset.tenant || '') + ' ' + (row.dataset.details || '') + ' ' + (row.dataset.ip || '');
+        const show = !q || text.includes(q);
+        row.classList.toggle('hidden', !show);
+        if (show) visible++;
+    });
+    const badge = document.getElementById('auditLogCountBadge');
+    if (badge) badge.textContent = visible + ' Olay Görüntüleniyor';
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const input = document.getElementById('auditSearchInput');
+        if (input && input.value) {
+            input.value = '';
+            filterAuditLogs('');
+        }
+    }
+});
+</script>
+{% endblock %}

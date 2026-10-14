@@ -3,8 +3,10 @@ Unit Tests - Category Repository
 Repository for category management
 """
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
+
 from repositories.category_repository import CategoryRepository, TenantCategoryRepository
 
 
@@ -14,9 +16,9 @@ def test_category_repository_init():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = CategoryRepository(database=mock_db)
-    
+
     assert repo.session == mock_session
 
 
@@ -24,7 +26,7 @@ def test_category_repository_init():
 def test_category_repository_imports():
     """Test that CategoryRepository can be imported"""
     from repositories.category_repository import CategoryRepository
-    
+
     assert CategoryRepository is not None
 
 
@@ -32,11 +34,11 @@ def test_category_repository_imports():
 def test_category_repository_module_structure():
     """Test category_repository module structure"""
     import repositories.category_repository as category_repo_module
-    
+
     # Check for expected classes
     assert hasattr(category_repo_module, 'CategoryRepository')
     assert hasattr(category_repo_module, 'TenantCategoryRepository')
-    
+
     # Check for expected imports
     assert hasattr(category_repo_module, 'Category')
     assert hasattr(category_repo_module, 'BaseRepository')
@@ -46,9 +48,9 @@ def test_category_repository_module_structure():
 @pytest.mark.unit
 def test_category_repository_extends_base():
     """Test CategoryRepository extends BaseRepository"""
-    from repositories.category_repository import CategoryRepository
     from repositories.base import BaseRepository
-    
+    from repositories.category_repository import CategoryRepository
+
     assert issubclass(CategoryRepository, BaseRepository)
 
 
@@ -59,12 +61,12 @@ def test_get_category():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_category = Mock()
-    
+
     repo = CategoryRepository(database=mock_db)
     repo.get = Mock(return_value=mock_category)
-    
+
     result = repo.get_category(1)
-    
+
     assert result == mock_category
     repo.get.assert_called_once()
 
@@ -77,13 +79,13 @@ def test_find_category_by_name_with_tenant():
     mock_db.session = mock_session
     mock_category = Mock()
     mock_query = Mock()
-    
+
     repo = CategoryRepository(database=mock_db)
     repo.session.query.return_value = mock_query
     mock_query.filter_by.return_value.filter_by.return_value.first.return_value = mock_category
-    
+
     result = repo.find_category_by_name('Test Category', tenant_id='test_tenant')
-    
+
     assert result == mock_category
 
 
@@ -95,13 +97,13 @@ def test_find_category_by_name_without_tenant():
     mock_db.session = mock_session
     mock_category = Mock()
     mock_query = Mock()
-    
+
     repo = CategoryRepository(database=mock_db)
     repo.session.query.return_value = mock_query
     mock_query.filter_by.return_value.filter_by.return_value.first.return_value = mock_category
-    
+
     result = repo.find_category_by_name('Test Category')
-    
+
     assert result == mock_category
 
 
@@ -113,13 +115,13 @@ def test_find_category_by_code_with_tenant():
     mock_db.session = mock_session
     mock_category = Mock()
     mock_query = Mock()
-    
+
     repo = CategoryRepository(database=mock_db)
     repo.session.query.return_value = mock_query
     mock_query.filter_by.return_value.filter_by.return_value.first.return_value = mock_category
-    
+
     result = repo.find_category_by_code('GLR-6001', tenant_id='test_tenant')
-    
+
     assert result == mock_category
 
 
@@ -131,13 +133,13 @@ def test_find_category_by_code_without_tenant():
     mock_db.session = mock_session
     mock_category = Mock()
     mock_query = Mock()
-    
+
     repo = CategoryRepository(database=mock_db)
     repo.session.query.return_value = mock_query
     mock_query.filter_by.return_value.filter_by.return_value.first.return_value = mock_category
-    
+
     result = repo.find_category_by_code('GLR-6001')
-    
+
     assert result == mock_category
 
 
@@ -149,13 +151,13 @@ def test_get_standard_categories():
     mock_db.session = mock_session
     mock_categories = [Mock()]
     mock_query = Mock()
-    
+
     repo = CategoryRepository(database=mock_db)
     repo.session.query.return_value = mock_query
     mock_query.filter_by.return_value.all.return_value = mock_categories
-    
+
     result = repo.get_standard_categories()
-    
+
     assert result == mock_categories
 
 
@@ -167,13 +169,13 @@ def test_get_categories_by_type_with_tenant():
     mock_db.session = mock_session
     mock_categories = [Mock()]
     mock_query = Mock()
-    
+
     repo = CategoryRepository(database=mock_db)
     repo.session.query.return_value = mock_query
     mock_query.filter_by.return_value.filter_by.return_value.all.return_value = mock_categories
-    
+
     result = repo.get_categories_by_type('Gider', tenant_id='test_tenant')
-    
+
     assert result == mock_categories
 
 
@@ -185,13 +187,13 @@ def test_get_categories_by_type_without_tenant():
     mock_db.session = mock_session
     mock_categories = [Mock()]
     mock_query = Mock()
-    
+
     repo = CategoryRepository(database=mock_db)
     repo.session.query.return_value = mock_query
     mock_query.filter_by.return_value.filter_by.return_value.all.return_value = mock_categories
-    
+
     result = repo.get_categories_by_type('Gider')
-    
+
     assert result == mock_categories
 
 
@@ -203,13 +205,13 @@ def test_get_tenant_categories():
     mock_db.session = mock_session
     mock_categories = [Mock()]
     mock_query = Mock()
-    
+
     repo = CategoryRepository(database=mock_db)
     repo.session.query.return_value = mock_query
     mock_query.filter_by.return_value.all.return_value = mock_categories
-    
+
     result = repo.get_tenant_categories('test_tenant')
-    
+
     assert result == mock_categories
 
 
@@ -220,15 +222,15 @@ def test_add_category():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_category = Mock()
-    
+
     with patch('repositories.category_repository.Category') as mock_category_class:
         mock_category_class.return_value = mock_category
-        
+
         repo = CategoryRepository(database=mock_db)
         repo.add = Mock(return_value=mock_category)
-        
+
         result = repo.add_category(name='Test', type='Gider')
-        
+
         assert result == mock_category
 
 
@@ -239,12 +241,12 @@ def test_delete_category():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_category = Mock()
-    
+
     repo = CategoryRepository(database=mock_db)
     repo.delete = Mock()
-    
+
     repo.delete_category(mock_category)
-    
+
     repo.delete.assert_called_once_with(mock_category)
 
 
@@ -256,13 +258,13 @@ def test_is_category_name_exists_with_tenant():
     mock_db.session = mock_session
     mock_category = Mock()
     mock_query = Mock()
-    
+
     repo = CategoryRepository(database=mock_db)
     repo.session.query.return_value = mock_query
     mock_query.filter_by.return_value.filter_by.return_value.first.return_value = mock_category
-    
+
     result = repo.is_category_name_exists('Test Category', tenant_id='test_tenant')
-    
+
     assert result is True
 
 
@@ -274,13 +276,13 @@ def test_is_category_name_exists_without_tenant():
     mock_db.session = mock_session
     mock_category = Mock()
     mock_query = Mock()
-    
+
     repo = CategoryRepository(database=mock_db)
     repo.session.query.return_value = mock_query
     mock_query.filter_by.return_value.filter_by.return_value.first.return_value = mock_category
-    
+
     result = repo.is_category_name_exists('Test Category')
-    
+
     assert result is True
 
 
@@ -291,13 +293,13 @@ def test_is_category_name_exists_not_found():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_query = Mock()
-    
+
     repo = CategoryRepository(database=mock_db)
     repo.session.query.return_value = mock_query
     mock_query.filter_by.return_value.filter_by.return_value.first.return_value = None
-    
+
     result = repo.is_category_name_exists('Test Category', tenant_id='test_tenant')
-    
+
     assert result is False
 
 
@@ -309,13 +311,13 @@ def test_is_category_name_exists_with_exclude_id():
     mock_db.session = mock_session
     mock_category = Mock()
     mock_query = Mock()
-    
+
     repo = CategoryRepository(database=mock_db)
     repo.session.query.return_value = mock_query
     mock_query.filter_by.return_value.filter_by.return_value.filter.return_value.first.return_value = mock_category
-    
+
     result = repo.is_category_name_exists('Test Category', tenant_id='test_tenant', exclude_id=1)
-    
+
     assert result is True
 
 
@@ -327,13 +329,13 @@ def test_is_category_code_exists_with_tenant():
     mock_db.session = mock_session
     mock_category = Mock()
     mock_query = Mock()
-    
+
     repo = CategoryRepository(database=mock_db)
     repo.session.query.return_value = mock_query
     mock_query.filter_by.return_value.filter_by.return_value.first.return_value = mock_category
-    
+
     result = repo.is_category_code_exists('GLR-6001', tenant_id='test_tenant')
-    
+
     assert result is True
 
 
@@ -345,13 +347,13 @@ def test_is_category_code_exists_without_tenant():
     mock_db.session = mock_session
     mock_category = Mock()
     mock_query = Mock()
-    
+
     repo = CategoryRepository(database=mock_db)
     repo.session.query.return_value = mock_query
     mock_query.filter_by.return_value.filter_by.return_value.first.return_value = mock_category
-    
+
     result = repo.is_category_code_exists('GLR-6001')
-    
+
     assert result is True
 
 
@@ -362,13 +364,13 @@ def test_is_category_code_exists_not_found():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_query = Mock()
-    
+
     repo = CategoryRepository(database=mock_db)
     repo.session.query.return_value = mock_query
     mock_query.filter_by.return_value.filter_by.return_value.first.return_value = None
-    
+
     result = repo.is_category_code_exists('GLR-6001', tenant_id='test_tenant')
-    
+
     assert result is False
 
 
@@ -380,13 +382,13 @@ def test_is_category_code_exists_with_exclude_id():
     mock_db.session = mock_session
     mock_category = Mock()
     mock_query = Mock()
-    
+
     repo = CategoryRepository(database=mock_db)
     repo.session.query.return_value = mock_query
     mock_query.filter_by.return_value.filter_by.return_value.filter.return_value.first.return_value = mock_category
-    
+
     result = repo.is_category_code_exists('GLR-6001', tenant_id='test_tenant', exclude_id=1)
-    
+
     assert result is True
 
 
@@ -398,9 +400,9 @@ def test_tenant_category_repository_init():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = TenantCategoryRepository(database=mock_db)
-    
+
     assert repo.session == mock_session
 
 
@@ -408,16 +410,16 @@ def test_tenant_category_repository_init():
 def test_tenant_category_repository_imports():
     """Test that TenantCategoryRepository can be imported"""
     from repositories.category_repository import TenantCategoryRepository
-    
+
     assert TenantCategoryRepository is not None
 
 
 @pytest.mark.unit
 def test_tenant_category_repository_extends_base():
     """Test TenantCategoryRepository extends TenantScopedRepository"""
-    from repositories.category_repository import TenantCategoryRepository
     from repositories.base import TenantScopedRepository
-    
+    from repositories.category_repository import TenantCategoryRepository
+
     assert issubclass(TenantCategoryRepository, TenantScopedRepository)
 
 
@@ -430,7 +432,7 @@ def test_get_categories_for_tenant():
     mock_tenant_categories = [Mock()]
     mock_standard_categories = [Mock()]
     mock_query = Mock()
-    
+
     repo = TenantCategoryRepository(database=mock_db)
     repo.session.query.return_value = mock_query
     repo.require_tenant_id = Mock(return_value='test_tenant')
@@ -438,9 +440,9 @@ def test_get_categories_for_tenant():
         Mock(all=Mock(return_value=mock_tenant_categories)),
         Mock(all=Mock(return_value=mock_standard_categories))
     ]
-    
+
     result = repo.get_categories_for_tenant('test_tenant')
-    
+
     assert result == mock_tenant_categories + mock_standard_categories
 
 
@@ -452,14 +454,14 @@ def test_get_tenant_specific_categories():
     mock_db.session = mock_session
     mock_categories = [Mock()]
     mock_query = Mock()
-    
+
     repo = TenantCategoryRepository(database=mock_db)
     repo.session.query.return_value = mock_query
     repo.require_tenant_id = Mock(return_value='test_tenant')
     mock_query.filter_by.return_value.all.return_value = mock_categories
-    
+
     result = repo.get_tenant_specific_categories('test_tenant')
-    
+
     assert result == mock_categories
 
 
@@ -471,14 +473,14 @@ def test_find_category_for_tenant_tenant_specific():
     mock_db.session = mock_session
     mock_category = Mock()
     mock_query = Mock()
-    
+
     repo = TenantCategoryRepository(database=mock_db)
     repo.session.query.return_value = mock_query
     repo.require_tenant_id = Mock(return_value='test_tenant')
     mock_query.filter_by.return_value.first.return_value = mock_category
-    
+
     result = repo.find_category_for_tenant('Test Category', 'test_tenant')
-    
+
     assert result == mock_category
 
 
@@ -490,7 +492,7 @@ def test_find_category_for_tenant_standard():
     mock_db.session = mock_session
     mock_category = Mock()
     mock_query = Mock()
-    
+
     repo = TenantCategoryRepository(database=mock_db)
     repo.session.query.return_value = mock_query
     repo.require_tenant_id = Mock(return_value='test_tenant')
@@ -499,9 +501,9 @@ def test_find_category_for_tenant_standard():
         Mock(first=Mock(return_value=None)),
         Mock(first=Mock(return_value=mock_category))
     ]
-    
+
     result = repo.find_category_for_tenant('Test Category', 'test_tenant')
-    
+
     assert result == mock_category
 
 
@@ -512,7 +514,7 @@ def test_find_category_for_tenant_not_found():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_query = Mock()
-    
+
     repo = TenantCategoryRepository(database=mock_db)
     repo.session.query.return_value = mock_query
     repo.require_tenant_id = Mock(return_value='test_tenant')
@@ -521,9 +523,9 @@ def test_find_category_for_tenant_not_found():
         Mock(first=Mock(return_value=None)),
         Mock(first=Mock(return_value=None))
     ]
-    
+
     result = repo.find_category_for_tenant('Test Category', 'test_tenant')
-    
+
     assert result is None
 
 
@@ -534,12 +536,12 @@ def test_is_valid_category_for_tenant_true():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_category = Mock()
-    
+
     repo = TenantCategoryRepository(database=mock_db)
     repo.find_category_for_tenant = Mock(return_value=mock_category)
-    
+
     result = repo.is_valid_category_for_tenant('Test Category', 'test_tenant')
-    
+
     assert result is True
 
 
@@ -549,10 +551,10 @@ def test_is_valid_category_for_tenant_false():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = TenantCategoryRepository(database=mock_db)
     repo.find_category_for_tenant = Mock(return_value=None)
-    
+
     result = repo.is_valid_category_for_tenant('Test Category', 'test_tenant')
-    
+
     assert result is False

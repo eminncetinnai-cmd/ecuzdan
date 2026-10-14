@@ -1,239 +1,321 @@
 {% extends "layout.html" %}
-{% block content %}
-<style>
-    .ff-card { transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
-    .ff-card:hover { transform: translateY(-2px); box-shadow: 0 16px 48px -20px rgba(0,0,0,0.12); }
-    .progress-bar { height: 10px; border-radius: 999px; background: #e2e8f0; overflow: hidden; }
-    .progress-fill { height: 100%; border-radius: 999px; transition: width 1s ease-out; }
-    .criterion-success { border-left: 4px solid #10b981; }
-    .criterion-warning { border-left: 4px solid #f59e0b; }
-    .criterion-danger { border-left: 4px solid #ef4444; }
-    .milestone-done { opacity: 1; }
-    .milestone-pending { opacity: 0.45; }
-    .stage-step { width: 2rem; height: 2rem; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; }
-</style>
 
-<div class="max-w-6xl mx-auto">
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static_asset_url('css/financial_freedom.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-8 pb-12">
     <!-- Header -->
-    <div class="mb-8 flex flex-wrap justify-between items-end gap-4">
-        <div>
-            <h2 class="text-4xl font-black text-slate-900 tracking-tighter uppercase leading-none bg-gradient-to-r from-slate-900 via-amber-600 to-slate-900 bg-clip-text text-transparent">Finansal Özgürlük</h2>
-            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">FIRE · Trinity Study · YMYL — verilerinize dayalı kişisel değerlendirme</p>
+    <div class="page-header mb-6">
+        <div class="page-header-left">
+            <p class="page-header-eyebrow">FIRE & Finansal Özgürlük · Sürdürülebilir Bağımsızlık</p>
+            <h1>Finansal Özgürlük</h1>
+            <p class="page-header-subtitle">{{ _('ui_auto_bab5dc7979dc') }}</p>
         </div>
-        <div class="bg-gradient-to-tr from-amber-500 to-amber-600 text-white px-6 py-4 rounded-2xl shadow-lg flex items-center gap-3">
+        <div class="bg-gradient-to-tr from-amber-500 to-amber-600 dark:from-amber-600 dark:to-amber-700 text-white px-5 py-3.5 rounded-2xl shadow-md flex items-center gap-3">
             <span class="text-2xl">{{ analysis.freedom_stage.icon }}</span>
             <div>
-                <p class="text-[9px] font-bold uppercase opacity-80 tracking-wider">Mevcut Aşama</p>
-                <p class="text-sm font-black uppercase">{{ analysis.freedom_stage.name }}</p>
+                <p class="text-[9px] font-bold uppercase opacity-85 tracking-wider">{{ _('ui_auto_a29b5d7f1688') }}</p>
+                <p class="text-sm font-black uppercase tracking-tight">{{ analysis.freedom_stage.name }}</p>
             </div>
         </div>
     </div>
 
+    <!-- Segmented Navigation Hub -->
+    <div class="mb-6 flex flex-wrap items-center gap-2 border-b border-slate-200/80 pb-4 dark:border-slate-800">
+        <a href="{{ url_for('analysis.analysis_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'analysis.analysis_dashboard' or request.path.startswith('/analysis') %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            <span>Finansal Sağlık &amp; Karne</span>
+        </a>
+        <a href="{{ url_for('dashboard.financial_freedom') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'dashboard.financial_freedom' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <span>Finansal Özgürlük (FIRE)</span>
+        </a>
+        <a href="{{ url_for('strategy.strategy') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'strategy.strategy' or request.path.startswith('/strategy') %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            <span>Portföy Stratejisi</span>
+        </a>
+        <a href="{{ url_for('dashboard.financial_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'dashboard.financial_dashboard' or request.path.startswith('/financial_dashboard') %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <span>Piyasa &amp; Kantitatif Analiz</span>
+        </a>
+        <a href="{{ url_for('global_ratios.global_ratios_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'global_ratios.global_ratios_dashboard' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>Küresel Rasyolar (Makro)</span>
+        </a>
+        <a href="{{ url_for('central_bank_reserves.central_bank_reserves_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'central_bank_reserves.central_bank_reserves_dashboard' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            <span>TCMB Rezervleri &amp; Altın</span>
+        </a>
+    </div>
+
     {% if analysis.is_financially_free %}
-    <div class="ff-card premium-card p-6 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 mb-8">
+    <div class="ff-card premium-card p-6 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl shadow-sm">
         <div class="flex items-center gap-4">
             <span class="text-4xl">🏆</span>
             <div>
-                <h3 class="font-black text-lg text-emerald-900 uppercase">Finansal Bağımsızlığa Ulaştınız</h3>
-                <p class="text-sm text-emerald-700 mt-1">Portföyünüz 4% güvenli çekim kuralına göre yaşam giderlerinizi sürdürebilir.</p>
+                <h3 class="font-black text-lg text-emerald-900 dark:text-emerald-200 uppercase">{{ _('ui_auto_bc5359916017') }}</h3>
+                <p class="text-sm text-emerald-700 dark:text-emerald-300 mt-1">{{ _('ui_auto_39896b8d99a9') }}</p>
             </div>
         </div>
     </div>
     {% endif %}
 
-    <!-- FI Progress Hero -->
-    <div class="ff-card premium-card p-8 bg-white/85 border-t-4 border-amber-500 mb-8 shadow-sm">
+    <!-- FI Progress Hero (Ana Odak Kartı) -->
+    <div class="ff-card premium-card p-6 md:p-8 bg-white/90 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl border-t-4 border-amber-500 shadow-sm">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
             <div class="lg:col-span-2">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">FI Hedefi — 25× Yıllık Gider (4% Kuralı)</p>
-                <div class="flex flex-wrap items-end gap-3 mb-3">
-                    <p class="text-3xl font-black text-slate-900">{{ analysis.fi_progress_pct }}%</p>
-                    <p class="text-sm text-slate-500 pb-1">tamamlandı</p>
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-amber-500">🎯</span>
+                    <p class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">{{ _('ui_auto_5113cb06727d') }}</p>
                 </div>
-                <div class="progress-bar mb-2">
-                    <div class="progress-fill bg-gradient-to-r from-amber-400 to-emerald-500" style="width: {{ min(analysis.fi_progress_pct, 100) }}%"></div>
+                <div class="flex flex-wrap items-baseline gap-3 mb-4">
+                    <p class="text-4xl font-black text-slate-900 dark:text-white tracking-tight">%{{ analysis.fi_progress_pct }}</p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">{{ _('ui_auto_530f5bb21331') }}</p>
                 </div>
-                <div class="flex flex-wrap justify-between text-[10px] font-bold text-slate-500 gap-2">
-                    <span>Mevcut: {{ (analysis.total_assets + analysis.total_cash)|format_money }} ₺</span>
-                    <span>Hedef: {{ analysis.fi_number|format_money }} ₺</span>
+                <div class="ff-progress-bar mb-3" role="progressbar" aria-valuenow="{{ min(analysis.fi_progress_pct, 100) }}" aria-valuemin="0" aria-valuemax="100" aria-label="Finansal Özgürlük İlerlemesi">
+                    <div class="ff-progress-fill bg-gradient-to-r from-amber-400 via-emerald-400 to-emerald-500" style="width: {{ min(analysis.fi_progress_pct, 100) }}%"></div>
+                </div>
+                <div class="flex flex-wrap justify-between text-xs font-bold text-slate-600 dark:text-slate-300 gap-2">
+                    <span>Mevcut: <strong class="text-slate-900 dark:text-white">{{ (analysis.total_assets + analysis.total_cash)|format_money }}</strong> {{ base_currency_symbol }}</span>
+                    <span>Hedef: <strong class="text-slate-900 dark:text-white">{{ analysis.fi_number|format_money }}</strong> {{ base_currency_symbol }}</span>
                 </div>
             </div>
-            <div class="text-center lg:text-right space-y-2">
-                <p class="text-[10px] font-bold text-slate-400 uppercase">Özgürlük Skoru</p>
-                <p class="text-5xl font-black {% if analysis.freedom_score >= 75 %}text-emerald-600{% elif analysis.freedom_score >= 45 %}text-amber-600{% else %}text-rose-600{% endif %}">{{ analysis.freedom_score }}</p>
-                <p class="text-[10px] text-slate-400">/ 100 — 6 kriterden</p>
-                <span class="inline-block px-3 py-1 rounded-full text-[9px] font-black uppercase bg-indigo-100 text-indigo-700">{{ analysis.fire_profile.name }}</span>
+            <div class="text-center lg:text-right lg:border-l lg:border-slate-100 dark:lg:border-slate-800 lg:pl-8 space-y-2">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider">{{ _('ui_auto_7692e760849c') }}</p>
+                <p class="text-5xl font-black tracking-tight {% if analysis.freedom_score >= 75 %}text-emerald-500 dark:text-emerald-400{% elif analysis.freedom_score >= 45 %}text-amber-500 dark:text-amber-400{% else %}text-rose-500 dark:text-rose-400{% endif %}">{{ analysis.freedom_score }}</p>
+                <p class="text-[10px] text-slate-400">{{ _('ui_auto_fc6b84d11e7e') }}</p>
+                <div>
+                    <span class="inline-block px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/40">{{ analysis.fire_profile.name }}</span>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Key metrics row -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div class="ff-card premium-card p-5 bg-white/80 text-center">
-            <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Net Değer</p>
-            <p class="text-xl font-black {% if analysis.net_worth >= 0 %}text-indigo-700{% else %}text-rose-600{% endif %}">{{ analysis.net_worth|format_money }} ₺</p>
+    <!-- 4 Temel Metrik Kartı -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="ff-card premium-card p-5 bg-white/80 dark:bg-slate-900/80 rounded-2xl text-center">
+            <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">{{ _('ui_auto_8807b833b178') }}</p>
+            <p class="text-xl font-black {% if analysis.net_worth >= 0 %}text-indigo-600 dark:text-indigo-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">{{ analysis.net_worth|format_money }} <span class="text-xs font-bold opacity-75">{{ base_currency_symbol }}</span></p>
         </div>
-        <div class="ff-card premium-card p-5 bg-white/80 text-center">
-            <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Tasarruf Oranı</p>
-            <p class="text-xl font-black {% if analysis.savings_rate >= 20 %}text-emerald-600{% elif analysis.savings_rate >= 10 %}text-amber-600{% else %}text-rose-600{% endif %}">%{{ analysis.savings_rate }}</p>
+        <div class="ff-card premium-card p-5 bg-white/80 dark:bg-slate-900/80 rounded-2xl text-center">
+            <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">{{ _('ui_auto_36e537adf7c1') }}</p>
+            <p class="text-xl font-black {% if analysis.savings_rate >= 20 %}text-emerald-600 dark:text-emerald-400{% elif analysis.savings_rate >= 10 %}text-amber-600 dark:text-amber-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">%{{ analysis.savings_rate }}</p>
         </div>
-        <div class="ff-card premium-card p-5 bg-white/80 text-center">
-            <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Gerçek Pasif Gelir Karşılama</p>
-            <p class="text-xl font-black text-emerald-600">%{{ analysis.income_replacement_pct }}</p>
+        <div class="ff-card premium-card p-5 bg-white/80 dark:bg-slate-900/80 rounded-2xl text-center">
+            <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">{{ _('ui_auto_dc8dc9498b2c') }}</p>
+            <p class="text-xl font-black text-emerald-600 dark:text-emerald-400">%{{ analysis.income_replacement_pct }}</p>
         </div>
-        <div class="ff-card premium-card p-5 bg-white/80 text-center">
-            <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Tahmini FI Süresi</p>
-            <p class="text-xl font-black text-slate-800">{% if analysis.years_to_fi is not none %}{{ analysis.years_to_fi }} yıl{% else %}—{% endif %}</p>
-            {% if analysis.estimated_freedom_date %}<p class="text-[9px] text-amber-600 font-bold mt-1">{{ analysis.estimated_freedom_date }}</p>{% endif %}
+        <div class="ff-card premium-card p-5 bg-white/80 dark:bg-slate-900/80 rounded-2xl text-center">
+            <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">{{ _('ui_auto_e2f3d993efdd') }}</p>
+            <p class="text-xl font-black text-slate-800 dark:text-white">{% if analysis.years_to_fi is not none %}{{ analysis.years_to_fi }} yıl{% else %}—{% endif %}</p>
+            {% if analysis.estimated_freedom_date %}<p class="text-[9px] text-amber-600 dark:text-amber-400 font-bold mt-1">{{ analysis.estimated_freedom_date }}</p>{% endif %}
         </div>
     </div>
 
-    <!-- Personal interpretation -->
-    <div class="ff-card premium-card p-6 bg-gradient-to-br from-slate-50 to-white border border-slate-200 mb-8">
-        <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight mb-3">📋 Verilerinizin Yorumu</h3>
-        <p class="text-sm text-slate-600 leading-relaxed">{{ analysis.interpretation }}</p>
-        <p class="text-xs text-slate-400 mt-3 italic">{{ analysis.fire_profile.detail }}</p>
+    <!-- Kişiselleştirilmiş Finansal Yorum -->
+    <div class="ff-card premium-card p-6 bg-gradient-to-br from-slate-50 to-white dark:from-slate-900/90 dark:to-slate-800/90 rounded-2xl border-l-4 border-indigo-500">
+        <h3 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight mb-2.5 flex items-center gap-2">
+            <span>💡</span> {{ _('ui_auto_560df9e2df57') }}
+        </h3>
+        <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium">{{ analysis.interpretation }}</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-2.5 italic">{{ analysis.fire_profile.detail }}</p>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        <!-- Criteria -->
+    <!-- Kriterler & Yan Panel (2 Kolon) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Sol Kolon: 6 Kriter Değerlendirmesi -->
         <div class="lg:col-span-2 space-y-4">
-            <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">Küresel Kriter Karnesi</h3>
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                    <span class="w-1.5 h-3.5 bg-indigo-500 rounded-full inline-block"></span>
+                    {{ _('ui_auto_41c367e37728') }}
+                </h3>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">6 Boyutlu Skor</span>
+            </div>
+
             {% for c in analysis.criteria %}
-            <div class="ff-card premium-card p-5 bg-white/85 criterion-{{ c.status }}">
+            <div class="ff-card premium-card p-5 bg-white/85 dark:bg-slate-900/80 rounded-2xl criterion-{{ c.status }}">
                 <div class="flex flex-wrap justify-between items-start gap-2 mb-2">
                     <div>
-                        <h4 class="font-black text-sm text-slate-800">{{ c.name }}</h4>
-                        <p class="text-[9px] text-slate-400 font-semibold uppercase tracking-wide">{{ c.source }}</p>
+                        <h4 class="font-black text-sm text-slate-800 dark:text-white">{{ c.name }}</h4>
+                        <p class="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mt-0.5">{{ c.source }}</p>
                     </div>
-                    <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase
-                        {% if c.status == 'success' %}bg-emerald-100 text-emerald-700
-                        {% elif c.status == 'warning' %}bg-amber-100 text-amber-700
-                        {% else %}bg-rose-100 text-rose-700{% endif %}">
+                    <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider
+                        {% if c.status == 'success' %}bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300
+                        {% elif c.status == 'warning' %}bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300
+                        {% else %}bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300{% endif %}">
                         {{ c.score }}/{{ c.max_score }} puan
                     </span>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs mb-2">
-                    <div><span class="text-slate-400 font-bold">Sizin değeriniz:</span> <span class="font-black text-slate-800">{{ c.your_value }}</span></div>
-                    <div><span class="text-slate-400 font-bold">Hedef:</span> <span class="font-semibold text-slate-600">{{ c.target }}</span></div>
+                    <div><span class="text-slate-400 font-bold">{{ _('ui_auto_d84089d01394') }}</span> <span class="font-black text-slate-800 dark:text-slate-200">{{ c.your_value }}</span></div>
+                    <div><span class="text-slate-400 font-bold">{{ _('ui_auto_3416be5ee2d4') }}</span> <span class="font-semibold text-slate-600 dark:text-slate-300">{{ c.target }}</span></div>
                 </div>
-                <p class="text-[11px] text-slate-500">{{ c.detail }}</p>
-                <p class="text-xs text-slate-700 mt-2 font-medium">{{ c.interpretation }}</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">{{ c.detail }}</p>
+                <p class="text-xs text-slate-700 dark:text-slate-300 mt-2 font-medium bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">{{ c.interpretation }}</p>
             </div>
             {% endfor %}
         </div>
 
-        <!-- Milestones + cash flow snapshot -->
+        <!-- Sağ Kolon: Kilometre Taşları + Nakit Akışı + Aksiyon Tavsiyeleri -->
         <div class="space-y-6">
-            <div class="ff-card premium-card p-6 bg-white/85">
-                <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight mb-4">Yolculuk Kilometre Taşları</h3>
+            <!-- Kilometre Taşları -->
+            <div class="ff-card premium-card p-6 bg-white/85 dark:bg-slate-900/80 rounded-2xl">
+                <h3 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight mb-4 flex items-center gap-2">
+                    <span>🚩</span> {{ _('ui_auto_c2711c64a230') }}
+                </h3>
                 <ul class="space-y-3">
                     {% for m in analysis.milestones %}
                     <li class="flex items-center gap-3 {% if m.done %}milestone-done{% else %}milestone-pending{% endif %}">
                         <span class="text-lg">{{ m.icon }}</span>
-                        <span class="text-xs font-bold text-slate-700 flex-1">{{ m.name }}</span>
-                        {% if m.done %}<span class="text-emerald-500 text-sm">✓</span>{% else %}<span class="text-slate-300 text-sm">○</span>{% endif %}
+                        <span class="text-xs font-bold text-slate-700 dark:text-slate-300 flex-1">{{ m.name }}</span>
+                        {% if m.done %}
+                        <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400 flex items-center justify-center text-xs font-black">✓</span>
+                        {% else %}
+                        <span class="w-5 h-5 rounded-full bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 flex items-center justify-center text-xs">○</span>
+                        {% endif %}
                     </li>
                     {% endfor %}
                 </ul>
             </div>
 
-            <div class="ff-card premium-card p-6 bg-white/85">
-                <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight mb-4">12 Aylık Nakit Özeti</h3>
+            <!-- Nakit Akışı Özeti -->
+            <div class="ff-card premium-card p-6 bg-white/85 dark:bg-slate-900/80 rounded-2xl">
+                <h3 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight mb-4 flex items-center gap-2">
+                    <span>💵</span> {{ _('ui_auto_724288d49e1f') }}
+                </h3>
                 <div class="space-y-3 text-xs">
-                    <div class="flex justify-between"><span class="text-slate-400">Aylık gelir (ort.)</span><span class="font-black text-emerald-600">{{ analysis.monthly_avg_income|format_money }} ₺</span></div>
-                    <div class="flex justify-between"><span class="text-slate-400">Aylık gider (ort.)</span><span class="font-black text-rose-600">{{ analysis.monthly_avg_expenses|format_money }} ₺</span></div>
-                    <div class="flex justify-between border-t border-slate-100 pt-2"><span class="text-slate-400">Aylık tasarruf</span><span class="font-black text-indigo-600">{{ analysis.monthly_savings|format_money }} ₺</span></div>
-                    <div class="flex justify-between"><span class="text-slate-400">Acil fon (nakit)</span><span class="font-bold">{{ analysis.emergency_fund_months|round(1) }} ay</span></div>
-                    <div class="flex justify-between"><span class="text-slate-400">Kira/pasif nakit</span><span class="font-bold text-emerald-600">{{ analysis.rental_income_monthly|format_money }} ₺/ay</span></div>
-                    <div class="flex justify-between"><span class="text-slate-400">Güvenli çekim (%4)</span><span class="font-bold">{{ analysis.safe_withdrawal_monthly|format_money }} ₺/ay</span></div>
-                    <div class="flex justify-between"><span class="text-slate-400">Portföy varlıkları</span><span class="font-bold">{{ analysis.total_assets|format_money }} ₺</span></div>
-                    <div class="flex justify-between"><span class="text-slate-400">Borç/yükümlülük</span><span class="font-bold text-rose-600">{{ analysis.total_debts|format_money }} ₺</span></div>
+                    <div class="flex justify-between items-center"><span class="text-slate-400">{{ _('ui_auto_1fda5909bd9a') }}</span><span class="font-black text-emerald-600 dark:text-emerald-400">{{ analysis.monthly_avg_income|format_money }} {{ base_currency_symbol }}</span></div>
+                    <div class="flex justify-between items-center"><span class="text-slate-400">{{ _('ui_auto_80b14d36091d') }}</span><span class="font-black text-rose-600 dark:text-rose-400">{{ analysis.monthly_avg_expenses|format_money }} {{ base_currency_symbol }}</span></div>
+                    <div class="flex justify-between items-center border-t border-slate-100 dark:border-slate-800 pt-2"><span class="text-slate-400">{{ _('ui_auto_91cc33552c48') }}</span><span class="font-black text-indigo-600 dark:text-indigo-400">{{ analysis.monthly_savings|format_money }} {{ base_currency_symbol }}</span></div>
+                    <div class="flex justify-between items-center"><span class="text-slate-400">{{ _('ui_auto_fbc804b2b1be') }}</span><span class="font-bold text-slate-800 dark:text-slate-200">{{ analysis.emergency_fund_months|round(1) }} ay</span></div>
+                    <div class="flex justify-between items-center"><span class="text-slate-400">{{ _('ui_auto_243b6bbeeacd') }}</span><span class="font-bold text-emerald-600 dark:text-emerald-400">{{ analysis.rental_income_monthly|format_money }} {{ base_currency_symbol }}/ay</span></div>
+                    <div class="flex justify-between items-center"><span class="text-slate-400">{{ _('ui_auto_7a849c17ef19') }}</span><span class="font-bold text-slate-800 dark:text-slate-200">{{ analysis.safe_withdrawal_monthly|format_money }} {{ base_currency_symbol }}/ay</span></div>
+                    <div class="flex justify-between items-center"><span class="text-slate-400">{{ _('ui_auto_139796ee2a96') }}</span><span class="font-bold text-slate-800 dark:text-slate-200">{{ analysis.total_assets|format_money }} {{ base_currency_symbol }}</span></div>
+                    <div class="flex justify-between items-center"><span class="text-slate-400">{{ _('ui_auto_e3450620a152') }}</span><span class="font-bold text-rose-600 dark:text-rose-400">{{ analysis.total_debts|format_money }} {{ base_currency_symbol }}</span></div>
                 </div>
             </div>
 
-            <div class="ff-card premium-card p-6 bg-amber-50/80 border border-amber-100">
-                <h3 class="text-sm font-black text-amber-900 uppercase tracking-tight mb-3">Öncelikli Adımlar</h3>
-                <ul class="space-y-2 text-xs text-amber-900">
-                    {% if analysis.savings_rate < 20 %}<li>• Tasarruf oranını %20 bandına çıkarın</li>{% endif %}
-                    {% if analysis.emergency_fund_months < 6 %}<li>• En az 6 aylık acil fon biriktirin</li>{% endif %}
-                    {% if analysis.fi_progress_pct < 50 %}<li>• Düzenli yatırım ile FI hedefine yaklaşın</li>{% endif %}
-                    {% if analysis.debt_to_income_pct > 36 %}<li>• Borç yükünü azaltın (DTI %36 altı)</li>{% endif %}
-                    {% if analysis.income_replacement_pct < 50 %}<li>• Pasif gelir kaynaklarını çeşitlendirin</li>{% endif %}
+            <!-- Eylem Tavsiyeleri -->
+            <div class="ff-card premium-card p-6 bg-amber-50/80 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 rounded-2xl">
+                <h3 class="text-sm font-black text-amber-900 dark:text-amber-200 uppercase tracking-tight mb-3 flex items-center gap-2">
+                    <span>⚡</span> {{ _('ui_auto_caede1a8d2f1') }}
+                </h3>
+                <ul class="space-y-2 text-xs text-amber-900 dark:text-amber-300 font-medium">
+                    {% if analysis.savings_rate < 20 %}<li>• {{ _('ui_auto_fabd74f5786b') }}</li>{% endif %}
+                    {% if analysis.emergency_fund_months < 6 %}<li>• {{ _('ui_auto_24f0b9bac418') }}</li>{% endif %}
+                    {% if analysis.fi_progress_pct < 50 %}<li>• {{ _('ui_auto_8f07d10ca10c') }}</li>{% endif %}
+                    {% if analysis.debt_to_income_pct > 36 %}<li>• {{ _('ui_auto_b6d5988e6e6c') }}</li>{% endif %}
+                    {% if analysis.income_replacement_pct < 50 %}<li>• {{ _('ui_auto_a50baee8e5c9') }}</li>{% endif %}
                     {% if analysis.savings_rate >= 20 and analysis.emergency_fund_months >= 6 and analysis.fi_progress_pct >= 25 %}
-                    <li>• Mevcut stratejiyi sürdürün — doğru yoldasınız</li>
+                    <li>• {{ _('ui_auto_25c6f4c72da9') }}</li>
                     {% endif %}
                 </ul>
+
+                <!-- Hızlı Aksiyon Kısayolları -->
+                <div class="mt-4 pt-3 border-t border-amber-200/60 dark:border-amber-900/40 flex flex-wrap gap-1.5">
+                    <a href="/categories" class="px-2.5 py-1 rounded-lg bg-amber-200/70 dark:bg-amber-900/50 hover:bg-amber-300 text-amber-900 dark:text-amber-200 text-[10px] font-bold transition">
+                        Bütçeleri Sıkılaştır →
+                    </a>
+                    <a href="/assets?modal=new" class="px-2.5 py-1 rounded-lg bg-amber-200/70 dark:bg-amber-900/50 hover:bg-amber-300 text-amber-900 dark:text-amber-200 text-[10px] font-bold transition">
+                        Yatırım Varlığı Ekle →
+                    </a>
+                    <a href="/strategy" class="px-2.5 py-1 rounded-lg bg-amber-200/70 dark:bg-amber-900/50 hover:bg-amber-300 text-amber-900 dark:text-amber-200 text-[10px] font-bold transition">
+                        Portföy Simülasyonu →
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Academic references -->
-    <div class="ff-card premium-card p-6 bg-white/70 mb-6">
-        <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight mb-4">Akademik &amp; Literatür Referansları</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {% for ref in analysis.references %}
-            <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                <p class="font-black text-xs text-slate-800">{{ ref.title }}</p>
-                <p class="text-[10px] text-slate-500 mt-1">{{ ref.author }}</p>
-                <p class="text-[9px] text-indigo-600 font-semibold mt-1">{{ ref.note }}</p>
+    <!-- Sadeleştirilmiş Akordeon: Finansal Metodoloji, Formüller ve Akademik Kaynaklar -->
+    <details class="ff-accordion ff-card premium-card rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 p-6 group transition-all">
+        <summary class="flex items-center justify-between cursor-pointer list-none select-none">
+            <div class="flex items-center gap-3.5">
+                <span class="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-base font-black">📚</span>
+                <div>
+                    <h3 class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">Finansal Metodoloji, Formüller ve Akademik Kaynaklar</h3>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5">Trinity Study (%4 Bengen), Elizabeth Warren 50/30/20, Makro Parametreler</p>
+                </div>
             </div>
-            {% endfor %}
-        </div>
-        <p class="text-[9px] text-slate-400 mt-4 italic">Hesaplamalar son 12 ay ödenmiş işlemler, mevcut portföy ve planlı yükümlülük verilerinize dayanır. Yatırım getirisi varsayımı: yıllık {{ analysis.macro_data.real_return_rate|round(1) }}% reel getiri, %4 güvenli çekim. (Kaynak: {{ analysis.macro_data.source }})</p>
-    </div>
+            <div class="flex items-center gap-2 text-xs font-bold text-amber-600 dark:text-amber-400">
+                <span class="group-open:hidden">İncele</span>
+                <span class="hidden group-open:inline">Kapat</span>
+                <svg class="w-4 h-4 transform group-open:rotate-180 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </div>
+        </summary>
 
-    <!-- Mathematical Foundations Card -->
-    <div class="ff-card premium-card p-10 bg-slate-900 text-white shadow-2xl relative overflow-hidden">
-        <div class="absolute w-96 h-96 bg-amber-600 rounded-full blur-[150px] -top-20 -right-20 opacity-20"></div>
-        <div class="relative z-10">
-            <h3 class="font-black text-sm text-amber-400 uppercase mb-4 tracking-widest italic flex items-center">
-                <span class="w-2.5 h-2.5 bg-amber-400 rounded-full mr-2.5"></span>
-                Finansal Sözlük &amp; Metodoloji
-            </h3>
-            <h4 class="text-lg font-black text-white mb-4">Analizlerin Matematiksel Temelleri</h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
-                    <p class="text-[10px] font-bold text-amber-400 uppercase mb-2">4% Güvenli Çekim Kuralı</p>
-                    <p class="text-xs text-slate-300 leading-relaxed">Trinity Study (Bengen, 1994) — Yıllık %4 portföy çekimi, 30 yıllık dönemde %95 başarı oranı sağlar. FI Hedefi = Yıllık Gider × 25</p>
+        <div class="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800 space-y-8">
+            <!-- Akademik Kaynaklar Grid'i -->
+            <div>
+                <h4 class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <span>📖</span> {{ _('ui_auto_de6f929d7641') }}
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {% for ref in analysis.references %}
+                    <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60">
+                        <p class="font-black text-xs text-slate-900 dark:text-white">{{ ref.title }}</p>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-medium">{{ ref.author }}</p>
+                        <p class="text-[9px] text-indigo-600 dark:text-indigo-400 font-semibold mt-1">{{ ref.note }}</p>
+                    </div>
+                    {% endfor %}
                 </div>
-                <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
-                    <p class="text-[10px] font-bold text-amber-400 uppercase mb-2">Tasarruf Oranı</p>
-                    <p class="text-xs text-slate-300 leading-relaxed">FIRE matematiği — Tasarruf oranı %20'den başlar, %50'de hızlanır. Yüksek tasarruf = Kısa FI süresi</p>
-                </div>
-                <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
-                    <p class="text-[10px] font-bold text-amber-400 uppercase mb-2">Acil Fon</p>
-                    <p class="text-xs text-slate-300 leading-relaxed">Dave Ramsey & Fed — 3-6 aylık gider karşılığı nakit. İşsizlik riskine göre 12 aya kadar çıkılabilir</p>
-                </div>
-                <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
-                    <p class="text-[10px] font-bold text-amber-400 uppercase mb-2">Pasif Gelir</p>
-                    <p class="text-xs text-slate-300 leading-relaxed">Your Money or Your Life — Crossover point: Pasif gelir ≥ Gider. İş geliri zorunluluğu kalkar</p>
-                </div>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-3 italic leading-relaxed">Hesaplamalar son 12 ay ödenmiş işlemler, mevcut portföy ve planlı yükümlülük verilerinize dayanır. Yatırım getirisi varsayımı: yıllık %{{ analysis.macro_data.real_return_rate|round(1) }} reel getiri, %4 güvenli çekim. (Kaynak: {{ analysis.macro_data.source }})</p>
             </div>
-            <div class="border-t border-slate-700/60 pt-6 mt-6 flex flex-wrap gap-8 justify-between text-xs text-slate-400 font-semibold">
-                <div>
-                    <span>FI Çarpanı:</span>
-                    <span class="text-white ml-1 font-bold">25×</span>
-                </div>
-                <div>
-                    <span>Güvenli Çekim:</span>
-                    <span class="text-white ml-1 font-bold">%4</span>
-                </div>
-                <div>
-                    <span>Reel Getiri:</span>
-                    <span class="text-white ml-1 font-bold">%{{ analysis.macro_data.real_return_rate|round(1) }}</span>
-                </div>
-                <div>
-                    <span>Enflasyon:</span>
-                    <span class="text-white ml-1 font-bold">%{{ analysis.macro_data.inflation_rate|round(1) }}</span>
-                </div>
-                <div>
-                    <span>Kaynak:</span>
-                    <span class="text-white ml-1 font-bold">{{ analysis.macro_data.source }}</span>
+
+            <!-- Matematiksel Temeller Kartı -->
+            <div class="p-6 md:p-8 rounded-2xl bg-slate-900 text-white relative overflow-hidden shadow-xl">
+                <div class="relative z-10">
+                    <h3 class="font-black text-xs text-amber-400 uppercase mb-2 tracking-widest flex items-center">
+                        <span class="w-2 h-2 bg-amber-400 rounded-full mr-2"></span>
+                        {{ _('ui_auto_efc51e834707') }}
+                    </h3>
+                    <h4 class="text-base font-black text-white mb-4">{{ _('ui_auto_cbe590f8d8ab') }}</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/80">
+                            <p class="text-[10px] font-bold text-amber-400 uppercase mb-1.5">{{ _('ui_auto_c0f4fe2374e8') }}</p>
+                            <p class="text-xs text-slate-300 leading-relaxed">{{ _('ui_auto_5ac2b24b0a28') }}</p>
+                        </div>
+                        <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/80">
+                            <p class="text-[10px] font-bold text-amber-400 uppercase mb-1.5">{{ _('ui_auto_36e537adf7c1') }}</p>
+                            <p class="text-xs text-slate-300 leading-relaxed">{{ _('ui_auto_56bc9ce7184b') }}</p>
+                        </div>
+                        <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/80">
+                            <p class="text-[10px] font-bold text-amber-400 uppercase mb-1.5">{{ _('ui_auto_d4d689cc03a2') }}</p>
+                            <p class="text-xs text-slate-300 leading-relaxed">{{ _('ui_auto_b2db40bb958f') }}</p>
+                        </div>
+                        <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/80">
+                            <p class="text-[10px] font-bold text-amber-400 uppercase mb-1.5">{{ _('ui_auto_36ce4d069e4a') }}</p>
+                            <p class="text-xs text-slate-300 leading-relaxed">{{ _('ui_auto_68f6324fbaed') }}</p>
+                        </div>
+                    </div>
+                    <div class="border-t border-slate-700/80 pt-4 flex flex-wrap gap-6 justify-between text-xs text-slate-400 font-semibold">
+                        <div>
+                            <span>{{ _('ui_auto_e29a686a543c') }}</span>
+                            <span class="text-white ml-1 font-bold">{{ _('ui_auto_7c373db7ba36') }}</span>
+                        </div>
+                        <div>
+                            <span>{{ _('ui_auto_a1118d6e1b1c') }}</span>
+                            <span class="text-white ml-1 font-bold">%4</span>
+                        </div>
+                        <div>
+                            <span>{{ _('ui_auto_06aec4430939') }}</span>
+                            <span class="text-white ml-1 font-bold">%{{ analysis.macro_data.real_return_rate|round(1) }}</span>
+                        </div>
+                        <div>
+                            <span>{{ _('ui_auto_27adca0a0430') }}</span>
+                            <span class="text-white ml-1 font-bold">%{{ analysis.macro_data.inflation_rate|round(1) }}</span>
+                        </div>
+                        <div>
+                            <span>{{ _('ui_auto_0897fb2a5d3f') }}</span>
+                            <span class="text-white ml-1 font-bold">{{ analysis.macro_data.source }}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </details>
 </div>
-
 {% endblock %}

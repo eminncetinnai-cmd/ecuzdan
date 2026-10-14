@@ -4,7 +4,6 @@ import logging
 
 from flask import jsonify, render_template, request, session
 
-from bootstrap.container import get_container
 from utils.decorators import login_required
 
 logger = logging.getLogger(__name__)

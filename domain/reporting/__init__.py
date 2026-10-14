@@ -1,1 +1,1 @@
-﻿# domain.reporting: reporting and export domain.\n
+# domain.reporting: reporting and export domain.\n

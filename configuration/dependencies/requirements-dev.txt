@@ -1,0 +1,10 @@
+# E-Cüzdan development/test profile.
+# Runtime application dependencies are included; E2E browser and production deployment dependencies stay separate.
+-r requirements-runtime.txt
+pytest
+pytest-flask
+pytest-cov
+pytest-xdist
+pytest-benchmark
+pytest-timeout
+ruff

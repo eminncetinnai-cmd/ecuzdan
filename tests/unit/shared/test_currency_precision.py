@@ -3,17 +3,18 @@ Unit tests for shared.currency_precision module - Critical financial operations
 """
 
 import pytest
+
 from shared.currency_precision import (
-    CurrencyPrecision,
-    CurrencyType,
-    get_currency_scale,
-    get_asset_type_scale,
-    get_currency_symbol,
-    SUPPORTED_FIAT,
     SUPPORTED_CRYPTO,
+    SUPPORTED_FIAT,
+    SUPPORTED_FUNDS,
     SUPPORTED_GOLD,
     SUPPORTED_STOCKS,
-    SUPPORTED_FUNDS
+    CurrencyPrecision,
+    CurrencyType,
+    get_asset_type_scale,
+    get_currency_scale,
+    get_currency_symbol,
 )
 
 
@@ -202,35 +203,35 @@ def test_get_currency_type_case_insensitive():
 @pytest.mark.unit
 def test_is_fiat():
     """Test is_fiat method"""
-    assert CurrencyPrecision.is_fiat('TRY') == True
-    assert CurrencyPrecision.is_fiat('USD') == True
-    assert CurrencyPrecision.is_fiat('EUR') == True
-    assert CurrencyPrecision.is_fiat('BTC') == False
-    assert CurrencyPrecision.is_fiat('ETH') == False
-    assert CurrencyPrecision.is_fiat('GRAM') == False
+    assert CurrencyPrecision.is_fiat('TRY')
+    assert CurrencyPrecision.is_fiat('USD')
+    assert CurrencyPrecision.is_fiat('EUR')
+    assert not CurrencyPrecision.is_fiat('BTC')
+    assert not CurrencyPrecision.is_fiat('ETH')
+    assert not CurrencyPrecision.is_fiat('GRAM')
 
 
 @pytest.mark.unit
 def test_is_crypto():
     """Test is_crypto method"""
-    assert CurrencyPrecision.is_crypto('BTC') == True
-    assert CurrencyPrecision.is_crypto('ETH') == True
-    assert CurrencyPrecision.is_crypto('XRP') == True
-    assert CurrencyPrecision.is_crypto('TRY') == False
-    assert CurrencyPrecision.is_crypto('USD') == False
-    assert CurrencyPrecision.is_crypto('GRAM') == False
+    assert CurrencyPrecision.is_crypto('BTC')
+    assert CurrencyPrecision.is_crypto('ETH')
+    assert CurrencyPrecision.is_crypto('XRP')
+    assert not CurrencyPrecision.is_crypto('TRY')
+    assert not CurrencyPrecision.is_crypto('USD')
+    assert not CurrencyPrecision.is_crypto('GRAM')
 
 
 @pytest.mark.unit
 def test_is_gold():
     """Test is_gold method"""
-    assert CurrencyPrecision.is_gold('GRAM') == True
-    assert CurrencyPrecision.is_gold('GR') == True
-    assert CurrencyPrecision.is_gold('ONS') == True
-    assert CurrencyPrecision.is_gold('OZ') == True
-    assert CurrencyPrecision.is_gold('TRY') == False
-    assert CurrencyPrecision.is_gold('BTC') == False
-    assert CurrencyPrecision.is_gold('USD') == False
+    assert CurrencyPrecision.is_gold('GRAM')
+    assert CurrencyPrecision.is_gold('GR')
+    assert CurrencyPrecision.is_gold('ONS')
+    assert CurrencyPrecision.is_gold('OZ')
+    assert not CurrencyPrecision.is_gold('TRY')
+    assert not CurrencyPrecision.is_gold('BTC')
+    assert not CurrencyPrecision.is_gold('USD')
 
 
 @pytest.mark.unit

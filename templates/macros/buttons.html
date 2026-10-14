@@ -1,62 +1,162 @@
-{# Button Component Macros #}
+{# Button Component Macros — E-Cüzdan v15 Premium #}
 
-{% macro button_primary(text, url=None, onclick=None, icon=None, extra_classes='') %}
+{# ───────────────────────────────────────────────────────────────
+   button_primary — Indigo gradient, glow shadow, shimmer hover
+   Args:
+     text          : Button label text
+     url           : If set, renders <a> instead of <button>
+     onclick       : JS expression for button click
+     icon          : SVG HTML string (use |safe in caller)
+     extra_classes : Additional CSS classes
+     submit        : True → type=submit
+     loading_id    : If set, adds data-loading-target attr for JS spinner
+     disabled      : True → disabled attribute
+─────────────────────────────────────────────────────────────── #}
+{% macro button_primary(text, url=None, onclick=None, icon=None, extra_classes='', submit=False, loading_id=None, disabled=False) %}
 {% if url %}
-<a href="{{ url }}" class="btn-primary {{ extra_classes }}">
+<a href="{{ url }}"
+   class="btn-premium-primary {{ extra_classes }}"
+   {% if disabled %}aria-disabled="true" tabindex="-1"{% endif %}>
+{% elif submit %}
+<button type="submit"
+   class="btn-premium-primary {{ extra_classes }}"
+   {% if loading_id %}data-loading-target="{{ loading_id }}"{% endif %}
+   {% if disabled %}disabled{% endif %}>
 {% else %}
-<button type="button" onclick="{{ onclick }}" class="btn-primary {{ extra_classes }}">
+<button type="button"
+   {% if onclick %}onclick="{{ onclick }}"{% endif %}
+   class="btn-premium-primary {{ extra_classes }}"
+   {% if loading_id %}data-loading-target="{{ loading_id }}"{% endif %}
+   {% if disabled %}disabled{% endif %}>
 {% endif %}
-    {% if icon %}<span class="mr-2">{{ icon }}</span>{% endif %}
-    {{ text }}
+    {% if icon %}<span class="btn-icon mr-1.5 flex-shrink-0">{{ icon|safe }}</span>{% endif %}
+    <span class="btn-text">{{ text }}</span>
 {% if url %}</a>{% else %}</button>{% endif %}
 {% endmacro %}
 
-{% macro button_secondary(text, url=None, onclick=None, icon=None, extra_classes='') %}
+
+{# ───────────────────────────────────────────────────────────────
+   button_secondary — Glass, hover indigo border
+─────────────────────────────────────────────────────────────── #}
+{% macro button_secondary(text, url=None, onclick=None, icon=None, extra_classes='', submit=False, loading_id=None, disabled=False) %}
 {% if url %}
-<a href="{{ url }}" class="btn-secondary {{ extra_classes }}">
+<a href="{{ url }}"
+   class="btn-premium-secondary {{ extra_classes }}"
+   {% if disabled %}aria-disabled="true" tabindex="-1"{% endif %}>
+{% elif submit %}
+<button type="submit"
+   class="btn-premium-secondary {{ extra_classes }}"
+   {% if loading_id %}data-loading-target="{{ loading_id }}"{% endif %}
+   {% if disabled %}disabled{% endif %}>
 {% else %}
-<button type="button" onclick="{{ onclick }}" class="btn-secondary {{ extra_classes }}">
+<button type="button"
+   {% if onclick %}onclick="{{ onclick }}"{% endif %}
+   class="btn-premium-secondary {{ extra_classes }}"
+   {% if loading_id %}data-loading-target="{{ loading_id }}"{% endif %}
+   {% if disabled %}disabled{% endif %}>
 {% endif %}
-    {% if icon %}<span class="mr-2">{{ icon }}</span>{% endif %}
-    {{ text }}
+    {% if icon %}<span class="btn-icon mr-1.5 flex-shrink-0">{{ icon|safe }}</span>{% endif %}
+    <span class="btn-text">{{ text }}</span>
 {% if url %}</a>{% else %}</button>{% endif %}
 {% endmacro %}
 
-{% macro button_danger(text, url=None, onclick=None, icon=None, extra_classes='') %}
+
+{# ───────────────────────────────────────────────────────────────
+   button_danger — Rose gradient, glow
+─────────────────────────────────────────────────────────────── #}
+{% macro button_danger(text, url=None, onclick=None, icon=None, extra_classes='', submit=False, loading_id=None, disabled=False) %}
 {% if url %}
-<a href="{{ url }}" class="btn-danger {{ extra_classes }}">
+<a href="{{ url }}"
+   class="btn-premium-danger {{ extra_classes }}"
+   {% if disabled %}aria-disabled="true" tabindex="-1"{% endif %}>
+{% elif submit %}
+<button type="submit"
+   class="btn-premium-danger {{ extra_classes }}"
+   {% if loading_id %}data-loading-target="{{ loading_id }}"{% endif %}
+   {% if disabled %}disabled{% endif %}>
 {% else %}
-<button type="button" onclick="{{ onclick }}" class="btn-danger {{ extra_classes }}">
+<button type="button"
+   {% if onclick %}onclick="{{ onclick }}"{% endif %}
+   class="btn-premium-danger {{ extra_classes }}"
+   {% if loading_id %}data-loading-target="{{ loading_id }}"{% endif %}
+   {% if disabled %}disabled{% endif %}>
 {% endif %}
-    {% if icon %}<span class="mr-2">{{ icon }}</span>{% endif %}
-    {{ text }}
+    {% if icon %}<span class="btn-icon mr-1.5 flex-shrink-0">{{ icon|safe }}</span>{% endif %}
+    <span class="btn-text">{{ text }}</span>
 {% if url %}</a>{% else %}</button>{% endif %}
 {% endmacro %}
 
-{% macro button_success(text, url=None, onclick=None, icon=None, extra_classes='') %}
+
+{# ───────────────────────────────────────────────────────────────
+   button_success — Emerald gradient
+─────────────────────────────────────────────────────────────── #}
+{% macro button_success(text, url=None, onclick=None, icon=None, extra_classes='', submit=False, disabled=False) %}
 {% if url %}
-<a href="{{ url }}" class="btn-success {{ extra_classes }}">
+<a href="{{ url }}"
+   class="btn btn-success {{ extra_classes }}"
+   {% if disabled %}aria-disabled="true" tabindex="-1"{% endif %}>
+{% elif submit %}
+<button type="submit"
+   class="btn btn-success {{ extra_classes }}"
+   {% if disabled %}disabled{% endif %}>
 {% else %}
-<button type="button" onclick="{{ onclick }}" class="btn-success {{ extra_classes }}">
+<button type="button"
+   {% if onclick %}onclick="{{ onclick }}"{% endif %}
+   class="btn btn-success {{ extra_classes }}"
+   {% if disabled %}disabled{% endif %}>
 {% endif %}
-    {% if icon %}<span class="mr-2">{{ icon }}</span>{% endif %}
-    {{ text }}
+    {% if icon %}<span class="btn-icon mr-1.5">{{ icon|safe }}</span>{% endif %}
+    <span class="btn-text">{{ text }}</span>
 {% if url %}</a>{% else %}</button>{% endif %}
 {% endmacro %}
 
+
+{# ───────────────────────────────────────────────────────────────
+   button_gradient — Custom Tailwind gradient (backward compat)
+─────────────────────────────────────────────────────────────── #}
 {% macro button_gradient(text, gradient='from-indigo-600 to-indigo-700', url=None, onclick=None, icon=None, extra_classes='') %}
 {% if url %}
-<a href="{{ url }}" class="bg-gradient-to-r {{ gradient }} text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-wider shadow-lg hover:shadow-xl transition transform hover:scale-[1.02] {{ extra_classes }}">
+<a href="{{ url }}" class="bg-gradient-to-r {{ gradient }} text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-wider shadow-lg hover:shadow-xl transition transform hover:scale-[1.02] inline-flex items-center gap-2 {{ extra_classes }}">
 {% else %}
-<button type="button" onclick="{{ onclick }}" class="bg-gradient-to-r {{ gradient }} text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-wider shadow-lg hover:shadow-xl transition transform hover:scale-[1.02] {{ extra_classes }}">
+<button type="button" {% if onclick %}onclick="{{ onclick }}"{% endif %} class="bg-gradient-to-r {{ gradient }} text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-wider shadow-lg hover:shadow-xl transition transform hover:scale-[1.02] inline-flex items-center gap-2 {{ extra_classes }}">
 {% endif %}
-    {% if icon %}<span class="mr-2">{{ icon }}</span>{% endif %}
+    {% if icon %}<span>{{ icon|safe }}</span>{% endif %}
     {{ text }}
 {% if url %}</a>{% else %}</button>{% endif %}
 {% endmacro %}
 
+
+{# ───────────────────────────────────────────────────────────────
+   button_icon — Square icon-only button
+─────────────────────────────────────────────────────────────── #}
 {% macro button_icon(icon, onclick=None, title='', extra_classes='') %}
-<button type="button" onclick="{{ onclick }}" class="p-2 rounded-lg hover:bg-slate-100 transition {{ extra_classes }}" title="{{ title }}">
-    {{ icon }}
+<button type="button"
+   {% if onclick %}onclick="{{ onclick }}"{% endif %}
+   class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition {{ extra_classes }}"
+   title="{{ title }}">
+    {{ icon|safe }}
 </button>
+{% endmacro %}
+
+
+{# ───────────────────────────────────────────────────────────────
+   button_sm — Compact small button (secondary style)
+─────────────────────────────────────────────────────────────── #}
+{% macro button_sm(text, onclick=None, url=None, icon=None, extra_classes='', variant='secondary') %}
+{% set base_cls = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs uppercase tracking-wide transition' %}
+{% if variant == 'primary' %}
+{% set style_cls = 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-sm hover:shadow-indigo-200 hover:scale-[1.02]' %}
+{% elif variant == 'danger' %}
+{% set style_cls = 'bg-rose-500 text-white hover:bg-rose-600' %}
+{% else %}
+{% set style_cls = 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700' %}
+{% endif %}
+{% if url %}
+<a href="{{ url }}" class="{{ base_cls }} {{ style_cls }} {{ extra_classes }}">
+{% else %}
+<button type="button" {% if onclick %}onclick="{{ onclick }}"{% endif %} class="{{ base_cls }} {{ style_cls }} {{ extra_classes }}">
+{% endif %}
+    {% if icon %}<span>{{ icon|safe }}</span>{% endif %}
+    {{ text }}
+{% if url %}</a>{% else %}</button>{% endif %}
 {% endmacro %}

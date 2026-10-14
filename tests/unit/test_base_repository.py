@@ -3,8 +3,10 @@ Unit Tests - Base Repository
 SQLAlchemy repository primitives tests
 """
 
+from unittest.mock import Mock
+
 import pytest
-from unittest.mock import Mock, patch
+
 from repositories.base import BaseRepository, TenantScopedRepository
 
 
@@ -20,7 +22,7 @@ def test_base_repository_module_imports():
 def test_base_repository_module_structure():
     """Test base_repository module structure"""
     import repositories.base as base_module
-    
+
     # Check for expected classes
     assert hasattr(base_module, 'BaseRepository')
     assert hasattr(base_module, 'TenantScopedRepository')
@@ -32,17 +34,23 @@ def test_base_repository_init_with_database():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = BaseRepository(database=mock_db)
-    
+
     assert repo.db == mock_db
     assert repo.session == mock_session
 
 
 @pytest.mark.unit
-def test_base_repository_init_without_database():
-    """Test BaseRepository initialization without database - skipped due to Flask context requirement"""
-    pytest.skip("Requires Flask application context")
+def test_base_repository_init_without_database(app):
+    """Without injection, BaseRepository uses the initialized Flask db extension."""
+    from models import db
+
+    with app.app_context():
+        repo = BaseRepository()
+
+    assert repo.db is db
+    assert repo.session is db.session
 
 
 @pytest.mark.unit
@@ -53,11 +61,11 @@ def test_base_repository_query():
     mock_query = Mock()
     mock_session.query.return_value = mock_query
     mock_db.session = mock_session
-    
+
     repo = BaseRepository(database=mock_db)
-    
+
     result = repo.query('Model1', 'Model2')
-    
+
     assert result == mock_query
     mock_session.query.assert_called_once_with('Model1', 'Model2')
 
@@ -70,11 +78,11 @@ def test_base_repository_get():
     mock_entity = Mock()
     mock_session.get.return_value = mock_entity
     mock_db.session = mock_session
-    
+
     repo = BaseRepository(database=mock_db)
-    
+
     result = repo.get('Model', 1)
-    
+
     assert result == mock_entity
     mock_session.get.assert_called_once_with('Model', 1)
 
@@ -85,12 +93,12 @@ def test_base_repository_add():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = BaseRepository(database=mock_db)
     mock_entity = Mock()
-    
+
     result = repo.add(mock_entity)
-    
+
     assert result == mock_entity
     mock_session.add.assert_called_once_with(mock_entity)
 
@@ -101,12 +109,12 @@ def test_base_repository_delete():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = BaseRepository(database=mock_db)
     mock_entity = Mock()
-    
+
     repo.delete(mock_entity)
-    
+
     mock_session.delete.assert_called_once_with(mock_entity)
 
 
@@ -116,11 +124,11 @@ def test_base_repository_commit():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = BaseRepository(database=mock_db)
-    
+
     repo.commit()
-    
+
     mock_session.commit.assert_called_once()
 
 
@@ -130,11 +138,11 @@ def test_base_repository_rollback():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = BaseRepository(database=mock_db)
-    
+
     repo.rollback()
-    
+
     mock_session.rollback.assert_called_once()
 
 
@@ -144,9 +152,9 @@ def test_tenant_scoped_repository_init():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = TenantScopedRepository(database=mock_db)
-    
+
     assert repo.db == mock_db
     assert repo.session == mock_session
 
@@ -157,18 +165,26 @@ def test_tenant_scoped_repository_require_tenant_id_explicit():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = TenantScopedRepository(database=mock_db)
-    
+
     result = repo.require_tenant_id(tenant_id='test_tenant')
-    
+
     assert result == 'test_tenant'
 
 
 @pytest.mark.unit
-def test_tenant_scoped_repository_require_tenant_id_from_flask():
-    """Test TenantScopedRepository require_tenant_id from Flask context - skipped due to Flask context requirement"""
-    pytest.skip("Requires Flask application context")
+def test_tenant_scoped_repository_require_tenant_id_from_flask(app):
+    """TenantScopedRepository resolves the tenant from Flask's request context."""
+    from flask import g
+
+    mock_db = Mock()
+    mock_db.session = Mock()
+    repo = TenantScopedRepository(database=mock_db)
+
+    with app.test_request_context('/'):
+        g.tenant_id = 'context_tenant'
+        assert repo.require_tenant_id() == 'context_tenant'
 
 
 @pytest.mark.unit
@@ -177,9 +193,9 @@ def test_tenant_scoped_repository_require_tenant_id_no_context():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = TenantScopedRepository(database=mock_db)
-    
+
     try:
         repo.require_tenant_id()
         assert False, "Should have raised RuntimeError"
@@ -193,18 +209,18 @@ def test_tenant_scoped_repository_filter_for_tenant():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = TenantScopedRepository(database=mock_db)
-    
+
     mock_query = Mock()
     mock_filtered_query = Mock()
     mock_query.filter.return_value = mock_filtered_query
-    
+
     mock_model = Mock()
     mock_model.tenant_id == 'test_tenant'  # This creates a comparison expression
-    
+
     result = repo.filter_for_tenant(mock_query, mock_model, 'test_tenant')
-    
+
     assert result == mock_filtered_query
     mock_query.filter.assert_called_once()
 
@@ -219,13 +235,13 @@ def test_tenant_scoped_repository_get_for_tenant():
     mock_query.filter.return_value.first.return_value = mock_entity
     mock_session.query.return_value = mock_query
     mock_db.session = mock_session
-    
+
     repo = TenantScopedRepository(database=mock_db)
-    
+
     mock_model = Mock()
-    
+
     result = repo.get_for_tenant(mock_model, 1, 'test_tenant')
-    
+
     assert result == mock_entity
     mock_session.query.assert_called_once_with(mock_model)
 
@@ -239,13 +255,13 @@ def test_tenant_scoped_repository_get_for_tenant_not_found():
     mock_query.filter.return_value.first.return_value = None
     mock_session.query.return_value = mock_query
     mock_db.session = mock_session
-    
+
     repo = TenantScopedRepository(database=mock_db)
-    
+
     mock_model = Mock()
-    
+
     result = repo.get_for_tenant(mock_model, 1, 'test_tenant')
-    
+
     assert result is None
 
 
@@ -255,14 +271,14 @@ def test_tenant_scoped_repository_assert_same_tenant_valid():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = TenantScopedRepository(database=mock_db)
-    
+
     mock_record = Mock()
     mock_record.tenant_id = 'test_tenant'
-    
+
     result = repo.assert_same_tenant(mock_record, 'test_tenant')
-    
+
     assert result == mock_record
 
 
@@ -272,12 +288,12 @@ def test_tenant_scoped_repository_assert_same_tenant_invalid():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = TenantScopedRepository(database=mock_db)
-    
+
     mock_record = Mock()
     mock_record.tenant_id = 'other_tenant'
-    
+
     try:
         repo.assert_same_tenant(mock_record, 'test_tenant')
         assert False, "Should have raised PermissionError"
@@ -291,9 +307,9 @@ def test_tenant_scoped_repository_assert_same_tenant_none_record():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = TenantScopedRepository(database=mock_db)
-    
+
     try:
         repo.assert_same_tenant(None, 'test_tenant')
         assert False, "Should have raised PermissionError"
@@ -307,14 +323,14 @@ def test_tenant_scoped_repository_assert_same_tenant_custom_error():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = TenantScopedRepository(database=mock_db)
-    
+
     mock_record = Mock()
     mock_record.tenant_id = 'other_tenant'
-    
+
     custom_msg = "Custom error message"
-    
+
     try:
         repo.assert_same_tenant(mock_record, 'test_tenant', custom_msg)
         assert False, "Should have raised PermissionError"
@@ -327,13 +343,13 @@ def test_base_repository_inheritance():
     """Test BaseRepository inherits from BaseRepositoryContract"""
     from repositories.base import BaseRepository
     from repositories.contracts import BaseRepositoryContract
-    
+
     assert issubclass(BaseRepository, BaseRepositoryContract)
 
 
 @pytest.mark.unit
 def test_tenant_scoped_repository_inheritance():
     """Test TenantScopedRepository inherits from BaseRepository"""
-    from repositories.base import TenantScopedRepository, BaseRepository
-    
+    from repositories.base import BaseRepository, TenantScopedRepository
+
     assert issubclass(TenantScopedRepository, BaseRepository)

@@ -1,0 +1,242 @@
+/* ==========================================================================
+   E-Cüzdan — Analysis & Financial Health CSS (static/css/analysis.css)
+   Clean, Modern, Dark-Mode Ready Styling for Analytics & Financial Score
+   ========================================================================== */
+
+/* Keyframe Animations */
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+    from { transform: scale(0.94); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+}
+
+@keyframes dashOffset {
+    from { stroke-dashoffset: 238.76; }
+}
+
+@keyframes pulseRing {
+    0%   { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.35); }
+    70%  { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+
+.fade-up { animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.scale-in { animation: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* Premium Glass & Solid Cards */
+.health-card {
+    background: var(--color-surface, #ffffff);
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: var(--radius-2xl, 1rem);
+    box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
+    transition: transform var(--transition-normal, 0.2s ease), box-shadow var(--transition-normal, 0.2s ease);
+}
+
+.health-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
+}
+
+/* Tab Navigation (Segmented Control) */
+.analysis-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    border-radius: var(--radius-xl, 0.75rem);
+    font-size: var(--font-size-xs, 0.75rem);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all var(--transition-fast, 0.15s ease);
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--color-text-muted, #64748b);
+    user-select: none;
+}
+
+.analysis-tab-btn:hover {
+    color: var(--color-text-strong, #0f172a);
+    background-color: var(--color-surface-subtle, #f1f5f9);
+}
+
+.analysis-tab-btn.active {
+    background: var(--color-surface, #ffffff);
+    color: var(--color-primary, #6366f1);
+    border-color: var(--color-border, #e2e8f0);
+    box-shadow: var(--shadow-sm, 0 1px 3px 0 rgba(0, 0, 0, 0.1));
+}
+
+.analysis-tab-content {
+    display: none;
+}
+
+.analysis-tab-content.active {
+    display: block;
+}
+
+/* Score Gauge */
+.gauge-circle {
+    animation: dashOffset 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.score-pulse {
+    animation: pulseRing 3s infinite;
+}
+
+/* Dynamic Metric Bar */
+.metric-bar-track {
+    height: 8px;
+    border-radius: var(--radius-full, 9999px);
+    background: var(--color-surface-subtle, #e2e8f0);
+    overflow: hidden;
+}
+
+.metric-bar-fill {
+    height: 100%;
+    border-radius: var(--radius-full, 9999px);
+    transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+    width: 0%;
+}
+
+/* Grade Badge */
+.grade-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-full, 9999px);
+    font-size: 0.8125rem;
+    font-weight: 900;
+}
+
+/* Report Card Table */
+.karne-table th {
+    font-size: 0.625rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted, #64748b);
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--color-border, #e2e8f0);
+}
+
+.karne-table td {
+    padding: 0.875rem 1rem;
+    font-size: var(--font-size-xs, 0.75rem);
+    border-bottom: 1px solid var(--color-border, #f1f5f9);
+}
+
+.karne-table tr:last-child td {
+    border-bottom: none;
+}
+
+.karne-table tr:hover td {
+    background-color: var(--color-surface-subtle, #f8fafc);
+}
+
+/* Chart Container */
+.benchmark-chart-container {
+    position: relative;
+    width: 100%;
+    height: 320px;
+}
+
+.benchmark-chart-container canvas {
+    max-height: 320px !important;
+}
+
+/* Tooltip Styles */
+.info-tip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: rgba(99, 102, 241, 0.15);
+    color: var(--color-primary, #6366f1);
+    font-size: 0.5625rem;
+    font-weight: 900;
+    cursor: help;
+    position: relative;
+}
+
+.info-tip:hover .tip-box {
+    display: block;
+}
+
+.tip-box {
+    display: none;
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0f172a;
+    color: #f8fafc;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-lg, 0.5rem);
+    width: 220px;
+    z-index: 50;
+    line-height: 1.4;
+    white-space: normal;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    text-align: left;
+}
+
+.tip-box::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #0f172a;
+}
+
+/* Dark Mode Overrides */
+[data-theme="dark"] .health-card {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: none;
+}
+
+[data-theme="dark"] .analysis-tab-btn {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .analysis-tab-btn:hover {
+    color: #f8fafc;
+    background-color: #334155;
+}
+
+[data-theme="dark"] .analysis-tab-btn.active {
+    background: #334155;
+    color: #818cf8;
+    border-color: #475569;
+}
+
+[data-theme="dark"] .metric-bar-track {
+    background: #334155;
+}
+
+[data-theme="dark"] .karne-table th {
+    border-color: #334155;
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .karne-table td {
+    border-color: #334155;
+}
+
+[data-theme="dark"] .karne-table tr:hover td {
+    background-color: #0f172a;
+}

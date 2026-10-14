@@ -1,11 +1,11 @@
 """Unit tests for TransactionFactory."""
 
-import pytest
-from unittest.mock import Mock, MagicMock, patch
 from decimal import Decimal
+from unittest.mock import Mock
+
+import pytest
 
 from infrastructure.demo.factories.transaction_factory import TransactionFactory
-from models import Transaction
 
 
 class TestTransactionFactory:
@@ -37,7 +37,7 @@ class TestTransactionFactory:
         """Test successful transaction creation."""
         transaction_factory.category_service = mock_category_service
         transaction_factory.config_loader = mock_config_loader
-        
+
         result = transaction_factory.create_transaction(
             date='2025-01-15',
             logical_category='salary',
@@ -47,7 +47,7 @@ class TestTransactionFactory:
             status='Ödendi',
             is_admin_generated=False
         )
-        
+
         assert result is not None
         assert result.date == '2025-01-15'
         assert result.category == 'Maaş'
@@ -62,7 +62,7 @@ class TestTransactionFactory:
         mock_category_service.is_valid_category.return_value = False
         transaction_factory.category_service = mock_category_service
         transaction_factory.config_loader = mock_config_loader
-        
+
         result = transaction_factory.create_transaction(
             date='2025-01-15',
             logical_category='invalid',
@@ -70,20 +70,20 @@ class TestTransactionFactory:
             description='Test transaction',
             amount=50000.0
         )
-        
+
         assert result is None
 
     def test_create_transaction_auto_status(self, transaction_factory, mock_category_service, mock_config_loader):
         """Test transaction creation with automatic status determination."""
         transaction_factory.category_service = mock_category_service
         transaction_factory.config_loader = mock_config_loader
-        
+
         # Mock the generation rule to return a status distribution
         mock_rule = {
             'status_distribution': {'Ödendi': 0.7, 'Bekliyor': 0.3}
         }
         transaction_factory.config_loader.get_generation_rule.return_value = mock_rule
-        
+
         result = transaction_factory.create_transaction(
             date='2025-01-15',
             logical_category='salary',
@@ -91,7 +91,7 @@ class TestTransactionFactory:
             description='Test transaction',
             amount=50000.0
         )
-        
+
         assert result is not None
         assert result.status in ['Ödendi', 'Bekliyor']  # Valid income statuses
 
@@ -99,7 +99,7 @@ class TestTransactionFactory:
         """Test transaction creation from template."""
         transaction_factory.category_service = mock_category_service
         transaction_factory.config_loader = mock_config_loader
-        
+
         # Mock template and rule
         mock_template = {
             'category_mapping': 'salary',
@@ -113,10 +113,10 @@ class TestTransactionFactory:
             'amount_range': {'min': 45000, 'max': 55000},
             'variation_percent': 0.10
         }
-        
+
         transaction_factory.config_loader.get_transaction_template.return_value = mock_template
         transaction_factory.config_loader.get_generation_rule.return_value = mock_rule
-        
+
         result = transaction_factory.create_transaction_from_template(
             template_name='monthly_salary',
             year=2025,
@@ -124,7 +124,7 @@ class TestTransactionFactory:
             variation_percent=0.05,
             is_admin_generated=True
         )
-        
+
         assert result is not None
         assert result.date == '2025-01-15'
         assert result.description == '2025-1 maaş'
@@ -135,27 +135,27 @@ class TestTransactionFactory:
         transaction_factory.category_service = mock_category_service
         transaction_factory.config_loader = mock_config_loader
         transaction_factory.config_loader.get_transaction_template.return_value = None
-        
+
         result = transaction_factory.create_transaction_from_template(
             template_name='invalid_template',
             year=2025,
             month=1
         )
-        
+
         assert result is None
 
     def test_determine_status_with_distribution(self, transaction_factory, mock_category_service, mock_config_loader):
         """Test status determination with distribution rules."""
         transaction_factory.category_service = mock_category_service
         transaction_factory.config_loader = mock_config_loader
-        
+
         mock_rule = {
             'status_distribution': {'Ödendi': 0.90, 'Gecikti': 0.10}
         }
         transaction_factory.config_loader.get_generation_rule.return_value = mock_rule
-        
+
         status = transaction_factory._determine_status('income', 'Maaş')
-        
+
         assert status in ['Ödendi', 'Gecikti']
 
     def test_determine_status_default_income(self, transaction_factory, mock_category_service, mock_config_loader):
@@ -163,9 +163,9 @@ class TestTransactionFactory:
         transaction_factory.category_service = mock_category_service
         transaction_factory.config_loader = mock_config_loader
         transaction_factory.config_loader.get_generation_rule.return_value = None
-        
+
         status = transaction_factory._determine_status('income', 'Maaş')
-        
+
         assert status in ['Ödendi', 'Bekliyor']
 
     def test_determine_status_default_expense(self, transaction_factory, mock_category_service, mock_config_loader):
@@ -173,9 +173,9 @@ class TestTransactionFactory:
         transaction_factory.category_service = mock_category_service
         transaction_factory.config_loader = mock_config_loader
         transaction_factory.config_loader.get_generation_rule.return_value = None
-        
+
         status = transaction_factory._determine_status('expense', 'Gıda')
-        
+
         assert status in ['Ödendi', 'Bekliyor', 'Gecikti', 'İptal']
 
     def test_map_category_type_to_transaction_type(self, transaction_factory):

@@ -84,7 +84,7 @@ class GoogleOAuthProvider(OAuthProvider):
 
         response = requests.post(self.token_url, data=data)
         if not response.ok:
-            logger.error(f"Failed to exchange code for token: {response.text}")
+            logger.error(f"Failed to exchange code for token: HTTP {response.status_code}")
             raise ValueError("Google ile giriş yapılamadı: Geçersiz doğrulama kodu.")
 
         return response.json()

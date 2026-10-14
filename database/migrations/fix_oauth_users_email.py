@@ -5,13 +5,12 @@ but have their email stored in the username field instead of the email field.
 """
 
 import logging
-import sys
 import os
+import sys
 
 # Add parent directory to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from sqlalchemy import text
 
 from models import User, db
 

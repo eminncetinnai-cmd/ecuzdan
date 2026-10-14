@@ -20,8 +20,20 @@ class CatalogApplicationService(ApplicationService):
     def page_context(self, tenant_id=None):
         return self.execute(lambda: self._svc.page_context(tenant_id))
 
-    def update_category(self, id, name, type_, tenant_id=None):
-        return self.execute(lambda: self._svc.update_category(id, name, type_, tenant_id=tenant_id))
+    def update_category(self, id, name, type_, tenant_id=None, code=None, parent_id=None, budget_limit=None, budget_limit_provided=False, version=None, user_id=None, color=None, icon=None):
+        return self.execute(lambda: self._svc.update_category(
+            id, name, type_, tenant_id=tenant_id, code=code,
+            parent_id=parent_id,
+            budget_limit=budget_limit, budget_limit_provided=budget_limit_provided,
+            version=version, user_id=user_id,
+            color=color, icon=icon
+        ))
+
+    def restore_category(self, id, tenant_id=None, user_id=None):
+        return self.execute(lambda: self._svc.restore_category(id, tenant_id=tenant_id, user_id=user_id))
+
+    def merge_categories(self, source_id, target_id, tenant_id=None, user_id=None):
+        return self.execute(lambda: self._svc.merge_categories(source_id, target_id, tenant_id=tenant_id, user_id=user_id))
 
     def delete_category(self, id, tenant_id=None):
         return self.execute(lambda: self._svc.delete_category(id, tenant_id=tenant_id))

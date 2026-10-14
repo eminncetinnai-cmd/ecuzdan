@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from infrastructure.database.management import export_database_to_json, import_database_from_json
 from repositories.financial_repository import FinancialRepository
 from repositories.user_repository import UserRepository
+from utils.capabilities import Capability
 
 
 class ExportService:
@@ -67,11 +68,20 @@ class ExportService:
         return user
 
     def require_platform_owner(self, user_id):
-        """Yalnızca sistem_yoneticisi tam DB export/import yapabilir."""
+        """Require the canonical platform-backup capability."""
         user = self.user_repository.get_user(user_id)
-        if not user or not user.is_super_admin:
+        allowed = False
+        if user:
+            from models import User
+
+            if isinstance(user, User):
+                allowed = user.has_capability(Capability.PLATFORM_BACKUP)
+            else:
+                # Preserve lightweight service-test doubles and legacy callers.
+                allowed = bool(getattr(user, 'is_super_admin', False))
+        if not allowed:
             raise PermissionError(
-                "Tam veritabanı yedekleme/geri yükleme yalnızca platform sahibine açıktır."
+                "Tam veritabanı yedekleme/geri yükleme yalnızca yetkili platform kullanıcılarına açıktır."
             )
         return user
 
@@ -92,26 +102,72 @@ class ExportService:
             raise PermissionError("Oturum bulunamadı.")
         tenant_id = user.tenant_id
 
-        from models import Transaction, RecurringPlan
-        from domain.portfolio.models.portfolio_models import Asset, AssetUpdate
+        from domain.portfolio.models.portfolio_models import Asset
+        from models import (
+            Account,
+            AssetSector,
+            AssetTransaction,
+            AssetType,
+            AssetUpdate,
+            Category,
+            InvestorProfile,
+            InvestorProfileAnswer,
+            LogbookEntry,
+            Payment,
+            PlanOccurrence,
+            RecurringPlan,
+            Tag,
+            Transaction,
+            UserPreference,
+        )
+
+        def _rows(model, **filters):
+            """Serialize all rows matching tenant filter."""
+            try:
+                rows = model.query.filter_by(**filters).all()
+                return [
+                    {c.name: str(getattr(r, c.name)) for c in r.__table__.columns}
+                    for r in rows
+                ]
+            except Exception:
+                return []
+
+        from database.schema_version import SCHEMA_VERSION
 
         data = {
             "export_type": "tenant",
+            "schema_version": SCHEMA_VERSION,
             "tenant_id": tenant_id,
             "exported_at": datetime.now().isoformat(),
-            "transactions": [
-                {c.name: str(getattr(t, c.name)) for c in t.__table__.columns}
-                for t in Transaction.query.filter_by(tenant_id=tenant_id).all()
-            ],
-            "recurring_plans": [
-                {c.name: str(getattr(p, c.name)) for c in p.__table__.columns}
-                for p in RecurringPlan.query.filter_by(tenant_id=tenant_id).all()
-            ],
-            "assets": [
-                {c.name: str(getattr(a, c.name)) for c in a.__table__.columns}
-                for a in Asset.query.filter_by(tenant_id=tenant_id).all()
-            ],
+            "categories": _rows(Category, tenant_id=tenant_id),
+            "accounts": _rows(Account, tenant_id=tenant_id),
+            "assets": _rows(Asset, tenant_id=tenant_id),
+            "asset_types": _rows(AssetType, tenant_id=tenant_id),
+            "asset_sectors": _rows(AssetSector, tenant_id=tenant_id),
+            "asset_updates": _rows(AssetUpdate, tenant_id=tenant_id),
+            "asset_transactions": _rows(AssetTransaction, tenant_id=tenant_id),
+            "transactions": _rows(Transaction, tenant_id=tenant_id),
+            "recurring_plans": _rows(RecurringPlan, tenant_id=tenant_id),
+            "plan_occurrences": _rows(PlanOccurrence, tenant_id=tenant_id),
+            "payments": _rows(Payment, tenant_id=tenant_id),
+            "tags": _rows(Tag, tenant_id=tenant_id),
+            "logbook_entries": _rows(LogbookEntry, tenant_id=tenant_id),
+            "investor_profiles": _rows(InvestorProfile, user_id=user_id),
+            "investor_profile_answers": _rows(InvestorProfileAnswer, user_id=user_id),
+            "user_preferences": _rows(UserPreference, user_id=user_id),
         }
+
+        # Build summary for logging
+        total_rows = sum(len(v) for v in data.values() if isinstance(v, list))
+        summary = ", ".join(
+            f"{k}={len(v)}" for k, v in data.items()
+            if isinstance(v, list) and v
+        )
+        import logging as _log
+        _log.getLogger(__name__).info(
+            "Tenant export: user_id=%s tenant=%s total_rows=%s [%s]",
+            user_id, tenant_id, total_rows, summary,
+        )
 
         import json
         raw = json.dumps(data, ensure_ascii=False, default=str)
@@ -125,6 +181,7 @@ class ExportService:
 
         return raw
 
+
     # ------------------------------------------------------------------
     # Platform-scope full DB export/import (sadece sistem_yoneticisi)
     # ------------------------------------------------------------------
@@ -135,10 +192,18 @@ class ExportService:
         self.require_platform_owner(user_id)
         return export_database_to_json(encrypt=encrypt, password=password)
 
-    def import_database_json(self, user_id: int, content, password: str = None):
-        """
-        TAM veritabanı geri yükleme — yalnızca platform owner.
-        """
+    def import_database_json(
+        self,
+        user_id: int,
+        content,
+        password: str = None,
+        replace_existing: bool = False,
+    ):
+        """Tam veritabanı geri yükleme — yalnızca platform owner."""
         self.require_platform_owner(user_id)
-        return import_database_from_json(content, password=password)
+        return import_database_from_json(
+            content,
+            password=password,
+            replace_existing=replace_existing,
+        )
 

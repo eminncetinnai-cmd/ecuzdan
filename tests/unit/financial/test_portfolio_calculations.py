@@ -4,11 +4,12 @@ Portföy değeri, getirisi, risk dağılımı ve çeşitlendirme testleri
 """
 
 
-import pytest
 from decimal import Decimal
 
-from database import get_total_assets, get_total_debts
+import pytest
 from flask import g
+
+from database import get_total_assets, get_total_debts
 from models import Asset, AssetSector, AssetType, Tenant, User, db
 
 

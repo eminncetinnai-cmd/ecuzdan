@@ -2,8 +2,8 @@
 Integration tests for strategy module
 """
 
+
 import pytest
-from datetime import datetime, timedelta, timezone
 
 
 @pytest.mark.slow
@@ -42,7 +42,7 @@ class TestStrategyIntegration:
             'inflation_rate': 40.0,
             'risk_free_rate': 50.0
         }
-        
+
         response = authenticated_client.post('/strategy/settings',
                                            json=settings_data,
                                            content_type='application/json')
@@ -80,14 +80,14 @@ class TestStrategyIntegration:
             'inflation_rate': 35.0,
             'risk_free_rate': 45.0
         }
-        
+
         post_response = authenticated_client.post('/strategy/api/settings',
                                                  json=settings_data,
                                                  content_type='application/json')
-        
+
         # Then retrieve settings
         get_response = authenticated_client.get('/strategy/api/settings')
-        
+
         # If both succeeded, verify persistence
         if post_response.status_code == 200 and get_response.status_code == 200:
             retrieved_settings = get_response.json
@@ -124,18 +124,18 @@ class TestStrategyIntegration:
     def test_strategy_concurrent_requests(self, authenticated_client):
         """Test strategy handles concurrent requests gracefully"""
         import threading
-        
+
         def make_request():
             return authenticated_client.get('/strategy')
-        
+
         threads = [threading.Thread(target=make_request) for _ in range(5)]
-        
+
         for thread in threads:
             thread.start()
-        
+
         for thread in threads:
             thread.join()
-        
+
         # All requests should complete without errors
         # (This is a basic smoke test for concurrency issues)
 
@@ -164,16 +164,15 @@ class TestStrategyServiceIntegration:
     def test_strategy_application_service(self):
         """Test strategy application service"""
         from bootstrap.container import get_container
-        
+
         container = get_container()
         strategy_app = container.applications.strategy()
-        
+
         assert strategy_app is not None
 
     def test_strategy_settings_crud(self):
         """Test strategy settings CRUD operations"""
         from bootstrap.container import get_container
-        from models import db, User, StrategySettings
 
         container = get_container()
         strategy_app = container.applications.strategy()

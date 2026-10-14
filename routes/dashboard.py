@@ -1,16 +1,18 @@
 """Dashboard and financial analysis routes."""
 
-import json
+import json  # noqa: F401
 import logging
+import math
 from datetime import datetime
 
-from flask import g, jsonify, render_template, request, session
+from flask import Response, g, jsonify, render_template, request, session
 
 from bootstrap.container import get_container
 from engines.analysis_engine import get_analysis_engine
-from shared.decimal_precision import to_decimal
 from engines.financial_engine import get_financial_analysis, get_monthly_dashboard_data
-from market_data_service import get_market_data_summary
+from infrastructure.market.market_data_service import get_market_data_summary
+from shared.currency_precision import get_currency_symbol
+from shared.decimal_precision import to_decimal
 from utils.db_session import rollback_session
 from utils.decorators import login_required
 
@@ -22,19 +24,29 @@ def _get_dashboard_service():
     return get_container().applications.dashboard()
 
 
+def _dashboard_currency_context():
+    user = getattr(g, 'current_user', None)
+    tenant = getattr(user, 'tenant', None)
+    code = (getattr(user, 'base_currency', None) or getattr(tenant, 'base_currency', None) or 'TRY').upper()
+    return {
+        'dashboard_currency_code': code,
+        'dashboard_currency_symbol': get_currency_symbol(code) or code,
+    }
+
+
 def register_dashboard_routes(bp):
     dashboard_service = _get_dashboard_service()
 
     @bp.route('/')
     @login_required
     def index():
-        from repositories.financial_repository import FinancialRepository
         try:
             tenant_id = g.get('tenant_id')
-            # Faz 2: Süresiz planların (Abonelik, DCA vb.) rolling taksitlerini kontrol et ve üret
-            FinancialRepository().generate_rolling_transactions(tenant_id)
-            
-            return render_template('index.html', **dashboard_service.index_context(tenant_id))
+            # Dashboard GET salt-okunurdur; plan/transaction materialization explicit
+            # lifecycle veya background akışında yapılmalıdır.
+            context = dashboard_service.index_context(tenant_id)
+            context.update(_dashboard_currency_context())
+            return render_template('index.html', **context)
         except Exception as e:
             logger.exception(f"Dashboard index error: {e}")
             return render_template('error.html', code=500, message="Dashboard yüklenirken hata oluştu"), 500
@@ -70,12 +82,13 @@ def register_dashboard_routes(bp):
             )
             unit_price = asset_obj.unit_price if asset_obj.unit_price > 0 else amount
             purchased_qty = round(amount / unit_price, 6) if unit_price > 0 else 1.0
+            sym = _dashboard_currency_context()['dashboard_currency_symbol']
             session.modified = True
             return jsonify({
                 'success': True,
                 'message': (
-                    f'{amount:,.2f} ₺ yatırım transferi kaydedildi. '
-                    f'({unit_price:,.2f} ₺ birim fiyattan {purchased_qty:,.4f} adet)'
+                    f'{amount:,.2f} {sym} yatırım transferi kaydedildi. '
+                    f'({unit_price:,.2f} {sym} birim fiyattan {purchased_qty:,.4f} adet)'
                 ),
             })
         except ValueError as e:
@@ -133,7 +146,7 @@ def register_dashboard_routes(bp):
             }
 
         try:
-            from market_data_service import market_data_service as mds
+            from infrastructure.market.market_data_service import market_data_service as mds
             engine = get_analysis_engine(mds)
             analysis = engine.run_full_analysis(
                 preferences=get_container().applications.settings().get_preferences(session.get('user_id'))
@@ -172,7 +185,21 @@ def register_dashboard_routes(bp):
 
             now = datetime.now()
             year = request.args.get('year', now.year, type=int)
-            months_data, investment_data, months_tr = get_monthly_dashboard_data(year, g.get('tenant_id'))
+            months_data, investment_data, _legacy_months = get_monthly_dashboard_data(
+                year,
+                g.get('tenant_id'),
+            )
+            from infrastructure.i18n import i18n
+
+            localized_months = [
+                i18n.gettext(f'monthly_month_{index:02d}')
+                for index in range(1, 13)
+            ]
+            months_data = [
+                {**month, 'name': localized_months[index]}
+                for index, month in enumerate(months_data)
+            ]
+            months_tr = localized_months
 
             total_income = sum(month['inc'] for month in months_data)
             total_expense = sum(month['exp'] for month in months_data)
@@ -215,3 +242,59 @@ def register_dashboard_routes(bp):
         except Exception as e:
             logger.exception(f"User guide error: {e}")
             return render_template('error.html', code=500, message="Kullanma klavuzu yüklenirken hata oluştu"), 500
+
+    def _format_quote(val):
+        if val is None or val == '--' or str(val).strip().lower() in {'', 'nan', 'none', 'null'}:
+            return '--'
+        try:
+            clean_str = str(val).replace('\xa0', '').replace(' ', '').replace(',', '.')
+            parts = clean_str.split('.')
+            if len(parts) > 2:
+                clean_str = "".join(parts[:-1]) + "." + parts[-1]
+            num = float(clean_str)
+            if not math.isfinite(num) or num <= 0:
+                return '--'
+            return f"{num:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+        except (ValueError, TypeError):
+            return str(val)
+
+    @bp.route('/api/live-quotes')
+    def live_quotes():
+        """Canlı piyasa verilerini JSON formatında döndürür (frontend canlı ticker polling için)."""
+        from engines.financial_engine import get_live_data
+        data = get_live_data() or {}
+
+        return jsonify({
+            'success': True,
+            'quotes': {
+                'usd': _format_quote(data.get('usd')),
+                'eur': _format_quote(data.get('eur')),
+                'gold': _format_quote(data.get('gold')),
+                'weather': data.get('weather') or '--',
+                'last_updated': data.get('last_updated', ''),
+                'is_stale': bool(data.get('is_stale', False)),
+            }
+        })
+
+    @bp.route('/api/live-stream')
+    def live_stream():
+        """Server-Sent Events endpoint for real-time market ticker updates."""
+        from engines.financial_engine import get_live_data
+
+        def event_stream():
+            data = get_live_data() or {}
+            payload = json.dumps({
+                'usd': _format_quote(data.get('usd')),
+                'eur': _format_quote(data.get('eur')),
+                'gold': _format_quote(data.get('gold')),
+                'weather': data.get('weather') or '--',
+                'last_updated': data.get('last_updated', ''),
+                'is_stale': bool(data.get('is_stale', False)),
+            })
+            yield f"retry: 30000\ndata: {payload}\n\n"
+
+        return Response(event_stream(), mimetype='text/event-stream', headers={
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no',
+        })

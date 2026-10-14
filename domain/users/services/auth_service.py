@@ -48,7 +48,7 @@ class AuthService:
             user.last_login_at = datetime.now(timezone.utc).replace(tzinfo=None)
             self.repository.commit()
             return user, False # False means not newly created
-            
+
         # 2. Link existing local account
         user = self.repository.find_user_by_username(email)
         if user:
@@ -68,7 +68,7 @@ class AuthService:
 
         tenant = self.repository.add_tenant(id=tenant_id, name=email, status='active')
         self.repository.session.flush()
-        
+
         user = self.repository.add_user(
             username=email,
             password=None,
@@ -160,7 +160,7 @@ class AuthService:
         Standart kategoriler silinemez (is_active=True ve tenant_id=None).
         """
         from models import Category, db
-        
+
         # Standart kategoriler - GL kodları ile
         standard_categories = [
             # Gelir Kategorileri (GLR-6xxx - 600 Hesap Grubu)
@@ -172,7 +172,7 @@ class AuthService:
             ('GLR-6006', 'Prim & İkramiye', 'Gelir', 6),
             ('GLR-6007', 'Yardım & Destek', 'Gelir', 7),
             ('GLR-6008', 'Yatırım Kazancı', 'Gelir', 8),
-            
+
             # Gider Kategorileri (GDR-7xxx - 700 Hesap Grubu)
             ('GDR-7001', 'Kredi Kartı Ödemesi', 'Gider', 1),
             ('GDR-7002', 'Kredi Ödemeleri', 'Gider', 2),
@@ -183,7 +183,7 @@ class AuthService:
             ('GDR-7007', 'Kişisel Bakım', 'Gider', 7),
             ('GDR-7008', 'Nafaka', 'Gider', 8),
             ('GDR-7009', 'Diğer Giderler', 'Gider', 9),
-            
+
             # Yatırım Kategorileri (YTR-1xxx - 100 Varlık Hesabı)
             ('YTR-1001', 'Altın Alımı', 'Yatırım', 1),
             ('YTR-1002', 'Diğer Yatırımlar', 'Yatırım', 2),
@@ -193,7 +193,7 @@ class AuthService:
             ('YTR-1006', 'Kripto', 'Yatırım', 6),
             ('YTR-1007', 'Nakit & Mevduat', 'Yatırım', 7),
         ]
-        
+
         for code, name, type_, sort_order in standard_categories:
             # Kategori zaten var mı kontrol et (koda göre)
             existing = Category.query.filter_by(code=code).first()
@@ -207,7 +207,7 @@ class AuthService:
                     is_active=True,
                     tenant_id=None,  # Sistem genelinde, silinemez
                     level=0,
-                    path=f"/",
+                    path="/",
                     budget_limit=None  # Başlangıçta bütçe limiti yok
                 ))
             else:
@@ -224,27 +224,27 @@ class AuthService:
             raise ValueError("Tüm alanlar gereklidir.")
         if password != confirm_password:
             raise ValueError("Şifreler eşleşmiyor.")
-        
+
         # Password complexity validation
         if len(password) < 8:
             raise ValueError("Şifre en az 8 karakter olmalıdır.")
-        
+
         # Check for uppercase letter
         if not re.search(r'[A-Z]', password):
             raise ValueError("Şifre en az bir büyük harf içermelidir.")
-        
+
         # Check for lowercase letter
         if not re.search(r'[a-z]', password):
             raise ValueError("Şifre en az bir küçük harf içermelidir.")
-        
+
         # Check for digit
         if not re.search(r'\d', password):
             raise ValueError("Şifre en az bir rakam içermelidir.")
-        
+
         # Check for special character
         if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
             raise ValueError("Şifre en az bir özel karakter içermelidir (!@#$%^&*(),.?\":{}|<>).")
-        
+
         # Check for common passwords (basic list)
         common_passwords = ['password', '12345678', 'qwerty', 'abc123', 'password123']
         if password.lower() in common_passwords:

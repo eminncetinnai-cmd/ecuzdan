@@ -1,4 +1,4 @@
-﻿/* ═══════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
    UI Modern — Light Premium Theme
    E-Cüzdan v15 · Tüm dark tema kaldırıldı, premium light hava
    ═══════════════════════════════════════════════════════════════ */
@@ -89,11 +89,7 @@ body {
 .edit-modal.active { display: flex; }
 .edit-modal-card { border-radius: var(--radius-lg); overflow: hidden; }
 
-/* ─── Responsive sidebar ─────────────────────────────────────── */
-@media (max-width: 768px) {
-  .sidebar-premium { width: 72px; min-width: 72px; max-width: 72px; }
-  .sidebar-spacer   { width: 72px; }
-}
+/* ─── Responsive sidebar handled unified in layout and below ─── */
 
 /* ─── Edit Modal ─────────────────────────────────────────────── */
 .edit-modal { 
@@ -329,22 +325,35 @@ body {
 }
 
 /* ─── Mobile Sidebar Improvements ───────────────────────────────── */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .sidebar-premium {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 280px !important;
+    min-width: 280px !important;
+    max-width: 280px !important;
+    height: 100vh !important;
+    z-index: 9999 !important;
     transform: translateX(-100%);
-    transition: transform var(--transition-normal);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
   
+  .sidebar-premium.open,
   .sidebar-premium.mobile-open {
-    transform: translateX(0);
+    transform: translateX(0) !important;
+    box-shadow: 4px 0 28px rgba(0, 0, 0, 0.25) !important;
   }
   
   .sidebar-spacer {
-    display: none;
+    display: none !important;
+    width: 0 !important;
   }
   
   main {
-    margin-left: 0;
+    margin-left: 0 !important;
+    width: 100% !important;
   }
 }
 
@@ -493,3 +502,324 @@ body {
 .delete-desc           { background: #fff7f7; border: 1px solid var(--red-100); padding: 0.75rem 1rem; border-radius: 0.75rem; color: var(--red-700); }
 .delete-confirm-btn    { flex: 1; padding: 0.75rem; border-radius: 0.75rem; background: var(--red-500); color: var(--color-surface); font-weight: var(--font-weight-black); border: none; cursor: pointer; }
 .delete-cancel-btn     { flex: 1; padding: 0.75rem; border-radius: 0.75rem; background: var(--slate-100); color: var(--slate-600); font-weight: var(--font-weight-bold); border: none; cursor: pointer; }
+
+/* ═══════════════════════════════════════════════════════════════
+   FAZ A — KAPSAMLI UI STANDARDİZASYON EKLENTİSİ
+   E-Cüzdan v15 — Premium & Responsive Design System
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── 1. PREMIUM BUTTON SİSTEMİ (LOADING STATE) ─────────────── */
+.btn-premium-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  padding: 0.75rem 1.5rem; border-radius: 0.875rem; border: none; cursor: pointer;
+  font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 0.8125rem;
+  text-transform: uppercase; letter-spacing: 0.1em; color: #ffffff;
+  background: linear-gradient(135deg, #6366f1 0%, #7c3aed 100%);
+  box-shadow: 0 4px 14px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+  transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+  position: relative; overflow: hidden; white-space: nowrap; text-decoration: none;
+}
+.btn-premium-primary::before {
+  content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+  transition: left 0.5s ease;
+}
+.btn-premium-primary:hover::before { left: 100%; }
+.btn-premium-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(99,102,241,0.5), inset 0 1px 0 rgba(255,255,255,0.25);
+}
+.btn-premium-primary:active { transform: translateY(0); }
+
+.btn-premium-secondary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  padding: 0.75rem 1.5rem; border-radius: 0.875rem; border: 1px solid var(--slate-200);
+  cursor: pointer; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 0.8125rem;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--slate-700);
+  background: rgba(255,255,255,0.8); backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(15,23,42,0.06);
+  transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+  white-space: nowrap; text-decoration: none;
+}
+.btn-premium-secondary:hover {
+  background: rgba(255,255,255,0.95); border-color: var(--indigo-300);
+  color: var(--indigo-700); transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(99,102,241,0.15);
+}
+
+.btn-premium-danger {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  padding: 0.75rem 1.5rem; border-radius: 0.875rem; border: none; cursor: pointer;
+  font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 0.8125rem;
+  text-transform: uppercase; letter-spacing: 0.1em; color: #ffffff;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 4px 14px rgba(239,68,68,0.35);
+  transition: all 0.25s cubic-bezier(0.4,0,0.2,1); white-space: nowrap;
+}
+.btn-premium-danger:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(239,68,68,0.45); }
+
+/* Loading spinner */
+.btn-loading { pointer-events: none; opacity: 0.75; }
+.btn-loading .btn-text { visibility: hidden; }
+.btn-loading::after {
+  content: ''; position: absolute; width: 1rem; height: 1rem;
+  border: 2px solid rgba(255,255,255,0.35); border-top-color: #ffffff;
+  border-radius: 50%; animation: btnSpin 0.7s linear infinite;
+}
+@keyframes btnSpin { to { transform: rotate(360deg); } }
+
+/* ─── 3. MODAL ANİMASYONLARI ─────────────────────────────────── */
+.modal-overlay.active, .edit-modal.active, .modal.active {
+  animation: modalBackdropIn 0.2s ease forwards;
+}
+@keyframes modalBackdropIn {
+  from { background-color: rgba(15,23,42,0); backdrop-filter: blur(0px); }
+  to   { background-color: rgba(15,23,42,0.45); backdrop-filter: blur(4px); }
+}
+.modal-content, .edit-modal-card, .delete-modal-panel {
+  animation: modalPanelIn 0.28s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes modalPanelIn {
+  from { opacity: 0; transform: translateY(24px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-sm  { max-width: 420px; }
+.modal-md  { max-width: 560px; }
+.modal-lg  { max-width: 760px; }
+.modal-xl  { max-width: 960px; }
+.modal-full { max-width: calc(100vw - 3rem); }
+
+/* ─── 4. TOAST GELİŞTİRMELERİ ───────────────────────────────── */
+.toast-premium {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.875rem 1.125rem; border-radius: 1rem;
+  font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 0.875rem;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.1);
+  max-width: 400px; animation: toastSlideIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+.toast-premium.toast-exit { animation: toastSlideOut 0.3s ease forwards; }
+@keyframes toastSlideIn {
+  from { opacity: 0; transform: translateX(100%) scale(0.9); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes toastSlideOut {
+  from { opacity: 1; transform: translateX(0); max-height: 100px; }
+  to   { opacity: 0; transform: translateX(100%); max-height: 0; }
+}
+
+/* ─── 5. EMPTY STATE BİLEŞENİ ────────────────────────────────── */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 3rem 2rem; text-align: center;
+}
+.empty-state-icon {
+  width: 5rem; height: 5rem; border-radius: 1.5rem;
+  display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;
+  background: linear-gradient(135deg, var(--indigo-50) 0%, var(--slate-100) 100%);
+  border: 1px solid var(--indigo-100);
+}
+.empty-state-icon svg { width: 2.5rem; height: 2.5rem; color: var(--indigo-400); }
+.empty-state-title {
+  font-size: 1.125rem; font-weight: 800; color: var(--slate-800);
+  margin-bottom: 0.5rem; letter-spacing: -0.02em;
+}
+.empty-state-desc {
+  font-size: 0.875rem; color: var(--slate-500); max-width: 28rem;
+  line-height: 1.6; margin-bottom: 1.5rem;
+}
+
+/* ─── 6. SKELETON LOADER ─────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, var(--slate-100) 25%, var(--slate-50) 50%, var(--slate-100) 75%);
+  background-size: 200% 100%; animation: skeletonShimmer 1.5s infinite linear;
+  border-radius: var(--radius-md);
+}
+@keyframes skeletonShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.skeleton-text   { height: 0.875rem; width: 100%; }
+.skeleton-text-sm { height: 0.75rem; width: 60%; }
+.skeleton-title  { height: 1.5rem; width: 40%; }
+.skeleton-avatar { width: 2.5rem; height: 2.5rem; border-radius: 0.75rem; }
+.skeleton-btn    { height: 2.5rem; width: 8rem; border-radius: 0.75rem; }
+.skeleton-card   { height: 10rem; border-radius: var(--radius-xl); }
+
+/* ─── 7. FORM ENHANCEMENTleri ────────────────────────────────── */
+.field-floating { position: relative; margin-bottom: 1.125rem; }
+.field-floating input, .field-floating select, .field-floating textarea {
+  width: 100%; padding: 1rem 1rem 0.5rem; border: 1.5px solid var(--slate-200);
+  border-radius: var(--radius-lg); font-size: 0.9375rem; font-weight: 500;
+  color: var(--slate-900); background: var(--color-surface); outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease; appearance: none;
+}
+.field-floating label {
+  position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
+  font-size: 0.875rem; font-weight: 500; color: var(--slate-400);
+  pointer-events: none; transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+.field-floating input:focus, .field-floating select:focus, .field-floating textarea:focus {
+  border-color: var(--indigo-500); box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+}
+.field-floating input:focus ~ label, .field-floating input:not(:placeholder-shown) ~ label,
+.field-floating select:focus ~ label, .field-floating textarea:focus ~ label,
+.field-floating textarea:not(:placeholder-shown) ~ label {
+  top: 0.5rem; font-size: 0.6875rem; font-weight: 700; color: var(--indigo-600);
+  text-transform: uppercase; letter-spacing: 0.05em; transform: translateY(0);
+}
+.field-error input, .field-error select, .field-error textarea {
+  border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.1);
+  animation: shake 0.35s ease;
+}
+.field-error label { color: #ef4444; }
+.field-error-msg {
+  font-size: 0.75rem; font-weight: 600; color: #ef4444;
+  margin-top: 0.375rem; display: flex; align-items: center; gap: 0.25rem;
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); } 40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); } 80% { transform: translateX(3px); }
+}
+.field-success input, .field-success select {
+  border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
+}
+
+/* ─── 8. DARK MODE GELİŞTİRMELERİ ───────────────────────────── */
+.dark .premium-card {
+  background: rgba(15,23,42,0.8); border-color: rgba(51,65,85,0.7);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+}
+.dark .modal-content, .dark .edit-modal-card {
+  background: var(--slate-900); border-color: var(--slate-700);
+}
+.dark .modal-title { color: var(--slate-50); }
+.dark .modal-close { background: var(--slate-800); color: var(--slate-300); }
+.dark .modal-close:hover { background: var(--slate-700); }
+.dark .form-input, .dark .edit-modal-input,
+.dark .form-group input, .dark .form-group select, .dark .form-group textarea {
+  background: var(--slate-800); border-color: var(--slate-600); color: var(--slate-50);
+}
+.dark .btn-premium-secondary {
+  background: rgba(30,41,59,0.8); border-color: var(--slate-600); color: var(--slate-200);
+}
+.dark .btn-premium-secondary:hover {
+  background: rgba(51,65,85,0.9); border-color: var(--indigo-500); color: var(--indigo-300);
+}
+.dark .empty-state-icon {
+  background: linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(15,23,42,0.5) 100%);
+  border-color: rgba(99,102,241,0.2);
+}
+.dark .empty-state-title { color: var(--slate-100); }
+.dark .empty-state-desc  { color: var(--slate-400); }
+.dark .skeleton {
+  background: linear-gradient(90deg, var(--slate-800) 25%, var(--slate-700) 50%, var(--slate-800) 75%);
+  background-size: 200% 100%;
+}
+.dark body { background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%); }
+.dark .field-floating input, .dark .field-floating select, .dark .field-floating textarea {
+  background: var(--slate-800); border-color: var(--slate-600); color: var(--slate-50);
+}
+.dark .field-floating label { color: var(--slate-500); }
+.dark .field-floating input:focus ~ label, .dark .field-floating select:focus ~ label {
+  color: var(--indigo-400);
+}
+.dark .delete-modal-panel { background: var(--slate-900); border-color: rgba(239,68,68,0.2); }
+.dark .delete-title { color: var(--slate-50); }
+.dark .card-header { background: rgba(15,23,42,0.6); border-color: var(--slate-700); }
+.dark .card-header h2 { color: var(--slate-50); }
+.dark .table th { background: var(--slate-800); color: var(--slate-300); }
+.dark .table td { border-color: var(--slate-700); color: var(--slate-200); }
+.dark .table tbody tr:hover { background: var(--slate-800); }
+.dark .alert { background: rgba(15,23,42,0.8); border-color: var(--slate-700); color: var(--slate-200); }
+
+/* ─── 9. RESPONSİVE İYİLEŞTİRMELER ─────────────────────────── */
+.table-responsive {
+  width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;
+  border-radius: var(--radius-xl);
+}
+.table-responsive::-webkit-scrollbar { height: 4px; }
+.table-responsive::-webkit-scrollbar-thumb { background: var(--slate-300); border-radius: 2px; }
+@media (max-width: 640px) {
+  .grid-responsive-2 { grid-template-columns: 1fr; }
+  .grid-responsive-3 { grid-template-columns: 1fr; }
+  .grid-responsive-4 { grid-template-columns: repeat(2,1fr); }
+  .hide-mobile { display: none !important; }
+  .modal-content { padding: 1.25rem; max-width: 100%; border-radius: var(--radius-lg); }
+  .btn-premium-primary, .btn-premium-secondary, .btn-premium-danger {
+    padding: 0.625rem 1.125rem; font-size: 0.75rem;
+  }
+  .empty-state { padding: 2rem 1.25rem; }
+}
+@media (min-width: 641px) and (max-width: 1023px) {
+  .grid-responsive-3 { grid-template-columns: repeat(2,1fr); }
+  .grid-responsive-4 { grid-template-columns: repeat(2,1fr); }
+}
+
+/* ─── 10. ALERT BANNER BİLEŞENİ ─────────────────────────────── */
+.alert-banner {
+  display: flex; align-items: flex-start; gap: 0.875rem;
+  padding: 1rem 1.25rem; border-radius: var(--radius-lg);
+  border: 1px solid transparent; margin-bottom: 1.25rem;
+  animation: alertSlideIn 0.3s ease both;
+}
+@keyframes alertSlideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.alert-banner-title { font-size: 0.875rem; font-weight: 800; margin-bottom: 0.125rem; }
+.alert-banner-msg   { font-size: 0.8125rem; font-weight: 500; line-height: 1.5; }
+.alert-banner-success { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.25); color: #065f46; }
+.alert-banner-error   { background: rgba(239,68,68,0.08);  border-color: rgba(239,68,68,0.25);  color: #7f1d1d; }
+.alert-banner-warning { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.3);  color: #78350f; }
+.alert-banner-info    { background: rgba(99,102,241,0.08); border-color: rgba(99,102,241,0.2);  color: #312e81; }
+.dark .alert-banner-success { color: #34d399; }
+.dark .alert-banner-error   { color: #fca5a5; }
+.dark .alert-banner-warning { color: #fbbf24; }
+.dark .alert-banner-info    { color: #a5b4fc; }
+
+/* ─── 11. BADGE GELİŞTİRMELERİ ─────────────────────────────── */
+.badge-premium {
+  display: inline-flex; align-items: center; gap: 0.375rem;
+  padding: 0.25rem 0.75rem; border-radius: 9999px;
+  font-size: 0.6875rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.08em; border: 1px solid transparent;
+}
+.badge-success  { background: rgba(16,185,129,0.1);  color: #059669; border-color: rgba(16,185,129,0.25); }
+.badge-error    { background: rgba(239,68,68,0.1);   color: #dc2626; border-color: rgba(239,68,68,0.25); }
+.badge-warning  { background: rgba(245,158,11,0.1);  color: #d97706; border-color: rgba(245,158,11,0.3); }
+.badge-info     { background: rgba(99,102,241,0.1);  color: #4f46e5; border-color: rgba(99,102,241,0.2); }
+.badge-neutral  { background: rgba(100,116,139,0.1); color: #475569; border-color: rgba(100,116,139,0.2); }
+.dark .badge-success { color: #34d399; }
+.dark .badge-error   { color: #fca5a5; }
+.dark .badge-warning { color: #fbbf24; }
+.dark .badge-info    { color: #a5b4fc; }
+.dark .badge-neutral { color: #94a3b8; }
+
+/* ─── 12. HOVER GLOW EFECT ───────────────────────────────────── */
+.hover-glow { transition: box-shadow 0.3s ease, transform 0.3s ease; }
+.hover-glow:hover { box-shadow: 0 8px 30px rgba(99,102,241,0.2); transform: translateY(-2px); }
+
+/* ─── 13. SAYFA BAŞLIĞI STANDARDI ────────────────────────────── */
+.page-header {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;
+}
+.page-header-left h1, .page-header-left h2 {
+  font-size: clamp(1.5rem, 3vw, 2.25rem); font-weight: 900;
+  letter-spacing: -0.04em; line-height: 1.1; color: var(--slate-900);
+  background: linear-gradient(135deg, var(--slate-900) 0%, var(--indigo-900) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.page-header-eyebrow {
+  font-size: 0.6875rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.12em; color: var(--indigo-500); margin-bottom: 0.25rem;
+}
+.page-header-subtitle { font-size: 0.8125rem; color: var(--slate-500); margin-top: 0.25rem; }
+.dark .page-header-left h1, .dark .page-header-left h2 {
+  background: linear-gradient(135deg, #f1f5f9 0%, #a5b4fc 100%);
+  -webkit-background-clip: text;
+}
+.dark .page-header-eyebrow  { color: var(--indigo-400); }
+.dark .page-header-subtitle { color: var(--slate-400); }
+
+/* ─── 14. SCROLL LOCK HELPER ─────────────────────────────────── */
+html.modal-open { overflow: hidden; }

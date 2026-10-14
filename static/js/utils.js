@@ -263,7 +263,7 @@ export function once(element, event, handler, options = {}) {
 }
 
 // Toast Notification System
-export function showToast(message, type = 'success', duration = 4000) {
+export function showToast(message, type = 'success', duration = 4000, action = null) {
     const container = document.getElementById('toast-container');
     if (!container) return;
 
@@ -287,14 +287,52 @@ export function showToast(message, type = 'success', duration = 4000) {
     const bgColor = colors[type] || colors.info;
     const icon = icons[type] || icons.info;
 
-    toast.className = `toast-item ${bgColor} text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 transform transition-all duration-300 translate-x-full opacity-0`;
+    toast.className = `toast-item ${bgColor} text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 transform transition-all duration-300 translate-x-full opacity-0 pointer-events-auto`;
+    
+    let actionBtnHtml = '';
+    if (action && action.text) {
+        actionBtnHtml = `<button type="button" class="toast-action-btn flex-shrink-0 px-2.5 py-1 bg-white/25 hover:bg-white/35 active:scale-95 text-white rounded-lg text-xs font-bold transition shadow-sm cursor-pointer">${action.text}</button>`;
+    }
+
     toast.innerHTML = `
         <div class="flex-shrink-0">${icon}</div>
-        <div class="flex-1 font-semibold text-sm">${message}</div>
-        <button onclick="this.parentElement.remove()" class="flex-shrink-0 hover:opacity-80 transition">
+        <div class="flex-1 font-semibold text-sm leading-snug">${message}</div>
+        ${actionBtnHtml}
+        <button type="button" class="toast-close-btn flex-shrink-0 hover:opacity-80 transition cursor-pointer p-0.5" aria-label="Kapat">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
     `;
+
+    const removeToast = () => {
+        if (!toast.parentElement) return;
+        toast.classList.add('translate-x-full', 'opacity-0');
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.parentElement.removeChild(toast);
+            }
+        }, 300);
+    };
+
+    const closeBtn = toast.querySelector('.toast-close-btn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', removeToast);
+    }
+
+    if (action && (action.onClick || action.callback)) {
+        const actionCallback = action.onClick || action.callback;
+        const actionBtn = toast.querySelector('.toast-action-btn');
+        if (actionBtn) {
+            actionBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                try {
+                    actionCallback();
+                } catch (err) {
+                    console.error('Toast action failed:', err);
+                }
+                removeToast();
+            });
+        }
+    }
 
     container.appendChild(toast);
 
@@ -304,14 +342,13 @@ export function showToast(message, type = 'success', duration = 4000) {
     });
 
     // Auto remove
-    setTimeout(() => {
-        toast.classList.add('translate-x-full', 'opacity-0');
-        setTimeout(() => {
-            if (toast.parentElement) {
-                toast.parentElement.removeChild(toast);
-            }
-        }, 300);
-    }, duration);
+    let autoRemoveTimer = setTimeout(removeToast, duration);
+
+    // Pause on hover
+    toast.addEventListener('mouseenter', () => clearTimeout(autoRemoveTimer));
+    toast.addEventListener('mouseleave', () => {
+        autoRemoveTimer = setTimeout(removeToast, 2000);
+    });
 }
 
 // Pop-up notification for completed operations

@@ -3,18 +3,20 @@ Unit Tests - Settings Routes
 Settings route functions
 """
 
+from unittest.mock import Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+
 from routes.settings import (
-    _get_settings_service,
-    _parse_optional,
-    _with_currency_context,
-    _apply_preferences_to_engine_defaults,
-    _refresh_engine_defaults_cache,
-    _engine_defaults,
-    _handle_settings_action,
-    register_settings_routes,
     BASE_CURRENCY_CHOICES,
+    _apply_preferences_to_engine_defaults,
+    _engine_defaults,
+    _get_settings_service,
+    _handle_settings_action,
+    _parse_optional,
+    _refresh_engine_defaults_cache,
+    _with_currency_context,
+    register_settings_routes,
 )
 
 
@@ -28,7 +30,7 @@ def test_get_settings_service():
         mock_applications.settings.return_value = mock_settings
         mock_container.applications = mock_applications
         mock_get_container.return_value = mock_container
-        
+
         result = _get_settings_service()
         assert result == mock_settings
 
@@ -39,12 +41,12 @@ def test_parse_optional():
     # Test empty string
     assert _parse_optional('', int) is None
     assert _parse_optional(None, int) is None
-    
+
     # Test valid numbers
     assert _parse_optional('5', int) == 5
     assert _parse_optional('3.14', float) == 3.14
     assert _parse_optional('3,14', float) == 3.14
-    
+
     # Test invalid numbers
     with pytest.raises(ValueError):
         _parse_optional('abc', int)
@@ -61,9 +63,9 @@ def test_register_settings_routes():
     """Test register_settings_routes function"""
     mock_bp = Mock()
     mock_bp.route = Mock(return_value=lambda f: f)
-    
+
     register_settings_routes(mock_bp)
-    
+
     assert mock_bp.route.called
 
 
@@ -73,15 +75,9 @@ def test_settings_imports():
     from routes.settings import (
         _get_settings_service,
         _parse_optional,
-        _with_currency_context,
-        _apply_preferences_to_engine_defaults,
-        _refresh_engine_defaults_cache,
-        _engine_defaults,
-        _handle_settings_action,
         register_settings_routes,
-        BASE_CURRENCY_CHOICES,
     )
-    
+
     assert callable(_get_settings_service)
     assert callable(_parse_optional)
     assert callable(_with_currency_context)
@@ -96,7 +92,7 @@ def test_settings_imports():
 def test_settings_routes_structure():
     """Test settings routes module structure"""
     import routes.settings as settings_module
-    
+
     # Check for expected functions
     assert hasattr(settings_module, '_get_settings_service')
     assert hasattr(settings_module, '_parse_optional')
@@ -106,7 +102,7 @@ def test_settings_routes_structure():
     assert hasattr(settings_module, '_engine_defaults')
     assert hasattr(settings_module, '_handle_settings_action')
     assert hasattr(settings_module, 'register_settings_routes')
-    
+
     # Check for expected imports
     assert hasattr(settings_module, 'logging')
     assert hasattr(settings_module, 'os')
@@ -137,9 +133,9 @@ def test_register_settings_routes_route_registration():
     """Test register_settings_routes registers routes"""
     mock_bp = Mock()
     mock_bp.route = Mock(return_value=lambda f: f)
-    
+
     register_settings_routes(mock_bp)
-    
+
     # Should register multiple routes
     assert mock_bp.route.call_count >= 4
 
@@ -148,7 +144,7 @@ def test_register_settings_routes_route_registration():
 def test_settings_module_has_required_imports():
     """Test settings module has required imports"""
     import routes.settings as settings_module
-    
+
     # Flask imports
     assert hasattr(settings_module, 'current_app')
     assert hasattr(settings_module, 'flash')
@@ -157,7 +153,7 @@ def test_settings_module_has_required_imports():
     assert hasattr(settings_module, 'request')
     assert hasattr(settings_module, 'session')
     assert hasattr(settings_module, 'url_for')
-    
+
     # Standard library imports
     assert hasattr(settings_module, 'logging')
     assert hasattr(settings_module, 'os')
@@ -166,7 +162,7 @@ def test_settings_module_has_required_imports():
     assert hasattr(settings_module, 'Decimal')
     assert hasattr(settings_module, 'Lock')
     assert hasattr(settings_module, 'Thread')
-    
+
     # Custom imports
     assert hasattr(settings_module, 'secure_filename')
     assert hasattr(settings_module, 'get_container')
@@ -182,7 +178,7 @@ def test_settings_blueprint_parameter():
     """Test register_settings_routes accepts blueprint parameter"""
     mock_bp = Mock()
     mock_bp.route = Mock(return_value=lambda f: f)
-    
+
     # Should not raise exception
     register_settings_routes(mock_bp)
 
@@ -190,9 +186,10 @@ def test_settings_blueprint_parameter():
 @pytest.mark.unit
 def test_settings_route_exists():
     """Test settings route exists"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert '/settings' in source
 
@@ -200,9 +197,10 @@ def test_settings_route_exists():
 @pytest.mark.unit
 def test_logout_other_devices_route_exists():
     """Test logout other devices route exists"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert '/logout_other_devices' in source
 
@@ -210,9 +208,10 @@ def test_logout_other_devices_route_exists():
 @pytest.mark.unit
 def test_toggle_privacy_mode_route_exists():
     """Test toggle privacy mode route exists"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert '/toggle_privacy_mode' in source
 
@@ -220,9 +219,10 @@ def test_toggle_privacy_mode_route_exists():
 @pytest.mark.unit
 def test_reset_data_route_exists():
     """Test reset data route exists"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert '/reset_data' in source
 
@@ -230,9 +230,10 @@ def test_reset_data_route_exists():
 @pytest.mark.unit
 def test_settings_error_handling_structure():
     """Test settings routes have error handling"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     # Check that the module has error handling patterns
     source = inspect.getsource(settings_module)
     assert 'except Exception' in source or 'try:' in source
@@ -241,9 +242,10 @@ def test_settings_error_handling_structure():
 @pytest.mark.unit
 def test_settings_permission_error_handling():
     """Test settings routes handle PermissionError"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'PermissionError' in source
 
@@ -251,9 +253,10 @@ def test_settings_permission_error_handling():
 @pytest.mark.unit
 def test_settings_flash_messaging():
     """Test settings routes use flash messaging"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'flash' in source
 
@@ -261,9 +264,10 @@ def test_settings_flash_messaging():
 @pytest.mark.unit
 def test_settings_rollback_session():
     """Test settings routes use rollback_session"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'rollback_session' in source
 
@@ -271,9 +275,10 @@ def test_settings_rollback_session():
 @pytest.mark.unit
 def test_settings_session_usage():
     """Test settings routes use session"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'session' in source
 
@@ -281,9 +286,10 @@ def test_settings_session_usage():
 @pytest.mark.unit
 def test_settings_login_required():
     """Test settings routes use login_required decorator"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'login_required' in source
 
@@ -291,9 +297,10 @@ def test_settings_login_required():
 @pytest.mark.unit
 def test_settings_file_upload():
     """Test settings routes handle file upload"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'file' in source or 'secure_filename' in source
 
@@ -301,9 +308,10 @@ def test_settings_file_upload():
 @pytest.mark.unit
 def test_settings_password_change():
     """Test settings routes handle password change"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'password' in source.lower()
 
@@ -311,9 +319,10 @@ def test_settings_password_change():
 @pytest.mark.unit
 def test_settings_currency_change():
     """Test settings routes handle currency change"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'currency' in source.lower()
 
@@ -321,9 +330,10 @@ def test_settings_currency_change():
 @pytest.mark.unit
 def test_settings_preferences():
     """Test settings routes handle preferences"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'preferences' in source.lower()
 
@@ -331,9 +341,10 @@ def test_settings_preferences():
 @pytest.mark.unit
 def test_settings_privacy_mode():
     """Test settings routes handle privacy mode"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'privacy' in source.lower()
 
@@ -341,9 +352,10 @@ def test_settings_privacy_mode():
 @pytest.mark.unit
 def test_settings_theme():
     """Test settings routes handle theme"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'theme' in source.lower()
 
@@ -351,9 +363,10 @@ def test_settings_theme():
 @pytest.mark.unit
 def test_settings_notifications():
     """Test settings routes handle notifications"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'notification' in source.lower()
 
@@ -361,9 +374,10 @@ def test_settings_notifications():
 @pytest.mark.unit
 def test_settings_language():
     """Test settings routes handle language"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'language' in source.lower()
 
@@ -371,9 +385,10 @@ def test_settings_language():
 @pytest.mark.unit
 def test_settings_admin_actions():
     """Test settings routes handle admin actions"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'admin' in source.lower()
 
@@ -381,9 +396,10 @@ def test_settings_admin_actions():
 @pytest.mark.unit
 def test_settings_engine_defaults():
     """Test settings routes use engine defaults"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'engine_defaults' in source
 
@@ -391,9 +407,10 @@ def test_settings_engine_defaults():
 @pytest.mark.unit
 def test_settings_currency_manager():
     """Test settings routes use CurrencyManager"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'CurrencyManager' in source
 
@@ -401,9 +418,10 @@ def test_settings_currency_manager():
 @pytest.mark.unit
 def test_settings_threading():
     """Test settings routes use threading"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'Thread' in source or 'Lock' in source
 
@@ -411,9 +429,10 @@ def test_settings_threading():
 @pytest.mark.unit
 def test_settings_caching():
     """Test settings routes use caching"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'cache' in source.lower() or 'CACHE' in source
 
@@ -421,9 +440,10 @@ def test_settings_caching():
 @pytest.mark.unit
 def test_settings_i18n():
     """Test settings routes use i18n"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'i18n' in source
 
@@ -436,10 +456,10 @@ def test_get_standard_category_codes_function_exists():
 
 
 @pytest.mark.unit
-def test_parse_optional():
+def test_parse_optional_duplicate():
     """Test _parse_optional function"""
     from routes.settings import _parse_optional
-    
+
     assert _parse_optional('123', int) == 123
     assert _parse_optional('', int) is None
     assert _parse_optional(None, int) is None
@@ -450,7 +470,7 @@ def test_parse_optional():
 def test_parse_optional_with_comma():
     """Test _parse_optional handles comma as decimal separator"""
     from routes.settings import _parse_optional
-    
+
     assert _parse_optional('3,14', float) == 3.14
     assert _parse_optional('1234', int) == 1234
 
@@ -459,10 +479,10 @@ def test_parse_optional_with_comma():
 def test_parse_optional_invalid_number():
     """Test _parse_optional raises ValueError for invalid numbers"""
     from routes.settings import _parse_optional
-    
+
     with pytest.raises(ValueError, match="geçerli bir sayı değil"):
         _parse_optional('abc', int)
-    
+
     with pytest.raises(ValueError, match="geçerli bir sayı değil"):
         _parse_optional('12.34.56', float)
 
@@ -484,28 +504,24 @@ def test_cleanup_non_standard_categories_function_exists():
 @pytest.mark.unit
 def test_with_currency_context_function_exists():
     """Test _with_currency_context function exists and is callable"""
-    from routes.settings import _with_currency_context
     assert callable(_with_currency_context)
 
 
 @pytest.mark.unit
 def test_apply_preferences_to_engine_defaults_function_exists():
     """Test _apply_preferences_to_engine_defaults function exists and is callable"""
-    from routes.settings import _apply_preferences_to_engine_defaults
     assert callable(_apply_preferences_to_engine_defaults)
 
 
 @pytest.mark.unit
 def test_engine_defaults_function_exists():
     """Test _engine_defaults function exists and is callable"""
-    from routes.settings import _engine_defaults
     assert callable(_engine_defaults)
 
 
 @pytest.mark.unit
 def test_handle_settings_action_function_exists():
     """Test _handle_settings_action function exists and is callable"""
-    from routes.settings import _handle_settings_action
     assert callable(_handle_settings_action)
 
 
@@ -531,8 +547,6 @@ def test_engine_defaults_cache_constants():
     from routes.settings import (
         _ENGINE_DEFAULTS_CACHE,
         _ENGINE_DEFAULTS_CACHE_TTL,
-        _ENGINE_DEFAULTS_REFRESH_LOCK,
-        _ENGINE_DEFAULTS_REFRESH_IN_PROGRESS
     )
     assert isinstance(_ENGINE_DEFAULTS_CACHE, dict)
     assert isinstance(_ENGINE_DEFAULTS_CACHE_TTL, int)
@@ -542,9 +556,10 @@ def test_engine_defaults_cache_constants():
 @pytest.mark.unit
 def test_settings_has_login_required():
     """Test settings routes use login_required decorator"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'login_required' in source
 
@@ -552,9 +567,10 @@ def test_settings_has_login_required():
 @pytest.mark.unit
 def test_settings_uses_flash():
     """Test settings routes use flash messages"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'flash' in source
 
@@ -562,9 +578,10 @@ def test_settings_uses_flash():
 @pytest.mark.unit
 def test_settings_uses_session():
     """Test settings routes use session"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'session' in source
 
@@ -579,9 +596,10 @@ def test_settings_uses_logger():
 @pytest.mark.unit
 def test_settings_has_logging():
     """Test settings module uses logging"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'logger' in source
 
@@ -589,9 +607,10 @@ def test_settings_has_logging():
 @pytest.mark.unit
 def test_settings_uses_request():
     """Test settings routes use request"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'request' in source
 
@@ -599,9 +618,10 @@ def test_settings_uses_request():
 @pytest.mark.unit
 def test_settings_uses_redirect():
     """Test settings routes use redirect"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'redirect' in source
 
@@ -609,9 +629,10 @@ def test_settings_uses_redirect():
 @pytest.mark.unit
 def test_settings_uses_render_template():
     """Test settings routes use render_template"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'render_template' in source
 
@@ -619,9 +640,10 @@ def test_settings_uses_render_template():
 @pytest.mark.unit
 def test_settings_uses_url_for():
     """Test settings routes use url_for"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'url_for' in source
 
@@ -629,9 +651,10 @@ def test_settings_uses_url_for():
 @pytest.mark.unit
 def test_settings_has_threading():
     """Test settings module uses threading"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'Thread' in source or 'threading' in source
 
@@ -639,9 +662,10 @@ def test_settings_has_threading():
 @pytest.mark.unit
 def test_settings_has_time_import():
     """Test settings module imports time"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'time' in source
 
@@ -649,9 +673,10 @@ def test_settings_has_time_import():
 @pytest.mark.unit
 def test_settings_has_decimal_import():
     """Test settings module imports Decimal"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'Decimal' in source
 
@@ -659,9 +684,10 @@ def test_settings_has_decimal_import():
 @pytest.mark.unit
 def test_settings_has_secure_filename():
     """Test settings module uses secure_filename"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'secure_filename' in source
 
@@ -669,9 +695,10 @@ def test_settings_has_secure_filename():
 @pytest.mark.unit
 def test_settings_has_current_app():
     """Test settings module uses current_app"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'current_app' in source
 
@@ -679,9 +706,10 @@ def test_settings_has_current_app():
 @pytest.mark.unit
 def test_settings_has_os_import():
     """Test settings module imports os"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'os' in source
 
@@ -689,9 +717,10 @@ def test_settings_has_os_import():
 @pytest.mark.unit
 def test_settings_has_datetime_import():
     """Test settings module imports datetime"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'datetime' in source
 
@@ -699,9 +728,10 @@ def test_settings_has_datetime_import():
 @pytest.mark.unit
 def test_settings_has_lock_import():
     """Test settings module imports Lock"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'Lock' in source
 
@@ -709,9 +739,10 @@ def test_settings_has_lock_import():
 @pytest.mark.unit
 def test_settings_uses_bootstrap_container():
     """Test settings module uses bootstrap container"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'bootstrap' in source or 'container' in source
 
@@ -719,9 +750,10 @@ def test_settings_uses_bootstrap_container():
 @pytest.mark.unit
 def test_settings_uses_infrastructure_i18n():
     """Test settings module uses infrastructure i18n"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'i18n' in source
 
@@ -729,9 +761,10 @@ def test_settings_uses_infrastructure_i18n():
 @pytest.mark.unit
 def test_settings_uses_infrastructure_demo():
     """Test settings module uses infrastructure demo"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'demo' in source
 
@@ -739,9 +772,10 @@ def test_settings_uses_infrastructure_demo():
 @pytest.mark.unit
 def test_settings_uses_utils_db_session():
     """Test settings module uses utils db_session"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'db_session' in source or 'rollback_session' in source
 
@@ -749,9 +783,10 @@ def test_settings_uses_utils_db_session():
 @pytest.mark.unit
 def test_settings_uses_utils_decorators():
     """Test settings module uses utils decorators"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'decorators' in source or 'login_required' in source
 
@@ -804,9 +839,10 @@ def test_settings_module_docstring():
 @pytest.mark.unit
 def test_settings_module_has_logging_config():
     """Test settings module configures logging"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'logging' in source
 
@@ -814,9 +850,10 @@ def test_settings_module_has_logging_config():
 @pytest.mark.unit
 def test_settings_has_exception_handling():
     """Test settings routes have exception handling"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'except' in source or 'try' in source
 
@@ -824,9 +861,10 @@ def test_settings_has_exception_handling():
 @pytest.mark.unit
 def test_settings_has_flash_messages():
     """Test settings routes use flash messages"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'flash' in source
 
@@ -834,9 +872,10 @@ def test_settings_has_flash_messages():
 @pytest.mark.unit
 def test_settings_has_route_decorators():
     """Test settings routes use route decorators"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert '@' in source  # Decorator syntax
 
@@ -844,9 +883,10 @@ def test_settings_has_route_decorators():
 @pytest.mark.unit
 def test_settings_has_post_methods():
     """Test settings routes have POST methods"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'POST' in source or 'post' in source
 
@@ -854,9 +894,10 @@ def test_settings_has_post_methods():
 @pytest.mark.unit
 def test_settings_has_get_methods():
     """Test settings routes have GET methods"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'GET' in source or 'get' in source
 
@@ -864,9 +905,10 @@ def test_settings_has_get_methods():
 @pytest.mark.unit
 def test_settings_has_form_handling():
     """Test settings routes handle form data"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'form' in source
 
@@ -874,9 +916,10 @@ def test_settings_has_form_handling():
 @pytest.mark.unit
 def test_settings_has_file_handling():
     """Test settings routes handle file uploads"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'file' in source or 'secure_filename' in source
 
@@ -884,9 +927,10 @@ def test_settings_has_file_handling():
 @pytest.mark.unit
 def test_settings_has_password_handling():
     """Test settings routes handle password changes"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'password' in source or 'pw' in source
 
@@ -894,9 +938,10 @@ def test_settings_has_password_handling():
 @pytest.mark.unit
 def test_settings_has_currency_handling():
     """Test settings routes handle currency changes"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'currency' in source
 
@@ -904,9 +949,10 @@ def test_settings_has_currency_handling():
 @pytest.mark.unit
 def test_settings_has_theme_handling():
     """Test settings routes handle theme changes"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'theme' in source
 
@@ -914,9 +960,10 @@ def test_settings_has_theme_handling():
 @pytest.mark.unit
 def test_settings_has_language_handling():
     """Test settings routes handle language changes"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'language' in source or 'lang' in source
 
@@ -924,9 +971,10 @@ def test_settings_has_language_handling():
 @pytest.mark.unit
 def test_settings_has_privacy_mode():
     """Test settings routes handle privacy mode"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'privacy' in source
 
@@ -934,9 +982,10 @@ def test_settings_has_privacy_mode():
 @pytest.mark.unit
 def test_settings_has_notification_handling():
     """Test settings routes handle notification preferences"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'notification' in source or 'notify' in source
 
@@ -965,21 +1014,18 @@ def test_parse_optional_docstring():
 @pytest.mark.unit
 def test_with_currency_context_docstring():
     """Test _with_currency_context has docstring"""
-    from routes.settings import _with_currency_context
     assert _with_currency_context.__doc__ is not None
 
 
 @pytest.mark.unit
 def test_engine_defaults_docstring():
     """Test _engine_defaults has docstring"""
-    from routes.settings import _engine_defaults
     assert _engine_defaults.__doc__ is not None
 
 
 @pytest.mark.unit
 def test_refresh_engine_defaults_cache_function_exists():
     """Test _refresh_engine_defaults_cache function exists and is callable"""
-    from routes.settings import _refresh_engine_defaults_cache
     assert callable(_refresh_engine_defaults_cache)
 
 
@@ -987,7 +1033,7 @@ def test_refresh_engine_defaults_cache_function_exists():
 def test_parse_optional_whitespace_handling():
     """Test _parse_optional handles whitespace correctly"""
     from routes.settings import _parse_optional
-    
+
     assert _parse_optional('  123  ', int) == 123
     assert _parse_optional('   ', int) is None
     assert _parse_optional('  3.14  ', float) == 3.14
@@ -997,7 +1043,7 @@ def test_parse_optional_whitespace_handling():
 def test_parse_optional_negative_numbers():
     """Test _parse_optional handles negative numbers"""
     from routes.settings import _parse_optional
-    
+
     assert _parse_optional('-123', int) == -123
     assert _parse_optional('-3.14', float) == -3.14
 
@@ -1006,7 +1052,7 @@ def test_parse_optional_negative_numbers():
 def test_parse_optional_zero():
     """Test _parse_optional handles zero"""
     from routes.settings import _parse_optional
-    
+
     assert _parse_optional('0', int) == 0
     assert _parse_optional('0.0', float) == 0.0
 
@@ -1015,7 +1061,7 @@ def test_parse_optional_zero():
 def test_parse_optional_large_numbers():
     """Test _parse_optional handles large numbers"""
     from routes.settings import _parse_optional
-    
+
     assert _parse_optional('999999', int) == 999999
     assert _parse_optional('999999.99', float) == 999999.99
 
@@ -1023,8 +1069,9 @@ def test_parse_optional_large_numbers():
 @pytest.mark.unit
 def test_engine_defaults_cache_lock_type():
     """Test _ENGINE_DEFAULTS_REFRESH_LOCK is a Lock"""
-    from routes.settings import _ENGINE_DEFAULTS_REFRESH_LOCK
     from threading import Lock
+
+    from routes.settings import _ENGINE_DEFAULTS_REFRESH_LOCK
     assert isinstance(_ENGINE_DEFAULTS_REFRESH_LOCK, Lock)
 
 
@@ -1073,9 +1120,10 @@ def test_engine_defaults_refresh_in_progress_is_bool():
 @pytest.mark.unit
 def test_settings_module_length():
     """Test settings module has reasonable length"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     # Module should have at least 400 lines
     assert len(source.split('\n')) > 400
@@ -1084,9 +1132,10 @@ def test_settings_module_length():
 @pytest.mark.unit
 def test_settings_has_multiple_routes():
     """Test settings module has multiple route definitions"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     # Should have multiple @bp.route decorators
     assert source.count('@bp.route') >= 3
@@ -1095,9 +1144,10 @@ def test_settings_has_multiple_routes():
 @pytest.mark.unit
 def test_settings_has_reset_data_route():
     """Test settings has reset_data route"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'reset_data' in source
 
@@ -1105,9 +1155,10 @@ def test_settings_has_reset_data_route():
 @pytest.mark.unit
 def test_settings_has_logout_other_devices_route():
     """Test settings has logout_other_devices route"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'logout_other_devices' in source
 
@@ -1115,9 +1166,10 @@ def test_settings_has_logout_other_devices_route():
 @pytest.mark.unit
 def test_settings_has_toggle_privacy_mode_route():
     """Test settings has toggle_privacy_mode route"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'toggle_privacy_mode' in source
 
@@ -1125,9 +1177,10 @@ def test_settings_has_toggle_privacy_mode_route():
 @pytest.mark.unit
 def test_settings_has_admin_actions():
     """Test settings has admin action handling"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'admin' in source.lower()
 
@@ -1135,9 +1188,10 @@ def test_settings_has_admin_actions():
 @pytest.mark.unit
 def test_settings_has_profile_update():
     """Test settings has profile update handling"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'update_profile' in source
 
@@ -1145,9 +1199,10 @@ def test_settings_has_profile_update():
 @pytest.mark.unit
 def test_settings_has_password_change():
     """Test settings has password change handling"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'change_pw' in source or 'password' in source.lower()
 
@@ -1155,9 +1210,10 @@ def test_settings_has_password_change():
 @pytest.mark.unit
 def test_settings_has_currency_change():
     """Test settings has currency change handling"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'change_base_currency' in source
 
@@ -1165,9 +1221,10 @@ def test_settings_has_currency_change():
 @pytest.mark.unit
 def test_settings_has_preferences_update():
     """Test settings has preferences update handling"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'update_preferences' in source
 
@@ -1175,9 +1232,10 @@ def test_settings_has_preferences_update():
 @pytest.mark.unit
 def test_settings_has_theme_change():
     """Test settings has theme change handling"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'change_theme' in source
 
@@ -1185,9 +1243,10 @@ def test_settings_has_theme_change():
 @pytest.mark.unit
 def test_settings_has_notification_update():
     """Test settings has notification update handling"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'update_notifications' in source or 'notify' in source
 
@@ -1195,9 +1254,10 @@ def test_settings_has_notification_update():
 @pytest.mark.unit
 def test_settings_has_language_change():
     """Test settings has language change handling"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'change_language' in source
 
@@ -1205,9 +1265,10 @@ def test_settings_has_language_change():
 @pytest.mark.unit
 def test_settings_has_privacy_mode_toggle():
     """Test settings has privacy mode toggle handling"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'set_privacy_mode' in source
 
@@ -1215,9 +1276,10 @@ def test_settings_has_privacy_mode_toggle():
 @pytest.mark.unit
 def test_settings_has_file_upload_handling():
     """Test settings has file upload handling"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'file' in source.lower() or 'upload' in source.lower()
 
@@ -1225,19 +1287,21 @@ def test_settings_has_file_upload_handling():
 @pytest.mark.unit
 def test_settings_has_error_handling():
     """Test settings has error handling"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'except' in source.lower()
 
 
 @pytest.mark.unit
-def test_settings_has_logging():
+def test_settings_has_logging_duplicate():
     """Test settings has logging statements"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'logger' in source.lower()
 
@@ -1245,9 +1309,10 @@ def test_settings_has_logging():
 @pytest.mark.unit
 def test_settings_has_session_management():
     """Test settings has session management"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'session' in source.lower()
 
@@ -1255,9 +1320,10 @@ def test_settings_has_session_management():
 @pytest.mark.unit
 def test_settings_has_redirect_logic():
     """Test settings has redirect logic"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'redirect' in source.lower()
 
@@ -1265,9 +1331,10 @@ def test_settings_has_redirect_logic():
 @pytest.mark.unit
 def test_settings_has_template_rendering():
     """Test settings has template rendering"""
-    import routes.settings as settings_module
     import inspect
-    
+
+    import routes.settings as settings_module
+
     source = inspect.getsource(settings_module)
     assert 'render_template' in source.lower()
 
@@ -1276,7 +1343,7 @@ def test_settings_has_template_rendering():
 def test_parse_optional_with_float():
     """Test _parse_optional with float conversion"""
     from routes.settings import _parse_optional
-    
+
     assert _parse_optional('123.45', float) == 123.45
     assert _parse_optional('0.01', float) == 0.01
 
@@ -1285,7 +1352,7 @@ def test_parse_optional_with_float():
 def test_parse_optional_with_string_whitespace():
     """Test _parse_optional with string containing only whitespace"""
     from routes.settings import _parse_optional
-    
+
     assert _parse_optional('   ', int) is None
     assert _parse_optional('\t', int) is None
     assert _parse_optional('\n', int) is None
@@ -1295,7 +1362,7 @@ def test_parse_optional_with_string_whitespace():
 def test_parse_optional_with_mixed_whitespace():
     """Test _parse_optional with mixed whitespace and number"""
     from routes.settings import _parse_optional
-    
+
     assert _parse_optional('  42  ', int) == 42
     assert _parse_optional('\t99\t', int) == 99
 
@@ -1368,7 +1435,7 @@ def test_settings_module_dir():
 def test_parse_optional_empty_string():
     """Test _parse_optional with empty string"""
     from routes.settings import _parse_optional
-    
+
     assert _parse_optional('', int) is None
     assert _parse_optional('', float) is None
 
@@ -1377,7 +1444,7 @@ def test_parse_optional_empty_string():
 def test_parse_optional_none_input():
     """Test _parse_optional with None input"""
     from routes.settings import _parse_optional
-    
+
     assert _parse_optional(None, int) is None
     assert _parse_optional(None, float) is None
 
@@ -1386,7 +1453,7 @@ def test_parse_optional_none_input():
 def test_parse_optional_comma_decimal_various():
     """Test _parse_optional with various comma decimal formats"""
     from routes.settings import _parse_optional
-    
+
     assert _parse_optional('1,5', float) == 1.5
     assert _parse_optional('0,5', float) == 0.5
     assert _parse_optional('10,0', float) == 10.0
@@ -1396,7 +1463,7 @@ def test_parse_optional_comma_decimal_various():
 def test_parse_optional_scientific_notation():
     """Test _parse_optional with scientific notation"""
     from routes.settings import _parse_optional
-    
+
     assert _parse_optional('1e5', float) == 100000.0
     assert _parse_optional('1.5e2', float) == 150.0
 
@@ -1450,6 +1517,7 @@ def test_engine_defaults_refresh_in_progress_mutable():
 def test_settings_module_file_exists():
     """Test settings module file exists"""
     import os
+
     import routes.settings
     module_path = os.path.abspath(routes.settings.__file__)
     assert os.path.exists(module_path)
@@ -1465,7 +1533,6 @@ def test_settings_module_name():
 @pytest.mark.unit
 def test_settings_module_file_extension():
     """Test settings module is a .py file"""
-    import os
     import routes.settings
     module_path = routes.settings.__file__
     assert module_path.endswith('.py')
@@ -1474,9 +1541,10 @@ def test_settings_module_file_extension():
 @pytest.mark.unit
 def test_parse_optional_with_decimal():
     """Test _parse_optional with Decimal conversion"""
-    from routes.settings import _parse_optional
     from decimal import Decimal
-    
+
+    from routes.settings import _parse_optional
+
     result = _parse_optional('123.45', Decimal)
     assert isinstance(result, Decimal)
     assert float(result) == 123.45
@@ -1486,7 +1554,7 @@ def test_parse_optional_with_decimal():
 def test_parse_optional_with_leading_zeros():
     """Test _parse_optional with leading zeros"""
     from routes.settings import _parse_optional
-    
+
     assert _parse_optional('00123', int) == 123
     assert _parse_optional('00.5', float) == 0.5
 
@@ -1495,7 +1563,7 @@ def test_parse_optional_with_leading_zeros():
 def test_parse_optional_with_plus_sign():
     """Test _parse_optional with plus sign"""
     from routes.settings import _parse_optional
-    
+
     assert _parse_optional('+123', int) == 123
     assert _parse_optional('+3.14', float) == 3.14
 
@@ -1504,7 +1572,7 @@ def test_parse_optional_with_plus_sign():
 def test_parse_optional_with_very_large_number():
     """Test _parse_optional with very large number"""
     from routes.settings import _parse_optional
-    
+
     assert _parse_optional('999999999999', int) == 999999999999
 
 
@@ -1512,7 +1580,7 @@ def test_parse_optional_with_very_large_number():
 def test_parse_optional_with_very_small_decimal():
     """Test _parse_optional with very small decimal"""
     from routes.settings import _parse_optional
-    
+
     assert _parse_optional('0.0001', float) == 0.0001
 
 
@@ -1520,7 +1588,7 @@ def test_parse_optional_with_very_small_decimal():
 def test_parse_optional_multiple_commas():
     """Test _parse_optional with multiple commas (should fail)"""
     from routes.settings import _parse_optional
-    
+
     with pytest.raises(ValueError, match="geçerli bir sayı değil"):
         _parse_optional('1,234,567', float)
 
@@ -1529,7 +1597,7 @@ def test_parse_optional_multiple_commas():
 def test_parse_optional_text_with_number():
     """Test _parse_optional with text mixed with number (should fail)"""
     from routes.settings import _parse_optional
-    
+
     with pytest.raises(ValueError, match="geçerli bir sayı değil"):
         _parse_optional('123abc', int)
 
@@ -1538,7 +1606,7 @@ def test_parse_optional_text_with_number():
 def test_parse_optional_special_characters():
     """Test _parse_optional with special characters (should fail)"""
     from routes.settings import _parse_optional
-    
+
     with pytest.raises(ValueError, match="geçerli bir sayı değil"):
         _parse_optional('123@456', int)
 
@@ -1547,7 +1615,7 @@ def test_parse_optional_special_characters():
 def test_parse_optional_hexadecimal():
     """Test _parse_optional with hexadecimal (should fail for int)"""
     from routes.settings import _parse_optional
-    
+
     with pytest.raises(ValueError, match="geçerli bir sayı değil"):
         _parse_optional('0xFF', int)
 
@@ -1556,7 +1624,7 @@ def test_parse_optional_hexadecimal():
 def test_parse_optional_binary():
     """Test _parse_optional with binary (should fail)"""
     from routes.settings import _parse_optional
-    
+
     with pytest.raises(ValueError, match="geçerli bir sayı değil"):
         _parse_optional('0b101', int)
 
@@ -1593,7 +1661,7 @@ def test_engine_defaults_cache_is_not_empty():
 def test_parse_optional_executes_code():
     """Test _parse_optional executes actual code path"""
     from routes.settings import _parse_optional
-    
+
     # This should execute lines 217-225 in settings.py
     result = _parse_optional('123', int)
     assert result == 123
@@ -1603,7 +1671,7 @@ def test_parse_optional_executes_code():
 def test_parse_optional_none_path():
     """Test _parse_optional None path"""
     from routes.settings import _parse_optional
-    
+
     # This should execute the None return path
     result = _parse_optional(None, int)
     assert result is None
@@ -1613,7 +1681,7 @@ def test_parse_optional_none_path():
 def test_parse_optional_empty_string_path():
     """Test _parse_optional empty string path"""
     from routes.settings import _parse_optional
-    
+
     # This should execute the empty string return path
     result = _parse_optional('', int)
     assert result is None
@@ -1623,7 +1691,7 @@ def test_parse_optional_empty_string_path():
 def test_parse_optional_whitespace_path():
     """Test _parse_optional whitespace path"""
     from routes.settings import _parse_optional
-    
+
     # This should execute the whitespace return path
     result = _parse_optional('   ', int)
     assert result is None
@@ -1633,7 +1701,7 @@ def test_parse_optional_whitespace_path():
 def test_parse_optional_comma_replacement():
     """Test _parse_optional comma replacement path"""
     from routes.settings import _parse_optional
-    
+
     # This should execute the comma replacement path
     result = _parse_optional('3,14', float)
     assert result == 3.14
@@ -1642,9 +1710,10 @@ def test_parse_optional_comma_replacement():
 @pytest.mark.unit
 def test_parse_optional_error_path():
     """Test _parse_optional error handling path"""
-    from routes.settings import _parse_optional
     import pytest
-    
+
+    from routes.settings import _parse_optional
+
     # This should execute the error handling path
     with pytest.raises(ValueError, match="geçerli bir sayı değil"):
         _parse_optional('abc', int)
@@ -1656,10 +1725,10 @@ def test_engine_defaults_constants_access():
     from routes.settings import (
         _ENGINE_DEFAULTS_CACHE,
         _ENGINE_DEFAULTS_CACHE_TTL,
+        _ENGINE_DEFAULTS_REFRESH_IN_PROGRESS,
         _ENGINE_DEFAULTS_REFRESH_LOCK,
-        _ENGINE_DEFAULTS_REFRESH_IN_PROGRESS
     )
-    
+
     # Accessing these constants should execute their initialization
     assert _ENGINE_DEFAULTS_CACHE is not None
     assert _ENGINE_DEFAULTS_CACHE_TTL == 3600
@@ -1671,7 +1740,7 @@ def test_engine_defaults_constants_access():
 def test_base_currency_choices_access():
     """Test accessing BASE_CURRENCY_CHOICES executes code"""
     from routes.settings import BASE_CURRENCY_CHOICES
-    
+
     # Accessing this constant should execute its initialization
     assert BASE_CURRENCY_CHOICES is not None
     assert len(BASE_CURRENCY_CHOICES) == 4
@@ -1680,22 +1749,19 @@ def test_base_currency_choices_access():
 @pytest.mark.unit
 def test_apply_preferences_to_engine_defaults_callable():
     """Test _apply_preferences_to_engine_defaults is callable"""
-    from routes.settings import _apply_preferences_to_engine_defaults
     assert callable(_apply_preferences_to_engine_defaults)
 
 
 @pytest.mark.unit
 def test_engine_defaults_callable():
     """Test _engine_defaults is callable"""
-    from routes.settings import _engine_defaults
     assert callable(_engine_defaults)
 
 
 @pytest.mark.unit
 def test_engine_defaults_with_none_preferences():
     """Test _engine_defaults with None preferences"""
-    from routes.settings import _engine_defaults
-    
+
     # This should execute the function with None preferences
     result = _engine_defaults(None)
     assert result is not None
@@ -1705,8 +1771,7 @@ def test_engine_defaults_with_none_preferences():
 @pytest.mark.unit
 def test_engine_defaults_with_empty_preferences():
     """Test _engine_defaults with empty preferences"""
-    from routes.settings import _engine_defaults
-    
+
     # This should execute the function with empty preferences
     result = _engine_defaults({})
     assert result is not None
@@ -1716,8 +1781,7 @@ def test_engine_defaults_with_empty_preferences():
 @pytest.mark.unit
 def test_engine_defaults_returns_dict():
     """Test _engine_defaults returns a dictionary"""
-    from routes.settings import _engine_defaults
-    
+
     result = _engine_defaults(None)
     assert isinstance(result, dict)
 
@@ -1725,8 +1789,7 @@ def test_engine_defaults_returns_dict():
 @pytest.mark.unit
 def test_engine_defaults_has_safe_withdrawal_rate():
     """Test _engine_defaults result has safe_withdrawal_rate_pct"""
-    from routes.settings import _engine_defaults
-    
+
     result = _engine_defaults(None)
     assert 'safe_withdrawal_rate_pct' in result
 
@@ -1734,8 +1797,7 @@ def test_engine_defaults_has_safe_withdrawal_rate():
 @pytest.mark.unit
 def test_engine_defaults_has_emergency_fund_months():
     """Test _engine_defaults result has emergency_fund_months"""
-    from routes.settings import _engine_defaults
-    
+
     result = _engine_defaults(None)
     assert 'emergency_fund_months' in result
 
@@ -1743,8 +1805,7 @@ def test_engine_defaults_has_emergency_fund_months():
 @pytest.mark.unit
 def test_engine_defaults_has_risk_free_rate():
     """Test _engine_defaults result has risk_free_rate_pct"""
-    from routes.settings import _engine_defaults
-    
+
     result = _engine_defaults(None)
     assert 'risk_free_rate_pct' in result
 
@@ -1773,21 +1834,19 @@ def test_get_settings_service_callable():
 @pytest.mark.unit
 def test_with_currency_context_callable():
     """Test _with_currency_context is callable"""
-    from routes.settings import _with_currency_context
     assert callable(_with_currency_context)
 
 
 @pytest.mark.unit
 def test_with_currency_context_empty_dict():
     """Test _with_currency_context with empty dict"""
-    from routes.settings import _with_currency_context
     from unittest.mock import patch
-    
+
     # Mock CurrencyManager at the import location inside the function
     with patch('domain.analysis.services.CurrencyManager') as mock_currency_manager:
         mock_currency_manager.SUPPORTED_CURRENCIES = {'TRY': 'Türk Lirası', 'USD': 'US Dollar'}
         mock_currency_manager.get_base_currency.return_value = 'TRY'
-        
+
         result = _with_currency_context({})
         assert isinstance(result, dict)
         assert 'base_currency_choices' in result
@@ -1796,12 +1855,11 @@ def test_with_currency_context_empty_dict():
 @pytest.mark.unit
 def test_with_currency_context_with_base_currency_choices():
     """Test _with_currency_context adds base_currency_choices"""
-    from routes.settings import _with_currency_context
     from unittest.mock import patch
-    
+
     with patch('domain.analysis.services.CurrencyManager') as mock_currency_manager:
         mock_currency_manager.SUPPORTED_CURRENCIES = {'TRY': 'Türk Lirası', 'USD': 'US Dollar'}
-        
+
         result = _with_currency_context({})
         assert 'base_currency_choices' in result
         assert len(result['base_currency_choices']) > 0
@@ -1810,13 +1868,12 @@ def test_with_currency_context_with_base_currency_choices():
 @pytest.mark.unit
 def test_with_currency_context_current_year():
     """Test _with_currency_context adds current_year"""
-    from routes.settings import _with_currency_context
     from unittest.mock import patch
-    
+
     with patch('domain.analysis.services.CurrencyManager') as mock_currency_manager:
         mock_currency_manager.SUPPORTED_CURRENCIES = {'TRY': 'Türk Lirası'}
         with patch('routes.settings.datetime') as mock_datetime:
             mock_datetime.now.return_value.year = 2024
-            
+
             result = _with_currency_context({})
             assert 'current_year' in result

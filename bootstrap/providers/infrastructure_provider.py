@@ -1,3 +1,7 @@
+from .application_provider import ApplicationProvider
+from .domain_provider import DomainProvider
+from .repository_provider import RepositoryProvider
+
 
 class InfrastructureProvider:
     """Provides infrastructure service instances. Lazy-singleton."""

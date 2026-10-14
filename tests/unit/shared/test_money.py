@@ -2,8 +2,10 @@
 Unit tests for shared.money module - Critical financial operations
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
+
 from shared.money import Money, money, sum_money
 
 
@@ -360,7 +362,7 @@ def test_money_is_zero():
     """Test Money is_zero check"""
     m = Money('0', 'TRY')
     assert m.is_zero()
-    
+
     m2 = Money('100.50', 'TRY')
     assert not m2.is_zero()
 
@@ -370,10 +372,10 @@ def test_money_is_positive():
     """Test Money is_positive check"""
     m = Money('100.50', 'TRY')
     assert m.is_positive()
-    
+
     m2 = Money('0', 'TRY')
     assert not m2.is_positive()
-    
+
     m3 = Money('-50', 'TRY')
     assert not m3.is_positive()
 
@@ -383,10 +385,10 @@ def test_money_is_negative():
     """Test Money is_negative check"""
     m = Money('-50', 'TRY')
     assert m.is_negative()
-    
+
     m2 = Money('0', 'TRY')
     assert not m2.is_negative()
-    
+
     m3 = Money('100.50', 'TRY')
     assert not m3.is_negative()
 

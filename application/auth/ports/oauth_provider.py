@@ -4,6 +4,7 @@ import abc
 from dataclasses import dataclass
 from typing import Optional
 
+
 @dataclass
 class OAuthUserInfoDto:
     provider: str
@@ -15,12 +16,12 @@ class OAuthUserInfoDto:
 
 class OAuthProvider(abc.ABC):
     """Port defining the contract for an OAuth authentication provider."""
-    
+
     @abc.abstractmethod
     def get_authorization_url(self, state: str, redirect_uri: str) -> str:
         """Returns the URL to redirect the user to for authentication."""
         pass
-        
+
     @abc.abstractmethod
     def verify_token_and_get_user(self, code: str, redirect_uri: str) -> OAuthUserInfoDto:
         """Exchanges an authorization code for tokens and fetches user info."""

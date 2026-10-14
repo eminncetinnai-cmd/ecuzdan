@@ -3,8 +3,10 @@ Unit Tests - User Repository
 Repository for users, tenants and invites
 """
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
+
 from repositories.user_repository import UserRepository
 
 
@@ -14,9 +16,9 @@ def test_user_repository_init():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = UserRepository(database=mock_db)
-    
+
     assert repo.session == mock_session
 
 
@@ -24,7 +26,7 @@ def test_user_repository_init():
 def test_user_repository_imports():
     """Test that UserRepository can be imported"""
     from repositories.user_repository import UserRepository
-    
+
     assert UserRepository is not None
 
 
@@ -32,10 +34,10 @@ def test_user_repository_imports():
 def test_user_repository_module_structure():
     """Test user_repository module structure"""
     import repositories.user_repository as user_repo_module
-    
+
     # Check for expected class
     assert hasattr(user_repo_module, 'UserRepository')
-    
+
     # Check for expected imports
     assert hasattr(user_repo_module, 'User')
     assert hasattr(user_repo_module, 'Tenant')
@@ -47,9 +49,9 @@ def test_user_repository_module_structure():
 @pytest.mark.unit
 def test_user_repository_extends_base():
     """Test UserRepository extends BaseRepository"""
-    from repositories.user_repository import UserRepository
     from repositories.base import BaseRepository
-    
+    from repositories.user_repository import UserRepository
+
     assert issubclass(UserRepository, BaseRepository)
 
 
@@ -60,12 +62,12 @@ def test_get_user():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_user = Mock()
-    
+
     repo = UserRepository(database=mock_db)
     repo.get = Mock(return_value=mock_user)
-    
+
     result = repo.get_user(1)
-    
+
     assert result == mock_user
 
 
@@ -76,14 +78,14 @@ def test_list_users():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_users = [Mock()]
-    
+
     with patch('repositories.user_repository.User') as mock_user_class:
         mock_user_class.query.all.return_value = mock_users
-        
+
         repo = UserRepository(database=mock_db)
-        
+
         result = repo.list_users()
-        
+
         assert result == mock_users
 
 
@@ -94,15 +96,14 @@ def test_list_users_for_tenant():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_users = [Mock()]
-    mock_query = Mock()
-    
+
     with patch('repositories.user_repository.User') as mock_user_class:
         mock_user_class.query.filter_by.return_value.order_by.return_value.all.return_value = mock_users
-        
+
         repo = UserRepository(database=mock_db)
-        
+
         result = repo.list_users_for_tenant('test_tenant')
-        
+
         assert result == mock_users
 
 
@@ -112,14 +113,14 @@ def test_count_users_for_tenant():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     with patch('repositories.user_repository.User') as mock_user_class:
         mock_user_class.query.filter_by.return_value.count.return_value = 5
-        
+
         repo = UserRepository(database=mock_db)
-        
+
         result = repo.count_users_for_tenant('test_tenant')
-        
+
         assert result == 5
 
 
@@ -130,14 +131,14 @@ def test_find_user_by_username():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_user = Mock()
-    
+
     with patch('repositories.user_repository.User') as mock_user_class:
         mock_user_class.query.filter_by.return_value.first.return_value = mock_user
-        
+
         repo = UserRepository(database=mock_db)
-        
+
         result = repo.find_user_by_username('testuser')
-        
+
         assert result == mock_user
 
 
@@ -148,14 +149,14 @@ def test_find_user_by_oauth_id():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_user = Mock()
-    
+
     with patch('repositories.user_repository.User') as mock_user_class:
         mock_user_class.query.filter_by.return_value.first.return_value = mock_user
-        
+
         repo = UserRepository(database=mock_db)
-        
+
         result = repo.find_user_by_oauth_id('google', '12345')
-        
+
         assert result == mock_user
 
 
@@ -166,12 +167,12 @@ def test_username_exists_true():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_user = Mock()
-    
+
     repo = UserRepository(database=mock_db)
     repo.find_user_by_username = Mock(return_value=mock_user)
-    
+
     result = repo.username_exists('testuser')
-    
+
     assert result is True
 
 
@@ -181,12 +182,12 @@ def test_username_exists_false():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = UserRepository(database=mock_db)
     repo.find_user_by_username = Mock(return_value=None)
-    
+
     result = repo.username_exists('testuser')
-    
+
     assert result is False
 
 
@@ -197,15 +198,15 @@ def test_add_user():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_user = Mock()
-    
+
     with patch('repositories.user_repository.User') as mock_user_class:
         mock_user_class.return_value = mock_user
-        
+
         repo = UserRepository(database=mock_db)
         repo.add = Mock(return_value=mock_user)
-        
+
         result = repo.add_user(username='testuser', email='test@example.com')
-        
+
         assert result == mock_user
 
 
@@ -216,12 +217,12 @@ def test_get_tenant():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_tenant = Mock()
-    
+
     repo = UserRepository(database=mock_db)
     repo.get = Mock(return_value=mock_tenant)
-    
+
     result = repo.get_tenant(1)
-    
+
     assert result == mock_tenant
 
 
@@ -232,14 +233,14 @@ def test_find_tenant():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_tenant = Mock()
-    
+
     with patch('repositories.user_repository.Tenant') as mock_tenant_class:
         mock_tenant_class.query.filter_by.return_value.first.return_value = mock_tenant
-        
+
         repo = UserRepository(database=mock_db)
-        
+
         result = repo.find_tenant('test_tenant')
-        
+
         assert result == mock_tenant
 
 
@@ -250,16 +251,15 @@ def test_get_user_with_preference():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_user = Mock()
-    mock_query = Mock()
-    
+
     with patch('repositories.user_repository.joinedload') as mock_joinedload:
         mock_joinedload.return_value = Mock()
-        
+
         repo = UserRepository(database=mock_db)
         repo.session.query.return_value.options.return_value.filter.return_value.first.return_value = mock_user
-        
+
         result = repo.get_user_with_preference(1)
-        
+
         assert result == mock_user
 
 
@@ -270,15 +270,15 @@ def test_add_tenant():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_tenant = Mock()
-    
+
     with patch('repositories.user_repository.Tenant') as mock_tenant_class:
         mock_tenant_class.return_value = mock_tenant
-        
+
         repo = UserRepository(database=mock_db)
         repo.add = Mock(return_value=mock_tenant)
-        
+
         result = repo.add_tenant(name='Test Tenant')
-        
+
         assert result == mock_tenant
 
 
@@ -289,14 +289,14 @@ def test_find_invite():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_invite = Mock()
-    
+
     with patch('repositories.user_repository.TenantInvite') as mock_invite_class:
         mock_invite_class.query.filter_by.return_value.first.return_value = mock_invite
-        
+
         repo = UserRepository(database=mock_db)
-        
+
         result = repo.find_invite('test_token')
-        
+
         assert result == mock_invite
 
 
@@ -307,14 +307,14 @@ def test_find_active_invite():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_invite = Mock()
-    
+
     with patch('repositories.user_repository.TenantInvite') as mock_invite_class:
         mock_invite_class.query.filter_by.return_value.first.return_value = mock_invite
-        
+
         repo = UserRepository(database=mock_db)
-        
+
         result = repo.find_active_invite('test@example.com', 'test_tenant')
-        
+
         assert result == mock_invite
 
 
@@ -325,15 +325,14 @@ def test_list_invites():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_invites = [Mock()]
-    mock_query = Mock()
-    
+
     with patch('repositories.user_repository.TenantInvite') as mock_invite_class:
         mock_invite_class.query.filter_by.return_value.order_by.return_value.all.return_value = mock_invites
-        
+
         repo = UserRepository(database=mock_db)
-        
+
         result = repo.list_invites('test_tenant')
-        
+
         assert result == mock_invites
 
 
@@ -344,15 +343,14 @@ def test_list_invites_with_invited_by():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_invites = [Mock()]
-    mock_query = Mock()
-    
+
     with patch('repositories.user_repository.TenantInvite') as mock_invite_class:
         mock_invite_class.query.filter_by.return_value.filter_by.return_value.order_by.return_value.all.return_value = mock_invites
-        
+
         repo = UserRepository(database=mock_db)
-        
+
         result = repo.list_invites('test_tenant', invited_by=1)
-        
+
         assert result == mock_invites
 
 
@@ -363,15 +361,15 @@ def test_add_invite():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_invite = Mock()
-    
+
     with patch('repositories.user_repository.TenantInvite') as mock_invite_class:
         mock_invite_class.return_value = mock_invite
-        
+
         repo = UserRepository(database=mock_db)
         repo.add = Mock(return_value=mock_invite)
-        
+
         result = repo.add_invite(email='test@example.com', tenant_id='test_tenant')
-        
+
         assert result == mock_invite
 
 
@@ -382,12 +380,12 @@ def test_delete_user():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_user = Mock()
-    
+
     repo = UserRepository(database=mock_db)
     repo.delete = Mock()
-    
+
     repo.delete_user(mock_user)
-    
+
     repo.delete.assert_called_once_with(mock_user)
 
 
@@ -398,14 +396,14 @@ def test_find_preference():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_preference = Mock()
-    
+
     with patch('repositories.user_repository.UserPreference') as mock_pref_class:
         mock_pref_class.query.filter_by.return_value.first.return_value = mock_preference
-        
+
         repo = UserRepository(database=mock_db)
-        
+
         result = repo.find_preference(1)
-        
+
         assert result == mock_preference
 
 
@@ -416,15 +414,15 @@ def test_add_preference():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_preference = Mock()
-    
+
     with patch('repositories.user_repository.UserPreference') as mock_pref_class:
         mock_pref_class.return_value = mock_preference
-        
+
         repo = UserRepository(database=mock_db)
         repo.add = Mock(return_value=mock_preference)
-        
+
         result = repo.add_preference(user_id=1, theme='dark')
-        
+
         assert result == mock_preference
 
 
@@ -435,16 +433,23 @@ def test_reset_financial_data_for_tenant():
     mock_session = Mock()
     mock_db.session = mock_session
     mock_query = Mock()
-    
-    with patch('repositories.user_repository.Transaction') as mock_tx_class:
-        with patch('repositories.user_repository.RecurringPlan') as mock_plan_class:
-            with patch('repositories.user_repository.Asset') as mock_asset_class:
-                with patch('repositories.user_repository.AssetUpdate') as mock_update_class:
-                    with patch('repositories.user_repository.AssetTransaction') as mock_tx_class2:
-                        repo = UserRepository(database=mock_db)
-                        repo.session.query.return_value.filter_by.return_value = mock_query
-                        
-                        repo.reset_financial_data_for_tenant('test_tenant')
+
+    with patch('repositories.user_repository.LogbookEntry'), \
+         patch('repositories.user_repository.LedgerAdjustment'), \
+         patch('repositories.user_repository.LedgerAuditEvent'), \
+         patch('repositories.user_repository.Payment'), \
+         patch('repositories.user_repository.PlanOccurrence'), \
+         patch('repositories.user_repository.Transaction'), \
+         patch('repositories.user_repository.RecurringPlan'), \
+         patch('repositories.user_repository.BankStatementSnapshot'), \
+         patch('repositories.user_repository.BankAccount'), \
+         patch('repositories.user_repository.Asset'), \
+         patch('repositories.user_repository.AssetUpdate'), \
+         patch('repositories.user_repository.AssetTransaction'):
+        repo = UserRepository(database=mock_db)
+        repo.session.query.return_value.filter_by.return_value = mock_query
+
+        repo.reset_financial_data_for_tenant('test_tenant')
 
 
 @pytest.mark.unit
@@ -453,9 +458,9 @@ def test_reset_financial_data_for_tenant_empty_tenant_id():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = UserRepository(database=mock_db)
-    
+
     try:
         repo.reset_financial_data_for_tenant('')
         assert False, "Should raise ValueError"
@@ -469,9 +474,9 @@ def test_reset_financial_data_for_tenant_none_tenant_id():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
+
     repo = UserRepository(database=mock_db)
-    
+
     try:
         repo.reset_financial_data_for_tenant(None)
         assert False, "Should raise ValueError"
@@ -485,11 +490,17 @@ def test_reset_financial_data():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    
-    with patch('repositories.user_repository.Transaction') as mock_tx_class:
-        with patch('repositories.user_repository.RecurringPlan') as mock_plan_class:
-            with patch('repositories.user_repository.Asset') as mock_asset_class:
-                with patch('repositories.user_repository.AssetUpdate') as mock_update_class:
-                    repo = UserRepository(database=mock_db)
-                    
-                    repo.reset_financial_data()
+
+    with patch('repositories.user_repository.LogbookEntry'), \
+         patch('repositories.user_repository.LedgerAdjustment'), \
+         patch('repositories.user_repository.LedgerAuditEvent'), \
+         patch('repositories.user_repository.Payment'), \
+         patch('repositories.user_repository.PlanOccurrence'), \
+         patch('repositories.user_repository.Transaction'), \
+         patch('repositories.user_repository.RecurringPlan'), \
+         patch('repositories.user_repository.Asset'), \
+         patch('repositories.user_repository.AssetUpdate'), \
+         patch('repositories.user_repository.AssetTransaction'):
+        repo = UserRepository(database=mock_db)
+
+        repo.reset_financial_data()

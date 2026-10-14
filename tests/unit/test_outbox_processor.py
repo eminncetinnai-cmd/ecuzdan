@@ -2,14 +2,16 @@
 Background worker for polling and dispatching outbox events
 """
 
-import pytest
+import json
 import logging
-import threading
-from unittest.mock import patch
+from unittest.mock import Mock, patch
+
+import pytest
+
 from infrastructure.background.outbox_processor import (
+    EVENT_TYPE_REGISTRY,
     OutboxProcessor,
     _resolve_event_class,
-    EVENT_TYPE_REGISTRY,
 )
 
 
@@ -55,14 +57,14 @@ def test_outbox_processor_init_with_app():
 def test_outbox_processor_logging_available_with_handlers():
     """Test _logging_available returns True when handlers are active"""
     processor = OutboxProcessor(object())
-    
+
     # Add a mock handler
     mock_handler = logging.StreamHandler()
     logging.root.addHandler(mock_handler)
-    
+
     result = processor._logging_available()
     assert result is True
-    
+
     # Clean up
     logging.root.removeHandler(mock_handler)
 
@@ -71,14 +73,14 @@ def test_outbox_processor_logging_available_with_handlers():
 def test_outbox_processor_logging_available_no_handlers():
     """Test _logging_available returns False when no handlers"""
     processor = OutboxProcessor(object())
-    
+
     # Clear all handlers temporarily
     original_handlers = logging.root.handlers[:]
     logging.root.handlers.clear()
-    
+
     result = processor._logging_available()
     assert result is False
-    
+
     # Restore handlers
     logging.root.handlers.extend(original_handlers)
 
@@ -87,15 +89,15 @@ def test_outbox_processor_logging_available_no_handlers():
 def test_outbox_processor_logging_available_closed_stream():
     """Test _logging_available returns False when handler stream is closed"""
     processor = OutboxProcessor(object())
-    
+
     # Add a handler with closed stream
     mock_handler = logging.StreamHandler()
     mock_handler.stream = type('obj', (object,), {'closed': True})()
     logging.root.addHandler(mock_handler)
-    
+
     result = processor._logging_available()
     assert result is False
-    
+
     # Clean up
     logging.root.removeHandler(mock_handler)
 
@@ -104,14 +106,14 @@ def test_outbox_processor_logging_available_closed_stream():
 def test_outbox_processor_safe_log_info():
     """Test _safe_log_info logs when logging is available"""
     processor = OutboxProcessor(object())
-    
+
     # Add a handler
     mock_handler = logging.StreamHandler()
     logging.root.addHandler(mock_handler)
-    
+
     # Should not raise exception
     processor._safe_log_info("Test message %s", "arg")
-    
+
     # Clean up
     logging.root.removeHandler(mock_handler)
 
@@ -120,14 +122,14 @@ def test_outbox_processor_safe_log_info():
 def test_outbox_processor_safe_log_info_no_logging():
     """Test _safe_log_info silently fails when logging unavailable"""
     processor = OutboxProcessor(object())
-    
+
     # Clear handlers
     original_handlers = logging.root.handlers[:]
     logging.root.handlers.clear()
-    
+
     # Should not raise exception
     processor._safe_log_info("Test message")
-    
+
     # Restore handlers
     logging.root.handlers.extend(original_handlers)
 
@@ -136,14 +138,14 @@ def test_outbox_processor_safe_log_info_no_logging():
 def test_outbox_processor_safe_log_exception():
     """Test _safe_log_exception logs when logging is available"""
     processor = OutboxProcessor(object())
-    
+
     # Add a handler
     mock_handler = logging.StreamHandler()
     logging.root.addHandler(mock_handler)
-    
+
     # Should not raise exception
     processor._safe_log_exception("Test exception")
-    
+
     # Clean up
     logging.root.removeHandler(mock_handler)
 
@@ -152,60 +154,46 @@ def test_outbox_processor_safe_log_exception():
 def test_outbox_processor_safe_log_exception_no_logging():
     """Test _safe_log_exception silently fails when logging unavailable"""
     processor = OutboxProcessor(object())
-    
+
     # Clear handlers
     original_handlers = logging.root.handlers[:]
     logging.root.handlers.clear()
-    
+
     # Should not raise exception
     processor._safe_log_exception("Test exception")
-    
+
     # Restore handlers
     logging.root.handlers.extend(original_handlers)
 
 
 @pytest.mark.unit
-def test_outbox_processor_start_creates_thread():
-    """Test start creates and starts daemon thread"""
-    mock_event_bus = object()
-    processor = OutboxProcessor(mock_event_bus)
-    
+def test_outbox_processor_start_without_app_is_disabled():
+    """start() refuses to create a database polling thread without Flask app."""
+    processor = OutboxProcessor(event_bus=object())
+
     processor.start(interval_seconds=1)
-    
-    assert processor._thread is not None
-    assert processor._thread.is_alive()
-    assert processor._thread.daemon is True
-    
-    # Stop the thread
-    processor.stop()
+
+    assert processor._thread is None
+    assert processor._configuration_warning_emitted is True
 
 
 @pytest.mark.unit
-def test_outbox_processor_start_idempotent():
-    """Test start is idempotent - doesn't create multiple threads"""
-    mock_event_bus = object()
-    processor = OutboxProcessor(mock_event_bus)
-    
+def test_outbox_processor_start_without_app_warns_once():
+    """Repeated disabled starts do not create repeated lifecycle state."""
+    processor = OutboxProcessor(event_bus=object())
+
     processor.start(interval_seconds=1)
-    first_thread = processor._thread
-    
     processor.start(interval_seconds=1)
-    second_thread = processor._thread
-    
-    assert first_thread is second_thread
-    
-    processor.stop()
+
+    assert processor._thread is None
+    assert processor._configuration_warning_emitted is True
 
 
 @pytest.mark.unit
-def test_outbox_processor_stop():
-    """Test stop signals thread to stop and waits"""
-    mock_event_bus = object()
-    processor = OutboxProcessor(mock_event_bus)
-    
+def test_outbox_processor_stop_without_app():
+    """stop() remains safe when start() was disabled."""
+    processor = OutboxProcessor(event_bus=object())
     processor.start(interval_seconds=1)
-    assert processor._thread is not None
-    
     processor.stop()
     assert processor._thread is None
 
@@ -215,7 +203,7 @@ def test_outbox_processor_stop_without_start():
     """Test stop without start doesn't raise error"""
     mock_event_bus = object()
     processor = OutboxProcessor(mock_event_bus)
-    
+
     # Should not raise exception
     processor.stop()
 
@@ -232,17 +220,17 @@ def test_event_type_registry():
 def test_outbox_processor_safe_log_info_exception_in_logger():
     """Test _safe_log_info handles logger exceptions gracefully"""
     processor = OutboxProcessor(object())
-    
+
     # Add a handler
     mock_handler = logging.StreamHandler()
     logging.root.addHandler(mock_handler)
-    
+
     # Patch logger.info to raise an exception
     import infrastructure.background.outbox_processor as processor_module
     with patch.object(processor_module.logger, 'info', side_effect=Exception('Logger error')):
         # Should not raise exception
         processor._safe_log_info("Test message")
-    
+
     # Clean up
     logging.root.removeHandler(mock_handler)
 
@@ -251,34 +239,69 @@ def test_outbox_processor_safe_log_info_exception_in_logger():
 def test_outbox_processor_safe_log_exception_exception_in_logger():
     """Test _safe_log_exception handles logger exceptions gracefully"""
     processor = OutboxProcessor(object())
-    
+
     # Add a handler
     mock_handler = logging.StreamHandler()
     logging.root.addHandler(mock_handler)
-    
+
     # Patch logger.exception to raise an exception
     import infrastructure.background.outbox_processor as processor_module
     with patch.object(processor_module.logger, 'exception', side_effect=Exception('Logger error')):
         # Should not raise exception
         processor._safe_log_exception("Test exception")
-    
+
     # Clean up
     logging.root.removeHandler(mock_handler)
 
 
 @pytest.mark.unit
 def test_outbox_processor_run_loop_without_app():
-    """Test _run_loop calls process_batch when no app provided - skipped due to database dependency"""
-    pytest.skip("Requires database mocking for process_batch")
+    """A misconfigured loop exits without polling the database."""
+    processor = OutboxProcessor(event_bus=Mock())
+    processor._run_loop(interval=0.01)
+    assert processor._thread is None
+    assert processor._configuration_warning_emitted is True
 
 
 @pytest.mark.unit
-def test_outbox_processor_run_loop_with_app():
-    """Test _run_loop uses app context when app provided - skipped due to Flask context"""
-    pytest.skip("Requires Flask app context for testing")
+def test_outbox_processor_run_loop_with_app(app):
+    """The loop polls inside app context and stops deterministically after one batch."""
+    processor = OutboxProcessor(event_bus=Mock(), app=app)
+    processor.process_batch = Mock(side_effect=lambda: processor._stop_event.set())
+
+    processor._run_loop(interval=0.01)
+
+    processor.process_batch.assert_called_once()
+    assert processor._stop_event.is_set() is True
 
 
-@pytest.mark.unit
-def test_outbox_processor_process_batch():
-    """Test process_batch processes pending messages - skipped due to database dependency"""
-    pytest.skip("Requires database mocking for process_batch")
+@pytest.mark.integration
+def test_outbox_processor_process_batch(app):
+    """A pending valid outbox message is published and marked processed."""
+    from infrastructure.database.models.outbox_model import OutboxMessageModel
+    from shared.db import db
+
+    with app.app_context():
+        message = OutboxMessageModel(
+            id='outbox-unit-created',
+            event_type='TransactionCreatedEvent',
+            payload=json.dumps({
+                'transaction_id': 42,
+                'category': 'Maaş',
+                'amount': 1000.0,
+                'status': 'Ödendi',
+                'tenant_id': 'default',
+            }),
+        )
+        db.session.add(message)
+        db.session.commit()
+        event_bus = Mock()
+        processor = OutboxProcessor(event_bus=event_bus, app=app)
+
+        assert processor.process_batch() == 1
+        db.session.refresh(message)
+
+    assert message.processed_on is not None
+    assert message.error is None
+    event_bus.publish.assert_called_once()
+    assert event_bus.publish.call_args.args[0].transaction_id == 42

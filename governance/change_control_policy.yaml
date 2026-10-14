@@ -1,0 +1,91 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# E-CÜZDAN RCCALS — REPOSITORY CHANGE CONTROL & ARTIFACT LIFECYCLE POLICY
+# Unifies change preflight, artifact intent, root protection, and .work retention.
+# ═══════════════════════════════════════════════════════════════════════════════
+version: "1.0.0"
+
+# ── 1. Root Directory Protection ──────────────────────────────────────────────
+root_protection:
+  allowlisted_files:
+    - "app.py"
+    - "config.py"
+    - "models.py"
+    - "market_data_service.py"
+    - "strategy.py"
+    - "worker.py"
+    - "wsgi.py"
+    - "pyproject.toml"
+    - "pytest.ini"
+    - ".gitignore"
+    - ".env"
+    - ".env.example"
+    - ".coveragerc_oauth"
+    - "docker-compose.logging.yml"
+    - "docker-compose.observability.yml"
+    - "start_e_cuzdan.bat"
+    - "README.md"
+  allowlisted_patterns:
+    - "^client_secret_.*\\.json$"
+    - "^e_cuzdan_v\\d+\\.db(-shm|-wal)?$"
+  strictly_blocked_root_prefixes:
+    - "analysis_"
+    - "debug_"
+    - "probe_"
+    - "experiment_"
+    - "tmp_"
+    - "temp_"
+    - "copy_"
+    - "test_"
+    - "fix_"
+
+# ── 2. Directory Governance ───────────────────────────────────────────────────
+authorized_top_directories:
+  - "domain"
+  - "application"
+  - "repositories"
+  - "infrastructure"
+  - "routes"
+  - "database"
+  - "templates"
+  - "static"
+  - "config"
+  - "configuration"
+  - "tests"
+  - "docs"
+  - "scripts"
+  - "governance"
+  - "translations"
+  - "utils"
+  - "validators"
+  - "dtos"
+  - "engines"
+  - "shared"
+  - "bootstrap"
+  - "instance"
+  - "logs"
+  - "data"
+  - "observability"
+  - ".work"
+
+# ── 3. Naming Rules ───────────────────────────────────────────────────────────
+forbidden_name_patterns:
+  - pattern: "(?:^|[_.\\-])(?:tmp|temp|test2|final|final2|backup|old|copy|fix|latest)(?:[_.\\-]|$)"
+    message: "Forbidden temporary or non-semantic keyword in filename"
+  - pattern: ".*_v\\d+\\.(py|js|css|html)$"
+    message: "Forbidden version suffix '_v[N]' in source file"
+
+# ── 4. .work Workspace Retention Policy ───────────────────────────────────────
+work_retention:
+  allowed_subdirectories:
+    - "investigations"
+    - "experiments"
+    - "probes"
+    - "generated"
+    - "sessions"
+  max_retention_days:
+    investigations: 14
+    experiments: 7
+    probes: 3
+    generated: 7
+    sessions: 30
+  auto_purge: false  # Must require explicit confirmation

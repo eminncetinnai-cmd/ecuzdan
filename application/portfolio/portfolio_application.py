@@ -60,7 +60,12 @@ class PortfolioApplicationService(ApplicationService):
             )
         )
 
+    def portfolio_snapshot_context(self, tenant_id=None):
+        """Return a light, persisted-value snapshot for market workspace cards."""
+        return self.execute(lambda: self.asset_service.portfolio_snapshot_context(tenant_id))
+
     # ── Investment performance (pass-through to domain service) ───────────────
+
     def investment_performance_context(self, tenant_id=None):
         """Return yearly performance dict for /investment_performance."""
         return self.execute(lambda: get_yearly_performance(tenant_id))

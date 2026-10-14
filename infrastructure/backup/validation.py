@@ -5,11 +5,12 @@ Phase 17: Backup validation and schema compatibility checking
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import timezone
 from typing import Dict, List, Tuple
 
 from sqlalchemy import inspect
 
+from database.schema_version import SCHEMA_VERSION
 from models import db
 
 logger = logging.getLogger(__name__)
@@ -19,25 +20,38 @@ class BackupValidationService:
     """Yedek doğrulama servisi"""
 
     # Mevcut schema versiyonu
-    CURRENT_SCHEMA_VERSION = "v16.0"
+    CURRENT_SCHEMA_VERSION = SCHEMA_VERSION
 
     # Beklenen tablo yapısı
     EXPECTED_TABLES = {
-        'user', 'tenant', 'category', 'asset_type', 'asset_sector',
-        'asset', 'transaction', 'recurring_plan', 'payment',
-        'asset_update', 'asset_transaction', 'strategy_settings',
-        'investor_profile', 'investor_profile_answer', 'profile_question',
-        'logbook_entry', 'tenant_invite', 'category_asset_type_mapping',
-        'tag', 'entity_tag', 'backup_metadata'
+        'account', 'asset', 'asset_sector', 'asset_transaction', 'asset_type',
+        'bank_account', 'bank_statement_snapshot',
+        'asset_update', 'audit_log', 'backup_metadata', 'category',
+        'category_asset_type_mapping', 'entity_tag', 'investor_profile',
+        'investor_profile_answer', 'journal_entry', 'ledger_adjustment',
+        'ledger_audit_event', 'ledger_line', 'logbook_entry',
+        'monitoring_alert_config', 'notification', 'outbox_messages',
+        'payment', 'plan_occurrence', 'profile_question', 'quiz_attempt',
+        'quiz_question', 'recurring_plan', 'strategy_settings', 'tag',
+        'tenant', 'tenant_invite', 'transaction', 'user',
+        'user_achievement', 'user_preference', 'user_progress',
     }
+    # These were introduced after earlier backups. Their absence is valid;
+    # when present, their rows and columns are validated normally.
+    OPTIONAL_TABLES = {'bank_account', 'bank_statement_snapshot'}
 
     def __init__(self):
+
         self.inspector = inspect(db.engine)
 
     def _normalize_table_name(self, table_name: str) -> str:
         """Normalize backup table names to singular canonical names."""
         if table_name in self.EXPECTED_TABLES:
             return table_name
+        if table_name.endswith('batches'):
+            candidate = table_name[:-2]
+            if candidate in self.EXPECTED_TABLES:
+                return candidate
         if table_name.endswith('ies'):
             candidate = table_name[:-3] + 'y'
             if candidate in self.EXPECTED_TABLES:
@@ -52,7 +66,7 @@ class BackupValidationService:
         """Return table data for singular or plural table keys."""
         if table_name in backup_data:
             return backup_data[table_name]
-        plural_key = f"{table_name}s"
+        plural_key = f"{table_name}es" if table_name.endswith('batch') else f"{table_name}s"
         return backup_data.get(plural_key, [])
 
     def validate_schema(self, backup_data: Dict) -> Tuple[bool, List[str]]:
@@ -78,7 +92,8 @@ class BackupValidationService:
         extra_tables = {name for name in raw_tables if self._normalize_table_name(name) not in self.EXPECTED_TABLES}
 
         if schema_version is not None:
-            missing_tables = self.EXPECTED_TABLES - normalized_tables
+            missing_tables = self.EXPECTED_TABLES - normalized_tables - self.OPTIONAL_TABLES
+
             if missing_tables:
                 errors.append(f"Eksik tablolar: {', '.join(sorted(missing_tables))}")
 
@@ -167,38 +182,57 @@ class BackupValidationService:
         """
         errors = []
 
-        # User -> Tenant
-        users = self._get_table_data(backup_data, 'user')
-        tenants = self._get_table_data(backup_data, 'tenant')
-        if users and tenants:
-            tenant_ids = {t['id'] for t in tenants}
-            for user in users:
-                if user.get('tenant_id') and user['tenant_id'] not in tenant_ids:
-                    errors.append(f"User {user['id']} için geçersiz tenant_id: {user['tenant_id']}")
+        # ORM foreign key metadata'sını kullanarak tüm tablo ilişkilerini doğrula.
+        # Böylece yeni eklenen ledger, plan, notification ve outbox tabloları
+        # manuel bir kontrol listesi güncellenmeden kapsamda kalır.
+        for table_name in self.EXPECTED_TABLES:
+            table = db.metadata.tables.get(table_name)
+            if table is None:
+                continue
+            rows = self._get_table_data(backup_data, table_name)
+            if not rows:
+                continue
 
-        # Category -> Tenant
+            for row in rows:
+                row_id = row.get("id")
+                for foreign_key in table.foreign_keys:
+                    local_column = foreign_key.parent.name
+                    local_value = row.get(local_column)
+                    if local_value is None:
+                        continue
+
+                    target_table = foreign_key.column.table.name
+                    target_column = foreign_key.column.name
+                    # schema_version içermeyen minimal/partial importlarda
+                    # payload’da bulunmayan target tablo mevcut DB’den çözülebilir.
+                    # Tablo açıkça payload’a dahil edilmişse FK kontrolü sürer.
+                    target_present = any(
+                        self._normalize_table_name(name) == target_table
+                        for name in backup_data
+                        if name not in {'schema_version', 'metadata'}
+                    )
+                    if not target_present:
+                        continue
+                    target_rows = self._get_table_data(backup_data, target_table)
+                    target_values = {target.get(target_column) for target in target_rows}
+                    if local_value not in target_values:
+                        errors.append(
+                            f"{table_name} {row_id} için geçersiz "
+                            f"{local_column}={local_value}; hedef "
+                            f"{target_table}.{target_column} bulunamadı"
+                        )
+
+        # Transaction.category gerçek bir SQL foreign key değildir; ancak
+        # finansal kayıtların kategori sözlüğüyle tutarlı olması gerekir.
         categories = self._get_table_data(backup_data, 'category')
-        if categories and tenants:
-            for category in categories:
-                if category.get('tenant_id') and category['tenant_id'] not in tenant_ids:
-                    errors.append(f"Category {category['id']} için geçersiz tenant_id: {category['tenant_id']}")
-
-        # Asset -> AssetSector
-        assets = self._get_table_data(backup_data, 'asset')
-        asset_sectors = self._get_table_data(backup_data, 'asset_sector')
-        if assets and asset_sectors:
-            sector_ids = {s['id'] for s in asset_sectors}
-            for asset in assets:
-                if asset.get('sector_id') and asset['sector_id'] not in sector_ids:
-                    errors.append(f"Asset {asset['id']} için geçersiz sector_id: {asset['sector_id']}")
-
-        # Transaction -> Category
-        transactions = self._get_table_data(backup_data, 'transaction')
-        if transactions and categories:
-            category_names = {c['name'] for c in categories}
-            for tx in transactions:
-                if tx.get('category') and tx['category'] not in category_names:
-                    errors.append(f"Transaction {tx['id']} için geçersiz category: {tx['category']}")
+        category_names = {category.get('name') for category in categories}
+        for transaction in self._get_table_data(backup_data, 'transaction'):
+            category = transaction.get('category')
+            if category and category_names and category not in category_names:
+                errors.append(
+                    f"Transaction {transaction.get('id')} için geçersiz "
+                    f"category: {category}"
+                )
 
         return errors
 

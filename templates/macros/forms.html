@@ -1,16 +1,172 @@
+{# Design System Form Macros #}
+
+{% macro form_input(name, label, type='text', placeholder='', required=false, value='', error_message='', extra_classes='', id='', onchange='', oninput='', pattern='', min='', max='', step='') %}
+<div class="form-group {{ extra_classes }}">
+    {% if label %}
+    <label for="{{ id or name }}" class="form-label">
+        {{ label }}
+        {% if required %}<span class="text-red-500 ml-1">*</span>{% endif %}
+    </label>
+    {% endif %}
+    <input
+        type="{{ type }}"
+        name="{{ name }}"
+        id="{{ id or name }}"
+        class="form-input {% if error_message %}form-input-error{% endif %}"
+        placeholder="{{ placeholder }}"
+        {% if value %}value="{{ value }}"{% endif %}
+        {% if required %}required{% endif %}
+        {% if onchange %}onchange="{{ onchange }}"{% endif %}
+        {% if oninput %}oninput="{{ oninput }}"{% endif %}
+        {% if pattern %}pattern="{{ pattern }}"{% endif %}
+        {% if min %}min="{{ min }}"{% endif %}
+        {% if max %}max="{{ max }}"{% endif %}
+        {% if step %}step="{{ step }}"{% endif %}
+    >
+    {% if error_message %}
+    <span class="form-error">
+        <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        </svg>
+        {{ error_message }}
+    </span>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro form_select(name, label, options, selected_value='', required=false, error_message='', extra_classes='', id='', onchange='', oninput='', pattern='', min='', max='', step='') %}
+<div class="form-group {{ extra_classes }}">
+    {% if label %}
+    <label for="{{ id or name }}" class="form-label">
+        {{ label }}
+        {% if required %}<span class="text-red-500 ml-1">*</span>{% endif %}
+    </label>
+    {% endif %}
+    <select
+        name="{{ name }}"
+        id="{{ id or name }}"
+        class="form-input {% if error_message %}form-input-error{% endif %}"
+        {% if required %}required{% endif %}
+        {% if onchange %}onchange="{{ onchange }}"{% endif %}
+        {% if oninput %}oninput="{{ oninput }}"{% endif %}
+        {% if pattern %}pattern="{{ pattern }}"{% endif %}
+        {% if min %}min="{{ min }}"{% endif %}
+        {% if max %}max="{{ max }}"{% endif %}
+        {% if step %}step="{{ step }}"{% endif %}
+    >
+        {% if not required %}
+        <option value="">{{ _('ui_auto_select_all') }}</option>
+        {% endif %}
+        {% for option in options %}
+        <option value="{{ option.value }}" {% if option.value == selected_value %}selected{% endif %}>
+            {{ option.label }}
+        </option>
+        {% endfor %}
+    </select>
+    {% if error_message %}
+    <span class="form-error">
+        <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        </svg>
+        {{ error_message }}
+    </span>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro form_textarea(name, label, placeholder='', rows=4, required=false, value='', error_message='', extra_classes='', id='', onchange='', oninput='', pattern='', min='', max='', step='') %}
+<div class="form-group {{ extra_classes }}">
+    {% if label %}
+    <label for="{{ id or name }}" class="form-label">
+        {{ label }}
+        {% if required %}<span class="text-red-500 ml-1">*</span>{% endif %}
+    </label>
+    {% endif %}
+    <textarea
+        name="{{ name }}"
+        id="{{ id or name }}"
+        class="form-input {% if error_message %}form-input-error{% endif %}"
+        placeholder="{{ placeholder }}"
+        rows="{{ rows }}"
+        {% if required %}required{% endif %}
+        {% if onchange %}onchange="{{ onchange }}"{% endif %}
+        {% if oninput %}oninput="{{ oninput }}"{% endif %}
+        {% if pattern %}pattern="{{ pattern }}"{% endif %}
+        {% if min %}min="{{ min }}"{% endif %}
+        {% if max %}max="{{ max }}"{% endif %}
+        {% if step %}step="{{ step }}"{% endif %}
+    >{{ value }}</textarea>
+    {% if error_message %}
+    <span class="form-error">
+        <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        </svg>
+        {{ error_message }}
+    </span>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro form_checkbox(name, label, checked=false, extra_classes='', id='', onchange='', oninput='', pattern='', min='', max='', step='') %}
+<div class="form-group flex items-center {{ extra_classes }}">
+    <input
+        type="checkbox"
+        name="{{ name }}"
+        id="{{ id or name }}"
+        class="form-checkbox"
+        {% if checked %}checked{% endif %}
+        {% if onchange %}onchange="{{ onchange }}"{% endif %}
+        {% if oninput %}oninput="{{ oninput }}"{% endif %}
+        {% if pattern %}pattern="{{ pattern }}"{% endif %}
+        {% if min %}min="{{ min }}"{% endif %}
+        {% if max %}max="{{ max }}"{% endif %}
+        {% if step %}step="{{ step }}"{% endif %}
+    >
+    <label for="{{ id or name }}" class="form-label ml-2 mb-0">
+        {{ label }}
+    </label>
+</div>
+{% endmacro %}
+
+{% macro form_radio(name, options, selected_value='', extra_classes='', onchange='', oninput='', pattern='', min='', max='', step='') %}
+<div class="form-group {{ extra_classes }}">
+    {% for option in options %}
+    <div class="flex items-center mb-2">
+        <input
+            type="radio"
+            name="{{ name }}"
+            id="{{ name }}_{{ loop.index }}"
+            value="{{ option.value }}"
+            class="form-radio"
+            {% if option.value == selected_value %}checked{% endif %}
+            {% if onchange %}onchange="{{ onchange }}"{% endif %}
+            {% if oninput %}oninput="{{ oninput }}"{% endif %}
+            {% if pattern %}pattern="{{ pattern }}"{% endif %}
+            {% if min %}min="{{ min }}"{% endif %}
+            {% if max %}max="{{ max }}"{% endif %}
+            {% if step %}step="{{ step }}"{% endif %}
+        >
+        <label for="{{ name }}_{{ loop.index }}" class="form-label ml-2 mb-0">
+            {{ option.label }}
+        </label>
+    </div>
+    {% endfor %}
+</div>
+{% endmacro %}
+
 {% macro date_field(name, value='', form='', class='', required=true, id='') %}
 <div class="date-field-wrap relative w-full">
     <input type="text" name="{{ name }}" {% if id %}id="{{ id }}"{% endif %} {% if form %}form="{{ form }}"{% endif %}
         class="date-tr w-full pr-10 {{ class }}"
-        placeholder="gg/aa/yyyy"
+        placeholder="{{ _('ui_auto_ddde638ff0f6') }}"
         inputmode="numeric"
         autocomplete="off"
         maxlength="10"
-        title="Gün/Ay/Yıl — yazın veya takvim simgesine tıklayın"
+        title="{{ _('ui_auto_705769294b3a') }}"
         value="{% if value %}{{ value|format_date }}{% endif %}"
         {% if required %}required{% endif %}>
     <button type="button" class="date-picker-btn absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition"
-        tabindex="-1" aria-label="Takvimden tarih seç">
+        tabindex="-1" aria-label="{{ _('ui_auto_3b037e182eaf') }}">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
         </svg>

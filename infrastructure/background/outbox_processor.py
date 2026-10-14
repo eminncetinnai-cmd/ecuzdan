@@ -15,8 +15,9 @@ import importlib
 import json
 import logging
 import threading
-import time
 from datetime import datetime, timezone
+
+from sqlalchemy.exc import SQLAlchemyError
 
 logger = logging.getLogger(__name__)
 
@@ -48,12 +49,23 @@ class OutboxProcessor:
         self._batch_size = batch_size
         self._thread: threading.Thread | None = None
         self._stop_event = threading.Event()
+        self._configuration_warning_emitted = False
 
     # ── public API ───────────────────────────────────────────────────
 
     def start(self, interval_seconds: int = 5):
-        """Start polling in a daemon thread."""
+        """Start polling in a daemon thread when a Flask app is configured."""
         if self._thread and self._thread.is_alive():
+            return
+        if self._app is None or not callable(getattr(self._app, 'app_context', None)):
+            if not self._configuration_warning_emitted:
+                self._safe_log_warning(
+                    "OutboxProcessor disabled: a Flask app is required for database polling."
+                )
+                self._configuration_warning_emitted = True
+            return
+        if not self._database_is_registered():
+            self._configuration_warning_emitted = True
             return
         self._stop_event.clear()
         self._thread = threading.Thread(
@@ -63,7 +75,28 @@ class OutboxProcessor:
             name='outbox-processor',
         )
         self._thread.start()
-        self._safe_log_info("OutboxProcessor started (interval=%ds)", interval_seconds)
+        self._safe_log_debug("OutboxProcessor started (interval=%ds)", interval_seconds)
+
+    def _database_is_registered(self) -> bool:
+        """Return whether the worker app is registered with the shared database."""
+        try:
+            from shared.db import db
+
+            with self._app.app_context():
+                db.engine
+            return True
+        except RuntimeError as exc:
+            self._safe_log_warning(
+                "OutboxProcessor disabled: worker Flask app is not registered with shared SQLAlchemy: %s",
+                exc,
+            )
+            return False
+        except Exception as exc:
+            self._safe_log_warning(
+                "OutboxProcessor disabled: worker database is unavailable: %s",
+                exc,
+            )
+            return False
 
     def stop(self):
         """Signal the background thread to stop."""
@@ -72,7 +105,7 @@ class OutboxProcessor:
             self._thread.join(timeout=10)
             self._thread = None
 
-        self._safe_log_info("OutboxProcessor stopped.")
+        self._safe_log_debug("OutboxProcessor stopped.")
 
     def _logging_available(self) -> bool:
         """Return True if logging handlers are still active and writable."""
@@ -84,6 +117,14 @@ class OutboxProcessor:
             if stream is not None and getattr(stream, 'closed', False):
                 return False
         return True
+
+    def _safe_log_debug(self, msg: str, *args, **kwargs) -> None:
+        """Log debug safely only when the logging subsystem is still active."""
+        if self._logging_available():
+            try:
+                logger.debug(msg, *args, **kwargs)
+            except Exception:
+                pass
 
     def _safe_log_info(self, msg: str, *args, **kwargs) -> None:
         """Log info safely only when the logging subsystem is still active."""
@@ -98,6 +139,14 @@ class OutboxProcessor:
         if self._logging_available():
             try:
                 logger.exception(msg, *args, **kwargs)
+            except Exception:
+                pass
+
+    def _safe_log_warning(self, msg: str, *args, **kwargs) -> None:
+        """Log recoverable configuration/runtime conditions safely."""
+        if self._logging_available():
+            try:
+                logger.warning(msg, *args, **kwargs)
             except Exception:
                 pass
 
@@ -147,13 +196,36 @@ class OutboxProcessor:
 
     def _run_loop(self, interval: int):
         """Polling loop executed in the daemon thread."""
+        if self._app is None or not callable(getattr(self._app, 'app_context', None)):
+            # Misconfigured workers must stop once, rather than producing a
+            # repeated database-context error on every polling interval.
+            if not self._configuration_warning_emitted:
+                self._safe_log_warning(
+                    "OutboxProcessor stopped: a Flask app is required for database polling."
+                )
+                self._configuration_warning_emitted = True
+            return
+
+        consecutive_failures = 0
         while not self._stop_event.is_set():
             try:
-                if self._app:
-                    with self._app.app_context():
-                        self.process_batch()
-                else:
+                with self._app.app_context():
                     self.process_batch()
-            except Exception:
-                self._safe_log_exception("OutboxProcessor error during poll cycle.")
-            self._stop_event.wait(interval)
+                consecutive_failures = 0
+            except SQLAlchemyError as exc:
+                consecutive_failures += 1
+                self._safe_log_exception(
+                    "OutboxProcessor database failure during poll cycle (attempt %d): %s",
+                    consecutive_failures,
+                    exc,
+                )
+            except Exception as exc:
+                consecutive_failures += 1
+                self._safe_log_exception(
+                    "OutboxProcessor application failure during poll cycle (attempt %d): %s",
+                    consecutive_failures,
+                    exc,
+                )
+
+            delay = interval if consecutive_failures == 0 else min(interval * (2 ** min(consecutive_failures, 4)), 60)
+            self._stop_event.wait(delay)

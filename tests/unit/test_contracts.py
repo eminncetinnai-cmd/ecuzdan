@@ -4,15 +4,16 @@ Repository contracts and abstract interfaces tests
 """
 
 import pytest
+
 from repositories.contracts import (
     BaseRepositoryContract,
-    ReadRepositoryContract,
-    WriteRepositoryContract,
-    TenantAwareRepositoryContract,
     CatalogRepositoryContract,
     FinancialRepositoryContract,
-    ReportingRepositoryContract,
     PortfolioRepositoryContract,
+    ReadRepositoryContract,
+    ReportingRepositoryContract,
+    TenantAwareRepositoryContract,
+    WriteRepositoryContract,
 )
 
 
@@ -27,7 +28,7 @@ def test_contracts_module_imports():
 def test_contracts_module_structure():
     """Test contracts module structure"""
     import repositories.contracts as contracts_module
-    
+
     # Check for expected classes
     assert hasattr(contracts_module, 'BaseRepositoryContract')
     assert hasattr(contracts_module, 'ReadRepositoryContract')
@@ -63,10 +64,10 @@ def test_base_repository_contract_has_required_methods():
 def test_base_repository_contract_methods_are_abstract():
     """Test BaseRepositoryContract methods are abstract"""
     from abc import ABCMeta
-    
+
     # Check that the class is abstract
     assert isinstance(BaseRepositoryContract, ABCMeta)
-    
+
     # Check that methods are abstract
     assert hasattr(BaseRepositoryContract.get, '__isabstractmethod__')
     assert hasattr(BaseRepositoryContract.add, '__isabstractmethod__')
@@ -79,7 +80,7 @@ def test_base_repository_contract_methods_are_abstract():
 def test_read_repository_contract_is_protocol():
     """Test ReadRepositoryContract is a Protocol"""
     from typing import Protocol
-    
+
     assert issubclass(ReadRepositoryContract, Protocol)
 
 
@@ -94,7 +95,7 @@ def test_read_repository_contract_has_required_methods():
 def test_write_repository_contract_is_protocol():
     """Test WriteRepositoryContract is a Protocol"""
     from typing import Protocol
-    
+
     assert issubclass(WriteRepositoryContract, Protocol)
 
 
@@ -110,7 +111,7 @@ def test_write_repository_contract_has_required_methods():
 def test_tenant_aware_repository_contract_is_protocol():
     """Test TenantAwareRepositoryContract is a Protocol"""
     from typing import Protocol
-    
+
     assert issubclass(TenantAwareRepositoryContract, Protocol)
 
 
@@ -124,7 +125,7 @@ def test_tenant_aware_repository_contract_has_required_methods():
 def test_catalog_repository_contract_is_protocol():
     """Test CatalogRepositoryContract is a Protocol"""
     from typing import Protocol
-    
+
     assert issubclass(CatalogRepositoryContract, Protocol)
 
 
@@ -145,7 +146,7 @@ def test_catalog_repository_contract_has_required_methods():
 def test_financial_repository_contract_is_protocol():
     """Test FinancialRepositoryContract is a Protocol"""
     from typing import Protocol
-    
+
     assert issubclass(FinancialRepositoryContract, Protocol)
 
 
@@ -170,7 +171,7 @@ def test_financial_repository_contract_has_required_methods():
 def test_reporting_repository_contract_is_protocol():
     """Test ReportingRepositoryContract is a Protocol"""
     from typing import Protocol
-    
+
     assert issubclass(ReportingRepositoryContract, Protocol)
 
 
@@ -190,7 +191,7 @@ def test_reporting_repository_contract_has_required_methods():
 def test_portfolio_repository_contract_is_protocol():
     """Test PortfolioRepositoryContract is a Protocol"""
     from typing import Protocol
-    
+
     assert issubclass(PortfolioRepositoryContract, Protocol)
 
 
@@ -209,7 +210,7 @@ def test_portfolio_repository_contract_has_required_methods():
 def test_base_repository_contract_inherits_from_abc():
     """Test BaseRepositoryContract inherits from ABC"""
     from abc import ABC
-    
+
     assert issubclass(BaseRepositoryContract, ABC)
 
 
@@ -217,7 +218,7 @@ def test_base_repository_contract_inherits_from_abc():
 def test_contracts_use_typing():
     """Test contracts use typing module imports"""
     import repositories.contracts as contracts_module
-    
+
     # Check that typing imports are available
     assert hasattr(contracts_module, 'Any')
     assert hasattr(contracts_module, 'List')
@@ -229,7 +230,7 @@ def test_contracts_use_typing():
 def test_contracts_from_abc():
     """Test contracts use abc module imports"""
     import repositories.contracts as contracts_module
-    
+
     # Check that abc imports are available
     assert hasattr(contracts_module, 'ABC')
     assert hasattr(contracts_module, 'abstractmethod')

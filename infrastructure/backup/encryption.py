@@ -9,6 +9,7 @@ import logging
 import os
 from typing import Optional, Tuple
 
+from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -106,8 +107,13 @@ class BackupEncryptionService:
             logger.info("Backup başarıyla deşifre edildi")
             return decrypted_data
 
+        except InvalidTag:
+            # Yanlış parola veya değiştirilmiş ciphertext, kullanıcı kaynaklı ve
+            # beklenen bir doğrulama sonucudur; production error akışını kirletmez.
+            logger.debug("Backup authentication failed during decryption")
+            raise ValueError("Şifre doğrulaması başarısız. Lütfen şifrenizi kontrol edin.")
         except Exception as e:
-            logger.error(f"Deşifre hatası: {e}")
+            logger.error("Deşifre hatası: %s", e)
             raise ValueError("Şifre doğrulaması başarısız. Lütfen şifrenizi kontrol edin.")
 
     def generate_checksum(self, data: bytes) -> str:

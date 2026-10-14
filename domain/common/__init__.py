@@ -1,5 +1,5 @@
 """Common domain models and event structures."""
-from .events import DomainEvent
 from .event_bus import EventBus
+from .events import DomainEvent
 
 __all__ = ["DomainEvent", "EventBus"]

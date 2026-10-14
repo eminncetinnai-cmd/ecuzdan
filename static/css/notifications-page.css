@@ -686,6 +686,8 @@ html.dark .notification-badge.info {
 .notification-actions {
     display: flex;
     gap: 8px;
+    flex-shrink: 0;
+    align-items: center;
 }
 
 .notification-action-btn {

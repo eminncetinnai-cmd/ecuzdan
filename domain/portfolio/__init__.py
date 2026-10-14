@@ -1,1 +1,1 @@
-﻿# domain.portfolio: portfolio domain package.\n
+# domain.portfolio: portfolio domain package.\n

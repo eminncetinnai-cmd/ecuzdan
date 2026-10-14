@@ -3,9 +3,11 @@ Unit Tests - Notifications Routes
 Notification routes unit tests
 """
 
-import pytest
-from unittest.mock import Mock
 from datetime import datetime
+from unittest.mock import Mock
+
+import pytest
+
 from routes.notifications import _serialize
 
 
@@ -21,9 +23,9 @@ def test_serialize_notification():
     mock_notification.link = '/test'
     mock_notification.is_read = False
     mock_notification.created_at = datetime(2024, 1, 15, 10, 30)
-    
+
     result = _serialize(mock_notification)
-    
+
     assert result['id'] == 1
     assert result['category'] == 'alert'
     assert result['severity'] == 'high'
@@ -46,9 +48,9 @@ def test_serialize_notification_read():
     mock_notification.link = None
     mock_notification.is_read = True
     mock_notification.created_at = datetime(2024, 2, 20, 14, 45)
-    
+
     result = _serialize(mock_notification)
-    
+
     assert result['id'] == 2
     assert result['category'] == 'info'
     assert result['severity'] == 'low'
@@ -71,9 +73,9 @@ def test_serialize_notification_no_created_at():
     mock_notification.link = '/warning'
     mock_notification.is_read = False
     mock_notification.created_at = None
-    
+
     result = _serialize(mock_notification)
-    
+
     assert result['id'] == 3
     assert result['category'] == 'warning'
     assert result['severity'] == 'medium'
@@ -96,9 +98,9 @@ def test_serialize_notification_no_link():
     mock_notification.link = None
     mock_notification.is_read = True
     mock_notification.created_at = datetime(2024, 3, 10, 9, 0)
-    
+
     result = _serialize(mock_notification)
-    
+
     assert result['id'] == 4
     assert result['category'] == 'success'
     assert result['severity'] == 'low'
@@ -121,9 +123,9 @@ def test_serialize_notification_date_format():
     mock_notification.link = '/date'
     mock_notification.is_read = False
     mock_notification.created_at = datetime(2024, 12, 25, 23, 59)
-    
+
     result = _serialize(mock_notification)
-    
+
     assert result['created_at'] == '25/12/2024 23:59'
 
 
@@ -139,9 +141,9 @@ def test_serialize_notification_all_fields_present():
     mock_notification.link = '/link'
     mock_notification.is_read = False
     mock_notification.created_at = datetime(2024, 1, 1, 0, 0)
-    
+
     result = _serialize(mock_notification)
-    
+
     expected_keys = ['id', 'category', 'severity', 'title', 'body', 'link', 'is_read', 'created_at']
     for key in expected_keys:
         assert key in result

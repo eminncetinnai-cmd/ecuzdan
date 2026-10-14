@@ -1,207 +1,187 @@
 {% extends "layout.html" %}
+{% from 'macros/buttons.html' import button_primary, button_secondary %}
 
 {% block title %}Davet Listesi - E-Cüzdan{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="page-header">
-        <h1>Davet Listesi</h1>
-        <p>Tenant davetlerini görüntüleyin</p>
+<div class="max-w-6xl mx-auto space-y-6 mb-12">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{{ _('ui_auto_d649a19271c7') }}</h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">{{ _('ui_auto_b6f5b6292f7b') }}</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="{{ url_for('tenant.users') }}" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                <span>Kullanıcı Listesi</span>
+            </a>
+            {{ button_primary(_('ui_auto_ab7dafca2df7'), url=url_for('tenant.invite')) }}
+        </div>
     </div>
     
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">
+                <div class="p-4 rounded-xl text-xs font-semibold {% if category == 'error' or category == 'danger' %}bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-900/50{% elif category == 'success' %}bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/50{% else %}bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-900/50{% endif %}">
                     {{ message }}
                 </div>
             {% endfor %}
         {% endif %}
     {% endwith %}
     
-    <div class="card">
-        <div class="card-header">
-            <h2>Davetler</h2>
-            <a href="{{ url_for('tenant.invite') }}" class="btn btn-primary">Yeni Davet</a>
+    <!-- Table Card -->
+    <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+        <!-- Card Header & Filter -->
+        <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-900/50">
+            <div class="flex items-center gap-2">
+                <h2 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">{{ _('ui_auto_bdf9a2f6ddff') }}</h2>
+                <span id="inviteCountBadge" class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300">
+                    {{ invites|length }} Davet
+                </span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="relative">
+                    <input type="text" id="inviteSearchInput" oninput="filterInvites(this.value)" placeholder="E-posta veya rol ara…" class="w-56 px-3 py-1.5 pl-8 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </div>
+            </div>
         </div>
         
-        <div class="table-responsive">
-            <table class="table">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs" id="invitesTable">
                 <thead>
-                    <tr>
-                        <th>E-posta</th>
-                        <th>Rol</th>
-                        <th>Durum</th>
-                        <th>Oluşturulma Tarihi</th>
-                        <th>Süre Bitiş</th>
+                    <tr class="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 text-[10px] font-black uppercase tracking-wider text-slate-400 select-none">
+                        <th class="px-5 py-3.5 cursor-pointer hover:text-slate-600 dark:hover:text-slate-200" onclick="sortInvites(0)">{{ _('ui_auto_0ff610ba0319') }} <span class="sort-icon-invite text-[9px] opacity-40">↕</span></th>
+                        <th class="px-5 py-3.5 cursor-pointer hover:text-slate-600 dark:hover:text-slate-200" onclick="sortInvites(1)">Rol <span class="sort-icon-invite text-[9px] opacity-40">↕</span></th>
+                        <th class="px-5 py-3.5 cursor-pointer hover:text-slate-600 dark:hover:text-slate-200" onclick="sortInvites(2)">Durum <span class="sort-icon-invite text-[9px] opacity-40">↕</span></th>
+                        <th class="px-5 py-3.5 cursor-pointer hover:text-slate-600 dark:hover:text-slate-200" onclick="sortInvites(3)">{{ _('ui_auto_74adf6e1325f') }} <span class="sort-icon-invite text-[9px] opacity-40">↕</span></th>
+                        <th class="px-5 py-3.5 cursor-pointer hover:text-slate-600 dark:hover:text-slate-200" onclick="sortInvites(4)">{{ _('ui_auto_6f5e5c7f5871') }} <span class="sort-icon-invite text-[9px] opacity-40">↕</span></th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="invitesTbody" class="divide-y divide-slate-100 dark:divide-slate-800">
                     {% for invite in invites %}
-                    <tr>
-                        <td>{{ invite.email }}</td>
-                        <td>
+                    <tr class="invite-row hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition"
+                        data-email="{{ invite.email|lower }}"
+                        data-role="{{ invite.role|lower }}"
+                        data-status="{% if invite.is_used %}kullanildi{% elif invite.is_expired %}suresi_doldu{% else %}bekliyor{% endif %}"
+                        data-created="{{ invite.created_at.strftime('%Y-%m-%d %H:%M') if invite.created_at else '' }}"
+                        data-expires="{{ invite.expires_at.strftime('%Y-%m-%d %H:%M') if invite.expires_at else '' }}">
+                        <td class="px-5 py-3 font-semibold text-slate-800 dark:text-slate-200">
+                            <div class="flex items-center gap-2">
+                                <span class="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-black text-xs flex items-center justify-center">
+                                    ✉
+                                </span>
+                                <span>{{ invite.email }}</span>
+                            </div>
+                        </td>
+                        <td class="px-5 py-3">
                             {% if invite.role == 'tenant_admin' %}
-                                <span class="badge badge-primary">Tenant Admin</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-900/50">
+                                    {{ _('ui_auto_7cbbc6ca9723') }}
+                                </span>
                             {% else %}
-                                <span class="badge badge-secondary">Kullanıcı</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                    {{ _('ui_auto_07075bae9ab2') }}
+                                </span>
                             {% endif %}
                         </td>
-                        <td>
+                        <td class="px-5 py-3">
                             {% if invite.is_used %}
-                                <span class="badge badge-success">Kullanıldı</span>
+                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/50">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                    {{ _('ui_auto_f691e24a84f5') }}
+                                </span>
                             {% elif invite.is_expired %}
-                                <span class="badge badge-danger">Süresi Doldu</span>
+                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-900/50">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                    {{ _('ui_auto_93e45d8e94ad') }}
+                                </span>
                             {% else %}
-                                <span class="badge badge-info">Bekliyor</span>
+                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-900/50">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                    Bekliyor
+                                </span>
                             {% endif %}
                         </td>
-                        <td>{{ invite.created_at.strftime('%d/%m/%Y %H:%M') if invite.created_at else '-' }}</td>
-                        <td>{{ invite.expires_at.strftime('%d/%m/%Y %H:%M') if invite.expires_at else '-' }}</td>
+                        <td class="px-5 py-3 font-mono text-slate-500 dark:text-slate-400">{{ invite.created_at.strftime('%d/%m/%Y %H:%M') if invite.created_at else '-' }}</td>
+                        <td class="px-5 py-3 font-mono text-slate-500 dark:text-slate-400">{{ invite.expires_at.strftime('%d/%m/%Y %H:%M') if invite.expires_at else '-' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="px-5 py-10 text-center text-slate-400 text-xs">
+                            Henüz davet oluşturulmamış.
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        <div id="noInviteResults" class="hidden p-8 text-center text-slate-400 text-xs">
+            Arama kriterine uygun davet bulunamadı.
+        </div>
     </div>
 </div>
 
-<style>
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
+<script>
+let inviteSortCol = -1;
+let inviteSortAsc = true;
+const INVITE_KEYS = ['email', 'role', 'status', 'created', 'expires'];
+
+function sortInvites(colIdx) {
+    const tbody = document.getElementById('invitesTbody');
+    if (!tbody) return;
+
+    if (inviteSortCol === colIdx) {
+        inviteSortAsc = !inviteSortAsc;
+    } else {
+        inviteSortCol = colIdx;
+        inviteSortAsc = true;
+    }
+
+    const key = INVITE_KEYS[colIdx];
+    const rows = Array.from(tbody.querySelectorAll('.invite-row'));
+
+    rows.sort((a, b) => {
+        const valA = a.dataset[key] || '';
+        const valB = b.dataset[key] || '';
+        return inviteSortAsc ? valA.localeCompare(valB, 'tr') : valB.localeCompare(valA, 'tr');
+    });
+
+    rows.forEach(r => tbody.appendChild(r));
+
+    const icons = document.querySelectorAll('.sort-icon-invite');
+    icons.forEach((icon, idx) => {
+        if (idx === colIdx) {
+            icon.textContent = inviteSortAsc ? '▲' : '▼';
+            icon.classList.remove('opacity-40');
+            icon.classList.add('opacity-100', 'text-indigo-600', 'dark:text-indigo-400');
+        } else {
+            icon.textContent = '↕';
+            icon.classList.add('opacity-40');
+            icon.classList.remove('opacity-100', 'text-indigo-600', 'dark:text-indigo-400');
+        }
+    });
 }
 
-.page-header {
-    margin-bottom: 30px;
-}
+function filterInvites(query) {
+    const q = query.toLowerCase().trim();
+    const rows = document.querySelectorAll('#invitesTbody .invite-row');
+    let visible = 0;
+    rows.forEach(row => {
+        const email = row.dataset.email || '';
+        const role = row.dataset.role || '';
+        const status = row.dataset.status || '';
+        const match = !q || email.includes(q) || role.includes(q) || status.includes(q);
+        row.style.display = match ? '' : 'none';
+        if (match) visible++;
+    });
 
-.page-header h1 {
-    margin: 0 0 10px 0;
-    color: #333;
-}
+    const noRes = document.getElementById('noInviteResults');
+    if (noRes) noRes.classList.toggle('hidden', visible > 0 || rows.length === 0);
 
-.page-header p {
-    margin: 0;
-    color: #666;
+    const badge = document.getElementById('inviteCountBadge');
+    if (badge) badge.textContent = `${visible} Davet`;
 }
-
-.card {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
-}
-
-.card-header {
-    padding: 20px;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.card-header h2 {
-    margin: 0;
-    color: #333;
-}
-
-.table-responsive {
-    overflow-x: auto;
-}
-
-.table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.table th,
-.table td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-}
-
-.table th {
-    background-color: #f5f5f5;
-    font-weight: 600;
-}
-
-.badge {
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.badge-primary {
-    background-color: #667eea;
-    color: white;
-}
-
-.badge-secondary {
-    background-color: #6c757d;
-    color: white;
-}
-
-.badge-success {
-    background-color: #28a745;
-    color: white;
-}
-
-.badge-danger {
-    background-color: #dc3545;
-    color: white;
-}
-
-.badge-info {
-    background-color: #17a2b8;
-    color: white;
-}
-
-.btn {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.3s;
-    text-decoration: none;
-    display: inline-block;
-}
-
-.btn-primary {
-    background-color: #667eea;
-    color: white;
-}
-
-.btn-primary:hover {
-    background-color: #5568d3;
-}
-
-.alert {
-    padding: 12px;
-    border-radius: 4px;
-    margin-bottom: 20px;
-}
-
-.alert-error {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-}
-
-.alert-success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-}
-
-.alert-warning {
-    background-color: #fff3cd;
-    color: #856404;
-    border: 1px solid #ffeaa7;
-}
-</style>
+</script>
 {% endblock %}

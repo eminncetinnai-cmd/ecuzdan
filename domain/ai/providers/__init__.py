@@ -1,1 +1,1 @@
-﻿# domain.ai.providers: AI provider adapters.\n
+# domain.ai.providers: AI provider adapters.\n

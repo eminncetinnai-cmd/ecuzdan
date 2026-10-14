@@ -32,7 +32,11 @@ def get_actual_cash(tenant_id=None):
     if tenant_id:
         query = query.filter_by(tenant_id=tenant_id)
     transactions = query.all()
-    return sum(t.amount if t.type == 'Gelir' else -t.amount for t in transactions if t.status == 'Ödendi')
+    return sum(
+        t.amount if t.type == 'Gelir' else -t.amount
+        for t in transactions
+        if t.status == 'Ödendi' and getattr(t, 'is_deleted', False) is not True
+    )
 
 
 def get_total_assets(tenant_id=None):
@@ -52,7 +56,8 @@ def get_total_assets(tenant_id=None):
 
 def get_total_debts(tenant_id=None):
     """
-    Toplam borç miktarını hesaplar (düzenli gider planları)
+    Toplam borç miktarını hesaplar (düzenli gider planları).
+    Süresiz planlar ve tamamlanmış planlar borç üretmez.
 
     Returns:
         float: Toplam borç miktarı
@@ -62,4 +67,30 @@ def get_total_debts(tenant_id=None):
     if tenant_id:
         query = query.filter_by(tenant_id=tenant_id)
     plans = query.all()
-    return sum(p.amount * p.installments for p in plans)
+
+    from decimal import Decimal
+
+    def _calc_plan_debt(p):
+        if getattr(p, 'status', None) in ('Tamamlandı', 'İptal', 'Durduruldu'):
+            return 0
+        if getattr(p, 'plan_type', None) in ('Abonelik', 'Kira'):
+            return 0
+        if getattr(p, 'is_indefinite', None) is True:
+            return 0
+        rem = getattr(p, 'remaining_total_amount', None)
+        if isinstance(rem, (int, float, Decimal)):
+            return float(rem)
+        inst = getattr(p, 'installments', 0) or 0
+        try:
+            inst_val = int(inst)
+        except (TypeError, ValueError):
+            inst_val = 0
+        if inst_val <= 0:
+            return 0
+        try:
+            amt_val = float(p.amount or 0)
+        except (TypeError, ValueError):
+            amt_val = 0.0
+        return amt_val * inst_val
+
+    return sum(_calc_plan_debt(p) for p in plans)

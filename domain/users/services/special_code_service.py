@@ -4,10 +4,13 @@ This service manages special codes that can be used to upgrade user roles.
 It provides a world-standard approach for invitation/promo code systems.
 """
 
+import hashlib
+import hmac
 import logging
 import os
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
 import yaml
 
 logger = logging.getLogger(__name__)
@@ -43,6 +46,37 @@ class SpecialCodeService:
             logger.error(f"Error parsing special codes configuration: {e}")
             self._codes_config = {}
             return {}
+
+    @staticmethod
+    def code_fingerprint(code: str) -> str:
+        """Return a non-reversible identifier safe for audit/log records."""
+        return hashlib.sha256((code or '').encode('utf-8')).hexdigest()[:16]
+
+    def get_code_info_for_stored(self, stored_code: str) -> Optional[Dict[str, Any]]:
+        """Resolve metadata from a stored fingerprint or legacy raw value."""
+        codes = self._load_config()
+        if stored_code in codes:
+            return codes[stored_code]
+        for raw_code, config in codes.items():
+            if hmac.compare_digest(self.code_fingerprint(raw_code), str(stored_code or '')):
+                return config
+        return None
+
+    @staticmethod
+    def _redemption_count(code: str, fingerprint: str | None = None) -> int:
+        """Count committed redemptions for current and legacy storage formats."""
+        try:
+            from sqlalchemy import or_
+
+            from models import User
+
+            values = [User.special_code == code]
+            if fingerprint:
+                values.append(User.special_code == fingerprint)
+            return User.query.filter(or_(*values)).count()
+        except Exception as exc:
+            logger.debug("Special-code usage lookup skipped: %s", type(exc).__name__)
+            return 0
 
     def validate_code(self, code: str, user_id: int, tenant_id: Optional[str] = None) -> Dict[str, Any]:
         """Validate a special code and return its details if valid.
@@ -88,9 +122,15 @@ class SpecialCodeService:
                 'error': 'Bu kod sadece belirli tenant\'lar için geçerli'
             }
 
-        # Check max uses (would require database tracking in production)
+        # Enforce configured usage limits against committed user redemptions.
         max_uses = code_config.get('max_uses')
-        if max_uses and max_uses <= 0:
+        try:
+            max_uses = int(max_uses) if max_uses is not None else None
+        except (TypeError, ValueError):
+            logger.warning("Invalid max_uses configuration for special code")
+            max_uses = None
+        fingerprint = self.code_fingerprint(code)
+        if max_uses is not None and max_uses <= self._redemption_count(code, fingerprint):
             return {
                 'valid': False,
                 'error': 'Bu kodun kullanım hakkı dolmuş'

@@ -2,8 +2,7 @@
 
 import random
 from datetime import datetime
-from decimal import Decimal
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 from domain.categories.services.category_service import CategoryService
 from domain.demo.config_loader import DemoDataConfigLoader
@@ -17,7 +16,7 @@ class AssetFactory:
     def __init__(self, tenant_id: Optional[str] = None):
         """
         Initialize the asset factory.
-        
+
         Args:
             tenant_id: Tenant ID for tenant-scoped operations
         """
@@ -45,7 +44,7 @@ class AssetFactory:
     ) -> Optional[Asset]:
         """
         Create an asset with category validation.
-        
+
         Args:
             asset_type: Asset type (e.g., 'Hisse Senedi', 'Altın')
             name: Asset name
@@ -62,19 +61,19 @@ class AssetFactory:
             description: Description (optional)
             notes: Notes (optional)
             is_admin_generated: Whether this is admin-generated data
-        
+
         Returns:
             Asset object or None if category is invalid
         """
         # Validate asset category exists
         if not self.category_service.is_valid_category(asset_type, self.tenant_id):
             return None
-        
+
         # Create default sector if not provided (sector_id is required in Asset model)
         if sector_id is None:
             sector = self.get_or_create_sector('Genel')
             sector_id = sector.id
-        
+
         # Create asset
         asset = Asset(
             type=asset_type,
@@ -94,7 +93,7 @@ class AssetFactory:
             is_admin_generated=is_admin_generated,
             tenant_id=self.tenant_id
         )
-        
+
         return asset
 
     def create_asset_from_template(
@@ -108,7 +107,7 @@ class AssetFactory:
     ) -> Optional[Asset]:
         """
         Create an asset from a predefined template.
-        
+
         Args:
             template_name: Template name (e.g., 'stock', 'gold')
             name: Asset name
@@ -116,14 +115,14 @@ class AssetFactory:
             purchase_date: Purchase date (YYYY-MM-DD format)
             variation_percent: Amount variation percentage
             is_admin_generated: Whether this is admin-generated data
-        
+
         Returns:
             Asset object or None if template/invalid
         """
         template = self.config_loader.get_asset_template(template_name)
         if not template:
             return None
-        
+
         # Calculate quantity and price with variation
         base_quantity = template.get('base_quantity', 1)
         quantity_range = template.get('quantity_range', {})
@@ -131,17 +130,17 @@ class AssetFactory:
             quantity = random.uniform(quantity_range['min'], quantity_range['max'])
         else:
             quantity = base_quantity * (1 + random.uniform(-variation_percent, variation_percent))
-        
+
         base_price = template.get('base_price', 0)
         price_range = template.get('price_range', {})
         if price_range:
             unit_price = random.uniform(price_range['min'], price_range['max'])
         else:
             unit_price = base_price * (1 + random.uniform(-variation_percent, variation_percent))
-        
+
         purchase_cost = quantity * unit_price
         value = purchase_cost
-        
+
         return self.create_asset(
             asset_type=template.get('type'),
             name=name,
@@ -163,10 +162,10 @@ class AssetFactory:
     def get_or_create_sector(self, sector_name: str) -> AssetSector:
         """
         Get or create an asset sector.
-        
+
         Args:
             sector_name: Sector name
-        
+
         Returns:
             AssetSector object
         """
@@ -191,7 +190,7 @@ class AssetFactory:
     ) -> Dict[str, Any]:
         """
         Create asset valuation data (not the model, just the data).
-        
+
         Args:
             asset_id: Asset ID
             old_value: Old value
@@ -201,13 +200,13 @@ class AssetFactory:
             update_type: Update type
             notes: Notes
             updated_at: Update date (YYYY-MM-DD format)
-        
+
         Returns:
             Dictionary with valuation data
         """
         if updated_at is None:
             updated_at = datetime.now().strftime('%Y-%m-%d')
-        
+
         return {
             'asset_id': asset_id,
             'old_value': to_decimal(old_value),
