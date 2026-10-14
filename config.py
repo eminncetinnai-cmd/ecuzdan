@@ -50,8 +50,10 @@ class Config:
         self.DATABASE_URL = db_url
         self.GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', self.GOOGLE_CLIENT_ID)
         self.GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET', self.GOOGLE_CLIENT_SECRET)
-        self.HTTPS_ENABLED = os.getenv('HTTPS_ENABLED', str(self.HTTPS_ENABLED).lower()).lower() == 'true'
-        self.FORCE_HTTPS = os.getenv('FORCE_HTTPS', str(self.FORCE_HTTPS).lower()).lower() == 'true'
+        is_render = os.getenv('RENDER', 'false').lower() == 'true'
+        default_https = 'true' if (self.FLASK_ENV == 'production' or is_render) else 'false'
+        self.HTTPS_ENABLED = os.getenv('HTTPS_ENABLED', default_https).lower() == 'true'
+        self.FORCE_HTTPS = os.getenv('FORCE_HTTPS', default_https).lower() == 'true'
         self.BACKGROUND_SERVICE_ENABLED = os.getenv(
             'BACKGROUND_SERVICE_ENABLED', str(self.BACKGROUND_SERVICE_ENABLED).lower()
         ).lower() == 'true'
@@ -82,7 +84,13 @@ class Config:
             'RATELIMIT_IN_MEMORY_FALLBACK_ENABLED',
             str(self.RATELIMIT_IN_MEMORY_FALLBACK_ENABLED),
         ).lower() == 'true'
-        self.TRUST_PROXY_HOPS = int(os.getenv('TRUST_PROXY_HOPS', str(self.TRUST_PROXY_HOPS)))
+        default_proxy_hops = '1' if is_render else str(self.TRUST_PROXY_HOPS)
+        self.TRUST_PROXY_HOPS = int(os.getenv('TRUST_PROXY_HOPS', default_proxy_hops))
+
+        if is_render or os.getenv('ALLOW_SINGLE_INSTANCE_RATELIMIT', '').lower() == 'true':
+            self.RATELIMIT_IN_MEMORY_FALLBACK_ENABLED = True
+            if self.RATELIMIT_STORAGE_URI.startswith('redis://127.0.0.1'):
+                self.RATELIMIT_STORAGE_URI = 'memory://'
 
         # Hard security validation in production
         if self.FLASK_ENV not in ('development', 'testing'):
@@ -103,7 +111,10 @@ class Config:
                 raise ValueError(
                     "CRITICAL CONFIGURATION ERROR: DATABASE_URL must be explicitly set in production."
                 )
-            allow_single_instance = os.getenv('ALLOW_SINGLE_INSTANCE_RATELIMIT', 'false').lower() == 'true'
+            allow_single_instance = (
+                os.getenv('ALLOW_SINGLE_INSTANCE_RATELIMIT', 'false').lower() == 'true'
+                or is_render
+            )
             if self.RATELIMIT_STORAGE_URI.startswith('memory://') and not allow_single_instance:
                 raise ValueError(
                     "CRITICAL CONFIGURATION ERROR: RATELIMIT_STORAGE_URI must use a shared persistent backend in production (or set ALLOW_SINGLE_INSTANCE_RATELIMIT=true for single-container deployment)."
@@ -118,13 +129,14 @@ class Config:
     SESSION_COOKIE_HTTPONLY = True
     # For development: use 'Lax' for OAuth compatibility without HTTPS
     # For production with HTTPS: use 'None' with SESSION_COOKIE_SECURE=True
-    SESSION_COOKIE_SAMESITE = 'Lax' if os.getenv('HTTPS_ENABLED', 'false').lower() == 'false' else 'None'
-    SESSION_COOKIE_SECURE = os.getenv('HTTPS_ENABLED', 'false').lower() == 'true'  # Auto-detect from environment
+    _default_https_class = 'true' if (FLASK_ENV == 'production' or os.getenv('RENDER') == 'true') else 'false'
+    SESSION_COOKIE_SAMESITE = 'Lax' if os.getenv('HTTPS_ENABLED', _default_https_class).lower() == 'false' else 'None'
+    SESSION_COOKIE_SECURE = os.getenv('HTTPS_ENABLED', _default_https_class).lower() == 'true'  # Auto-detect from environment
     SESSION_REFRESH_EACH_REQUEST = True
 
     # HTTPS Configuration
-    HTTPS_ENABLED = os.getenv('HTTPS_ENABLED', 'false').lower() == 'true'
-    FORCE_HTTPS = os.getenv('FORCE_HTTPS', 'false').lower() == 'true'
+    HTTPS_ENABLED = os.getenv('HTTPS_ENABLED', _default_https_class).lower() == 'true'
+    FORCE_HTTPS = os.getenv('FORCE_HTTPS', _default_https_class).lower() == 'true'
 
     # Application Boot ID (for session invalidation on restart)
     APP_BOOT_ID = os.getenv('APP_BOOT_ID', None)
