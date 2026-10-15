@@ -77,17 +77,16 @@
                     </span>
                 </div>
 
-                <div class="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight mb-5 sm:mb-6 flex items-baseline gap-2 {{ 'text-emerald-400' if net_worth >= 0 else 'text-rose-400' }}">
+                <div class="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight mb-4 sm:mb-6 flex items-baseline gap-2 {{ 'text-emerald-400' if net_worth >= 0 else 'text-rose-400' }}">
                     <span>{{ net_worth|format_money }}</span>
-                    <span class="text-xl md:text-2xl font-bold text-slate-400">{{ base_currency_symbol }}</span>
+                    <span class="text-lg sm:text-xl md:text-2xl font-bold text-slate-400">{{ base_currency_symbol }}</span>
                 </div>
 
                 <!-- Alt İstatistik Kartları (Mobilde tek sütun ferah, tablet/masaüstünde 3 sütun) -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4">
                     <!-- Nakit Pozisyonu -->
-                    <div class="p-3.5 rounded-2xl bg-white/[0.05] border border-white/[0.08] backdrop-blur-md">
+                    <div class="p-3 sm:p-3.5 rounded-2xl bg-white/[0.05] border border-white/[0.08] backdrop-blur-md">
                         <div class="flex items-center gap-1.5 mb-1">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
                             <p class="text-[10px] sm:text-xs font-bold text-slate-300 uppercase tracking-wider truncate">{{ _('ui_auto_9721ca219c8b') }}</p>
                         </div>
                         <p class="text-base sm:text-lg font-black text-emerald-400 truncate">
@@ -96,9 +95,8 @@
                     </div>
 
                     <!-- Toplam Yatırım Varlığı -->
-                    <div class="p-3.5 rounded-2xl bg-white/[0.05] border border-white/[0.08] backdrop-blur-md">
+                    <div class="p-3 sm:p-3.5 rounded-2xl bg-white/[0.05] border border-white/[0.08] backdrop-blur-md">
                         <div class="flex items-center gap-1.5 mb-1">
-                            <span class="w-2 h-2 rounded-full bg-sky-400"></span>
                             <p class="text-[10px] sm:text-xs font-bold text-slate-300 uppercase tracking-wider truncate">{{ _('ui_auto_03885b7ebff7') }}</p>
                         </div>
                         <p class="text-base sm:text-lg font-black text-sky-400 truncate">
@@ -107,9 +105,8 @@
                     </div>
 
                     <!-- Aktif Varlık Adedi -->
-                    <div class="p-3.5 rounded-2xl bg-white/[0.05] border border-white/[0.08] backdrop-blur-md">
+                    <div class="p-3 sm:p-3.5 rounded-2xl bg-white/[0.05] border border-white/[0.08] backdrop-blur-md">
                         <div class="flex items-center gap-1.5 mb-1">
-                            <span class="w-2 h-2 rounded-full bg-violet-400"></span>
                             <p class="text-[10px] sm:text-xs font-bold text-slate-300 uppercase tracking-wider truncate">{{ _('ui_auto_9e6fcbd8ff28') }}</p>
                         </div>
                         <p class="text-base sm:text-lg font-black text-violet-400 truncate">
@@ -120,10 +117,10 @@
             </div>
 
             <!-- Sağ Kolon: Nakit vs Yatırım Dağılım Göstergesi (5 Kolon) -->
-            <div class="lg:col-span-5 p-5 rounded-2xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-md">
+            <div class="lg:col-span-5 p-4 sm:p-5 rounded-2xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-md">
                 <div class="flex items-center justify-between mb-3">
                     <span class="text-[10px] font-bold text-slate-300 uppercase tracking-wider">{{ _('ui_auto_76e1c1459af1') }}</span>
-                    <span class="text-[10px] font-black text-indigo-300 uppercase tracking-wider">Sermaye Dağılımı</span>
+                    <span class="text-[10px] font-mono font-bold text-indigo-300">{{ base_currency_code }}</span>
                 </div>
 
                 <!-- Dağılım Çubuğu -->
@@ -162,7 +159,7 @@
     </div>
 
     <!-- ═══ 3. KULLANICI DESTEKLİ HIZLI AKSİYONLAR BARI ═══════════════════════ -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3.5">
         <button data-macro="button_secondary" type="button" onclick="openQuickTransactionModal('Gelir')" class="quick-action-btn bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 cursor-pointer">
             <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black">↑</span>
             <span>+ Hızlı Gelir</span>
@@ -179,7 +176,7 @@
             <span class="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-black">📅</span>
             <span>Ödeme Takvimi</span>
         </a>
-        <a href="/assets" data-macro="button_secondary" class="quick-action-btn bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 hover:bg-amber-100 dark:hover:bg-amber-900/60">
+        <a href="/assets" data-macro="button_secondary" class="quick-action-btn col-span-2 sm:col-span-1 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 hover:bg-amber-100 dark:hover:bg-amber-900/60">
             <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black">💼</span>
             <span>Varlık Portföyü</span>
         </a>
@@ -243,9 +240,9 @@
     {% endif %}
 
     <!-- ═══ 4. 4-KART LİKİDİTE PROJEKSİYONLARI ════════════════════════════════ -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-5">
         <!-- 1. Bugünkü Nakit -->
-        <div class="dash-card p-5 border-l-4 border-l-emerald-500 flex flex-col justify-between">
+        <div class="dash-card p-4 sm:p-5 border-l-4 border-l-emerald-500 flex flex-col justify-between">
             <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center gap-2.5">
                     <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20">
@@ -269,7 +266,7 @@
         </div>
 
         <!-- 2. 7 Günlük Tahmin -->
-        <div class="dash-card p-5 border-l-4 border-l-amber-500 flex flex-col justify-between">
+        <div class="dash-card p-4 sm:p-5 border-l-4 border-l-amber-500 flex flex-col justify-between">
             <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center gap-2.5">
                     <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20">
@@ -293,7 +290,7 @@
         </div>
 
         <!-- 3. Ay Sonu Tahmin -->
-        <div class="dash-card p-5 border-l-4 border-l-orange-500 flex flex-col justify-between">
+        <div class="dash-card p-4 sm:p-5 border-l-4 border-l-orange-500 flex flex-col justify-between">
             <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center gap-2.5">
                     <div class="w-8 h-8 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center border border-orange-500/20">
@@ -317,7 +314,7 @@
         </div>
 
         <!-- 4. Yıl Sonu Kasa -->
-        <div class="dash-card p-5 border-l-4 border-l-indigo-500 flex flex-col justify-between">
+        <div class="dash-card p-4 sm:p-5 border-l-4 border-l-indigo-500 flex flex-col justify-between">
             <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center gap-2.5">
                     <div class="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/20">
@@ -342,51 +339,51 @@
     </div>
 
     <!-- ═══ 5. İKİNCİL TELEMETRİ KARTLARI ═════════════════════════════════════ -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         <!-- Card 1: Yıl içi gerçekleşen nakit -->
-        <div class="dash-card p-4">
+        <div class="dash-card p-3 sm:p-4">
             <div class="flex items-center justify-between mb-1.5">
-                <h3 class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ _('ui_auto_f56ff94fd347') }}</h3>
+                <h3 class="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">{{ _('ui_auto_f56ff94fd347') }}</h3>
                 <span class="info-tip" title="{{ _('ui_auto_4f3c5b56d16f') }}">?</span>
             </div>
-            <p class="text-lg font-black tracking-tight {% if year_paid_cash >= 0 %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
+            <p class="text-base sm:text-lg font-black tracking-tight truncate {% if year_paid_cash >= 0 %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
                 {{ year_paid_cash|format_money }} <span class="text-xs font-bold text-slate-400">{{ base_currency_symbol }}</span>
             </p>
         </div>
 
         <!-- Card 2: Ödenmiş yatırım transferi -->
-        <div class="dash-card p-4">
+        <div class="dash-card p-3 sm:p-4">
             <div class="flex items-center justify-between mb-1.5">
-                <h3 class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ _('ui_auto_57117158a1d5') }}</h3>
+                <h3 class="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">{{ _('ui_auto_57117158a1d5') }}</h3>
                 <span class="info-tip" title="{{ _('ui_auto_1d78a2044fed') }}">?</span>
             </div>
-            <p class="text-lg font-black tracking-tight text-blue-600 dark:text-blue-400">
+            <p class="text-base sm:text-lg font-black tracking-tight text-blue-600 dark:text-blue-400 truncate">
                 {{ paid_investment_transfers|format_money }} <span class="text-xs font-bold text-slate-400">{{ base_currency_symbol }}</span>
             </p>
         </div>
 
         <!-- Card 3: Yatırım / Gelir Oranı -->
-        <div class="dash-card p-4">
+        <div class="dash-card p-3 sm:p-4">
             <div class="flex items-center justify-between mb-1.5">
-                <h3 class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ _('ui_auto_d2a074d8a2e0') }}</h3>
+                <h3 class="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">{{ _('ui_auto_d2a074d8a2e0') }}</h3>
                 <span class="info-tip" title="{{ _('ui_auto_a552dff813df') }}">?</span>
             </div>
             <div class="flex items-baseline gap-2">
-                <p class="text-lg font-black tracking-tight text-sky-600 dark:text-sky-400">%{{ investment_ratio }}</p>
-                <span class="text-[10px] font-semibold text-slate-400">Tasarruf Oranı</span>
+                <p class="text-base sm:text-lg font-black tracking-tight text-sky-600 dark:text-sky-400">%{{ investment_ratio }}</p>
+                <span class="text-[10px] font-semibold text-slate-400 hidden sm:inline">Tasarruf Oranı</span>
             </div>
         </div>
 
         <!-- Card 4: Bekleyen yıl etkisi -->
-        <div class="dash-card p-4">
+        <div class="dash-card p-3 sm:p-4">
             <div class="flex items-center justify-between mb-1.5">
-                <h3 class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ _('ui_auto_f36eca03ef93') }}</h3>
+                <h3 class="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">{{ _('ui_auto_f36eca03ef93') }}</h3>
                 <span class="info-tip" title="{{ _('ui_auto_aa5c94745742') }}">?</span>
             </div>
-            <p class="text-lg font-black tracking-tight text-amber-600 dark:text-amber-400">
+            <p class="text-base sm:text-lg font-black tracking-tight text-amber-600 dark:text-amber-400 truncate">
                 {{ pending_year_cash|format_money }} <span class="text-xs font-bold text-slate-400">{{ base_currency_symbol }}</span>
             </p>
-            <div class="mt-1 text-[10px] text-slate-400 font-bold uppercase truncate">
+            <div class="mt-1 text-[10px] text-slate-400 font-bold uppercase truncate" title="{{ _('dashboard_pending_investment') }}: {{ pending_investment_transfers|format_ticker_price }} {{ base_currency_symbol }}">
                 {{ _('dashboard_pending_investment') }}: {{ pending_investment_transfers|format_money }} {{ base_currency_symbol }}
             </div>
         </div>
@@ -494,26 +491,26 @@
         <!-- İşlem Akışı -->
         <div class="space-y-3">
             {% for t in last_t[:6] %}
-            <div class="tx-item flex items-center justify-between p-4 bg-slate-50/70 dark:bg-slate-800/50 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 transition duration-200 shadow-sm">
-                <div class="flex items-center gap-3.5 min-w-0">
-                    <div class="w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center {% if t.type == 'Gelir' %}bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20{% elif t.type == 'Yatırım' %}bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20{% elif t.type == 'Transfer' %}bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20{% else %}bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20{% endif %}">
-                        <span class="text-base font-black">
+            <div class="tx-item flex items-center justify-between p-3 sm:p-4 bg-slate-50/70 dark:bg-slate-800/50 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 transition duration-200 shadow-sm">
+                <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+                    <div class="w-9 h-9 sm:w-10 sm:h-10 flex-shrink-0 rounded-xl flex items-center justify-center {% if t.type == 'Gelir' %}bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20{% elif t.type == 'Yatırım' %}bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20{% elif t.type == 'Transfer' %}bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20{% else %}bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20{% endif %}">
+                        <span class="text-sm sm:text-base font-black">
                             {% if t.type == 'Gelir' %}↑{% elif t.type == 'Yatırım' %}◆{% elif t.type == 'Transfer' %}⇄{% else %}↓{% endif %}
                         </span>
                     </div>
                     <div class="min-w-0">
-                        <div class="font-bold text-slate-800 dark:text-slate-100 text-sm truncate">{{ t.description }}</div>
-                        <div class="text-[11px] text-slate-400 font-medium mt-0.5 flex items-center gap-2">
-                            <span class="px-2 py-0.5 rounded-md bg-slate-200/60 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 font-semibold text-[10px]">{{ t.category }}</span>
+                        <div class="font-bold text-slate-800 dark:text-slate-100 text-xs sm:text-sm truncate">{{ t.description }}</div>
+                        <div class="text-[10px] sm:text-[11px] text-slate-400 font-medium mt-0.5 flex items-center gap-1.5 sm:gap-2">
+                            <span class="px-1.5 sm:px-2 py-0.5 rounded-md bg-slate-200/60 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 font-semibold text-[9px] sm:text-[10px] truncate max-w-[90px] sm:max-w-none">{{ t.category }}</span>
                             <span>•</span>
-                            <span>{{ t.date|format_date }}</span>
+                            <span class="truncate">{{ t.date|format_date }}</span>
                         </div>
                     </div>
                 </div>
-                <div class="flex items-center gap-4 flex-shrink-0 ml-4">
+                <div class="flex items-center gap-2 sm:gap-4 flex-shrink-0 ml-2 sm:ml-4">
                     <div class="text-right">
-                        <div class="font-black text-sm md:text-base {% if t.type == 'Gelir' %}text-emerald-600 dark:text-emerald-400{% elif t.type == 'Yatırım' %}text-sky-600 dark:text-sky-400{% elif t.type == 'Transfer' %}text-violet-600 dark:text-violet-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
-                            {% if t.type == 'Gelir' %}+{% elif t.type == 'Yatırım' %}◆ {% elif t.type == 'Transfer' %}⇄ {% else %}−{% endif %}{{ t.amount|format_money }} <span class="text-xs font-bold">{{ base_currency_symbol }}</span>
+                        <div class="font-black text-xs sm:text-base {% if t.type == 'Gelir' %}text-emerald-600 dark:text-emerald-400{% elif t.type == 'Yatırım' %}text-sky-600 dark:text-sky-400{% elif t.type == 'Transfer' %}text-violet-600 dark:text-violet-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
+                            {% if t.type == 'Gelir' %}+{% elif t.type == 'Yatırım' %}◆ {% elif t.type == 'Transfer' %}⇄ {% else %}−{% endif %}{{ t.amount|format_money }} <span class="text-[10px] sm:text-xs font-bold">{{ base_currency_symbol }}</span>
                         </div>
                         <div class="mt-0.5">
                             {% if t.status == 'Ödendi' %}
@@ -532,7 +529,7 @@
                         </div>
                     </div>
                     <!-- Hızlı İşlem Menüsü -->
-                    <div class="flex items-center gap-1">
+                    <div class="flex items-center gap-0.5 sm:gap-1">
                         <button data-macro="button_secondary" type="button" 
                                 onclick="openEditModal(this)"
                                 data-id="{{ t.id }}"
@@ -542,15 +539,15 @@
                                 data-description="{{ t.description }}"
                                 data-note="{{ t.note or '' }}"
                                 data-status="{{ t.status }}"
-                                class="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition" 
+                                class="p-1.5 sm:p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition" 
                                 title="Düzenle">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                         </button>
                         <button data-macro="button_secondary" type="button" 
                                 onclick="deleteTransaction('{{ t.id }}')"
-                                class="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition" 
+                                class="p-1.5 sm:p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition" 
                                 title="Sil">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                         </button>
                     </div>
                 </div>

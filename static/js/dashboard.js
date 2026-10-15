@@ -32,6 +32,30 @@
         };
     }
 
+    function formatCompactMoney(value) {
+        let val = value;
+        if (typeof value === 'string') {
+            val = parseFloat(value);
+            if (isNaN(val)) val = 0;
+        }
+        const currSym = window.BASE_CURRENCY_SYMBOL || '₺';
+        const absVal = Math.abs(val);
+        const sign = val < 0 ? '-' : '';
+        if (absVal >= 1000000) {
+            return sign + (absVal / 1000000).toFixed(1).replace('.', ',') + 'M ' + currSym;
+        }
+        if (absVal >= 10000) {
+            return sign + Math.round(absVal / 1000) + 'K ' + currSym;
+        }
+        if (absVal >= 1000) {
+            return sign + (absVal / 1000).toFixed(1).replace('.', ',') + 'K ' + currSym;
+        }
+        if (Number.isInteger(val)) {
+            return sign + absVal + ' ' + currSym;
+        }
+        return sign + absVal.toFixed(2).replace('.', ',') + ' ' + currSym;
+    }
+
     function formatDashboardMoney(value) {
         let val = value;
         if (typeof value === 'string') {
@@ -160,6 +184,7 @@
                         borderWidth: 1,
                         padding: 10,
                         cornerRadius: 8,
+                        caretSize: 6,
                         callbacks: {
                             label: function(context) {
                                 return ' ' + formatDashboardMoney(context.parsed.y);
@@ -170,14 +195,21 @@
                 scales: {
                     x: {
                         grid: { display: false, color: theme.grid },
-                        ticks: { font: { size: 10, weight: '600' }, color: theme.text, maxRotation: 0 }
+                        ticks: {
+                            font: { size: 10, weight: '600' },
+                            color: theme.text,
+                            maxRotation: 0,
+                            autoSkip: true,
+                            maxTicksLimit: 7
+                        }
                     },
                     y: {
                         grid: { color: theme.grid },
                         ticks: {
-                            callback: v => formatDashboardMoney(v),
+                            callback: v => formatCompactMoney(v),
                             font: { size: 10, weight: '500' },
-                            color: theme.text
+                            color: theme.text,
+                            maxTicksLimit: 6
                         }
                     }
                 }
