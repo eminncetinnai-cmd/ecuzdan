@@ -2003,9 +2003,32 @@ html[data-sidebar-mode="rail"] .rail-icon-expand {
     }
 
     /* Compact 76px Icon Rail State (when not peeking) */
+    /* Compact 76px Icon Rail State (when not peeking) */
+    html[data-sidebar-mode="rail"] #desktopSidebar.sidebar-premium:not(.rail-peek):not(:has(:focus-visible)) .sidebar-content {
+        padding: 0 !important;
+        width: 76px !important;
+        overflow: hidden;
+    }
+
+    html[data-sidebar-mode="rail"] #desktopSidebar.sidebar-premium:not(.rail-peek):not(:has(:focus-visible)) .sidebar-middle {
+        padding: 0.5rem 0 !important;
+        width: 76px !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+    }
+
+    html[data-sidebar-mode="rail"] #desktopSidebar.sidebar-premium:not(.rail-peek):not(:has(:focus-visible)) .sidebar-middle::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+
     html[data-sidebar-mode="rail"] #desktopSidebar.sidebar-premium:not(.rail-peek):not(:has(:focus-visible)) .sidebar-brand-row {
         height: 56px;
-        padding: 0 0.5rem;
+        padding: 0;
+        margin: 0 auto;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -2017,7 +2040,7 @@ html[data-sidebar-mode="rail"] .rail-icon-expand {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 40px;
+        width: 44px;
         flex: 0 0 auto;
     }
 
@@ -2027,11 +2050,14 @@ html[data-sidebar-mode="rail"] .rail-icon-expand {
     }
 
     html[data-sidebar-mode="rail"] #desktopSidebar.sidebar-premium:not(.rail-peek):not(:has(:focus-visible)) .brand-logo {
-        width: 40px;
-        height: 40px;
-        min-width: 40px;
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
         border-radius: 12px;
         font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     html[data-sidebar-mode="rail"] #desktopSidebar.sidebar-premium.rail-peek .sidebar-brand-row,
@@ -2043,11 +2069,12 @@ html[data-sidebar-mode="rail"] .rail-icon-expand {
         justify-content: space-between;
     }
 
-    /* Section Titles: Exactly 28px height in both resting and peeking */
+    /* Section Titles: Exactly 20px height in resting rail */
     html[data-sidebar-mode="rail"] #desktopSidebar.sidebar-premium:not(.rail-peek):not(:has(:focus-visible)) .nav-section-title {
-        height: 28px;
+        height: 20px;
         padding: 0;
-        margin: 0.2rem 0.6rem;
+        margin: 0.35rem auto;
+        width: 32px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -2056,13 +2083,13 @@ html[data-sidebar-mode="rail"] .rail-icon-expand {
 
     html[data-sidebar-mode="rail"] #desktopSidebar.sidebar-premium:not(.rail-peek):not(:has(:focus-visible)) .nav-section-title .nav-section-label,
     html[data-sidebar-mode="rail"] #desktopSidebar.sidebar-premium:not(.rail-peek):not(:has(:focus-visible)) .nav-section-title .chevron {
-        display: none;
+        display: none !important;
     }
 
     html[data-sidebar-mode="rail"] #desktopSidebar.sidebar-premium:not(.rail-peek):not(:has(:focus-visible)) .nav-section-title::after {
         content: '';
         position: static;
-        width: 28px;
+        width: 32px;
         height: 2px;
         background: rgba(148, 163, 184, 0.35);
         border-radius: 9999px;
@@ -2078,14 +2105,23 @@ html[data-sidebar-mode="rail"] .rail-icon-expand {
         justify-content: space-between;
     }
 
-    /* Nav Links: Exactly 40px height in both resting and peeking */
+    /* Nav Links: Exactly 44x44px centered icon buttons in resting rail */
     html[data-sidebar-mode="rail"] #desktopSidebar.sidebar-premium:not(.rail-peek):not(:has(:focus-visible)) .nav-link {
-        height: 40px;
-        padding: 0;
-        margin: 0.2rem 0.6rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        max-width: 44px !important;
+        padding: 0 !important;
+        margin: 0.25rem auto !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 12px !important;
+        box-sizing: border-box !important;
+    }
+
+    html[data-sidebar-mode="rail"] #desktopSidebar.sidebar-premium:not(.rail-peek):not(:has(:focus-visible)) .nav-link::before {
+        display: none !important;
     }
 
     html[data-sidebar-mode="rail"] #desktopSidebar.sidebar-premium:not(.rail-peek):not(:has(:focus-visible)) .nav-link:hover,
@@ -2094,13 +2130,16 @@ html[data-sidebar-mode="rail"] .rail-icon-expand {
     }
 
     html[data-sidebar-mode="rail"] #desktopSidebar.sidebar-premium:not(.rail-peek):not(:has(:focus-visible)) .nav-link svg {
-        margin-right: 0;
-        width: 20px;
-        height: 20px;
+        margin: 0 !important;
+        width: 22px !important;
+        height: 22px !important;
+        min-width: 22px !important;
+        min-height: 22px !important;
+        flex-shrink: 0 !important;
     }
 
     html[data-sidebar-mode="rail"] #desktopSidebar.sidebar-premium:not(.rail-peek):not(:has(:focus-visible)) .nav-link-label {
-        display: none;
+        display: none !important;
     }
 
     html[data-sidebar-mode="rail"] #desktopSidebar.sidebar-premium.rail-peek .nav-link,
@@ -2120,14 +2159,28 @@ html[data-sidebar-mode="rail"] .rail-icon-expand {
         height: 20px;
     }
 
+    html[data-sidebar-mode="rail"] #desktopSidebar.sidebar-premium:not(.rail-peek):not(:has(:focus-visible)) .sidebar-rail-footer {
+        padding: 0.5rem 0 !important;
+        display: flex !important;
+        justify-content: center !important;
+    }
+
     html[data-sidebar-mode="rail"] #desktopSidebar.sidebar-premium:not(.rail-peek):not(:has(:focus-visible)) #sidebarRailFooterBtn {
-        justify-content: center;
-        padding: 0.5rem;
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        max-width: 44px !important;
+        padding: 0 !important;
+        margin: 0 auto !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 12px !important;
     }
 
     html[data-sidebar-mode="rail"] #desktopSidebar.sidebar-premium:not(.rail-peek):not(:has(:focus-visible)) .rail-footer-label,
     html[data-sidebar-mode="rail"] #desktopSidebar.sidebar-premium:not(.rail-peek):not(:has(:focus-visible)) .rail-footer-kbd {
-        display: none;
+        display: none !important;
     }
 
     /* In resting rail mode, preserve icon accessibility even if section was collapsed in expanded view */

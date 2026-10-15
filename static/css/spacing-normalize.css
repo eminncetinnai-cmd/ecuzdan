@@ -15,8 +15,9 @@
     }
 }
 
-/* 2. Sidebar İç Padding */
-.sidebar-premium .sidebar-content {
+/* 2. Sidebar İç Padding - Expanded ve Rail-Peek modlarında geçerli */
+html:not([data-sidebar-mode="rail"]) .sidebar-premium .sidebar-content,
+html[data-sidebar-mode="rail"] .sidebar-premium.rail-peek .sidebar-content {
     padding: var(--space-5) !important;
 }
 .sidebar-premium .sidebar-middle,
