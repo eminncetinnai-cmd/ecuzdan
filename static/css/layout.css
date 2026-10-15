@@ -6,7 +6,9 @@
 .layout-wrapper {
     display: flex;
     flex-grow: 1;
-    overflow: auto;
+    min-width: 0;
+    width: 100%;
+    overflow-x: hidden;
 }
 
 .sidebar-spacer {
@@ -16,12 +18,19 @@
 
 main {
     flex-grow: 1;
+    min-width: 0;
+    width: 100%;
     display: flex;
     flex-direction: column;
     background: var(--slate-50);
-    overflow: auto;
     position: relative;
     z-index: 1;
+}
+
+.content-area {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
 }
 
 main::before {
@@ -829,12 +838,18 @@ footer {
     flex-shrink: 0;
 }
 
-/* Toast Container */
+/* Toast Container - Positioned below header bar (80px / 5rem) */
 #toast-container {
     position: fixed;
-    top: 1.5rem;
+    top: 5rem;
     right: 1.5rem;
     z-index: 50;
+    pointer-events: none;
+    max-width: 24rem;
+}
+
+#toast-container > * {
+    pointer-events: auto;
 }
 
 /* Responsive Layout */
@@ -863,7 +878,7 @@ footer {
     }
     
     .content-area {
-        padding: 1rem 1rem 5rem 1rem;
+        padding: 1rem 1rem calc(5.5rem + env(safe-area-inset-bottom, 0px)) 1rem !important;
     }
 }
 
@@ -1050,41 +1065,23 @@ footer {
     }
     
     .content-area {
-        padding: 0.5rem;
+        padding: 0.75rem 0.75rem calc(5.5rem + env(safe-area-inset-bottom, 0px)) 0.75rem !important;
     }
     
-    /* Button responsive */
-    button, .btn {
-        min-height: 44px;
-        padding: 0.5rem 1rem;
-        font-size: 14px;
+    /* Table responsive container */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
     
-    /* Icon responsive */
-    svg {
-        min-width: 20px;
-        min-height: 20px;
-    }
-    
-    /* Table responsive */
-    table {
-        font-size: 12px;
-    }
-    
-    table th, table td {
-        padding: 0.5rem;
-    }
-    
-    /* Form inputs responsive */
-    input, select, textarea {
-        min-height: 44px;
-        font-size: 16px;
+    /* Form inputs touch accessibility */
+    input[type="text"], input[type="number"], input[type="date"], select, textarea {
+        font-size: 16px; /* Prevents auto-zoom in iOS Safari */
     }
     
     /* Card responsive */
     .premium-card, .card {
         padding: 1rem;
-        margin: 0.5rem;
     }
     
     /* Header buttons even smaller */
@@ -1375,7 +1372,20 @@ html.dark #headerBar {
         min-width: 2.25rem;
     }
     #headerBar .user-dropdown-btn {
-        padding: .25rem;
+        padding: 0;
+        width: 2.25rem;
+        min-width: 2.25rem;
+        height: 2.25rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.75rem;
+    }
+    #headerBar .user-dropdown-btn .user-avatar-mini,
+    #headerBar .user-dropdown-btn .user-avatar-mini > * {
+        width: 1.85rem;
+        height: 1.85rem;
+        border-radius: 0.5rem;
     }
     #headerBar .user-dropdown-btn > svg {
         display: none;
@@ -1393,9 +1403,16 @@ html.dark #headerBar {
         gap: .2rem !important;
     }
     #headerBar .header-control,
-#headerBar .user-dropdown-btn {
+    #headerBar .user-dropdown-btn {
         min-height: 2.1rem;
         height: 2.1rem;
+        width: 2.1rem;
+        min-width: 2.1rem;
+    }
+    #headerBar .user-dropdown-btn .user-avatar-mini,
+    #headerBar .user-dropdown-btn .user-avatar-mini > * {
+        width: 1.75rem;
+        height: 1.75rem;
     }
     #headerBar .global-search-btn,
 #headerBar .quick-actions-btn,
@@ -1527,21 +1544,15 @@ html.privacy .privacy-mode-preference-card {
 #headerBar .user-dropdown-panel .dropdown-theme-control .light-icon {
     flex: 0 0 1rem;
 }
-@media (max-width: 760px) {
+@media (max-width: 1024px) {
     #headerBar .time-display {
-        width: 2.25rem;
-        min-width: 2.25rem;
-        height: 2.25rem;
-        min-height: 2.25rem;
-        padding: 0;
-        justify-content: center;
+        display: none !important;
     }
-    #headerBar .time-display > .flex {
-        display: none;
-    }
+}
+@media (max-width: 760px) {
     #headerBar .header-right .header-control,
-#headerBar .header-right .privacy-toggle,
-#headerBar .header-right .logout-btn-header {
+    #headerBar .header-right .privacy-toggle,
+    #headerBar .header-right .logout-btn-header {
         flex-basis: 2.25rem;
         width: 2.25rem;
         min-width: 2.25rem;
@@ -1549,13 +1560,6 @@ html.privacy .privacy-mode-preference-card {
         min-height: 2.25rem;
     }
 }
-@media (max-width: 480px) {
-    #headerBar .time-display {
-        width: 2.1rem;
-        min-width: 2.1rem;
-        height: 2.1rem;
-        min-height: 2.1rem;
-    }
     #headerBar .header-right .header-control,
 #headerBar .header-right .privacy-toggle,
 #headerBar .header-right .logout-btn-header {

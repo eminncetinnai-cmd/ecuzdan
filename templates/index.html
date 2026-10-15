@@ -49,7 +49,7 @@
         </div>
 
         <!-- Finansal Sağlık & Varlık Hızlı Linkleri -->
-        <div class="flex items-center gap-2.5">
+        <div class="flex flex-wrap items-center gap-2 sm:gap-2.5">
             <a href="/analysis" data-macro="button_secondary" class="btn-premium-secondary">
                 <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                 <span>Sağlık Raporu</span>
@@ -62,12 +62,12 @@
     </div>
 
     <!-- ═══ 2. NET SERVET & SERMAYE DAĞILIMI HERO BANNER ═══════════════════════ -->
-    <div class="dash-hero p-6 md:p-8">
+    <div class="dash-hero p-5 sm:p-6 md:p-8">
         <!-- Ambient Blur Mesh -->
         <div class="absolute -right-16 -top-16 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
         <div class="absolute -left-16 -bottom-16 w-72 h-72 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none"></div>
 
-        <div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        <div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center">
             <!-- Sol Kolon: Net Servet & Metrikler (7 Kolon) -->
             <div class="lg:col-span-7">
                 <div class="flex items-center gap-2 mb-2">
@@ -77,20 +77,20 @@
                     </span>
                 </div>
 
-                <div class="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight mb-6 flex items-baseline gap-2 {{ 'text-emerald-400' if net_worth >= 0 else 'text-rose-400' }}">
+                <div class="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight mb-5 sm:mb-6 flex items-baseline gap-2 {{ 'text-emerald-400' if net_worth >= 0 else 'text-rose-400' }}">
                     <span>{{ net_worth|format_money }}</span>
                     <span class="text-xl md:text-2xl font-bold text-slate-400">{{ base_currency_symbol }}</span>
                 </div>
 
-                <!-- Alt İstatistik Kartları -->
-                <div class="grid grid-cols-3 gap-3 sm:gap-4">
+                <!-- Alt İstatistik Kartları (Mobilde tek sütun ferah, tablet/masaüstünde 3 sütun) -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4">
                     <!-- Nakit Pozisyonu -->
                     <div class="p-3.5 rounded-2xl bg-white/[0.05] border border-white/[0.08] backdrop-blur-md">
                         <div class="flex items-center gap-1.5 mb-1">
                             <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                            <p class="text-[10px] font-bold text-slate-300 uppercase tracking-wider truncate">{{ _('ui_auto_9721ca219c8b') }}</p>
+                            <p class="text-[10px] sm:text-xs font-bold text-slate-300 uppercase tracking-wider truncate">{{ _('ui_auto_9721ca219c8b') }}</p>
                         </div>
-                        <p class="text-sm sm:text-base md:text-lg font-black text-emerald-400 truncate">
+                        <p class="text-base sm:text-lg font-black text-emerald-400 truncate">
                             {{ today_cash|format_money }} <span class="text-xs font-bold text-slate-400">{{ base_currency_symbol }}</span>
                         </p>
                     </div>
@@ -99,9 +99,9 @@
                     <div class="p-3.5 rounded-2xl bg-white/[0.05] border border-white/[0.08] backdrop-blur-md">
                         <div class="flex items-center gap-1.5 mb-1">
                             <span class="w-2 h-2 rounded-full bg-sky-400"></span>
-                            <p class="text-[10px] font-bold text-slate-300 uppercase tracking-wider truncate">{{ _('ui_auto_03885b7ebff7') }}</p>
+                            <p class="text-[10px] sm:text-xs font-bold text-slate-300 uppercase tracking-wider truncate">{{ _('ui_auto_03885b7ebff7') }}</p>
                         </div>
-                        <p class="text-sm sm:text-base md:text-lg font-black text-sky-400 truncate">
+                        <p class="text-base sm:text-lg font-black text-sky-400 truncate">
                             {{ total_asset_value|format_money }} <span class="text-xs font-bold text-slate-400">{{ base_currency_symbol }}</span>
                         </p>
                     </div>
@@ -110,9 +110,9 @@
                     <div class="p-3.5 rounded-2xl bg-white/[0.05] border border-white/[0.08] backdrop-blur-md">
                         <div class="flex items-center gap-1.5 mb-1">
                             <span class="w-2 h-2 rounded-full bg-violet-400"></span>
-                            <p class="text-[10px] font-bold text-slate-300 uppercase tracking-wider truncate">{{ _('ui_auto_9e6fcbd8ff28') }}</p>
+                            <p class="text-[10px] sm:text-xs font-bold text-slate-300 uppercase tracking-wider truncate">{{ _('ui_auto_9e6fcbd8ff28') }}</p>
                         </div>
-                        <p class="text-sm sm:text-base md:text-lg font-black text-violet-400 truncate">
+                        <p class="text-base sm:text-lg font-black text-violet-400 truncate">
                             {{ open_asset_count }} <span class="text-xs font-bold text-slate-400">{{ _('dashboard_asset_count_unit') }}</span>
                         </p>
                     </div>

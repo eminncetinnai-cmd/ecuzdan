@@ -545,31 +545,7 @@ function initSidebarRail() {
     if (!sidebar || sidebar.dataset.railBound === 'true') return;
     sidebar.dataset.railBound = 'true';
 
-    sidebar.addEventListener('mouseenter', function() {
-        if (getSidebarRailMode() !== 'rail') return;
-        if (suppressPeekUntilMouseLeave) return;
-        if (railPeekLeaveTimer) {
-            clearTimeout(railPeekLeaveTimer);
-            railPeekLeaveTimer = null;
-        }
-        railPeekEnterTimer = setTimeout(function() {
-            if (getSidebarRailMode() === 'rail' && !suppressPeekUntilMouseLeave) {
-                sidebar.classList.add('rail-peek');
-            }
-        }, 320);
-    });
-
-    sidebar.addEventListener('mouseleave', function() {
-        suppressPeekUntilMouseLeave = false;
-        if (railPeekEnterTimer) {
-            clearTimeout(railPeekEnterTimer);
-            railPeekEnterTimer = null;
-        }
-        railPeekLeaveTimer = setTimeout(function() {
-            sidebar.classList.remove('rail-peek');
-        }, 180);
-    });
-
+    // Keyboard accessibility: expand when navigating with Tab (:focus-visible)
     sidebar.addEventListener('focusin', function(e) {
         if (getSidebarRailMode() === 'rail' && e.target && e.target.matches && e.target.matches(':focus-visible')) {
             sidebar.classList.add('rail-peek');
