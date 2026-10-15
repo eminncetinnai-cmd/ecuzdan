@@ -27,7 +27,7 @@ class OccurrenceCalculator:
         horizon_months: int = 3,
     ) -> list[PlanOccurrence]:
         ref_today = today or date.today()
-        is_indefinite = plan.occurrence_limit is None and count is None
+        is_indefinite = plan.occurrence_limit is None and count is None and plan.end_date is None
 
         if count is not None:
             if count <= 0:

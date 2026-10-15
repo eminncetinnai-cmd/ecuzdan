@@ -495,3 +495,59 @@ def test_plan_form_from_request_update_and_edit_actions():
     assert result_edit.action == 'edit_plan'
     assert result_edit.installments == 0
 
+
+@pytest.mark.unit
+def test_plan_form_from_request_auto_derives_installments_from_end_date():
+    """Entering end_date without installments derives installments correctly."""
+    form = {
+        'action': 'add_expense_plan',
+        'amount': '1500',
+        'start_date': '2026-01-15',
+        'end_date': '2026-06-15',
+        'installments': '0',
+        'payment_day': '15',
+        'plan_type': 'Taksit',
+        'frequency': 'Aylık',
+    }
+    result = plan_form_from_request(form)
+    assert result.installments == 6
+    assert result.end_date == '2026-06-15'
+
+
+@pytest.mark.unit
+def test_plan_form_from_request_auto_derives_end_date_from_installments():
+    """Entering installments without end_date derives end_date correctly."""
+    form = {
+        'action': 'add_expense_plan',
+        'amount': '1500',
+        'start_date': '2026-01-15',
+        'installments': '6',
+        'payment_day': '15',
+        'plan_type': 'Taksit',
+        'frequency': 'Aylık',
+    }
+    result = plan_form_from_request(form)
+    assert result.installments == 6
+    assert result.end_date == '2026-06-15'
+
+
+@pytest.mark.unit
+def test_plan_form_from_request_edit_month_change_past_end_date_shifts_end_date():
+    """Updating start_date to a month beyond old end_date automatically shifts end_date."""
+    form = {
+        'action': 'update_plan',
+        'plan_id': '10',
+        'amount': '1500',
+        'start_date': '2026-09-15',  # User moved start forward to Sept
+        'end_date': '2026-06-15',    # Stale end date in June
+        'installments': '6',
+        'payment_day': '15',
+        'plan_type': 'Taksit',
+        'frequency': 'Aylık',
+    }
+    result = plan_form_from_request(form)
+    # End date is adjusted forward to 6 months from 2026-09-15 -> 2027-02-15
+    assert result.end_date == '2027-02-15'
+    assert result.installments == 6
+
+

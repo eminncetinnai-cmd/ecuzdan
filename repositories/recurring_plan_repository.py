@@ -160,15 +160,26 @@ class RecurringPlanRepository(BaseRepository, BaseRepositoryContract):
             yield current_date
             current_date = self._next_plan_date(plan, current_date)
 
-    @staticmethod
-    def _plan_transaction_count(plan):
+    @classmethod
+    def _plan_transaction_count(cls, plan):
         """Finite plans use installments; rolling plans keep a three-period window."""
-        if plan.plan_type in ('Abonelik', 'DCA') or plan.installments in (0, 9999):
+        if plan.plan_type in ('Abonelik', 'DCA') or (plan.installments in (0, 9999) and not plan.end_date):
             return 3
+        if plan.end_date and (not plan.installments or plan.installments in (0, 9999)):
+            start_date = cls._parse_plan_date(plan.start_date) or datetime.now().date()
+            end_date = cls._parse_plan_date(plan.end_date)
+            if end_date and start_date:
+                from validators.request_validators import _calc_installments
+                return _calc_installments(start_date, end_date, plan.frequency)
         return max(int(plan.installments or 0), 0)
 
     def _plan_description(self, plan, index):
-        total = 'Süresiz' if plan.installments in (0, 9999) else str(plan.installments)
+        if plan.installments in (0, 9999) and not plan.end_date:
+            total = 'Süresiz'
+        elif plan.end_date and (not plan.installments or plan.installments in (0, 9999)):
+            total = str(self._plan_transaction_count(plan))
+        else:
+            total = str(plan.installments)
         return f"{plan.name} ({index + 1}/{total})"
 
     def _create_transactions_from_plan(self, plan):
@@ -525,6 +536,7 @@ class RecurringPlanRepository(BaseRepository, BaseRepositoryContract):
         except Exception:
             pass
         tx_query.delete(synchronize_session=False)
+        self.session.expire_all()
         if plan.status == 'Aktif':
             self._create_transactions_from_plan(plan)
 

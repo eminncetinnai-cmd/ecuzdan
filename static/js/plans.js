@@ -334,6 +334,7 @@ function onDurationModeChange(mode) {
     const fieldsGroup = document.getElementById('installment_fields_group');
     const planTypeInput = document.getElementById('plan_type');
     const installmentsInput = document.getElementById('plan_installments');
+    const endDateInput = document.getElementById('plan_end_date');
     const flowEl = document.getElementById('flow_type_selector');
     const flow = flowEl ? flowEl.value : 'Gider';
 
@@ -353,6 +354,9 @@ function onDurationModeChange(mode) {
         if (installmentsInput) {
             installmentsInput.value = 0;
             installmentsInput.required = false;
+        }
+        if (endDateInput) {
+            endDateInput.value = '';
         }
 
         if (planTypeInput) {
@@ -375,17 +379,141 @@ function onDurationModeChange(mode) {
             if (!installmentsInput.value || installmentsInput.value === '0') {
                 installmentsInput.value = 12;
             }
-            installmentsInput.required = true;
+            installmentsInput.required = false;
         }
 
         if (planTypeInput) {
             planTypeInput.value = 'Taksit';
         }
+        syncEndDateFromInstallments();
     }
 
     updateDurationLiveSummary();
 }
 window.onDurationModeChange = onDurationModeChange;
+
+function syncEndDateFromInstallments() {
+    const instInput = document.getElementById('plan_installments');
+    const startInput = document.getElementById('plan_start_date');
+    const endInput = document.getElementById('plan_end_date');
+    const freqInput = document.getElementById('plan_frequency');
+    if (!instInput || !startInput || !endInput) return;
+
+    const installments = parseInt(instInput.value || '0', 10);
+    if (installments <= 0) return;
+
+    let startDate = new Date();
+    if (startInput.value) {
+        const parts = startInput.value.split('-');
+        if (parts.length === 3) {
+            startDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        }
+    }
+    const freq = freqInput ? freqInput.value : 'Aylık';
+    const endDate = new Date(startDate.getTime());
+    if (freq === 'Haftalık') {
+        endDate.setDate(endDate.getDate() + (installments - 1) * 7);
+    } else if (freq === '3-Aylık') {
+        endDate.setMonth(endDate.getMonth() + (installments - 1) * 3);
+    } else if (freq === 'Yıllık') {
+        endDate.setFullYear(endDate.getFullYear() + (installments - 1));
+    } else {
+        endDate.setMonth(endDate.getMonth() + (installments - 1));
+    }
+
+    const y = endDate.getFullYear();
+    const m = String(endDate.getMonth() + 1).padStart(2, '0');
+    const d = String(endDate.getDate()).padStart(2, '0');
+    endInput.value = `${y}-${m}-${d}`;
+}
+window.syncEndDateFromInstallments = syncEndDateFromInstallments;
+
+function syncInstallmentsFromEndDate() {
+    const instInput = document.getElementById('plan_installments');
+    const startInput = document.getElementById('plan_start_date');
+    const endInput = document.getElementById('plan_end_date');
+    const freqInput = document.getElementById('plan_frequency');
+    if (!instInput || !startInput || !endInput || !endInput.value) return;
+
+    let startDate = new Date();
+    if (startInput.value) {
+        const parts = startInput.value.split('-');
+        if (parts.length === 3) {
+            startDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        }
+    }
+
+    const endParts = endInput.value.split('-');
+    if (endParts.length !== 3) return;
+    const endDate = new Date(parseInt(endParts[0], 10), parseInt(endParts[1], 10) - 1, parseInt(endParts[2], 10));
+
+    if (endDate < startDate) {
+        instInput.value = 1;
+        return;
+    }
+
+    const freq = freqInput ? freqInput.value : 'Aylık';
+    let count = 1;
+    if (freq === 'Haftalık') {
+        const diffMs = endDate.getTime() - startDate.getTime();
+        count = Math.max(1, Math.floor(diffMs / (1000 * 60 * 60 * 24 * 7)) + 1);
+    } else if (freq === 'Yıllık') {
+        let diffYears = endDate.getFullYear() - startDate.getFullYear();
+        if (endDate.getMonth() > startDate.getMonth() || (endDate.getMonth() === startDate.getMonth() && endDate.getDate() >= startDate.getDate())) {
+            diffYears += 1;
+        }
+        count = Math.max(1, diffYears);
+    } else if (freq === '3-Aylık') {
+        let diffMonths = (endDate.getFullYear() - startDate.getFullYear()) * 12 + (endDate.getMonth() - startDate.getMonth());
+        if (endDate.getDate() >= startDate.getDate()) {
+            diffMonths += 1;
+        }
+        count = Math.max(1, Math.ceil(diffMonths / 3));
+    } else {
+        let diffMonths = (endDate.getFullYear() - startDate.getFullYear()) * 12 + (endDate.getMonth() - startDate.getMonth());
+        if (endDate.getDate() >= startDate.getDate()) {
+            diffMonths += 1;
+        }
+        count = Math.max(1, diffMonths);
+    }
+
+    instInput.value = count;
+}
+window.syncInstallmentsFromEndDate = syncInstallmentsFromEndDate;
+
+function onInstallmentsInput() {
+    syncEndDateFromInstallments();
+    updateDurationLiveSummary();
+}
+window.onInstallmentsInput = onInstallmentsInput;
+
+function onEndDateInput() {
+    syncInstallmentsFromEndDate();
+    updateDurationLiveSummary();
+}
+window.onEndDateInput = onEndDateInput;
+
+function onStartDateChange() {
+    const startInput = document.getElementById('plan_start_date');
+    const paymentDayInput = document.getElementById('plan_payment_day');
+    if (startInput && startInput.value && paymentDayInput) {
+        const parts = startInput.value.split('-');
+        if (parts.length === 3) {
+            paymentDayInput.value = parseInt(parts[2], 10);
+        }
+    }
+    if (currentDurationMode === 'installment') {
+        const instInput = document.getElementById('plan_installments');
+        const endInput = document.getElementById('plan_end_date');
+        if (instInput && parseInt(instInput.value || '0', 10) > 0) {
+            syncEndDateFromInstallments();
+        } else if (endInput && endInput.value) {
+            syncInstallmentsFromEndDate();
+        }
+    }
+    updateDurationLiveSummary();
+}
+window.onStartDateChange = onStartDateChange;
 
 function updateDurationLiveSummary() {
     const summaryText = document.getElementById('duration_summary_text');
@@ -407,7 +535,7 @@ function updateDurationLiveSummary() {
     const freq = freqInput?.value || 'Aylık';
 
     if (!installments || installments <= 0) {
-        summaryText.textContent = 'Lütfen geçerli bir taksit sayısı girin.';
+        summaryText.textContent = 'Lütfen taksit sayısı veya bitiş tarihi belirleyin.';
         totalText.textContent = 'Toplam: —';
         return;
     }
@@ -447,12 +575,7 @@ function updateDurationLiveSummary() {
 window.updateDurationLiveSummary = updateDurationLiveSummary;
 
 function toggleAdvancedEndDate() {
-    const container = document.getElementById('advanced_end_date_container');
-    const icon = document.getElementById('advanced_end_date_icon');
-    if (!container) return;
-    const isHidden = container.classList.contains('hidden');
-    container.classList.toggle('hidden', !isHidden);
-    if (icon) icon.textContent = isHidden ? '▾' : '▸';
+    // Retained for backward-compatibility
 }
 window.toggleAdvancedEndDate = toggleAdvancedEndDate;
 
@@ -545,11 +668,8 @@ function openPlanModal() {
         paymentDayInput.value = new Date().getDate();
     }
 
-    // Collapse advanced end date
-    const endDateContainer = document.getElementById('advanced_end_date_container');
-    if (endDateContainer) endDateContainer.classList.add('hidden');
-    const endDateIcon = document.getElementById('advanced_end_date_icon');
-    if (endDateIcon) endDateIcon.textContent = '▸';
+    const endDateInput = document.getElementById('plan_end_date');
+    if (endDateInput) endDateInput.value = '';
 
     updateCategoriesAndAction();
     onDurationModeChange('indefinite');
@@ -587,25 +707,19 @@ function editPlan(btn) {
     // Duration mode determination
     const instCount = parseInt(btn.dataset.installments || '0', 10);
     const planTypeVal = btn.dataset.planType || 'Taksit';
-    const isIndefinite = (instCount === 0 || instCount === 9999 || planTypeVal === 'Abonelik' || planTypeVal === 'DCA');
+    const hasEndDate = Boolean(btn.dataset.endDate);
+    const isIndefinite = !hasEndDate && (instCount === 0 || instCount === 9999 || planTypeVal === 'Abonelik' || planTypeVal === 'DCA');
 
     if (isIndefinite) {
         onDurationModeChange('indefinite');
     } else {
         onDurationModeChange('installment');
-        document.getElementById('plan_installments').value = instCount;
-    }
-
-    if (btn.dataset.endDate) {
-        const endDateContainer = document.getElementById('advanced_end_date_container');
-        if (endDateContainer) endDateContainer.classList.remove('hidden');
-        const endDateIcon = document.getElementById('advanced_end_date_icon');
-        if (endDateIcon) endDateIcon.textContent = '▾';
-    } else {
-        const endDateContainer = document.getElementById('advanced_end_date_container');
-        if (endDateContainer) endDateContainer.classList.add('hidden');
-        const endDateIcon = document.getElementById('advanced_end_date_icon');
-        if (endDateIcon) endDateIcon.textContent = '▸';
+        if (instCount > 0) {
+            document.getElementById('plan_installments').value = instCount;
+            if (!hasEndDate) syncEndDateFromInstallments();
+        } else if (hasEndDate) {
+            syncInstallmentsFromEndDate();
+        }
     }
 
     updateDurationLiveSummary();
@@ -777,14 +891,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (currentDurationMode === 'indefinite') {
             formData.set('installments', '0');
             formData.set('plan_type', flowVal === 'Yatırım' ? 'DCA' : 'Abonelik');
-            const advContainer = document.getElementById('advanced_end_date_container');
-            if (advContainer?.classList.contains('hidden')) {
-                formData.set('end_date', '');
-            }
+            formData.set('end_date', '');
         } else {
             formData.set('plan_type', 'Taksit');
-            const instVal = document.getElementById('plan_installments')?.value || '12';
+            const instVal = document.getElementById('plan_installments')?.value || '';
+            const endVal = document.getElementById('plan_end_date')?.value || '';
             formData.set('installments', instVal);
+            formData.set('end_date', endVal);
         }
 
         const versionVal = document.getElementById('plan_version')?.value;

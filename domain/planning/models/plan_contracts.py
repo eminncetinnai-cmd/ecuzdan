@@ -66,6 +66,7 @@ class CanonicalPlan:
     target_asset_id: int | None = None
     legacy_plan_type: str | None = None
     paid_occurrences_count: int | None = None
+    version: int = 1
 
     @property
     def is_investment(self) -> bool:
@@ -224,16 +225,27 @@ class CanonicalPlan:
         flow_value = _as_string(getattr(model, "flow_type", flow_hint or PlanFlow.EXPENSE.value), flow_hint or PlanFlow.EXPENSE.value)
         flow = PlanFlow(flow_value) if flow_value in PlanFlow._value2member_map_ else PlanFlow.EXPENSE
 
+        start_d = _parse_date(getattr(model, "start_date", None))
+        end_d = _parse_date(getattr(model, "end_date", None))
+        frequency = _as_string(getattr(model, "frequency", "Aylık"), "Aylık")
+
         if plan_type == "Abonelik" or (plan_type == "DCA" and installments in (0, 9999)):
             lifecycle = PlanLifecycle.INDEFINITE
+        elif end_d and (installments in (0, 9999) or plan_type in ("Dönemsel", "Bitiş Tarihli")):
+            lifecycle = PlanLifecycle.END_DATED
         elif plan_type == "Taksit":
             lifecycle = PlanLifecycle.INSTALLMENT
-        elif getattr(model, "end_date", None):
+        elif end_d:
             lifecycle = PlanLifecycle.END_DATED
         elif installments in (0, 9999):
             lifecycle = PlanLifecycle.INDEFINITE
         else:
             lifecycle = PlanLifecycle.INSTALLMENT
+
+        if installments in (0, 9999) and end_d and start_d:
+            occurrence_limit = _calc_installments_from_dates(start_d, end_d, frequency)
+        else:
+            occurrence_limit = None if installments in (0, 9999) else installments
 
         paid_count = _optional_int(getattr(model, "paid_occurrences_count", None))
         if paid_count is None and hasattr(model, "paid_count"):
@@ -250,18 +262,34 @@ class CanonicalPlan:
             category=_as_string(getattr(model, "category", "Genel"), "Genel"),
             flow=flow,
             amount=_as_decimal(getattr(model, "amount", 0)),
-            frequency=_as_string(getattr(model, "frequency", "Aylık"), "Aylık"),
+            frequency=frequency,
             lifecycle=lifecycle,
-            start_date=_parse_date(getattr(model, "start_date", None)),
-            end_date=_parse_date(getattr(model, "end_date", None)),
-            occurrence_limit=None if installments in (0, 9999) else installments,
+            start_date=start_d,
+            end_date=end_d,
+            occurrence_limit=occurrence_limit,
             payment_day=_as_int(getattr(model, "payment_day", 1), 1),
             status=_status_value(getattr(model, "status", PlanStatus.ACTIVE.value)),
             note=(_as_string(getattr(model, "note", ""), "").strip() or None),
             target_asset_id=_optional_int(getattr(model, "target_asset_id", None)),
             legacy_plan_type=plan_type or None,
             paid_occurrences_count=paid_count,
+            version=_as_int(getattr(model, "version", 1), 1),
         )
+
+
+def _calc_installments_from_dates(start_date: date, end_date: date, frequency: str = "Aylık") -> int:
+    if end_date < start_date:
+        return 1
+    if frequency == "Haftalık":
+        return max(1, (end_date - start_date).days // 7 + 1)
+    months = (end_date.year - start_date.year) * 12 + (end_date.month - start_date.month)
+    if end_date.day >= start_date.day:
+        months += 1
+    if frequency == "3-Aylık":
+        return max(1, (months + 2) // 3)
+    if frequency == "Yıllık":
+        return max(1, (months + 11) // 12)
+    return max(1, months)
 
 
 def _as_string(value: Any, default: str) -> str:
