@@ -121,6 +121,9 @@ python scripts/check_type_annotations.py
 
 # 5. Master Pre-Flight Smoke Gate (MUST be 0 template errors & 0 route 500s)
 python scripts/preflight_check.py
+
+# 6. Mobile Excellence & Responsive Gate (MUST be 0px overflow across 5 device viewports)
+python scripts/check_mobile_excellence.py
 ```
 
 ---
