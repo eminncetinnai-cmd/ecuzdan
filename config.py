@@ -186,9 +186,14 @@ class Config:
     LOG_ALERTS_ENABLED = os.getenv('LOG_ALERTS_ENABLED', 'false').lower() in ('1', 'true', 'yes')
 
     # User Configuration
-    # Platform sahibinin kullanıcı adı. Ortam değişkeniyle değiştirilebilir;
-    # varsayılan mevcut kurulumlarla geriye dönük uyumluluk içindir.
+    # Platform sahibinin kullanıcı adı ve yetkili e-postaları. Ortam değişkeniyle genişletilebilir.
     SUPER_ADMIN_USERNAME = os.getenv('SUPER_ADMIN_USERNAME', 'emin')
+    SUPER_ADMIN_USERNAMES = frozenset(
+        u.strip().lower() for u in os.getenv(
+            'SUPER_ADMIN_USERNAMES',
+            'emin,eminncetinn@gmail.com,eminncetinn.ai@gmail.com'
+        ).split(',') if u.strip()
+    )
 
     @classmethod
     def from_env(cls):

@@ -16,8 +16,13 @@ class User(db.Model):
     ADMIN_ROLES = frozenset({'sistem_yoneticisi', 'yonetici'})
     #: Platform sahibinin kullanıcı adı. config.Config.SUPER_ADMIN_USERNAME ile
     #: aynı ortam değişkenini okur; models.py config'i import etmez (erken
-    #: yükleme sırası / döngü riski), bu yüzden değer doğrudan ortamdan alınır.
     SUPER_ADMIN_USERNAME = os.getenv('SUPER_ADMIN_USERNAME', 'emin')
+    SUPER_ADMIN_USERNAMES = frozenset(
+        u.strip().lower() for u in os.getenv(
+            'SUPER_ADMIN_USERNAMES',
+            'emin,eminncetinn@gmail.com,eminncetinn.ai@gmail.com'
+        ).split(',') if u.strip()
+    )
     __table_args__ = (
         db.Index('idx_user_role', 'role'),
         db.Index('idx_user_auth_provider', 'auth_provider'),
@@ -59,8 +64,17 @@ class User(db.Model):
 
     @property
     def is_super_admin(self):
-        """Süper yönetici: emin kullanıcısı."""
-        return self.username == self.SUPER_ADMIN_USERNAME
+        """Süper yönetici: emin kullanıcısı veya tanımlı süper admin e-postaları."""
+        if self.username == self.SUPER_ADMIN_USERNAME or (self.username and self.username.lower() in self.SUPER_ADMIN_USERNAMES):
+            return True
+        if self.email and self.email.lower() in self.SUPER_ADMIN_USERNAMES:
+            return True
+        return False
+
+    @property
+    def is_superadmin(self):
+        """is_super_admin alias (şablon uyumluluğu)."""
+        return self.is_super_admin
 
     @property
     def has_full_platform_access(self):

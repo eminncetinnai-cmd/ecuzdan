@@ -10,6 +10,14 @@ from werkzeug.security import check_password_hash, generate_password_hash
 if TYPE_CHECKING:
     pass
 
+SUPER_ADMIN_IDENTIFIERS = frozenset({'emin', 'eminncetinn@gmail.com', 'eminncetinn.ai@gmail.com'})
+
+
+def _is_super_admin_email(email: str | None) -> bool:
+    if not email:
+        return False
+    return email.strip().lower() in SUPER_ADMIN_IDENTIFIERS
+
 class AuthService:
     def __init__(self, repository=None):
         self.repository = repository
@@ -72,7 +80,7 @@ class AuthService:
         user = self.repository.add_user(
             username=email,
             password=None,
-            role='tenant_admin',
+            role='sistem_yoneticisi' if _is_super_admin_email(email) else 'tenant_admin',
             tenant_id=tenant.id,
             language='tr',
             auth_provider=provider,
@@ -120,7 +128,7 @@ class AuthService:
             username=email,
             email=email,
             password=generate_password_hash(password),
-            role='tenant_admin',   # Her yeni kayıt kendi tenant'ının admini olur
+            role='sistem_yoneticisi' if _is_super_admin_email(email) else 'tenant_admin',   # Süper admin e-postaları sistem yöneticisi olur
             tenant_id=tenant.id,
             language='tr',
         )
