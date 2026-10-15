@@ -168,11 +168,21 @@ def test_http_302_and_401_unauthenticated_redirection(client):
 
 @pytest.mark.regression
 def test_http_403_access_denied_for_unauthorized_user(authenticated_client):
-    """Yetkisiz standart kullanıcının admin alanına girmeye çalıştığında erişiminin engellendiğini doğrular."""
-    response = authenticated_client.get('/admin/users', follow_redirects=False)
-    assert response.status_code in [302, 403], f"Yetkisiz erişim açık kaldı: HTTP {response.status_code}"
-    if response.status_code == 302:
-        assert '/admin/users' not in response.headers.get('Location', '')
+    """Yetkisiz standart kullanıcının admin, monitoring ve depolama alanlarına girmeye çalıştığında erişiminin engellendiğini doğrular."""
+    restricted_endpoints = [
+        '/admin/',
+        '/admin/users',
+        '/admin/tenants',
+        '/admin/audit',
+        '/admin/design_system',
+        '/monitoring/',
+        '/storage-health/',
+    ]
+    for endpoint in restricted_endpoints:
+        response = authenticated_client.get(endpoint, follow_redirects=False)
+        assert response.status_code in [302, 403], f"Yetkisiz erişim açık kaldı ({endpoint}): HTTP {response.status_code}"
+        if response.status_code == 302:
+            assert endpoint not in response.headers.get('Location', '')
 
 
 @pytest.mark.regression
