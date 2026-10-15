@@ -58,9 +58,15 @@ else:
         "Üretimde .env içinde güçlü bir SECRET_KEY tanımlanmalıdır."
     )
     app.secret_key = 'dev-only-fixed-fallback-key-do-not-use-in-production'
+import hashlib
 app.config['SQLALCHEMY_DATABASE_URI'] = config.DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = config.SQLALCHEMY_TRACK_MODIFICATIONS
-app.config['APP_BOOT_ID'] = secrets.token_hex(32) if not config.APP_BOOT_ID else config.APP_BOOT_ID
+if config.APP_BOOT_ID:
+    app.config['APP_BOOT_ID'] = config.APP_BOOT_ID
+elif os.getenv('RENDER') == 'true' or config.FLASK_ENV == 'production':
+    app.config['APP_BOOT_ID'] = hashlib.sha256(f"boot-{app.secret_key}".encode()).hexdigest()
+else:
+    app.config['APP_BOOT_ID'] = secrets.token_hex(32)
 app.config['GOOGLE_CLIENT_ID'] = config.GOOGLE_CLIENT_ID
 app.config['GOOGLE_CLIENT_SECRET'] = config.GOOGLE_CLIENT_SECRET
 app.config['TEMPLATES_AUTO_RELOAD'] = config.FLASK_ENV in ('development', 'testing')

@@ -125,12 +125,11 @@ class Config:
     GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
 
     # Session Configuration
-    SESSION_TIMEOUT_HOURS = int(os.getenv('SESSION_TIMEOUT_HOURS', '2'))
+    SESSION_TIMEOUT_HOURS = int(os.getenv('SESSION_TIMEOUT_HOURS', '24'))
     SESSION_COOKIE_HTTPONLY = True
-    # For development: use 'Lax' for OAuth compatibility without HTTPS
-    # For production with HTTPS: use 'None' with SESSION_COOKIE_SECURE=True
     _default_https_class = 'true' if (FLASK_ENV == 'production' or os.getenv('RENDER') == 'true') else 'false'
-    SESSION_COOKIE_SAMESITE = 'Lax' if os.getenv('HTTPS_ENABLED', _default_https_class).lower() == 'false' else 'None'
+    # Use Lax by default for rock-solid cross-browser and mobile support
+    SESSION_COOKIE_SAMESITE = os.getenv('SESSION_COOKIE_SAMESITE', 'Lax')
     SESSION_COOKIE_SECURE = os.getenv('HTTPS_ENABLED', _default_https_class).lower() == 'true'  # Auto-detect from environment
     SESSION_REFRESH_EACH_REQUEST = True
 

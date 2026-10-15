@@ -29,6 +29,12 @@ services:
         value: "4"
       - key: SECRET_KEY
         generateValue: true
+      - key: APP_BOOT_ID
+        value: "ecuzdan-persistent-boot-v1"
+      - key: SESSION_TIMEOUT_HOURS
+        value: "24"
+      - key: SESSION_COOKIE_SAMESITE
+        value: "Lax"
       - key: DATABASE_URL
         sync: false
       - key: GOOGLE_CLIENT_ID
