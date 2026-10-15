@@ -150,10 +150,6 @@
                 <p class="text-[11px] text-slate-400 font-medium mt-0.5">Tüm gelir, gider, yatırım ve transfer kayıtlarınız</p>
             </div>
             <div class="tx-button-group tx-action-toolbar justify-end">
-                <button data-macro="button_secondary" type="button" onclick="exportVisibleTransactionsToCsv()" class="tx-btn tx-btn-secondary tx-btn-compact" title="Görüntülenen işlemleri CSV (Excel) olarak indir">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                    <span>CSV İndir</span>
-                </button>
                 <a href="{{ url_for('transactions.transactions_explorer') }}" data-macro="button_secondary" class="tx-btn tx-btn-primary tx-btn-compact">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
                     <span>{{ _('tx_open_explorer') }}</span>
