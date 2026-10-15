@@ -158,8 +158,26 @@
 @media (max-width: 640px) {
     #cal-root {
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
     .cal-grid {
-        min-width: 520px;
+        min-width: 480px;
+    }
+    .cal-day {
+        min-height: 70px;
+        padding: 5px;
+    }
+    #cal-popover {
+        position: fixed !important;
+        left: 12px !important;
+        right: 12px !important;
+        bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px)) !important;
+        top: auto !important;
+        max-width: none !important;
+        width: auto !important;
+        border-radius: var(--border-radius-16, 16px) !important;
+        box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.25) !important;
+        max-height: 60vh;
+        overflow-y: auto;
     }
 }

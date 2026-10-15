@@ -17,14 +17,14 @@
     </div>
 
     <!-- Segmented Navigation Bar -->
-    <div class="border-b border-slate-200 dark:border-slate-800 flex gap-2 sm:gap-4 overflow-x-auto pb-1 mb-8" role="tablist">
-        <a href="{{ url_for('plans.plans') }}" class="tx-tab-btn" role="tab" aria-selected="false">
+    <div class="border-b border-slate-200 dark:border-slate-800 flex items-center gap-2 sm:gap-4 overflow-x-auto no-scrollbar pb-2 sm:pb-3 mb-6 sm:mb-8 -mx-4 px-4 sm:mx-0 sm:px-0" role="tablist">
+        <a href="{{ url_for('plans.plans') }}" class="tx-tab-btn whitespace-nowrap shrink-0" role="tab" aria-selected="false">
             <span class="inline-flex items-center gap-1.5">
                 <span>📋</span>
                 <span>Düzenli Planlar &amp; Taksitler</span>
             </span>
         </a>
-        <a href="{{ url_for('plans.payment_calendar') }}" class="tx-tab-btn active" role="tab" aria-selected="true">
+        <a href="{{ url_for('plans.payment_calendar') }}" class="tx-tab-btn active whitespace-nowrap shrink-0" role="tab" aria-selected="true">
             <span class="inline-flex items-center gap-1.5">
                 <span>📅</span>
                 <span>Ödeme Takvimi &amp; Nakit Akışı</span>
@@ -33,41 +33,41 @@
     </div>
 
     <!-- Özet KPI Kartları -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <div class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-800/50 p-5 shadow-sm">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
+        <div class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-800/50 p-4 sm:p-5 shadow-sm">
             <p class="text-[10px] uppercase tracking-[0.25em] text-slate-500 dark:text-slate-400 font-bold mb-2">Kasa &amp; Likidite</p>
-            <p class="text-2xl font-black {% if today_cash >= 0 %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
+            <p class="text-xl sm:text-2xl font-black {% if today_cash >= 0 %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
                 {{ today_cash|format_money }} {{ base_currency_symbol }}
             </p>
             <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-1">Ödenen Net Nakit Bakiyesi</p>
         </div>
-        <div class="rounded-3xl border border-rose-200/80 dark:border-rose-900/40 bg-rose-50/50 dark:bg-rose-950/20 p-5 shadow-sm">
+        <div class="rounded-3xl border border-rose-200/80 dark:border-rose-900/40 bg-rose-50/50 dark:bg-rose-950/20 p-4 sm:p-5 shadow-sm">
             <p class="text-[10px] uppercase tracking-[0.25em] text-rose-600 dark:text-rose-400 font-bold mb-2">Kritik (Bu Hafta / 7 Gün)</p>
-            <p class="text-2xl font-black text-rose-600 dark:text-rose-400">
+            <p class="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400">
                 {{ week_total|format_money }} {{ base_currency_symbol }}
             </p>
             <p class="text-[10px] font-bold text-rose-500/80 dark:text-rose-400/80 mt-1">{{ week_p|length }} Bekleyen Ödeme</p>
         </div>
-        <div class="rounded-3xl border border-amber-200/80 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-950/20 p-5 shadow-sm">
+        <div class="rounded-3xl border border-amber-200/80 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-950/20 p-4 sm:p-5 shadow-sm">
             <p class="text-[10px] uppercase tracking-[0.25em] text-amber-600 dark:text-amber-400 font-bold mb-2">Aylık Yükümlülük (Bu Ay)</p>
-            <p class="text-2xl font-black text-amber-600 dark:text-amber-400">
+            <p class="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400">
                 {{ month_total|format_money }} {{ base_currency_symbol }}
             </p>
             <p class="text-[10px] font-bold text-amber-500/80 dark:text-amber-400/80 mt-1">{{ month_p|length }} Bekleyen Ödeme</p>
         </div>
     </div>
 
-<div class="flex space-x-2 mb-6 bg-slate-100/60 dark:bg-slate-800/60 p-2 rounded-2xl max-w-xl border border-slate-200/50 dark:border-slate-700/50">
-    <button data-macro="button_secondary" type="button" data-tab="list" class="pay-tab-btn active flex-1 py-3 px-4 rounded-xl font-black text-[10px] uppercase tracking-wider">{{ _('calendar_tab_list') }}</button>
-    <button data-macro="button_secondary" type="button" data-tab="calendar" class="pay-tab-btn flex-1 py-3 px-4 rounded-xl font-black text-[10px] uppercase tracking-wider text-slate-600 dark:text-slate-400">{{ _('calendar_tab_monthly') }}</button>
-    <button data-macro="button_secondary" type="button" data-tab="balance" class="pay-tab-btn flex-1 py-3 px-4 rounded-xl font-black text-[10px] uppercase tracking-wider text-slate-600 dark:text-slate-400">{{ _('ui_auto_9f05a486545e') }}</button>
+<div class="flex space-x-2 mb-6 bg-slate-100/60 dark:bg-slate-800/60 p-1.5 sm:p-2 rounded-2xl max-w-xl border border-slate-200/50 dark:border-slate-700/50 overflow-x-auto no-scrollbar">
+    <button data-macro="button_secondary" type="button" data-tab="list" class="pay-tab-btn active flex-1 py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-black text-[10px] uppercase tracking-wider whitespace-nowrap min-h-[44px]">{{ _('calendar_tab_list') }}</button>
+    <button data-macro="button_secondary" type="button" data-tab="calendar" class="pay-tab-btn flex-1 py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-black text-[10px] uppercase tracking-wider text-slate-600 dark:text-slate-400 whitespace-nowrap min-h-[44px]">{{ _('calendar_tab_monthly') }}</button>
+    <button data-macro="button_secondary" type="button" data-tab="balance" class="pay-tab-btn flex-1 py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-black text-[10px] uppercase tracking-wider text-slate-600 dark:text-slate-400 whitespace-nowrap min-h-[44px]">{{ _('ui_auto_9f05a486545e') }}</button>
 </div>
 
 <!-- Mevcut liste yapısı -->
 <div id="pay-tab-list" class="pay-tab-panel active">
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
-        <div class="diamond-card p-8 border-t-8 border-rose-500 bg-white/90 dark:bg-slate-900/80 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
-            <h3 class="font-black text-xs uppercase text-rose-600 dark:text-rose-400 mb-6 flex items-center">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10">
+        <div class="diamond-card p-4 sm:p-6 lg:p-8 border-t-8 border-rose-500 bg-white/90 dark:bg-slate-900/80 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
+            <h3 class="font-black text-xs uppercase text-rose-600 dark:text-rose-400 mb-4 sm:mb-6 flex items-center">
                 <span class="w-3 h-3 bg-rose-500 rounded-full mr-2"></span> {{ _('calendar_list_critical') }}
             </h3>
             <div class="overflow-x-auto">
@@ -90,8 +90,8 @@
                 </table>
             </div>
         </div>
-        <div class="diamond-card p-8 border-t-8 border-amber-400 bg-white/90 dark:bg-slate-900/80 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
-            <h3 class="font-black text-xs uppercase text-amber-600 dark:text-amber-400 mb-6 flex items-center">
+        <div class="diamond-card p-4 sm:p-6 lg:p-8 border-t-8 border-amber-400 bg-white/90 dark:bg-slate-900/80 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
+            <h3 class="font-black text-xs uppercase text-amber-600 dark:text-amber-400 mb-4 sm:mb-6 flex items-center">
                 <span class="w-3 h-3 bg-amber-400 rounded-full mr-2"></span> {{ _('calendar_list_pending') }}
             </h3>
             <div class="overflow-x-auto">
@@ -119,7 +119,7 @@
 
 <!-- Aylık takvim -->
 <div id="pay-tab-calendar" class="pay-tab-panel">
-    <div id="cal-root" class="premium-card p-6 lg:p-8 bg-white/80 dark:bg-slate-900/80 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
+    <div id="cal-root" class="premium-card p-3.5 sm:p-6 lg:p-8 bg-white/80 dark:bg-slate-900/80 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
          data-year="{{ cal_year }}" data-month="{{ cal_month }}" data-today="{{ today_iso }}">
         <div class="flex flex-wrap justify-between items-center gap-4 mb-6 border-b border-slate-200/60 dark:border-slate-800 pb-4">
             <div>
