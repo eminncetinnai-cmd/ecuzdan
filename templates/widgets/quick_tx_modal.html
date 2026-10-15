@@ -23,6 +23,18 @@
             <form id="globalQuickTxForm" class="edit-modal-body space-y-4">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
+                <!-- 1-Click Akıllı Şablonlar -->
+                <div>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Hızlı Şablonlar</label>
+                    <div class="flex flex-wrap gap-1.5">
+                        <button data-macro="button_secondary" type="button" onclick="setQuickTxPreset('Gider', 'Market', 'Market Alışverişi')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/60 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition cursor-pointer">Market 🛒</button>
+                        <button data-macro="button_secondary" type="button" onclick="setQuickTxPreset('Gider', 'Yemek', 'Yemek / Restoran')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300 border border-orange-200/60 dark:border-orange-800/60 hover:bg-orange-100 dark:hover:bg-orange-900/40 transition cursor-pointer">Yemek 🍽️</button>
+                        <button data-macro="button_secondary" type="button" onclick="setQuickTxPreset('Gider', 'Fatura', 'Fatura Ödemesi')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200/60 dark:border-rose-800/60 hover:bg-rose-100 dark:hover:bg-rose-900/40 transition cursor-pointer">Fatura ⚡</button>
+                        <button data-macro="button_secondary" type="button" onclick="setQuickTxPreset('Gider', 'Ulaşım', 'Ulaşım / Akaryakıt')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/60 hover:bg-sky-100 dark:hover:bg-sky-900/40 transition cursor-pointer">Ulaşım 🚗</button>
+                        <button data-macro="button_secondary" type="button" onclick="setQuickTxPreset('Gelir', 'Maaş', 'Aylık Maaş')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition cursor-pointer">Maaş 💰</button>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('tx_filter_type') }}</label>

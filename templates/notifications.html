@@ -3,6 +3,10 @@
 
 {% block title %}{{ _('notifications_title') }} | {{ brand }}{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static_asset_url('css/notifications-page.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="notifications-page">
     <div class="page-header">

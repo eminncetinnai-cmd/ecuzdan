@@ -261,23 +261,27 @@
     }
 </style>
 
-<!-- Segmented Navigation Hub -->
-<div class="mb-6 flex flex-wrap items-center gap-2 border-b border-slate-200/80 pb-4 dark:border-slate-800">
-    <a href="{{ url_for('transactions.transactions') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'transactions.transactions' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+<!-- Segmented Navigation Hub (İşlemler & Nakit) -->
+<div class="mb-6 flex flex-wrap items-center gap-2 border-b border-slate-200/80 pb-3 dark:border-slate-800" role="tablist">
+    <a href="{{ url_for('transactions.transactions') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700" role="tab" aria-selected="false">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
-        <span>İşlem Geçmişi &amp; Defter</span>
+        <span>{{ _('nav_transactions') }}</span>
     </a>
-    <a href="{{ url_for('transactions.reconciliation_page') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'transactions.reconciliation_page' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        <span>Banka &amp; Bakiye Mutabakatı</span>
+    <a href="{{ url_for('plans.plans') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700" role="tab" aria-selected="false">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+        <span>{{ _('nav_plans') }}</span>
     </a>
-    <a href="{{ url_for('dashboard.monthly_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'dashboard.monthly_dashboard' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
+    <a href="{{ url_for('plans.payment_calendar') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700" role="tab" aria-selected="false">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <span>{{ _('nav_calendar') }}</span>
+    </a>
+    <a href="{{ url_for('transactions.reconciliation_page') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700" role="tab" aria-selected="false">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+        <span>{{ _('nav_reconciliation') }}</span>
+    </a>
+    <a href="{{ url_for('dashboard.monthly_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition bg-indigo-600 text-white shadow-sm" role="tab" aria-selected="true">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
         <span>Aylık Konsolide Rapor</span>
-    </a>
-    <a href="{{ url_for('plans.payment_calendar') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint == 'plans.payment_calendar' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
-        <span>Ödeme Takvimi &amp; Projeksiyon</span>
     </a>
 </div>
 

@@ -333,6 +333,41 @@ window.setQuickTxAmount = function(delta) {
     input.focus();
 };
 
+window.setQuickTxPreset = function(flowType, category, description) {
+    var flowSelect = document.getElementById('globalQuickTxFlowType');
+    if (flowSelect) {
+        flowSelect.value = flowType;
+        if (typeof updateGlobalQuickTxCategory === 'function') {
+            updateGlobalQuickTxCategory();
+        }
+    }
+    var catSelect = document.getElementById('globalQuickTxCategory');
+    if (catSelect && category) {
+        var found = false;
+        for (var i = 0; i < catSelect.options.length; i++) {
+            var optVal = catSelect.options[i].value.toLowerCase();
+            var optTxt = catSelect.options[i].text.toLowerCase();
+            var target = category.toLowerCase();
+            if (optVal.includes(target) || optTxt.includes(target)) {
+                catSelect.selectedIndex = i;
+                found = true;
+                break;
+            }
+        }
+        if (!found && catSelect.options.length > 0) {
+            catSelect.selectedIndex = 0;
+        }
+    }
+    var descInput = document.querySelector('#globalQuickTxForm input[name="description"]');
+    if (descInput && description) {
+        descInput.value = description;
+    }
+    var amountInput = document.getElementById('globalQuickTxAmount');
+    if (amountInput) {
+        amountInput.focus();
+    }
+};
+
 const globalCatData = {
     'Gelir': (function() {
         const sidebar = document.querySelector('.sidebar-premium');

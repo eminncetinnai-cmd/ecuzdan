@@ -255,3 +255,25 @@
     {{ text }}
 </span>
 {% endmacro %}
+
+{# ───────────────────────────────────────────────────────────────
+   subnav_tabs — Modern Yatay Sekme Bandı (Hub Alt Gezinme)
+   Args:
+     items: [{'url': '/transactions', 'label': 'İşlemler', 'icon': '...'}]
+     current_url: request.path
+─────────────────────────────────────────────────────────────── #}
+{% macro subnav_tabs(items, current_url=None, extra_classes='') %}
+<nav class="subnav-tabs-bar flex items-center gap-1.5 p-1 bg-slate-100/80 dark:bg-slate-800/80 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 overflow-x-auto mb-6 {{ extra_classes }}" aria-label="Alt Gezinme">
+    {% for item in items %}
+    {% set is_active = (current_url == item.url) if current_url else (request.path == item.url) %}
+    <a href="{{ item.url }}" class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap {{ 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm' if is_active else 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50' }}">
+        {% if item.icon %}{{ item.icon|safe }}{% endif %}
+        <span>{{ item.label }}</span>
+        {% if item.badge %}
+        <span class="px-1.5 py-0.5 text-[10px] rounded-full {{ item.badge_class or 'bg-indigo-100 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400' }}">{{ item.badge }}</span>
+        {% endif %}
+    </a>
+    {% endfor %}
+</nav>
+{% endmacro %}
+
