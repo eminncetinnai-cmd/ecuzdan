@@ -95,6 +95,7 @@
             disk_space: 'Disk alanı',
             background_service: 'Arka Plan Servisleri',
             outbox_queue: 'Outbox Olay Kuyruğu',
+            cache: 'Önbellek',
         };
         Object.entries(health.components || {}).forEach(([component, value]) => {
             const row = document.createElement('div');

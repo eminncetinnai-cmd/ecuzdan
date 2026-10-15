@@ -584,11 +584,13 @@ def register_monitoring_routes(bp):
                 redis_client = _get_redis_client()
                 if redis_client:
                     redis_client.ping()
-                    health_status['components']['cache'] = 'healthy (redis)'
+                    health_status['components']['cache'] = 'healthy'
+                    health_status['cache_backend'] = 'redis'
                 else:
-                    health_status['components']['cache'] = 'healthy (local)'
+                    health_status['components']['cache'] = 'healthy'
+                    health_status['cache_backend'] = 'local'
             except Exception as cache_err:
-                health_status['components']['cache'] = 'degraded'
+                health_status['components']['cache'] = 'warning'
                 health_status['issues'].append(f'Cache ping failed: {cache_err}')
 
             # Cache the result
