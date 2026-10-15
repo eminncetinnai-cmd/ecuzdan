@@ -961,6 +961,7 @@ document.addEventListener('keydown', function(e) {
             })
             .catch(function() { /* Silently fall back to existing displayed values */ });
     }
-    // Poll every 30 seconds
+    // Initial fetch shortly after DOM load, then poll every 30 seconds
+    setTimeout(pollLiveQuotes, 800);
     setInterval(pollLiveQuotes, 30000);
 })();

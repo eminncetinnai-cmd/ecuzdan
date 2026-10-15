@@ -57,6 +57,10 @@ class Config:
         self.BACKGROUND_SERVICE_ENABLED = os.getenv(
             'BACKGROUND_SERVICE_ENABLED', str(self.BACKGROUND_SERVICE_ENABLED).lower()
         ).lower() == 'true'
+        default_bg_owner = 'web' if (self.FLASK_ENV != 'production' or is_render or os.getenv('ALLOW_SINGLE_INSTANCE_RATELIMIT', '').lower() == 'true') else 'worker'
+        self.BACKGROUND_WORKER_OWNER = os.getenv(
+            'BACKGROUND_WORKER_OWNER', default_bg_owner
+        ).strip().lower()
         self.FX_PROVIDER_CHAIN_ENABLED = os.getenv(
             'FX_PROVIDER_CHAIN_ENABLED', str(self.FX_PROVIDER_CHAIN_ENABLED)
         ).lower() == 'true'
@@ -145,11 +149,12 @@ class Config:
     INFLATION_RATE = to_decimal(os.getenv('INFLATION_RATE', '0.40'))
 
     # Service Configuration
+    _is_render_cls = os.getenv('RENDER', 'false').lower() == 'true' or os.getenv('ALLOW_SINGLE_INSTANCE_RATELIMIT', '').lower() == 'true'
     BACKGROUND_SERVICE_ENABLED = os.getenv(
-        'BACKGROUND_SERVICE_ENABLED', 'false' if FLASK_ENV == 'production' else 'true'
+        'BACKGROUND_SERVICE_ENABLED', 'true' if (_is_render_cls or FLASK_ENV != 'production') else 'true'
     ).lower() == 'true'
     BACKGROUND_WORKER_OWNER = os.getenv(
-        'BACKGROUND_WORKER_OWNER', 'worker' if FLASK_ENV == 'production' else 'web'
+        'BACKGROUND_WORKER_OWNER', 'web' if (_is_render_cls or FLASK_ENV != 'production') else 'worker'
     ).strip().lower()
     # Public FX/metals provider resilience (indicative/local-staging data only).
     FX_PROVIDER_CHAIN_ENABLED = os.getenv('FX_PROVIDER_CHAIN_ENABLED', 'true').lower() == 'true'

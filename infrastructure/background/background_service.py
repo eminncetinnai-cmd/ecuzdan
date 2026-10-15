@@ -69,10 +69,20 @@ from domain.analysis.services.fx_metals_provider import FX_KEYS, fetch_resilient
 logger = logging.getLogger(__name__)
 
 # Önbellek dosyaları
-BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 INSTANCE_DIR = os.path.join(BASE_DIR, 'instance')
 LIVE_CACHE_FILE = os.path.join(INSTANCE_DIR, 'live_data_cache.json')
 MARKET_CACHE_FILE = os.path.join(INSTANCE_DIR, 'market_data_cache.json')
+
+# Varsayılan gösterge referans verileri (Soğuk başlangıç veya ağ kesintisi koruması)
+DEFAULT_INDICATIVE_RATES = {
+    "weather": "+14°C",
+    "usd": "49.42",
+    "eur": "55.55",
+    "gold": "6602.00",
+    "last_updated": "2026-10-15 12:00:00",
+    "is_stale": True,
+}
 
 # Ticker listesi
 MARKET_ASSETS = {
@@ -101,7 +111,11 @@ class BackgroundService:
         self._thread = None
 
         # instance klasörünü oluştur
-        os.makedirs(INSTANCE_DIR, exist_ok=True)
+        if self._flask_app is not None and hasattr(self._flask_app, 'instance_path'):
+            self._instance_dir = self._flask_app.instance_path
+        else:
+            self._instance_dir = INSTANCE_DIR
+        os.makedirs(self._instance_dir, exist_ok=True)
 
         # Önbellekten yükle
         self._load_cache()
@@ -242,34 +256,51 @@ class BackgroundService:
         except Exception as e:
             logger.error(f"Veri güncelleme döngüsünde kritik hata: {e}", exc_info=True)
 
+    def _fetch_weather(self) -> str:
+        """Bursa hava durumunu çeker. Open-Meteo birincil, wttr.in ikincil sağlayıcıdır."""
+        # 1. Open-Meteo (Yüksek erişilebilirlik, datacenter IP engeli yok, ücretsiz JSON API)
+        try:
+            r = requests.get(
+                "https://api.open-meteo.com/v1/forecast?latitude=40.1885&longitude=29.0610&current=temperature_2m",
+                timeout=(2.0, 3.0),
+                headers={"User-Agent": "E-Cuzdan/15 weather-resilience"}
+            )
+            if getattr(r, "status_code", 0) == 200:
+                json_data = r.json() if callable(getattr(r, "json", None)) else {}
+                if isinstance(json_data, dict):
+                    temp = json_data.get("current", {}).get("temperature_2m")
+                    if temp is not None:
+                        sign = "+" if float(temp) > 0 else ""
+                        return f"{sign}{round(float(temp))}°C"
+        except Exception as exc:
+            logger.debug("Open-Meteo hava durumu hatası: %s", exc)
+
+        # 2. wttr.in fallback
+        try:
+            w = requests.get(
+                "https://wttr.in/Bursa?format=%t",
+                timeout=(1.5, 2.5),
+                headers={"User-Agent": "curl/7.68.0"}
+            )
+            if getattr(w, "status_code", 0) == 200:
+                raw_text = getattr(w, "text", "").strip().replace(" ", "")
+                if raw_text and not raw_text.startswith("<") and len(raw_text) <= 12:
+                    return raw_text if "°" in raw_text else f"{raw_text}°C"
+        except Exception as exc:
+            logger.debug("wttr.in hava durumu hatası: %s", exc)
+
+        # 3. Önceki geçerli önbellek veya varsayılan
+        prev = self._live_data.get("weather")
+        if prev and prev not in ("--", "--°C", ""):
+            return prev
+        return DEFAULT_INDICATIVE_RATES["weather"]
+
     def _update_live_data(self):
         """Hava durumu ve döviz verilerini çeker"""
         d = {"weather": "--°C", "usd": "--", "eur": "--", "gold": "--", "last_updated": ""}
 
-        def _to_2dp(raw: str) -> str:
-            """Ham string değeri (virgül/nokta karışık) 2 ondalık haneli ₺ formatına çevirir."""
-            try:
-                normalized = raw.replace('.', '').replace(',', '.').strip()
-                return f"{float(normalized):,.2f}"
-            except Exception:
-                # Sadece virgülle dene
-                try:
-                    return f"{float(raw.replace(',', '.').strip()):,.2f}"
-                except Exception:
-                    return raw  # parse edilemezse orijinal bırak
-
-        # 1. Hava durumu (1.5s connect, 2.5s read timeout)
-        try:
-            w = requests.get("https://wttr.in/Bursa?format=%t", timeout=(1.5, 2.5))
-            if w.status_code == 200:
-                raw_text = w.text.strip()
-                if raw_text and not raw_text.startswith("<") and len(raw_text) <= 12:
-                    d['weather'] = raw_text
-                else:
-                    d['weather'] = self._live_data.get('weather', '--°C')
-        except Exception as e:
-            logger.debug("Hava durumu verisi çekilemedi (zaman aşımı veya ağ): %s", e)
-            d['weather'] = self._live_data.get('weather', '--°C')
+        # 1. Hava durumu (Open-Meteo primary, wttr.in secondary)
+        d['weather'] = self._fetch_weather()
 
         # 2. Döviz ve altın için ordered provider chain.
         # Doviz.com remains first; official/public fallbacks are used per missing field.
@@ -289,8 +320,7 @@ class BackgroundService:
                 "quality_status": "cache_only_after_provider_failure",
             }
 
-        # Başarısız veya geçersiz alanlarda yalnızca geçerli eski cache’i koru.
-        # NaN/Infinity değerleri arayüze taşınmaz; veri yoksa açıkça '--' gösterilir.
+        # Başarısız veya geçersiz alanlarda yalnızca geçerli eski cache’i veya varsayılanı koru.
         stale_fields = []
         for key in ['usd', 'eur', 'gold']:
             current_value = d[key]
@@ -380,9 +410,11 @@ class BackgroundService:
         """Önbelleği JSON dosyalarına kaydeder"""
         with self._lock:
             try:
-                with open(LIVE_CACHE_FILE, 'w', encoding='utf-8') as f:
+                live_file = os.path.join(self._instance_dir, 'live_data_cache.json')
+                market_file = os.path.join(self._instance_dir, 'market_data_cache.json')
+                with open(live_file, 'w', encoding='utf-8') as f:
                     json.dump(self._live_data, f, ensure_ascii=False, indent=2)
-                with open(MARKET_CACHE_FILE, 'w', encoding='utf-8') as f:
+                with open(market_file, 'w', encoding='utf-8') as f:
                     json.dump(self._market_data, f, ensure_ascii=False, indent=2)
             except Exception as e:
                 logger.error(f"Önbellek diske yazılırken hata oluştu: {e}")
@@ -390,17 +422,24 @@ class BackgroundService:
     def _load_cache(self):
         """Önbellek dosyalarını okur"""
         with self._lock:
-            if os.path.exists(LIVE_CACHE_FILE):
+            live_file = os.path.join(self._instance_dir, 'live_data_cache.json')
+            market_file = os.path.join(self._instance_dir, 'market_data_cache.json')
+            if not os.path.exists(live_file) and os.path.exists(LIVE_CACHE_FILE):
+                live_file = LIVE_CACHE_FILE
+            if not os.path.exists(market_file) and os.path.exists(MARKET_CACHE_FILE):
+                market_file = MARKET_CACHE_FILE
+
+            if os.path.exists(live_file):
                 try:
-                    with open(LIVE_CACHE_FILE, 'r', encoding='utf-8') as f:
+                    with open(live_file, 'r', encoding='utf-8') as f:
                         self._live_data = json.load(f)
                     logger.debug("Canlı veri önbelleği diskten yüklendi.")
                 except Exception as e:
                     logger.error(f"Canlı veri önbelleği okuma hatası: {e}")
 
-            if os.path.exists(MARKET_CACHE_FILE):
+            if os.path.exists(market_file):
                 try:
-                    with open(MARKET_CACHE_FILE, 'r', encoding='utf-8') as f:
+                    with open(market_file, 'r', encoding='utf-8') as f:
                         self._market_data = json.load(f)
                     logger.debug("Piyasa verileri önbelleği diskten yüklendi.")
                 except Exception as e:
@@ -421,6 +460,22 @@ class BackgroundService:
                         break
                     except ValueError:
                         continue
+
+            # Eğer değerler henüz çekilmemişse veya kesinti sebebiyle '--' ise,
+            # UI'ın bozuk '-- ₺' göstermemesi için gösterge niteliğindeki referans değerleri doldur
+            has_missing = any(
+                data.get(k) in (None, '', '--', '--°C')
+                or str(data.get(k)).strip().lower() in {'nan', 'nat', 'none'}
+                for k in ('usd', 'eur', 'gold', 'weather')
+            )
+            if has_missing:
+                is_stale = True
+                for k in ('usd', 'eur', 'gold', 'weather'):
+                    if data.get(k) in (None, '', '--', '--°C') or str(data.get(k)).strip().lower() in {'nan', 'nat', 'none'}:
+                        data[k] = DEFAULT_INDICATIVE_RATES.get(k, '--')
+                if not data.get('last_updated'):
+                    data['last_updated'] = DEFAULT_INDICATIVE_RATES['last_updated']
+
             data['is_stale'] = is_stale
             return data
 

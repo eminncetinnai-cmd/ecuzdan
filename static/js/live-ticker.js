@@ -98,6 +98,7 @@
 
     function startPolling() {
         if (pollTimer) clearInterval(pollTimer);
+        fetchPolling();
         pollTimer = setInterval(fetchPolling, POLL_INTERVAL_MS);
     }
 

@@ -281,6 +281,69 @@ class FrankfurterProvider:
         return _snapshot(self.name, values, quality="official_daily_reference", observed_at=observed_at)
 
 
+class TruncgilProvider:
+    name = "truncgil"
+
+    def fetch(self) -> ProviderSnapshot:
+        response = _request("https://finans.truncgil.com/v4/today.json", self.name)
+        try:
+            payload = response.json()
+        except (AttributeError, ValueError, TypeError) as exc:
+            raise ProviderPayloadError(f"{self.name}:invalid_json") from exc
+        if not isinstance(payload, dict):
+            raise ProviderPayloadError(f"{self.name}:unexpected_schema")
+
+        values: dict[str, Decimal] = {}
+        usd_data = payload.get("USD")
+        if isinstance(usd_data, dict):
+            usd_val = _parse_decimal(usd_data.get("Selling") or usd_data.get("Buying"))
+            if usd_val is not None:
+                values["usd"] = usd_val
+
+        eur_data = payload.get("EUR")
+        if isinstance(eur_data, dict):
+            eur_val = _parse_decimal(eur_data.get("Selling") or eur_data.get("Buying"))
+            if eur_val is not None:
+                values["eur"] = eur_val
+
+        gra_data = payload.get("GRA") or payload.get("gram-altin")
+        if isinstance(gra_data, dict):
+            gra_val = _parse_decimal(gra_data.get("Selling") or gra_data.get("Buying"))
+            if gra_val is not None:
+                values["gold"] = gra_val
+
+        observed_at = str(payload.get("Update_Date") or "") or None
+        return _snapshot(self.name, values, quality="real_time_json_api", observed_at=observed_at)
+
+
+class OpenErApiProvider:
+    name = "open_er_api"
+
+    def fetch(self) -> ProviderSnapshot:
+        response = _request("https://open.er-api.com/v6/latest/USD", self.name)
+        try:
+            payload = response.json()
+        except (AttributeError, ValueError, TypeError) as exc:
+            raise ProviderPayloadError(f"{self.name}:invalid_json") from exc
+        if not isinstance(payload, dict):
+            raise ProviderPayloadError(f"{self.name}:unexpected_schema")
+
+        rates = payload.get("rates", {})
+        usd_try = _parse_decimal(rates.get("TRY"))
+        usd_eur = _parse_decimal(rates.get("EUR"))
+
+        values: dict[str, Decimal] = {}
+        if usd_try is not None:
+            values["usd"] = usd_try
+            if usd_eur is not None and usd_eur > 0:
+                eur_try = usd_try / usd_eur
+                if _parse_decimal(eur_try) is not None:
+                    values["eur"] = eur_try
+
+        observed_at = str(payload.get("time_last_update_utc") or "") or None
+        return _snapshot(self.name, values, quality="public_exchange_rate_reference", observed_at=observed_at)
+
+
 class GoldApiProvider:
     name = "gold_api"
 
@@ -367,7 +430,12 @@ def fetch_resilient_live_quotes(*, chain_enabled: bool = True) -> ResilientLiveQ
     provider_by_field: dict[str, str] = {}
     provider_errors: list[str] = []
 
-    providers = (DovizComProvider(), TcmbProvider(), FrankfurterProvider()) if chain_enabled else ()
+    providers = (
+        DovizComProvider(),
+        TcmbProvider(),
+        FrankfurterProvider(),
+        OpenErApiProvider(),
+    ) if chain_enabled else ()
     for provider in providers:
         if not {"usd", "eur"}.difference(values):
             break
@@ -391,6 +459,16 @@ def fetch_resilient_live_quotes(*, chain_enabled: bool = True) -> ResilientLiveQ
         else:
             values["gold"] = snapshot.values["gold"]
             provider_by_field["gold"] = snapshot.source
+
+    if "gold" not in values:
+        try:
+            snapshot = TruncgilProvider().fetch()
+            if "gold" in snapshot.values:
+                values["gold"] = snapshot.values["gold"]
+                provider_by_field["gold"] = snapshot.source
+        except ProviderUnavailable as exc:
+            provider_errors.append(TruncgilProvider.name)
+            logger.warning("Market provider başarısız: %s (%s)", TruncgilProvider.name, type(exc).__name__)
 
     missing = set(FX_KEYS).difference(values)
     if missing:
