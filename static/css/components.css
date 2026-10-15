@@ -611,6 +611,8 @@ td {
         padding-top: 0.75rem !important;
         margin-top: 0.25rem !important;
         justify-content: flex-end !important;
+        position: static !important;
+        box-shadow: none !important;
     }
 
     .responsive-card-table td[data-label]::before,

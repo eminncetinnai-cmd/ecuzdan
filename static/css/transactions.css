@@ -497,9 +497,18 @@
 
 @media (max-width: 640px) {
     .tx-action-toolbar { width: 100%; }
-    .tx-action-toolbar .tx-btn { flex: 1 1 calc(50% - 0.5rem); }
-    .tx-table-actions { justify-content: flex-end; gap: 0.25rem; }
-    .tx-table-action { min-width: 1.85rem; height: 1.85rem; padding: 0.3rem; flex: 0 0 auto; }
+    .tx-action-toolbar .tx-btn { flex: 1 1 calc(50% - 0.5rem); min-height: 44px; }
+    .tx-table-actions { justify-content: flex-end; gap: 0.35rem; }
+    .tx-table-action { min-width: 2.25rem; height: 2.25rem; padding: 0.35rem; flex: 0 0 auto; }
+}
+
+@media (max-width: 768px) {
+    #transTable th:last-child,
+    #transTable td:last-child {
+        position: static !important;
+        box-shadow: none !important;
+        background: transparent !important;
+    }
 }
 
 /* Date Preset Pills */

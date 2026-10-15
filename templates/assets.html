@@ -69,70 +69,70 @@
     </div>
 
     <!-- Hero KPI Banner -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         <!-- Toplam Değer -->
-        <div class="asset-card p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
-            <div class="flex items-center justify-between mb-3">
-                <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Toplam Portföy Değeri</span>
-                <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-sm font-black">
+        <div class="asset-card p-3.5 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+            <div class="flex items-center justify-between mb-2 sm:mb-3">
+                <span class="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400 truncate">Toplam Portföy</span>
+                <span class="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs sm:text-sm font-black shrink-0">
                     {{ base_currency_symbol }}
                 </span>
             </div>
-            <div id="heroTotalValue" class="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                {{ analysis.total_value|format_money }} <span class="text-sm font-bold text-slate-400">{{ base_currency_symbol }}</span>
+            <div id="heroTotalValue" class="text-base sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight truncate">
+                {{ analysis.total_value|format_money }} <span class="text-xs sm:text-sm font-bold text-slate-400">{{ base_currency_symbol }}</span>
             </div>
-            <div class="mt-2 flex items-center gap-2 text-[10px] font-bold text-slate-500">
-                <span id="heroActiveCount">{{ analysis.asset_count }} aktif pozisyon</span>
+            <div class="mt-1.5 sm:mt-2 flex items-center gap-1.5 text-[9px] sm:text-[10px] font-bold text-slate-500">
+                <span id="heroActiveCount" class="truncate">{{ analysis.asset_count }} pozisyon</span>
                 <span id="heroFilterBadge" class="hidden px-1.5 py-0.5 rounded text-[8px] font-bold uppercase bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">Filtrelendi</span>
             </div>
         </div>
 
         <!-- Toplam Maliyet -->
-        <div class="asset-card p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div class="flex items-center justify-between mb-3">
-                <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Toplam Yatırım Maliyeti</span>
-                <span class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center text-sm">
+        <div class="asset-card p-3.5 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex items-center justify-between mb-2 sm:mb-3">
+                <span class="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400 truncate">Toplam Maliyet</span>
+                <span class="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center text-xs sm:text-sm shrink-0">
                     💼
                 </span>
             </div>
-            <div id="heroTotalCost" class="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                {{ analysis.total_cost|format_money }} <span class="text-sm font-bold text-slate-400">{{ base_currency_symbol }}</span>
+            <div id="heroTotalCost" class="text-base sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight truncate">
+                {{ analysis.total_cost|format_money }} <span class="text-xs sm:text-sm font-bold text-slate-400">{{ base_currency_symbol }}</span>
             </div>
-            <div class="mt-2 text-[10px] font-semibold text-slate-500">
-                Alış maliyetleri toplamı
+            <div class="mt-1.5 sm:mt-2 text-[9px] sm:text-[10px] font-semibold text-slate-500 truncate">
+                Alış maliyeti
             </div>
         </div>
 
         <!-- Net Kâr / Zarar -->
-        <div class="asset-card p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div class="flex items-center justify-between mb-3">
-                <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Toplam Kâr / Zarar</span>
-                <span id="heroGainBadge" class="px-2 py-0.5 rounded text-[10px] font-black uppercase {% if analysis.total_gain_loss >= 0 %}bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300{% else %}bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300{% endif %}">
+        <div class="asset-card p-3.5 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex items-center justify-between mb-2 sm:mb-3">
+                <span class="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400 truncate">Net Kâr / Zarar</span>
+                <span id="heroGainBadge" class="px-1.5 sm:px-2 py-0.5 rounded text-[8px] sm:text-[10px] font-black uppercase shrink-0 {% if analysis.total_gain_loss >= 0 %}bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300{% else %}bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300{% endif %}">
                     {% if analysis.total_gain_loss >= 0 %}+Kâr{% else %}-Zarar{% endif %}
                 </span>
             </div>
-            <div id="heroTotalGain" class="text-2xl md:text-3xl font-black {% if analysis.total_gain_loss >= 0 %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %} tracking-tight">
-                {{ analysis.total_gain_loss|format_money }} <span class="text-sm font-bold opacity-75">{{ base_currency_symbol }}</span>
+            <div id="heroTotalGain" class="text-base sm:text-2xl md:text-3xl font-black {% if analysis.total_gain_loss >= 0 %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %} tracking-tight truncate">
+                {{ analysis.total_gain_loss|format_money }} <span class="text-xs sm:text-sm font-bold opacity-75">{{ base_currency_symbol }}</span>
             </div>
-            <div class="mt-2 flex items-center justify-between text-[9px] font-bold text-slate-500">
-                <span>Gerçekleşen: <strong id="heroRealizedGain" class="text-slate-700 dark:text-slate-300">{{ (analysis.total_realized_gain or 0)|format_money }}</strong></span>
-                <span>Potansiyel: <strong id="heroUnrealizedGain" class="text-slate-700 dark:text-slate-300">{{ (analysis.total_unrealized_gain or 0)|format_money }}</strong></span>
+            <div class="mt-1.5 sm:mt-2 flex items-center justify-between text-[8px] sm:text-[9px] font-bold text-slate-500 truncate">
+                <span class="truncate">G: <strong id="heroRealizedGain" class="text-slate-700 dark:text-slate-300">{{ (analysis.total_realized_gain or 0)|format_money }}</strong></span>
+                <span class="truncate">P: <strong id="heroUnrealizedGain" class="text-slate-700 dark:text-slate-300">{{ (analysis.total_unrealized_gain or 0)|format_money }}</strong></span>
             </div>
         </div>
 
         <!-- Portföy Getirisi (ROI) -->
-        <div class="asset-card p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div class="flex items-center justify-between mb-3">
-                <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Net Getiri Oranı (ROI)</span>
-                <span class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-sm">
+        <div class="asset-card p-3.5 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex items-center justify-between mb-2 sm:mb-3">
+                <span class="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400 truncate">Getiri (ROI)</span>
+                <span class="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs sm:text-sm shrink-0">
                     📈
                 </span>
             </div>
-            <div id="heroTotalRoi" class="text-2xl md:text-3xl font-black {% if analysis.overall_roi >= 0 %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %} tracking-tight">
+            <div id="heroTotalRoi" class="text-base sm:text-2xl md:text-3xl font-black {% if analysis.overall_roi >= 0 %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %} tracking-tight">
                 %{{ analysis.overall_roi|round(2) }}
             </div>
-            <div class="mt-2 flex items-center gap-1.5 text-[10px] font-semibold text-slate-500">
-                <span>Portföy genel ağırlıklı verim</span>
+            <div class="mt-1.5 sm:mt-2 flex items-center gap-1.5 text-[9px] sm:text-[10px] font-semibold text-slate-500 truncate">
+                <span>Ağırlıklı verim</span>
             </div>
         </div>
     </div>

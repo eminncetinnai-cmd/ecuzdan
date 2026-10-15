@@ -51,6 +51,9 @@
                 if (typeof updateBulkActionBar === 'function') {
                     updateBulkActionBar();
                 }
+                if (window.ECuzdanTables && typeof window.ECuzdanTables.applyDataLabels === 'function') {
+                    window.ECuzdanTables.applyDataLabels('transTable');
+                }
             },
             language: {
                 emptyTable: uiCopy.tableEmpty,
@@ -1358,7 +1361,19 @@
         });
     }
 
+    function toggleTxFiltersMobile() {
+        const panel = document.getElementById('txFilterPanel');
+        const badge = document.getElementById('mobileFilterStateBadge');
+        if (panel) {
+            panel.classList.toggle('hidden');
+            if (badge) {
+                badge.textContent = panel.classList.contains('hidden') ? 'Kapalı' : 'Açık';
+            }
+        }
+    }
+
     // Expose globals
+    window.toggleTxFiltersMobile = toggleTxFiltersMobile;
     window.switchTxTab = switchTxTab;
     window.openEditModal = openEditModal;
     window.closeEditTransactionModal = closeEditTransactionModal;
