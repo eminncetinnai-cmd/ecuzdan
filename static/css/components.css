@@ -218,6 +218,30 @@
 }
 
 @media (max-width: 640px) {
+    .edit-modal-content {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    .edit-modal-card {
+        max-width: 100%;
+        width: 100%;
+        border-radius: 24px 24px 0 0;
+        max-height: 88vh;
+        margin: 0;
+        border-bottom: none;
+    }
+
+    .edit-modal-header {
+        padding: 1.25rem 1.25rem 1rem 1.25rem;
+        border-radius: 24px 24px 0 0;
+    }
+
+    .edit-modal-body {
+        padding: 1.25rem;
+        -webkit-overflow-scrolling: touch;
+    }
+
     .edit-modal.asset-modal .edit-modal-body {
         grid-template-columns: 1fr;
     }
@@ -225,7 +249,8 @@
         grid-column: span 1;
     }
     .edit-modal.asset-modal .edit-modal-card {
-        max-width: 95%;
+        max-width: 100%;
+        width: 100%;
     }
 }
 

@@ -1,5 +1,7 @@
 """Repositories for category and catalog lookups."""
 
+from sqlalchemy.orm import joinedload
+
 from models import Asset, AssetSector, AssetType, Category, Transaction, db
 from utils.ref_cache import get_cached
 
@@ -52,7 +54,7 @@ class CatalogRepository(BaseRepository, BaseRepositoryContract, CatalogRepositor
         return query
 
     def list_visible_categories(self, tenant_id=None, include_inactive=False):
-        categories = get_cached('categories', lambda: Category.query.order_by(Category.type, Category.name).all())
+        categories = get_cached('categories', lambda: Category.query.options(joinedload(Category.parent)).order_by(Category.type, Category.name).all())
         if not include_inactive:
             categories = [cat for cat in categories if getattr(cat, 'is_active', True) is not False]
         if tenant_id:
