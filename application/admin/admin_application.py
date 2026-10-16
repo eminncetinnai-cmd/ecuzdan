@@ -42,3 +42,7 @@ class AdminApplicationService(ApplicationService):
 
     def get_admin_dashboard_stats(self, current_user):
         return self.execute(lambda: admin_domain.get_admin_dashboard_stats(current_user))
+
+    def get_user_stats(self, current_user):
+        return self.execute(lambda: admin_domain.get_user_stats(current_user))
+

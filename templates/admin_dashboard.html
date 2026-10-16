@@ -30,6 +30,9 @@
         <a href="{{ url_for('admin.list_users') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint in ['admin.list_users', 'admin.create_user', 'admin.edit_user'] %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
             <span>Kullanıcı Yönetimi</span>
+            <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-black {% if request.endpoint in ['admin.list_users', 'admin.create_user', 'admin.edit_user'] %}bg-white/20 text-white{% else %}bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300{% endif %}">
+                {{ stats.total_users }}
+            </span>
         </a>
         {% if stats.is_superadmin %}
         <a href="{{ url_for('admin.tenants') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint and request.endpoint.startswith('admin.tenants') or request.endpoint in ['admin.create_tenant', 'admin.edit_tenant'] %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
@@ -73,6 +76,131 @@
         {{ kpi_card(title=_('ui_auto_af11204b3ce4'), value=stats.active_tenants, subtitle="Kullanımda Olan", icon="✅", color="emerald") }}
         {{ kpi_card(title=_('ui_auto_ac027f4e66a1'), value=stats.total_transactions, subtitle="Konsolide Kayıt", icon="💰", color="amber") }}
     </div>
+
+    <!-- User Breakdown & Activity Section -->
+    {% if stats.user_stats %}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <!-- Kullanıcı ve Kimlik Dağılımı -->
+        <div class="premium-card p-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                    <span class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-black text-sm flex items-center justify-center">👥</span>
+                    <div>
+                        <h3 class="text-sm font-black text-slate-800 dark:text-white">Kullanıcı Dağılımı</h3>
+                        <p class="text-[10px] text-slate-400 font-medium">Kimlik sağlayıcı ve yetki profili</p>
+                    </div>
+                </div>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800">
+                    {{ stats.user_stats.total_users }} Toplam
+                </span>
+            </div>
+
+            <div class="space-y-3 pt-1">
+                <!-- Google SSO -->
+                <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+                        <span class="text-xs font-bold text-slate-700 dark:text-slate-200">Google OAuth 2.0</span>
+                    </div>
+                    <span class="text-xs font-black text-slate-900 dark:text-white">{{ stats.user_stats.google_users }}</span>
+                </div>
+
+                <!-- Local Accounts -->
+                <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span class="text-xs font-bold text-slate-700 dark:text-slate-200">Yerel Şifreli Hesap</span>
+                    </div>
+                    <span class="text-xs font-black text-slate-900 dark:text-white">{{ stats.user_stats.local_users }}</span>
+                </div>
+
+                <!-- Admin vs Standard -->
+                <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                        <span class="text-xs font-bold text-slate-700 dark:text-slate-200">Yönetici Hesapları</span>
+                    </div>
+                    <span class="text-xs font-black text-slate-900 dark:text-white">{{ stats.user_stats.admin_users }}</span>
+                </div>
+
+                <!-- 30-Day Active -->
+                <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                        <span class="text-xs font-bold text-slate-700 dark:text-slate-200">Son 30 Gün Aktif</span>
+                    </div>
+                    <span class="text-xs font-black text-slate-900 dark:text-white">{{ stats.user_stats.active_30d }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Son Kayıt Olan Kullanıcılar -->
+        <div class="premium-card p-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-sm lg:col-span-2">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                    <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-black text-sm flex items-center justify-center">⚡</span>
+                    <div>
+                        <h3 class="text-sm font-black text-slate-800 dark:text-white">Son Kullanıcı Hareketleri</h3>
+                        <p class="text-[10px] text-slate-400 font-medium">Sisteme en son kaydolan kullanıcılar ve son oturumları</p>
+                    </div>
+                </div>
+                <a href="{{ url_for('admin.list_users') }}" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center gap-1">
+                    <span>Tümünü Gör</span>
+                    <span>→</span>
+                </a>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="border-b border-slate-100 dark:border-slate-800 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                            <th class="pb-2.5">Kullanıcı</th>
+                            <th class="pb-2.5">Yetki / Rol</th>
+                            <th class="pb-2.5">Giriş Kanalı</th>
+                            <th class="pb-2.5 text-right">Son Oturum</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
+                        {% for u in stats.user_stats.recent_users %}
+                        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition">
+                            <td class="py-2.5 font-bold text-slate-800 dark:text-slate-200">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-black text-[10px] flex items-center justify-center">
+                                        {{ u.username[0]|upper }}
+                                    </span>
+                                    <span>{{ u.username }}</span>
+                                </div>
+                            </td>
+                            <td class="py-2.5">
+                                {% if u.role in ['sistem_yoneticisi', 'yonetici'] %}
+                                <span class="px-2 py-0.5 rounded text-[9px] font-black bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">Sistem Yöneticisi</span>
+                                {% elif u.role in ['tenant_yoneticisi', 'tenant_admin'] %}
+                                <span class="px-2 py-0.5 rounded text-[9px] font-black bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300">Tenant Yöneticisi</span>
+                                {% else %}
+                                <span class="px-2 py-0.5 rounded text-[9px] font-black bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">Kullanıcı</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-2.5">
+                                {% if u.auth_provider == 'GOOGLE' %}
+                                <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200 dark:border-sky-900/50">Google</span>
+                                {% else %}
+                                <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">Yerel</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-2.5 text-right font-mono text-[11px] text-slate-500 dark:text-slate-400">{{ u.last_login_at }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="py-4 text-center text-slate-400 text-xs">Kullanıcı kaydı bulunamadı.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
 
     <!-- Administrative Actions Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pt-2">

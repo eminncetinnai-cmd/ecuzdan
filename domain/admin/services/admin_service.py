@@ -3,6 +3,7 @@ Admin and Tenant Service Layer - Separates business logic from view routing.
 Provides clean APIs for user management, tenant management, and admin stats.
 """
 
+from datetime import datetime, timedelta, timezone
 import logging
 import re
 
@@ -255,31 +256,83 @@ def update_tenant_status_service(tenant_id, status, updated_by=None):
 
 # ─── ADMIN STATS SERVICES ──────────────────────────────────────────────
 
+def get_user_stats(current_user):
+    """
+    Returns user count metrics and distribution for admin dashboard and management.
+    sistem_yoneticisi / super_admin: platform-wide statistics.
+    tenant_yoneticisi: tenant-scoped statistics.
+    """
+    is_superadmin = (getattr(current_user, 'role', '') == 'sistem_yoneticisi' or getattr(current_user, 'is_super_admin', False))
+    if is_superadmin:
+        base_query = User.query
+    else:
+        tenant_id = getattr(current_user, 'tenant_id', None)
+        base_query = User.query.filter_by(tenant_id=tenant_id)
+
+    total_users = base_query.count()
+    google_users = base_query.filter(User.auth_provider == 'GOOGLE').count()
+    local_users = base_query.filter((User.auth_provider == 'LOCAL') | (User.auth_provider.is_(None))).count()
+    admin_users = base_query.filter(User.role.in_(['sistem_yoneticisi', 'tenant_yoneticisi', 'yonetici', 'tenant_admin'])).count()
+    standard_users = base_query.filter(User.role == 'kullanici').count()
+
+    thirty_days_ago = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=30)
+    active_30d = base_query.filter(User.last_login_at >= thirty_days_ago).count()
+
+    recent_objs = base_query.order_by(User.id.desc()).limit(5).all()
+    recent_users = [
+        {
+            'id': u.id,
+            'username': u.username,
+            'email': u.email or '',
+            'role': u.role,
+            'auth_provider': u.auth_provider or 'LOCAL',
+            'tenant_id': u.tenant_id,
+            'last_login_at': u.last_login_at.strftime('%d.%m.%Y %H:%M') if u.last_login_at else '-'
+        }
+        for u in recent_objs
+    ]
+
+    return {
+        'total_users': total_users,
+        'google_users': google_users,
+        'local_users': local_users,
+        'admin_users': admin_users,
+        'standard_users': standard_users,
+        'active_30d': active_30d,
+        'recent_users': recent_users,
+        'is_superadmin': is_superadmin
+    }
+
+
 def get_admin_dashboard_stats(current_user):
     """
     Generates statistics for admin dashboard.
     """
-    if current_user.role == 'sistem_yoneticisi':
-        total_users = User.query.count()
+    user_stats = get_user_stats(current_user)
+    is_superadmin = (getattr(current_user, 'role', '') == 'sistem_yoneticisi' or getattr(current_user, 'is_super_admin', False))
+
+    if is_superadmin:
         total_tenants = Tenant.query.count()
         active_tenants = Tenant.query.filter_by(status='active').count()
         total_transactions = Transaction.query.count()
 
         return {
-            'total_users': total_users,
+            'total_users': user_stats['total_users'],
+            'user_stats': user_stats,
             'total_tenants': total_tenants,
             'active_tenants': active_tenants,
             'total_transactions': total_transactions,
             'is_superadmin': True
         }
     else:
-        tenant_users = User.query.filter_by(tenant_id=current_user.tenant_id).count()
         tenant_transactions = Transaction.query.filter_by(tenant_id=current_user.tenant_id).count()
 
         return {
-            'total_users': tenant_users,
+            'total_users': user_stats['total_users'],
+            'user_stats': user_stats,
             'total_tenants': 1,
             'active_tenants': 1,
             'total_transactions': tenant_transactions,
             'is_superadmin': False
         }
+

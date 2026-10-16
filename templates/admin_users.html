@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% from 'macros/buttons.html' import button_primary, button_secondary, button_danger %}
+{% from 'macros/cards.html' import kpi_card %}
 {% from 'macros/ui.html' import badge %}
 
 {% block title %}Kullanıcı Yönetimi - E-Cüzdan{% endblock %}
@@ -30,6 +31,9 @@
         <a href="{{ url_for('admin.list_users') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint in ['admin.list_users', 'admin.create_user', 'admin.edit_user'] %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
             <span>Kullanıcı Yönetimi</span>
+            <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-black {% if request.endpoint in ['admin.list_users', 'admin.create_user', 'admin.edit_user'] %}bg-white/20 text-white{% else %}bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300{% endif %}">
+                {{ user_stats.total_users if user_stats else users|length }}
+            </span>
         </a>
         {% if current_user and current_user.is_super_admin %}
         <a href="{{ url_for('admin.tenants') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition {% if request.endpoint and request.endpoint.startswith('admin.tenants') or request.endpoint in ['admin.create_tenant', 'admin.edit_tenant'] %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">
@@ -61,6 +65,16 @@
             {% endfor %}
         {% endif %}
     {% endwith %}
+
+    <!-- 4-Stat User Metric Grid -->
+    {% if user_stats %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {{ kpi_card(title="Toplam Kullanıcı", value=user_stats.total_users, subtitle="Kayıtlı Sistem Hesabı", icon="👥", color="indigo") }}
+        {{ kpi_card(title="Google ile Giriş", value=user_stats.google_users, subtitle="OAuth 2.0 Doğrulanmış", icon="🌐", color="sky") }}
+        {{ kpi_card(title="Yerel Hesaplar", value=user_stats.local_users, subtitle="Kullanıcı Adı & Şifre", icon="🔑", color="emerald") }}
+        {{ kpi_card(title="Aktif Kullanıcılar", value=user_stats.active_30d, subtitle="Son 30 Gün Etkin", icon="⚡", color="amber") }}
+    </div>
+    {% endif %}
 
     <!-- Users Table Card -->
     <div class="premium-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
@@ -98,11 +112,27 @@
                     <tr class="user-row hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition" data-id="{{ user.id }}" data-username="{{ user.username|lower }}" data-role="{{ user.role|lower }}" data-tenant="{{ (user.tenant_id or '')|lower }}">
                         <td class="px-5 py-3 font-mono font-bold text-slate-500 dark:text-slate-400">#{{ user.id }}</td>
                         <td class="px-5 py-3 font-black text-slate-800 dark:text-slate-200">
-                            <div class="flex items-center gap-2">
-                                <span class="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 font-black text-xs flex items-center justify-center">
+                            <div class="flex items-center gap-2.5">
+                                {% if user.avatar_url %}
+                                <img src="{{ user.avatar_url }}" alt="" class="w-7 h-7 rounded-lg object-cover border border-slate-200 dark:border-slate-700">
+                                {% else %}
+                                <span class="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 font-black text-xs flex items-center justify-center border border-indigo-200/50 dark:border-indigo-900/50">
                                     {{ user.username[0]|upper }}
                                 </span>
-                                <span>{{ user.username }}</span>
+                                {% endif %}
+                                <div>
+                                    <div class="flex items-center gap-1.5">
+                                        <span>{{ user.username }}</span>
+                                        {% if user.auth_provider == 'GOOGLE' %}
+                                        <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200 dark:border-sky-900/50">Google</span>
+                                        {% else %}
+                                        <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">Yerel</span>
+                                        {% endif %}
+                                    </div>
+                                    {% if user.email and user.email != user.username %}
+                                    <p class="text-[10px] font-normal text-slate-400 leading-none mt-0.5">{{ user.email }}</p>
+                                    {% endif %}
+                                </div>
                             </div>
                         </td>
                         <td class="px-5 py-3">

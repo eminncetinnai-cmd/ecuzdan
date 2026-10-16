@@ -202,3 +202,46 @@ class TestDataIsolation:
         assert b'emin' in response.data
         assert b'tenant_admin' in response.data
         assert b'regular_user' in response.data
+
+
+class TestUserStats:
+    def test_superadmin_user_stats_api(self, client, superadmin_session):
+        """Superadmin user stats API endpoint döner ve metrikler doğrudur"""
+        response = client.get('/admin/api/user-stats')
+        assert response.status_code == 200
+        payload = response.get_json()
+        assert payload['success'] is True
+        data = payload['data']
+        assert data['total_users'] >= 3
+        assert data['is_superadmin'] is True
+        assert 'google_users' in data
+        assert 'local_users' in data
+        assert 'active_30d' in data
+        assert isinstance(data['recent_users'], list)
+
+    def test_tenant_admin_user_stats_api(self, client, tenant_admin_session):
+        """Tenant admin user stats API endpoint sadece kendi tenant'ını kapsar"""
+        response = client.get('/admin/api/user-stats')
+        assert response.status_code == 200
+        payload = response.get_json()
+        assert payload['success'] is True
+        data = payload['data']
+        assert data['is_superadmin'] is False
+        assert data['total_users'] >= 1
+
+    def test_users_page_displays_stats_cards(self, client, superadmin_session):
+        """Admin kullanıcılar sayfasında 4-kartlık metrik grid görüntülenir"""
+        response = client.get('/admin/users')
+        assert response.status_code == 200
+        assert 'Toplam Kullanıcı'.encode('utf-8') in response.data
+        assert 'Google ile Giriş'.encode('utf-8') in response.data
+        assert 'Yerel Hesaplar'.encode('utf-8') in response.data
+        assert 'Aktif Kullanıcılar'.encode('utf-8') in response.data
+
+    def test_admin_dashboard_displays_user_stats(self, client, superadmin_session):
+        """Admin dashboard sayfasında kullanıcı dağılımı ve son hareketler görüntülenir"""
+        response = client.get('/admin/')
+        assert response.status_code == 200
+        assert 'Kullanıcı Dağılımı'.encode('utf-8') in response.data
+        assert 'Son Kullanıcı Hareketleri'.encode('utf-8') in response.data
+

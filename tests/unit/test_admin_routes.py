@@ -527,3 +527,29 @@ def test_admin_service_methods():
 
     source = inspect.getsource(admin_module)
     assert 'admin_service' in source
+
+
+@pytest.mark.unit
+def test_admin_api_user_stats_route_exists():
+    """Test /api/user-stats route exists in admin module"""
+    import inspect
+    import routes.admin as admin_module
+
+    source = inspect.getsource(admin_module)
+    assert '/api/user-stats' in source
+    assert 'get_user_stats' in source
+
+
+@pytest.mark.unit
+def test_admin_service_has_get_user_stats():
+    """Test domain admin service exports get_user_stats"""
+    from domain.admin.services import get_user_stats
+    assert callable(get_user_stats)
+
+
+@pytest.mark.unit
+def test_admin_application_service_has_get_user_stats():
+    """Test AdminApplicationService has get_user_stats method"""
+    from application.admin.admin_application import AdminApplicationService
+    assert hasattr(AdminApplicationService, 'get_user_stats')
+

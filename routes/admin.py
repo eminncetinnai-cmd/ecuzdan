@@ -5,7 +5,7 @@ Tenant yÃ¶netimi ve sistem yÃ¶neticisi iÅŸlemleri
 
 import logging
 
-from flask import flash, redirect, render_template, request, session, url_for
+from flask import flash, jsonify, redirect, render_template, request, session, url_for
 
 from utils.auth_helpers import login_required, require_role, superadmin_required
 
@@ -23,7 +23,7 @@ def _get_admin_service():
 
 def register_admin_routes(bp):
     """
-    Admin route'larÄ±nÄ± blueprint'e kaydeder
+    Admin route'larını blueprint'e kaydeder
 
     Args:
         bp: Flask Blueprint
@@ -31,25 +31,46 @@ def register_admin_routes(bp):
 
     admin_service = _get_admin_service()
 
-    # â”€â”€â”€ KULLANICI YÃ–NETÄ°MÄ° â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # ─── KULLANICI YÖNETİMİ ──────────────────────────────────────────
 
     @bp.route('/users', methods=['GET'])
     @login_required
     @require_role('sistem_yoneticisi', 'tenant_yoneticisi')
     def list_users():
         """
-        sistem_yoneticisi: tÃ¼m kullanÄ±cÄ±larÄ± listeler (tenant bilgisiyle birlikte)
-        tenant_yoneticisi: sadece kendi tenant'Ä±ndaki kullanÄ±cÄ±larÄ± listeler
+        sistem_yoneticisi: tüm kullanıcıları listeler (tenant bilgisiyle birlikte)
+        tenant_yoneticisi: sadece kendi tenant'ındaki kullanıcıları listeler
         """
         try:
             current_user = admin_service.get_current_user(session['user_id'])
             users = admin_service.get_users_for_admin(current_user)
             tenants = admin_service.get_all_tenants()
-            return render_template('admin_users.html', users=users, tenants=tenants, current_user=current_user)
+            user_stats = admin_service.get_user_stats(current_user)
+            return render_template(
+                'admin_users.html',
+                users=users,
+                tenants=tenants,
+                current_user=current_user,
+                user_stats=user_stats
+            )
         except Exception as e:
             logger.error("Users list error: %s", e)
-            flash('KullanÄ±cÄ± listesi yÃ¼klenirken hata oluÅŸtu.', 'error')
-            return render_template('admin_users.html', users=[], tenants=[], current_user=None)
+            flash('Kullanıcı listesi yüklenirken hata oluştu.', 'error')
+            return render_template('admin_users.html', users=[], tenants=[], current_user=None, user_stats=None)
+
+    @bp.route('/api/user-stats', methods=['GET'])
+    @login_required
+    @require_role('sistem_yoneticisi', 'tenant_yoneticisi')
+    def api_user_stats():
+        """Kullanıcı sayıları ve dağılım istatistikleri API endpoint'i."""
+        try:
+            current_user = admin_service.get_current_user(session['user_id'])
+            stats = admin_service.get_user_stats(current_user)
+            return jsonify({'success': True, 'data': stats})
+        except Exception as e:
+            logger.error("API user stats error: %s", e)
+            return jsonify({'success': False, 'error': str(e)}), 500
+
 
     @bp.route('/users/create', methods=['GET', 'POST'])
     @login_required
