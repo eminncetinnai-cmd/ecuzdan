@@ -23,8 +23,10 @@ if hasattr(sys.stdout, 'reconfigure'):
 if hasattr(sys.stderr, 'reconfigure'):
     sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 
-# Disable verbose logging during preflight check
+# Disable verbose logging and background threads during preflight check
 logging.disable(logging.CRITICAL)
+os.environ["DISABLE_BACKGROUND_SERVICE"] = "true"
+os.environ["BACKGROUND_SERVICE_ENABLED"] = "false"
 
 
 def run_preflight_check() -> int:
@@ -156,6 +158,12 @@ def run_preflight_check() -> int:
                     route_errors.append(f"500 Internal Server Error on {path} ({name})")
                     print(f"      [FAIL] {path:24} -> HTTP {status} (CRITICAL 500)")
                 elif status in (200, 301, 302, 307, 308):
+                    if status == 200 and not res.is_json:
+                        body_text = res.get_data(as_text=True)
+                        if any(ent in body_text for ent in ('&amp;amp;', '&amp;lt;', '&amp;gt;')):
+                            route_errors.append(f"Double-escaped HTML entity (&amp;amp;) detected on {path} ({name})")
+                            print(f"      [FAIL] {path:24} -> Double-escaped HTML entity detected")
+                            continue
                     print(f"      [PASS] {path:24} -> HTTP {status} ({name})")
                 else:
                     print(f"      [WARN] {path:24} -> HTTP {status} ({name})")

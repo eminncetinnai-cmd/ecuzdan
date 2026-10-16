@@ -706,17 +706,17 @@
 
     window.categoryData = {
         'Gelir': [
-            {% for c in income_cats %}'{{ c.name }}',{% endfor %}
+            {% for c in income_cats %}{{ c.name|tojson }},{% endfor %}
         ],
         'Gider': [
-            {% for c in expense_cats %}'{{ c.name }}',{% endfor %}
+            {% for c in expense_cats %}{{ c.name|tojson }},{% endfor %}
         ],
         'Yatırım': [
-            {% for c in investment_cats %}'{{ c.name }}',{% endfor %}
+            {% for c in investment_cats %}{{ c.name|tojson }},{% endfor %}
         ]
     };
 
-    window.base_currency_symbol = '{{ base_currency_symbol }}';
+    window.base_currency_symbol = {{ base_currency_symbol|tojson }};
     window.plan_currency_symbol = window.base_currency_symbol;
 
     // Canonical Endpoint contract for delete plan (checked by test_frontend_backend_endpoint_contract):

@@ -699,7 +699,7 @@ async function loadTopicProgress() {
         if (progressbar) progressbar.setAttribute('aria-valuenow', String(percent));
         if (completeButton) {
             completeButton.disabled = state.completed;
-            completeButton.textContent = state.completed ? panel.dataset.completedLabel : '{{ _('fe_progress_mark_complete') }}';
+            completeButton.textContent = state.completed ? panel.dataset.completedLabel : {{ _('fe_progress_mark_complete')|tojson }};
             completeButton.classList.toggle('opacity-60', state.completed);
             completeButton.classList.toggle('cursor-not-allowed', state.completed);
         }

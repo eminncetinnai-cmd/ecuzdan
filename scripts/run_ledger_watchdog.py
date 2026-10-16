@@ -10,8 +10,12 @@ Returns exit code 0 if healthy, exit code 1 if violations are detected.
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
+
+os.environ["DISABLE_BACKGROUND_SERVICE"] = "true"
+os.environ["BACKGROUND_SERVICE_ENABLED"] = "false"
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
