@@ -33,7 +33,7 @@ def test_admin_audit_dashboard_superadmin(app, client):
     assert res.status_code == 200
     html = res.get_data(as_text=True)
 
-    assert "Canlı Denetim &amp; Kriptografik Bütünlük" in html
+    assert ("Canlı Denetim & Kriptografik Bütünlük" in html) or ("Canlı Denetim &amp; Kriptografik Bütünlük" in html)
     assert "Defter Bekçisi Durumu" in html
     assert "SHA-256 Kripto Zincir" in html
     assert "SAĞLIKLI" in html

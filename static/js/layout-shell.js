@@ -800,7 +800,6 @@ function handleSearchInput(query) {
         { name: `${__t('nav_plans') || 'Düzenli İşlemler'}`, url: '/plans', keywords: ['plan', 'düzenli', 'taksit', 'abonelik', 'fatura', 'maaş', 'recurring'], icon: '🔄', category: 'Genel Bakış' },
         { name: 'Aylık Dashboard', url: '/monthly_dashboard', keywords: ['aylık', 'monthly', 'rapor', 'report', 'bütçe'], icon: '📈', category: 'Genel Bakış' },
         { name: 'Ödeme Takvimi', url: '/payment_calendar', keywords: ['takvim', 'calendar', 'ödeme', 'payment', 'vade'], icon: '📅', category: 'Genel Bakış' },
-        { name: `${__t('nav_reconciliation') || 'Mutabakat'}`, url: '/reconciliation', keywords: ['mutabakat', 'reconciliation', 'denetim', 'kontrol', 'bakiye', 'fark'], icon: '✅', category: 'Genel Bakış' },
         // Varlıklar & Analiz
         { name: 'Varlık Yönetimi', url: '/assets', keywords: ['varlık', 'asset', 'yatırım', 'portfolio', 'altın', 'döviz', 'hisse', 'fon'], icon: '💼', category: 'Varlıklar & Analiz' },
         { name: 'Yatırım Performansı', url: '/investment_performance', keywords: ['performans', 'getiri', 'roi', 'kar', 'zarar', 'investment'], icon: '🚀', category: 'Varlıklar & Analiz' },

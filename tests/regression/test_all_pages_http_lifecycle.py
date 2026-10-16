@@ -25,7 +25,6 @@ def test_all_core_ui_pages_return_200_and_never_500(authenticated_client):
         ('/', 'Dashboard / Ana Sayfa'),
         ('/monthly_dashboard', 'Aylık Konsolide Özet'),
         ('/transactions', 'İşlem Geçmişi'),
-        ('/reconciliation', 'Hesap & Ekstre Mutabakatı'),
         ('/plans', 'Düzenli İşlemler & Planlar'),
         ('/payment_calendar', 'Ödeme Takvimi'),
         ('/assets', 'Varlıklar Listesi'),

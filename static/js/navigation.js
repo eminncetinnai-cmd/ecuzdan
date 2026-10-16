@@ -58,7 +58,6 @@ export function generateBreadcrumbs() {
         'plans': 'Düzenli İşlemler',
         'monthly_dashboard': 'Aylık Dashboard',
         'payment_calendar': 'Ödeme Takvimi',
-        'reconciliation': 'Mutabakat',
         'assets': 'Varlık Yönetimi',
         'assets_management': 'Varlık Yönetimi',
         'assets_view': 'Varlık Görünümü',

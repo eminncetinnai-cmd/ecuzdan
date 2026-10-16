@@ -101,7 +101,6 @@ def test_all_22_navigation_links_parity_and_datalabels(authenticated_client):
         ("/plans", "Duzenli Islemler"),
         ("/monthly_dashboard", "Aylik Ozet"),
         ("/payment_calendar", "Odeme Takvimi"),
-        ("/reconciliation", "Mutabakat"),
         # Assets & Analysis
         ("/assets", "Varliklar"),
         ("/investment_performance", "Yatirim Performansi"),
@@ -128,7 +127,7 @@ def test_all_22_navigation_links_parity_and_datalabels(authenticated_client):
 
     # Verify that nav links render data-label attribute for accessibility / tooltip parity
     nav_links = re.findall(r'<a\s+[^>]*class="[^"]*nav-link[^"]*"[^>]*>', body)
-    assert len(nav_links) >= 22, f"Expected at least 22 nav-links, found {len(nav_links)}"
+    assert len(nav_links) >= 21, f"Expected at least 21 nav-links, found {len(nav_links)}"
     for link in nav_links:
         assert 'data-label="' in link, f"Nav link missing data-label: {link}"
         assert 'title="' in link, f"Nav link missing title: {link}"

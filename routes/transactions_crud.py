@@ -39,11 +39,6 @@ def register_transaction_crud_routes(bp, ui_options_fn, request_payload_fn):
     queries = container.applications.transaction_queries()
     commands = container.applications.transaction_commands(outbox)
 
-    @bp.route('/reconciliation', methods=['GET'])
-    def reconciliation():
-        """Standalone, read-only reconciliation workspace."""
-        return render_template('reconciliation.html')
-
     @bp.route('/transactions', methods=['GET'])
     def transactions():
         try:

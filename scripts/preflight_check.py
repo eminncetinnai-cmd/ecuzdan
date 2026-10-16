@@ -121,7 +121,6 @@ def run_preflight_check() -> int:
             ('/', 'Dashboard / Ana Sayfa'),
             ('/monthly_dashboard', 'Aylık Konsolide Özet'),
             ('/transactions', 'İşlem Geçmişi'),
-            ('/reconciliation', 'Hesap & Ekstre Mutabakatı'),
             ('/plans', 'Düzenli İşlemler & Planlar'),
             ('/payment_calendar', 'Ödeme Takvimi'),
             ('/assets', 'Varlıklar Listesi'),

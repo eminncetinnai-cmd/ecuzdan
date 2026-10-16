@@ -539,9 +539,7 @@
         <p class="mt-2 max-w-2xl text-sm text-slate-500">{{ _('tx_explorer_subtitle') }}</p>
     </div>
     <div class="flex flex-wrap gap-2">
-                <a href="{{ url_for('transactions.transactions') }}" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-600 shadow-sm transition hover:border-amber-300 hover:text-amber-700">{{ _('tx_open_transaction') }}</a>
-        <a href="{{ url_for('transactions.reconciliation') }}" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-600 shadow-sm transition hover:border-amber-300 hover:text-amber-700">{{ _('tx_open_reconciliation') }}</a>
-
+        <a href="{{ url_for('transactions.transactions') }}" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-600 shadow-sm transition hover:border-amber-300 hover:text-amber-700">{{ _('tx_open_transaction') }}</a>
     </div>
 </div>
 
@@ -734,8 +732,7 @@
         unassignedAccount: {{ _('tx_explorer_account_unassigned')|tojson }},
         accountLabel: {{ _('tx_explorer_detail_account')|tojson }},
         sourceLabel: {{ _('tx_explorer_detail_source')|tojson }},
-        reconciliationLabel: {{ _('tx_explorer_detail_reconciliation')|tojson }},
-                openTransaction: {{ _('tx_explorer_open_transaction')|tojson }},
+        openTransaction: {{ _('tx_explorer_open_transaction')|tojson }},
         deleteConfirm: {{ _('tx_explorer_delete_confirm')|tojson }},
         category: {{ _('tx_explorer_detail_category')|tojson }},
         amount: {{ _('tx_explorer_detail_amount')|tojson }},
@@ -748,13 +745,11 @@
         ledger: {{ _('tx_explorer_detail_ledger')|tojson }},
         edit: {{ _('tx_explorer_edit')|tojson }},
         delete: {{ _('tx_explorer_delete')|tojson }},
-        noReconciliation: {{ _('tx_explorer_no_reconciliation')|tojson }},
         loading: {{ _('tx_explorer_loading')|tojson }},
         activeFilter: {{ _('tx_explorer_filter_active')|tojson }},
         errorDescription: {{ _('tx_explorer_error_description')|tojson }},
         noValue: {{ _('tx_explorer_no_value')|tojson }},
         transactionsUrl: {{ url_for('transactions.transactions')|tojson }},
-        reconciliationUrl: {{ url_for('transactions.reconciliation')|tojson }},
         typeValues: {{ type_values|default({})|tojson }},
         statusValues: {{ status_values|default({})|tojson }},
         typeLabels: {
@@ -1132,9 +1127,6 @@
             ? `${tx.bank_account_name}${tx.bank_account_currency ? ` · ${tx.bank_account_currency}` : ''}`
             : explorerCopy.unassignedAccount;
         const source = explorerCopy.sourceLabels[tx.source_type] || explorerCopy.sourceLabels.default;
-        const reconciliationLink = tx.reconciliation_available && tx.bank_account_id
-            ? `<a href="${explorerCopy.reconciliationUrl}?account_id=${encodeURIComponent(tx.bank_account_id)}" class="drawer-context-link">${escapeHtml(explorerCopy.reconciliationLabel)}</a>`
-            : `<span class="drawer-muted">${escapeHtml(explorerCopy.noReconciliation)}</span>`;
 
         content.innerHTML = `
             <div class="drawer-field drawer-highlight">
@@ -1172,7 +1164,6 @@
             <div class="drawer-context">
                 <div class="drawer-context-row"><span>${escapeHtml(explorerCopy.origin)}</span><strong>${escapeHtml(source)}</strong></div>
                 <div class="drawer-context-row"><span>${escapeHtml(explorerCopy.ledger)}</span><strong>${escapeHtml(tx.ledger_layer || explorerCopy.noValue)}</strong></div>
-                <div class="drawer-context-row"><span>${escapeHtml(explorerCopy.reconciliationLabel)}</span>${reconciliationLink}</div>
             </div>
             <div class="drawer-actions">
                 <button data-macro="button_secondary" type="button" onclick="editTransaction(${Number(tx.id)})" class="drawer-primary-action">${escapeHtml(explorerCopy.edit)}</button>

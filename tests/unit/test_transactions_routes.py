@@ -368,12 +368,6 @@ def test_transactions_page_pagination(authenticated_client, app):
     assert resp.status_code == 200
 
 
-@pytest.mark.unit
-def test_transactions_reconciliation_page(authenticated_client, app):
-    """GET /reconciliation renders reconciliation template."""
-    resp = authenticated_client.get('/reconciliation')
-    assert resp.status_code == 200
-
 
 @pytest.mark.unit
 def test_new_transaction_success_redirect(authenticated_client, app):

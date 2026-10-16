@@ -147,10 +147,6 @@
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         <span class="nav-link-label">{{ _('nav_calendar') }}</span>
                     </a>
-                    <a href="/reconciliation" class="nav-link {% if request.path == '/reconciliation' %}active{% endif %}" data-label="{{ _('nav_reconciliation') }}" title="{{ _('nav_reconciliation') }}">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path></svg>
-                        <span class="nav-link-label">{{ _('nav_reconciliation') }}</span>
-                    </a>
                 </div>
 
                 <div class="nav-section-title {% if not is_mobile %}collapsible{% endif %}" {% if not is_mobile %}data-target="assets-section" role="button" tabindex="0" aria-expanded="true"{% endif %}>

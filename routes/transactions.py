@@ -6,7 +6,6 @@ Transaction Blueprint — routes/transactions.py
 Route modülleri:
   - routes/transactions_crud.py           → UI görünümleri (/transactions, /new_transaction, /edit_t, /delete_t, /transactions/<id>/quick-pay, /transactions/explorer)
   - routes/transactions_api.py            → REST API (/api/transactions, /api/transactions/<int:id>, lineage, adjustments, reversal, audit)
-  - routes/transactions_reconciliation.py → Banka hesapları ve mutabakat (/api/reconciliation, /api/transactions/reconciliation, accounts, statements)
   - routes/transactions_occurrences.py    → Plan gerçekleşmeleri (/api/plans/<int:plan_id>/occurrences, pay, skip, cancel)
 
 Filtreleme & Sayfalama:
@@ -51,7 +50,6 @@ from validators.request_validators import transaction_form_from_request  # noqa:
 from .transactions_api import register_transaction_api_routes
 from .transactions_crud import register_transaction_crud_routes
 from .transactions_occurrences import register_transaction_occurrence_routes
-from .transactions_reconciliation import register_transaction_reconciliation_routes
 
 logger = logging.getLogger(__name__)
 
@@ -237,7 +235,6 @@ def register_transaction_routes(bp):
     Transactions blueprint için tüm alt modül route'larını kaydeder.
     """
     register_transaction_crud_routes(bp, _transaction_ui_options, _transaction_request_payload)
-    register_transaction_reconciliation_routes(bp, _phase4_error)
     register_transaction_occurrence_routes(
         bp,
         _phase4_error,
