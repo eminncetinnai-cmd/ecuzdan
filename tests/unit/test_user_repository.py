@@ -437,6 +437,9 @@ def test_reset_financial_data_for_tenant():
     with patch('repositories.user_repository.LogbookEntry'), \
          patch('repositories.user_repository.LedgerAdjustment'), \
          patch('repositories.user_repository.LedgerAuditEvent'), \
+         patch('repositories.user_repository.Account'), \
+         patch('repositories.user_repository.JournalEntry'), \
+         patch('repositories.user_repository.LedgerLine'), \
          patch('repositories.user_repository.Payment'), \
          patch('repositories.user_repository.PlanOccurrence'), \
          patch('repositories.user_repository.Transaction'), \

@@ -117,3 +117,73 @@ class LedgerService:
         db.session.add(original_je)
 
         return reversing_je
+
+    @classmethod
+    def record_dual_write(
+        cls,
+        transaction,
+        tenant_id: str = None,
+        amount=None,
+        session=None,
+    ) -> JournalEntry | None:
+        """Kasa ve hedef hesapları arasında çift taraflı defter kaydı oluşturur."""
+        try:
+            from domain.ledger.models.ledger_models import Account as LedgerAccount
+            from shared.decimal_precision import to_decimal
+
+            s = session or db.session
+            tid = tenant_id or getattr(transaction, 'tenant_id', None)
+            if not tid:
+                return None
+
+            raw_amount = amount if amount is not None else getattr(transaction, 'amount', 0)
+            dec_amount = to_decimal(raw_amount)
+            if dec_amount <= Decimal('0'):
+                return None
+
+            cash_acct = s.query(LedgerAccount).filter_by(tenant_id=tid, name='Nakit Kasa', type='Asset').first()
+            if not cash_acct:
+                cash_acct = LedgerAccount(
+                    tenant_id=tid,
+                    name='Nakit Kasa',
+                    type='Asset',
+                    currency='TRY',
+                )
+                s.add(cash_acct)
+                s.flush()
+
+            category_name = getattr(transaction, 'category', 'Genel') or 'Genel'
+            tx_type = getattr(transaction, 'type', 'Gider')
+
+            target_acct = s.query(LedgerAccount).filter_by(tenant_id=tid, name=category_name).first()
+            if not target_acct:
+                target_acct = LedgerAccount(
+                    tenant_id=tid,
+                    name=category_name,
+                    type='Revenue' if tx_type == 'Gelir' else 'Expense',
+                    currency='TRY',
+                )
+                s.add(target_acct)
+                s.flush()
+
+            if cash_acct and target_acct:
+                if tx_type == 'Gelir':
+                    lines = [
+                        {"account_id": cash_acct.id, "debit": dec_amount, "credit": Decimal('0.0000')},
+                        {"account_id": target_acct.id, "debit": Decimal('0.0000'), "credit": dec_amount}
+                    ]
+                else:
+                    lines = [
+                        {"account_id": cash_acct.id, "debit": Decimal('0.0000'), "credit": dec_amount},
+                        {"account_id": target_acct.id, "debit": dec_amount, "credit": Decimal('0.0000')}
+                    ]
+                return cls.record_transaction(
+                    tenant_id=tid,
+                    date=getattr(transaction, 'date', None) or datetime.now().strftime('%Y-%m-%d'),
+                    description=getattr(transaction, 'description', None) or category_name,
+                    lines=lines,
+                    user_id=getattr(transaction, 'user_id', None),
+                )
+        except Exception as ex:
+            logger.warning("Ledger dual-write recording warning: %s", ex)
+            return None

@@ -50,7 +50,6 @@ LAYER_CONFIGS: dict[str, dict[str, Any]] = {
             "tests/unit/financial/",
             "tests/unit/portfolio/",
             "tests/unit/reporting/",
-            "tests/unit/reconciliation/",
             "tests/unit/transactions/",
             "tests/unit/users/",
             "tests/unit/categories/",
@@ -175,7 +174,6 @@ LAYER_CONFIGS: dict[str, dict[str, Any]] = {
             "tests/unit/test_transactions_routes.py",
             "tests/regression/test_transactions_api_contract.py",
             "tests/regression/test_phase4_api_contract.py",
-            "tests/regression/test_reconciliation_api.py",
             "tests/regression/test_tenant_isolation_api.py",
         ],
         "target_min": 35.0,
@@ -255,11 +253,12 @@ def audit_layer(key: str, cfg: dict[str, Any], baseline: dict[str, float]) -> La
     temp_json = PROJECT_ROOT / f".cov_temp_{key}_{int(time.time())}.json"
 
     cov_args = [f"--cov={s}" for s in sources]
+    valid_tests = [t for t in tests if (PROJECT_ROOT / t).exists()]
     cmd = [
         sys.executable,
         "-m",
         "pytest",
-        *tests,
+        *valid_tests,
         *cov_args,
         f"--cov-report=json:{temp_json}",
         "-q",

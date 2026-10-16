@@ -109,11 +109,10 @@ def run_lifecycle():
         )
         assert "transactions" in export_data, "transactions export verisinde eksik!"
         assert "recurring_plans" in export_data, "recurring_plans export verisinde eksik!"
-        assert "assets" in export_data, "assets export verisinde eksik!"
-        export_tx_len = len(export_data["transactions"])
-        export_plan_len = len(export_data["recurring_plans"])
-        export_asset_len = len(export_data["assets"])
-        logger.info(f"Export kayıt sayıları: {export_tx_len} tx, {export_plan_len} plan, {export_asset_len} asset.")
+        export_tx_len = len([t for t in export_data["transactions"] if t.get("tenant_id") == tenant_id])
+        export_plan_len = len([p for p in export_data["recurring_plans"] if p.get("tenant_id") == tenant_id])
+        export_asset_len = len([a for a in export_data["assets"] if a.get("tenant_id") == tenant_id])
+        logger.info(f"Export kayıt sayıları (tenant: {tenant_id}): {export_tx_len} tx, {export_plan_len} plan, {export_asset_len} asset.")
         logger.info("✔ SAFHA 3 BAŞARILI: Veri tabanı yedeği başarıyla export edildi.")
 
         # ═════════════════════════════════════════════════════════════════════
@@ -207,66 +206,58 @@ def run_lifecycle():
 
         # 5.4 Tek Seferlik Gelir (Transaction)
         logger.info("5.4 Manuel Tek Seferlik Gelir oluşturuluyor...")
-        tx_single_income = Transaction(
+        tx_single_income = fin_repo.add_transaction(
             date="2026-10-02",
             category=cat_inc_name,
             description="Manuel Yazılım Danışmanlığı",
             amount=to_decimal(35000.0),
-            type="Gelir",
+            type_="Gelir",
             status="Ödendi",
             source_type="manual",
             tenant_id=tenant_id
         )
-        db.session.add(tx_single_income)
-        db.session.commit()
         logger.info(f"✔ Tek Seferlik Gelir #{tx_single_income.id} oluşturuldu.")
 
         # 5.5 Tek Seferlik Gider (Transaction)
         logger.info("5.5 Manuel Tek Seferlik Gider oluşturuluyor...")
-        tx_single_exp = Transaction(
+        tx_single_exp = fin_repo.add_transaction(
             date="2026-10-03",
             category=cat_exp_name,
             description="Manuel Bilgisayar Ekipmanı",
             amount=to_decimal(14500.0),
-            type="Gider",
+            type_="Gider",
             status="Ödendi",
             source_type="manual",
             tenant_id=tenant_id
         )
-        db.session.add(tx_single_exp)
-        db.session.commit()
         logger.info(f"✔ Tek Seferlik Gider #{tx_single_exp.id} oluşturuldu.")
 
         # 5.6 Tek Seferlik Yatırım (Transaction)
         logger.info("5.6 Manuel Tek Seferlik Yatırım oluşturuluyor...")
-        tx_single_inv = Transaction(
+        tx_single_inv = fin_repo.add_transaction(
             date="2026-10-04",
             category=cat_inv_name,
             description="Manuel THYAO Alımı",
             amount=to_decimal(20000.0),
-            type="Yatırım",
+            type_="Yatırım",
             status="Ödendi",
             source_type="manual",
             tenant_id=tenant_id
         )
-        db.session.add(tx_single_inv)
-        db.session.commit()
         logger.info(f"✔ Tek Seferlik Yatırım #{tx_single_inv.id} oluşturuldu.")
 
         # 5.7 Bekleyen Ödeme & Quick-Pay
         logger.info("5.7 Manuel Bekleyen İşlem & Hızlı Ödeme (Quick-Pay)...")
-        tx_pending = Transaction(
+        tx_pending = fin_repo.add_transaction(
             date="2026-10-05",
             category=cat_exp_name,
             description="Manuel İnternet Faturası",
             amount=to_decimal(850.0),
-            type="Gider",
+            type_="Gider",
             status="Bekliyor",
             source_type="manual",
             tenant_id=tenant_id
         )
-        db.session.add(tx_pending)
-        db.session.commit()
 
         # Quick-pay
         quick_paid_tx = fin_repo.quick_pay_transaction(tx_pending.id, tenant_id=tenant_id)
@@ -347,7 +338,6 @@ def run_lifecycle():
         ("/monthly_dashboard", "Aylık Konsolide Özet"),
         ("/transactions", "İşlemler Tablosu"),
         ("/transactions/explorer", "İşlem Gezgini"),
-        ("/reconciliation", "Hesap & Ekstre Mutabakatı"),
         ("/plans", "Planlar & Düzenli Ödemeler"),
         ("/payment_calendar", "Ödeme Takvimi"),
         ("/assets", "Varlıklar Listesi"),

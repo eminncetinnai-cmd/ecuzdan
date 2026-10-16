@@ -198,7 +198,7 @@ class RuntimeLedgerWatchdog:
             amt = Decimal(str(tx.amount))
             if tx.type == "Gelir":
                 tx_net_cash += amt
-            elif tx.type in ("Gider", "Yatırım"):
+            elif tx.type in ("Gider", "Yatırım", "Transfer"):
                 tx_net_cash -= amt
 
         # Find Cash account in General Ledger

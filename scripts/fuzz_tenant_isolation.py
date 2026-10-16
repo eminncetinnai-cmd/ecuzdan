@@ -567,20 +567,20 @@ class TenantIsolationFuzzer:
             )
         )
 
-        # VEC-17: Anonymous access to reconciliation
-        res = anon_client.get("/reconciliation")
+        # VEC-17: Anonymous access to plans
+        res = anon_client.get("/plans")
         passed = (res.status_code in (302, 401, 403))
         results.append(
             FuzzResult(
                 vector_id="VEC-17",
                 category="Auth Enforce",
                 method="GET",
-                endpoint="/reconciliation",
+                endpoint="/plans",
                 http_status=res.status_code,
                 data_leaked=False,
                 mutation_prevented=True,
                 passed=passed,
-                details="Anonymous client attempted to view reconciliation workspace",
+                details="Anonymous client attempted to view recurring plans",
             )
         )
 

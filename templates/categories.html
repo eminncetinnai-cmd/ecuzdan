@@ -25,11 +25,12 @@
         {% set total_cat_spent = namespace(val=0) %}
         {% set over_budget_count = namespace(val=0) %}
         {% for c in cats %}
-            {% if c.budget_limit and c.budget_limit > 0 %}
-                {% set total_cat_budget.val = total_cat_budget.val + c.budget_limit %}
-                {% set m_spent = metrics.get(c.name, {}).get('month_spent', 0) %}
+            {% set b_limit = (c.budget_limit or 0)|float %}
+            {% if b_limit > 0 %}
+                {% set total_cat_budget.val = total_cat_budget.val + b_limit %}
+                {% set m_spent = (metrics.get(c.name, {}).get('month_spent', 0))|float %}
                 {% set total_cat_spent.val = total_cat_spent.val + m_spent %}
-                {% if m_spent > c.budget_limit %}
+                {% if m_spent > b_limit %}
                     {% set over_budget_count.val = over_budget_count.val + 1 %}
                 {% endif %}
             {% endif %}
@@ -421,17 +422,18 @@
                             {% set m = metrics.get(c.name, {}) %}
                             {% set tx_cnt = m.get('tx_count', 0) %}
                             {% set tot_amt = m.get('total_amount', 0) %}
-                            {% set spent = m.get('month_spent', 0) %}
-                            {% set pct = ((spent / c.budget_limit) * 100)|round|int if c.budget_limit and c.budget_limit > 0 else 0 %}
+                            {% set spent = (m.get('month_spent', 0))|float %}
+                            {% set b_limit = (c.budget_limit or 0)|float %}
+                            {% set pct = ((spent / b_limit) * 100)|round|int if b_limit > 0 else 0 %}
                             <tr class="cat-row transition {% if not c.is_active %}opacity-60 bg-slate-50/60{% endif %}"
                                 data-id="{{ c.id }}"
                                 data-type="{{ c.type }}"
                                 data-name="{{ c.name|lower }}"
                                 data-code="{{ c.code|lower if c.code else '' }}"
-                                data-budget="{{ c.budget_limit or 0 }}"
+                                data-budget="{{ b_limit }}"
                                 data-spent="{{ spent }}"
                                 data-pct="{{ pct }}"
-                                data-over-budget="{{ 'true' if c.budget_limit and spent > c.budget_limit else 'false' }}"
+                                data-over-budget="{{ 'true' if b_limit > 0 and spent > b_limit else 'false' }}"
                                 data-standard="{{ 'true' if c.tenant_id is none else 'false' }}"
                                 data-active="{{ 'true' if c.is_active else 'false' }}"
                                 data-parent-id="{{ c.parent_id or '' }}"
@@ -505,7 +507,7 @@
                                              title="Aylık bütçe limitini düzenlemek için tıklayın">
                                             <div class="flex items-center justify-between text-[10px]">
                                                 <span class="font-extrabold {% if pct > 100 %}text-rose-600{% elif pct >= 80 %}text-amber-600{% else %}text-slate-700{% endif %}">
-                                                    {{ "{:,.0f}".format(spent) }} / {{ "{:,.0f}".format(c.budget_limit) }} {{ base_currency_symbol }}
+                                                    {{ "{:,.0f}".format(spent) }} / {{ "{:,.0f}".format(b_limit) }} {{ base_currency_symbol }}
                                                 </span>
                                                 <span class="font-bold text-[9px] {% if pct > 100 %}text-rose-600 font-black{% elif pct >= 80 %}text-amber-600 font-black{% else %}text-slate-400{% endif %}">
                                                     %{{ pct }}
@@ -517,15 +519,15 @@
                                             <div class="flex items-center justify-between text-[8.5px] pt-0.5">
                                                 {% if pct > 100 %}
                                                 <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded font-black bg-rose-100 text-rose-700 uppercase tracking-tight">
-                                                    ⚠️ +{{ "{:,.0f}".format(spent - c.budget_limit) }} {{ base_currency_symbol }} Aşım
+                                                    ⚠️ +{{ "{:,.0f}".format(spent - b_limit) }} {{ base_currency_symbol }} Aşım
                                                 </span>
                                                 {% elif pct >= 80 %}
                                                 <span class="inline-flex items-center gap-0.5 px-1 py-0.5 rounded font-bold bg-amber-50 text-amber-700">
-                                                    Kalan: {{ "{:,.0f}".format(c.budget_limit - spent) }} {{ base_currency_symbol }}
+                                                    Kalan: {{ "{:,.0f}".format(b_limit - spent) }} {{ base_currency_symbol }}
                                                 </span>
                                                 {% else %}
                                                 <span class="font-medium text-slate-400">
-                                                    Kalan: {{ "{:,.0f}".format(c.budget_limit - spent) }} {{ base_currency_symbol }}
+                                                    Kalan: {{ "{:,.0f}".format(b_limit - spent) }} {{ base_currency_symbol }}
                                                 </span>
                                                 {% endif %}
                                                 <span class="text-slate-300 opacity-0 group-hover:opacity-100 transition text-[9px]">✎</span>

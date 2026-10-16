@@ -5,13 +5,16 @@ from typing import Any
 from sqlalchemy.orm import joinedload
 
 from models import (
+    Account,
     Asset,
     AssetTransaction,
     AssetUpdate,
     BankAccount,
     BankStatementSnapshot,
+    JournalEntry,
     LedgerAdjustment,
     LedgerAuditEvent,
+    LedgerLine,
     LogbookEntry,
     Payment,
     PlanOccurrence,
@@ -124,22 +127,28 @@ class UserRepository(BaseRepository):
 
         # 1. Transaction bağımlıları
         self.session.query(LogbookEntry).filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
-        self.session.query(LedgerAdjustment).filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
         self.session.query(LedgerAuditEvent).filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
+        self.session.query(LedgerAdjustment).filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
 
-        # 2. Plan bağımlıları (Transaction'a da referans verebilir)
+        # 2. General Ledger bağımlıları
+        je_ids = self.session.query(JournalEntry.id).filter_by(tenant_id=tenant_id)
+        self.session.query(LedgerLine).filter(LedgerLine.journal_entry_id.in_(je_ids)).delete(synchronize_session=False)
+        self.session.query(JournalEntry).filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
+        self.session.query(Account).filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
+
+        # 3. Plan bağımlıları (Transaction'a da referans verebilir)
         self.session.query(Payment).filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
         self.session.query(PlanOccurrence).filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
 
-        # 3. Ana işlemler ve planlar
+        # 4. Ana işlemler ve planlar
         self.session.query(Transaction).filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
         self.session.query(RecurringPlan).filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
 
-        # 4. Banka hesapları ve ekstre mutabakatları
+        # 5. Banka hesapları ve ekstre mutabakatları
         self.session.query(BankStatementSnapshot).filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
         self.session.query(BankAccount).filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
 
-        # 5. Varlıklar ve alt kayıtları
+        # 6. Varlıklar ve alt kayıtları
         asset_ids = self.session.query(Asset.id).filter_by(tenant_id=tenant_id)
         self.session.query(AssetUpdate).filter(AssetUpdate.asset_id.in_(asset_ids)).delete(synchronize_session=False)
         self.session.query(AssetTransaction).filter(AssetTransaction.asset_id.in_(asset_ids)).delete(synchronize_session=False)
@@ -151,8 +160,11 @@ class UserRepository(BaseRepository):
         kullanmalı. Hiçbir kullanıcı-facing UI bu metodu çağırmamalı.
         """
         self.session.query(LogbookEntry).delete(synchronize_session=False)
-        self.session.query(LedgerAdjustment).delete(synchronize_session=False)
         self.session.query(LedgerAuditEvent).delete(synchronize_session=False)
+        self.session.query(LedgerAdjustment).delete(synchronize_session=False)
+        self.session.query(LedgerLine).delete(synchronize_session=False)
+        self.session.query(JournalEntry).delete(synchronize_session=False)
+        self.session.query(Account).delete(synchronize_session=False)
         self.session.query(Payment).delete(synchronize_session=False)
         self.session.query(PlanOccurrence).delete(synchronize_session=False)
         self.session.query(Transaction).delete(synchronize_session=False)

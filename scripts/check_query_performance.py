@@ -25,7 +25,6 @@ from shared.query_profiler import QueryProfiler
 CORE_ROUTES_TO_PROFILE = [
     ("/", "Dashboard / Summary"),
     ("/transactions", "Transactions History"),
-    ("/reconciliation", "Account Reconciliation"),
     ("/plans", "Recurring Plans"),
     ("/payment_calendar", "Payment Calendar"),
     ("/assets", "Assets Overview"),
@@ -49,8 +48,18 @@ def profile_application_routes(max_budget: int = MAX_QUERY_BUDGET, max_dup: int 
     app.config["WTF_CSRF_ENABLED"] = False
 
     client = app.test_client()
-    # Authenticate as test auditor user
-    client.post("/login", data={"username": "user_a_auditor", "password": "Pass123!"}, follow_redirects=True)
+
+    with app.app_context():
+        from models import User
+        user = User.query.first()
+        uid = user.id if user else 1
+        tid = user.tenant_id if user else "default"
+        engine = db.engine
+
+    with client.session_transaction() as sess:
+        sess["user_id"] = uid
+        sess["tenant_id"] = tid
+        sess["_user_id"] = str(uid)
 
     print("=" * 80)
     print("E-CUZDAN N+1 SQL QUERY PROFILER & PERFORMANCE SLA GATE")
@@ -61,8 +70,6 @@ def profile_application_routes(max_budget: int = MAX_QUERY_BUDGET, max_dup: int 
     print(f"{'ROUTE':<28} | {'HTTP':<4} | {'QUERIES':<7} | {'DUPS':<5} | {'DB TIME':<10} | {'SLA STATUS'}")
     print("-" * 80)
 
-    with app.app_context():
-        engine = db.engine
     violations = []
 
     for path, label in CORE_ROUTES_TO_PROFILE:

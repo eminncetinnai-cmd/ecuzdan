@@ -124,6 +124,9 @@ def _create_purchase_transaction(asset, purchase_date, amount, user_note=None, t
         tenant_id=tenant_id,
     )
     db.session.add(tx)
+    if tenant_id:
+        from domain.ledger.services.ledger_service import LedgerService
+        LedgerService.record_dual_write(tx, tenant_id=tenant_id, amount=amount)
     return tx
 
 
@@ -192,6 +195,9 @@ def _create_sale_transaction(asset, sale_date, amount, realized_gain=None, user_
         tenant_id=tenant_id,
     )
     db.session.add(tx)
+    if tenant_id:
+        from domain.ledger.services.ledger_service import LedgerService
+        LedgerService.record_dual_write(tx, tenant_id=tenant_id, amount=amount)
     return tx
 
 
@@ -738,6 +744,9 @@ def transfer_cash_to_asset(asset_id, amount, transfer_date, note=None, tenant_id
             tenant_id=tenant_id,
         )
         db.session.add(tx)
+        if tenant_id:
+            from domain.ledger.services.ledger_service import LedgerService
+            LedgerService.record_dual_write(tx, tenant_id=tenant_id, amount=amount)
 
     # 2. Varlık defter kaydı (AssetTransaction)
     unit_price = asset.unit_price if asset.unit_price > 0 else amount

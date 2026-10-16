@@ -37,7 +37,7 @@ def backfill_historical_ledger(dry_run: bool = False) -> int:
 
         unbacked = []
         for tx in paid_txs:
-            je = JournalEntry.query.filter_by(tenant_id=tx.tenant_id, description=tx.description).first()
+            je = JournalEntry.query.filter_by(tenant_id=tx.tenant_id, date=tx.date, description=tx.description).first()
             if not je:
                 unbacked.append(tx)
 

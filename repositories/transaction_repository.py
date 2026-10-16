@@ -182,55 +182,13 @@ class TransactionRepository(BaseRepository, BaseRepositoryContract):
         amount=None,
     ) -> None:
         """Kasa ve kategori hesapları arasında çift taraflı defter kaydı (Immutable Ledger) oluşturur."""
-        try:
-            from domain.ledger.models.ledger_models import Account as LedgerAccount
-            from domain.ledger.services.ledger_service import LedgerService
-            from shared.decimal_precision import to_decimal
-
-            raw_amount = amount if amount is not None else getattr(transaction, 'amount', 0)
-            dec_amount = to_decimal(raw_amount)
-
-            cash_acct = LedgerAccount.query.filter_by(tenant_id=tenant_id, name='Nakit Kasa', type='Asset').first()
-            if not cash_acct:
-                cash_acct = LedgerAccount(
-                    tenant_id=tenant_id,
-                    name='Nakit Kasa',
-                    type='Asset',
-                    currency='TRY',
-                )
-                self.session.add(cash_acct)
-                self.session.flush()
-
-            target_acct = LedgerAccount.query.filter_by(tenant_id=tenant_id, name=transaction.category).first()
-            if not target_acct:
-                target_acct = LedgerAccount(
-                    tenant_id=tenant_id,
-                    name=transaction.category,
-                    type='Revenue' if transaction.type == 'Gelir' else 'Expense',
-                    currency='TRY',
-                )
-                self.session.add(target_acct)
-                self.session.flush()
-
-            if cash_acct and target_acct:
-                if transaction.type == 'Gelir':
-                    lines = [
-                        {"account_id": cash_acct.id, "debit": dec_amount, "credit": Decimal('0.0000')},
-                        {"account_id": target_acct.id, "debit": Decimal('0.0000'), "credit": dec_amount}
-                    ]
-                else:
-                    lines = [
-                        {"account_id": cash_acct.id, "debit": Decimal('0.0000'), "credit": dec_amount},
-                        {"account_id": target_acct.id, "debit": dec_amount, "credit": Decimal('0.0000')}
-                    ]
-                LedgerService.record_transaction(
-                    tenant_id=tenant_id,
-                    date=transaction.date,
-                    description=transaction.description or transaction.category,
-                    lines=lines
-                )
-        except Exception as ex:
-            logger.warning("Ledger dual-write recording warning: %s", ex)
+        from domain.ledger.services.ledger_service import LedgerService
+        LedgerService.record_dual_write(
+            transaction=transaction,
+            tenant_id=tenant_id,
+            amount=amount,
+            session=self.session,
+        )
 
     def update_transaction(
         self,

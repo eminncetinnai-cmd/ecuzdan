@@ -154,6 +154,10 @@ class DemoDataOrchestrator:
             logger.info(f"Generated {rev_count} reversals and {adj_count} adjustments")
             logger.info(f"Total net transactions created in run: {stats['transactions']}")
 
+            if active_ctx:
+                synced = self._synchronize_ledger()
+                logger.info(f"Synchronized {synced} demo transactions into general ledger")
+
             logger.info("=== Demo Data Generation Complete ===")
             return stats
 
@@ -739,6 +743,64 @@ class DemoDataOrchestrator:
             name=plan.name,
             tenant_id=self.tenant_id,
         ).first() is not None
+
+    def _synchronize_ledger(self) -> int:
+        """Synchronize all paid demo transactions into the double-entry general ledger."""
+        from decimal import Decimal
+        from domain.ledger.models.ledger_models import Account as LedgerAccount, JournalEntry
+        from domain.ledger.services.ledger_service import LedgerService
+        from shared.decimal_precision import to_decimal
+
+        paid_txs = (
+            Transaction.query.filter_by(tenant_id=self.tenant_id, status="Ödendi", is_deleted=False)
+            .order_by(Transaction.date.asc(), Transaction.id.asc())
+            .all()
+        )
+        if not paid_txs:
+            return 0
+
+        cash_acct = LedgerAccount.query.filter_by(tenant_id=self.tenant_id, name="Nakit Kasa", type="Asset").first()
+        if not cash_acct:
+            cash_acct = LedgerAccount(tenant_id=self.tenant_id, name="Nakit Kasa", type="Asset", currency="TRY")
+            db.session.add(cash_acct)
+            db.session.flush()
+
+        sync_count = 0
+        for tx in paid_txs:
+            je = JournalEntry.query.filter_by(tenant_id=self.tenant_id, date=tx.date, description=tx.description).first()
+            if je:
+                continue
+
+            dec_amount = to_decimal(tx.amount)
+            acct_type = "Revenue" if tx.type == "Gelir" else ("Asset" if tx.type == "Yatırım" else "Expense")
+            target_acct = LedgerAccount.query.filter_by(tenant_id=self.tenant_id, name=tx.category).first()
+            if not target_acct:
+                target_acct = LedgerAccount(tenant_id=self.tenant_id, name=tx.category, type=acct_type, currency="TRY")
+                db.session.add(target_acct)
+                db.session.flush()
+
+            if tx.type == "Gelir":
+                lines = [
+                    {"account_id": cash_acct.id, "debit": dec_amount, "credit": Decimal("0.0000"), "currency": "TRY"},
+                    {"account_id": target_acct.id, "debit": Decimal("0.0000"), "credit": dec_amount, "currency": "TRY"},
+                ]
+            else:
+                lines = [
+                    {"account_id": cash_acct.id, "debit": Decimal("0.0000"), "credit": dec_amount, "currency": "TRY"},
+                    {"account_id": target_acct.id, "debit": dec_amount, "credit": Decimal("0.0000"), "currency": "TRY"},
+                ]
+
+            LedgerService.record_transaction(
+                tenant_id=self.tenant_id,
+                date=tx.date,
+                description=tx.description or tx.category,
+                lines=lines,
+                user_id=self.user_id,
+            )
+            sync_count += 1
+
+        db.session.commit()
+        return sync_count
 
 
 def generate_advanced_demo_data(

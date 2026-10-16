@@ -66,8 +66,17 @@ class BackupValidationService:
         """Return table data for singular or plural table keys."""
         if table_name in backup_data:
             return backup_data[table_name]
-        plural_key = f"{table_name}es" if table_name.endswith('batch') else f"{table_name}s"
-        return backup_data.get(plural_key, [])
+        plural_key = (
+            f"{table_name[:-1]}ies" if table_name.endswith('y')
+            else (f"{table_name}es" if table_name.endswith('batch') else f"{table_name}s")
+        )
+        if plural_key in backup_data:
+            return backup_data[plural_key]
+        norm = self._normalize_table_name(table_name)
+        for key, val in backup_data.items():
+            if key not in {'schema_version', 'metadata'} and self._normalize_table_name(key) == norm and isinstance(val, list):
+                return val
+        return []
 
     def validate_schema(self, backup_data: Dict) -> Tuple[bool, List[str]]:
         """
