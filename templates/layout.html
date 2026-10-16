@@ -271,7 +271,9 @@
             <div class="sidebar-top">
                 <div class="sidebar-brand-row flex items-center justify-between gap-1 pr-2">
                     <a href="/" class="brand-area flex-1 min-w-0" title="{{ brand }}">
-                        <div class="brand-logo">{{ _('ui_auto_e79b6fa3a4d8') }}</div>
+                        <div class="brand-logo">
+                            <img src="{{ static_asset_url('img/logo-icon.svg') }}" alt="{{ brand }}" width="38" height="38" class="w-full h-full object-contain">
+                        </div>
                         <div class="brand-info">
                             <p class="brand-kicker">{{ _('ui_auto_30423ad33865') }}</p>
                             <h1 class="brand-title">{{ brand }}</h1>
@@ -312,7 +314,9 @@
             <!-- Mobile Drawer Header -->
             <div class="flex items-center justify-between p-3.5 border-b border-slate-200 dark:border-slate-800 flex-shrink-0 bg-slate-50/50 dark:bg-slate-800/50">
                 <div class="flex items-center gap-2.5">
-                    <div class="brand-logo">{{ _('ui_auto_e79b6fa3a4d8') }}</div>
+                    <div class="brand-logo">
+                        <img src="{{ static_asset_url('img/logo-icon.svg') }}" alt="{{ brand }}" width="38" height="38" class="w-full h-full object-contain">
+                    </div>
                     <div>
                         <div class="text-sm font-bold text-slate-800 dark:text-slate-100 leading-tight">{{ brand }}</div>
                         <div class="text-[10px] text-slate-500 font-medium">{{ _('sidebar_premium_wealth') }}</div>

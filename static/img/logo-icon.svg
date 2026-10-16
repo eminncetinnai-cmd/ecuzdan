@@ -1,56 +1,171 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
   <defs>
-    <!-- Background Glow Filter -->
-    <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%">
+    <!-- Master Ambient Glow Filter -->
+    <filter id="vault-glow" x="-20%" y="-20%" width="140%" height="140%">
       <feGaussianBlur stdDeviation="6" result="blur" />
       <feComposite in="SourceGraphic" in2="blur" operator="over" />
     </filter>
-    
-    <!-- Metallic Violet to Indigo Gradient -->
-    <linearGradient id="primary-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#8b5cf6" />
-      <stop offset="50%" stop-color="#6366f1" />
-      <stop offset="100%" stop-color="#4338ca" />
+
+    <!-- Subtle Drop Shadow for Emblem Elements -->
+    <filter id="emblem-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#020617" flood-opacity="0.8" />
+    </filter>
+
+    <!-- Gold Luster Glow -->
+    <filter id="gold-shimmer" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur stdDeviation="2.5" result="glow" />
+      <feComposite in="SourceGraphic" in2="glow" operator="over" />
+    </filter>
+
+    <!-- Obsidian & Royal Indigo Background Gradient -->
+    <linearGradient id="vault-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e1b4b" />
+      <stop offset="45%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#020617" />
     </linearGradient>
 
-    <!-- Metallic Gold to Amber Gradient -->
-    <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#fcd34d" />
-      <stop offset="50%" stop-color="#f59e0b" />
-      <stop offset="100%" stop-color="#d97706" />
+    <!-- Specular Rim Gradient -->
+    <linearGradient id="rim-light" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818cf8" stop-opacity="0.75" />
+      <stop offset="30%" stop-color="#38bdf8" stop-opacity="0.5" />
+      <stop offset="60%" stop-color="#c7d2fe" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.04" />
     </linearGradient>
 
-    <!-- Emerald Accent Gradient -->
-    <linearGradient id="emerald-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+    <!-- Inner Glass Overlay -->
+    <linearGradient id="glass-surface" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.09" />
+      <stop offset="40%" stop-color="#ffffff" stop-opacity="0.02" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.25" />
+    </linearGradient>
+
+    <!-- Top Wing: Electric Cyan to Indigo Gradient (Growth & Alpha) -->
+    <linearGradient id="top-wing-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="45%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#6366f1" />
+    </linearGradient>
+
+    <!-- 24K Gold Clasp & Reserve Core Gradient -->
+    <linearGradient id="gold-core-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fffbeb" />
+      <stop offset="25%" stop-color="#fcd34d" />
+      <stop offset="65%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#b45309" />
+    </linearGradient>
+
+    <!-- Bottom Wing: Vibrant Emerald to Forest Gradient (Ledger Balance) -->
+    <linearGradient id="bottom-wing-grad" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#34d399" />
-      <stop offset="100%" stop-color="#059669" />
+      <stop offset="55%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#047857" />
     </linearGradient>
 
-    <!-- Subtle Glass Overlay -->
-    <linearGradient id="glass-glare" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35" />
-      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.02" />
+    <!-- Titanium Spine Pillar Gradient -->
+    <linearGradient id="spine-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="40%" stop-color="#f8fafc" />
+      <stop offset="75%" stop-color="#e2e8f0" />
+      <stop offset="100%" stop-color="#94a3b8" />
+    </linearGradient>
+
+    <!-- Wallet Silhouette Ribbon -->
+    <linearGradient id="wallet-ribbon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1" stop-opacity="0.45" />
+      <stop offset="50%" stop-color="#38bdf8" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0.05" />
     </linearGradient>
   </defs>
 
-  <!-- Ambient Glow -->
-  <circle cx="60" cy="60" r="42" fill="url(#primary-grad)" opacity="0.25" filter="url(#neon-glow)" />
+  <!-- Ambient Blue/Indigo Halo -->
+  <rect x="16" y="16" width="96" height="96" rx="28" fill="#4f46e5" opacity="0.22" filter="url(#vault-glow)" />
 
-  <!-- Master Shield/Wallet Outer Hexagon-Squircle -->
-  <rect x="15" y="15" width="90" height="90" rx="28" fill="url(#primary-grad)" />
-  <rect x="15" y="15" width="90" height="90" rx="28" fill="url(#glass-glare)" />
-  <rect x="15.5" y="15.5" width="89" height="89" rx="27.5" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.2" />
+  <!-- Master Squircle Container -->
+  <rect x="10" y="10" width="108" height="108" rx="28" fill="url(#vault-bg)" />
+  <rect x="10" y="10" width="108" height="108" rx="28" fill="url(#glass-surface)" />
+  <rect x="10.75" y="10.75" width="106.5" height="106.5" rx="27.25" fill="none" stroke="url(#rim-light)" stroke-width="1.5" />
 
-  <!-- Inner Dynamic Modern Wallet Flap / Node Arc -->
-  <path d="M 28 42 C 28 32, 38 24, 60 24 C 82 24, 92 32, 92 42 L 92 78 C 92 88, 82 96, 60 96 C 38 96, 28 88, 28 78 Z" fill="#0b0f19" opacity="0.88" />
-  
-  <!-- Stylized Infinity / Geometric Fold Arc -->
-  <path d="M 38 48 C 38 40, 48 35, 60 35 C 72 35, 82 40, 82 48 C 82 58, 60 62, 60 74" fill="none" stroke="url(#gold-grad)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round" />
-  
-  <!-- Central Lira Symbol & Digital Gem -->
-  <circle cx="60" cy="76" r="4.5" fill="url(#emerald-grad)" />
-  
-  <!-- Horizontal Horizon Accent Bars -->
-  <line x1="44" y1="47" x2="76" y2="47" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.9" />
-  <line x1="48" y1="56" x2="72" y2="56" stroke="url(#gold-grad)" stroke-width="2.5" stroke-linecap="round" />
+  <!-- Inner Recessed Micro-Chamber -->
+  <rect x="18" y="18" width="92" height="92" rx="20" fill="#030712" opacity="0.6" />
+  <rect x="18.5" y="18.5" width="91" height="91" rx="19.5" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+
+  <!-- Subtle Financial Security Cross-Hatch -->
+  <line x1="22" y1="44" x2="106" y2="44" stroke="rgba(255,255,255,0.03)" stroke-width="1" stroke-dasharray="2 4" />
+  <line x1="22" y1="84" x2="106" y2="84" stroke="rgba(255,255,255,0.03)" stroke-width="1" stroke-dasharray="2 4" />
+  <line x1="46" y1="22" x2="46" y2="106" stroke="rgba(255,255,255,0.03)" stroke-width="1" stroke-dasharray="2 4" />
+  <line x1="82" y1="22" x2="82" y2="106" stroke="rgba(255,255,255,0.03)" stroke-width="1" stroke-dasharray="2 4" />
+
+  <!-- Master Emblem Group with 3D Drop Shadow -->
+  <g filter="url(#emblem-shadow)">
+    
+    <!-- Outer Wallet Perimeter Arc (Isometric Flow) -->
+    <path d="M 46 28 C 76 28 98 42 98 64 C 98 86 76 100 46 100" 
+          fill="none" stroke="url(#wallet-ribbon)" stroke-width="3.5" stroke-linecap="round" />
+
+    <!-- 1. TOP WING: ASCENDING FINANCIAL GROWTH VECTOR -->
+    <!-- Runs from x=44 to x=92, height y=28 to y=44 -->
+    <path d="M 44 28 
+             L 80 28 
+             C 83.5 28 86.5 29.5 88.5 32 
+             L 94 39
+             C 95.5 41 94.5 44 92 44 
+             L 44 44 
+             Z" 
+          fill="url(#top-wing-grad)" />
+    <!-- Vector Specular Edge -->
+    <path d="M 45 29.5 L 79.5 29.5 C 82 29.5 84.5 30.8 86 32.8 L 91.5 39.5" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="1.2" stroke-linecap="round" />
+
+    <!-- 2. BOTTOM WING: GENERAL LEDGER FOUNDATION -->
+    <!-- Runs from x=44 to x=92, height y=84 to y=100 -->
+    <path d="M 44 84 
+             L 80 84 
+             C 84 84 87 86 89 89 
+             L 94 95
+             C 95 96.5 94 99 92 100 
+             L 44 100 
+             Z" 
+          fill="url(#bottom-wing-grad)" />
+    <!-- Ledger Specular Edge -->
+    <path d="M 45 85.5 L 79.5 85.5 C 82.5 85.5 85 87 86.5 89.5 L 91 95" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.2" stroke-linecap="round" />
+
+    <!-- 3. CENTRAL CLASP: 24K GOLD VAULT LOCK -->
+    <!-- Runs from x=44 to x=70, expands into a faceted gold gemstone lock at x=62..86, y=56..72 -->
+    <path d="M 44 58 
+             L 64 58 
+             L 70 54 
+             L 80 54 
+             L 86 64 
+             L 80 74 
+             L 70 74 
+             L 64 70 
+             L 44 70 
+             Z" 
+          fill="url(#gold-core-grad)" 
+          filter="url(#gold-shimmer)" />
+    <!-- Faceted Diamond Bevel in Clasp -->
+    <polygon points="75,57 82,64 75,71 68,64" fill="#fffbeb" opacity="0.85" />
+    <circle cx="75" cy="64" r="2.5" fill="#78350f" />
+
+    <!-- 4. TITANIUM MASTER SPINE: THE VAULT PILLAR -->
+    <!-- Perfectly flush with top bar (y=28) and bottom bar (y=100) -->
+    <!-- Rounded left corners at (32,28) and (32,100) with r=5 -->
+    <path d="M 37 28 
+             L 46 28 
+             L 46 100 
+             L 37 100 
+             C 33.7 100 31 97.3 31 94 
+             L 31 34 
+             C 31 30.7 33.7 28 37 28 
+             Z" 
+          fill="url(#spine-grad)" />
+
+    <!-- Spine Polished Bevel Lines -->
+    <line x1="33" y1="33" x2="33" y2="95" stroke="#ffffff" stroke-width="1.4" stroke-linecap="round" opacity="0.9" />
+    <line x1="44.5" y1="29" x2="44.5" y2="99" stroke="#94a3b8" stroke-width="1" opacity="0.6" />
+
+    <!-- Quantum Ledger Triple Micro-Nodes -->
+    <circle cx="34" cy="36" r="1.6" fill="#38bdf8" />
+    <circle cx="34" cy="64" r="1.6" fill="#f59e0b" />
+    <circle cx="34" cy="92" r="1.6" fill="#10b981" />
+  </g>
 </svg>

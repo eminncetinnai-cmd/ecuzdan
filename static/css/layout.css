@@ -137,8 +137,6 @@ main::after {
 }
 
 .brand-logo {
-    background: linear-gradient(135deg, #4f46e5 0%, #312e81 100%);
-    color: #ffffff;
     width: 38px;
     height: 38px;
     min-width: 38px;
@@ -146,17 +144,24 @@ main::after {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 800;
-    font-size: 14px;
-    letter-spacing: 0.04em;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 2px 6px -1px rgba(79, 70, 229, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    transition: all 0.2s ease;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), filter 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.brand-area:hover .brand-logo {
-    transform: scale(1.03);
-    box-shadow: 0 4px 10px -2px rgba(79, 70, 229, 0.4);
+.brand-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    filter: drop-shadow(0 2px 8px rgba(79, 70, 229, 0.3));
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), filter 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.brand-area:hover .brand-logo img {
+    transform: scale(1.06);
+    filter: drop-shadow(0 4px 14px rgba(99, 102, 241, 0.45));
 }
 
 .brand-info {
@@ -2054,10 +2059,12 @@ html[data-sidebar-mode="rail"] .rail-icon-expand {
         height: 44px;
         min-width: 44px;
         border-radius: 12px;
-        font-size: 14px;
         display: flex;
         align-items: center;
         justify-content: center;
+        background: transparent;
+        border: none;
+        box-shadow: none;
     }
 
     html[data-sidebar-mode="rail"] #desktopSidebar.sidebar-premium.rail-peek .sidebar-brand-row,

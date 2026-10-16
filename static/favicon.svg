@@ -1,21 +1,52 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="100%" height="100%">
   <defs>
     <linearGradient id="fav-bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#8b5cf6" />
-      <stop offset="50%" stop-color="#6366f1" />
-      <stop offset="100%" stop-color="#3730a3" />
+      <stop offset="0%" stop-color="#1e1b4b" />
+      <stop offset="50%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+    <linearGradient id="fav-rim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818cf8" />
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.2" />
+    </linearGradient>
+    <linearGradient id="fav-cyan" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#6366f1" />
     </linearGradient>
     <linearGradient id="fav-gold" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#fcd34d" />
-      <stop offset="100%" stop-color="#f59e0b" />
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="60%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#b45309" />
+    </linearGradient>
+    <linearGradient id="fav-emerald" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="fav-spine" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#cbd5e1" />
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="18" fill="url(#fav-bg)" />
-  <rect x="1" y="1" width="62" height="62" rx="17" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" />
-  <!-- Inner Lira / Wallet Geometry -->
-  <path d="M 16 23 C 16 17, 22 13, 32 13 C 42 13, 48 17, 48 23 L 48 43 C 48 49, 42 53, 32 53 C 22 53, 16 49, 16 43 Z" fill="#090d16" opacity="0.9" />
-  <path d="M 22 26 C 22 20, 27 18, 32 18 C 37 18, 42 20, 42 26 C 42 32, 32 35, 32 42" fill="none" stroke="url(#fav-gold)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />
-  <circle cx="32" cy="44" r="2.5" fill="#10b981" />
-  <line x1="25" y1="26" x2="39" y2="26" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" />
-  <line x1="27" y1="31" x2="37" y2="31" stroke="url(#fav-gold)" stroke-width="2" stroke-linecap="round" />
+
+  <!-- High-Contrast Squircle -->
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#fav-bg)" />
+  <rect x="2.5" y="2.5" width="59" height="59" rx="15.5" fill="none" stroke="url(#fav-rim)" stroke-width="1.2" />
+
+  <!-- Recessed Cavity -->
+  <rect x="6" y="6" width="52" height="52" rx="12" fill="#030712" opacity="0.65" />
+
+  <!-- Sovereign E Geometry -->
+  <!-- Top Growth Wing -->
+  <path d="M 22 14 L 43 14 C 45 14 47 15 48 16.5 L 50 20 C 50.8 21.2 50 22 48.5 22 L 22 22 Z" fill="url(#fav-cyan)" />
+  
+  <!-- Center Gold Vault Clasp -->
+  <path d="M 22 28 L 36 28 L 40 26 L 45 32 L 40 38 L 36 36 L 22 36 Z" fill="url(#fav-gold)" />
+  <polygon points="40,29 43,32 40,35 37,32" fill="#ffffff" opacity="0.9" />
+
+  <!-- Bottom Emerald Balance Wing -->
+  <path d="M 22 42 L 44 42 C 46 42 48 43 49 45 L 50 48 C 50.5 49.5 49.5 50 48 50 L 22 50 Z" fill="url(#fav-emerald)" />
+
+  <!-- Titanium Spine Pillar -->
+  <path d="M 17 14 L 24 14 L 24 50 L 17 50 C 15 50 13.5 48.5 13.5 46.5 L 13.5 17.5 C 13.5 15.5 15 14 17 14 Z" fill="url(#fav-spine)" />
+  <line x1="15" y1="17" x2="15" y2="47" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round" />
 </svg>

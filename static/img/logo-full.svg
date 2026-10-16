@@ -1,52 +1,97 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 80" width="100%" height="100%">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 80" width="100%" height="100%">
   <defs>
-    <!-- Metallic Violet to Indigo Gradient -->
-    <linearGradient id="lf-primary" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#8b5cf6" />
-      <stop offset="50%" stop-color="#6366f1" />
-      <stop offset="100%" stop-color="#4338ca" />
+    <!-- Background Gradient -->
+    <linearGradient id="lf-vault-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e1b4b" />
+      <stop offset="45%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#020617" />
     </linearGradient>
 
-    <!-- Metallic Gold Gradient -->
-    <linearGradient id="lf-gold" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#fcd34d" />
-      <stop offset="50%" stop-color="#f59e0b" />
-      <stop offset="100%" stop-color="#d97706" />
+    <!-- Specular Rim Gradient -->
+    <linearGradient id="lf-rim-light" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818cf8" stop-opacity="0.75" />
+      <stop offset="30%" stop-color="#38bdf8" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.04" />
     </linearGradient>
 
-    <!-- Emerald Gradient -->
-    <linearGradient id="lf-emerald" x1="0%" y1="0%" x2="100%" y2="100%">
+    <!-- Emblem Wing Gradients -->
+    <linearGradient id="lf-top-wing" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="45%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#6366f1" />
+    </linearGradient>
+
+    <linearGradient id="lf-gold-core" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fffbeb" />
+      <stop offset="25%" stop-color="#fcd34d" />
+      <stop offset="65%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#b45309" />
+    </linearGradient>
+
+    <linearGradient id="lf-bottom-wing" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#34d399" />
-      <stop offset="100%" stop-color="#059669" />
+      <stop offset="55%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+
+    <linearGradient id="lf-spine" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="50%" stop-color="#f1f5f9" />
+      <stop offset="100%" stop-color="#cbd5e1" />
     </linearGradient>
 
     <linearGradient id="lf-text-grad" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="70%" stop-color="#f8fafc" />
       <stop offset="100%" stop-color="#e2e8f0" />
     </linearGradient>
   </defs>
 
-  <!-- Left Icon Emblem -->
-  <g transform="translate(10, 10) scale(0.5)">
-    <!-- Master Outer Hexagon-Squircle -->
-    <rect x="15" y="15" width="90" height="90" rx="28" fill="url(#lf-primary)" />
-    <rect x="15.5" y="15.5" width="89" height="89" rx="27.5" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.2" />
+  <!-- Left Emblem Group (64x64 at (8, 8)) -->
+  <g transform="translate(8, 8) scale(0.5)">
+    <!-- Master Squircle Container -->
+    <rect x="10" y="10" width="108" height="108" rx="28" fill="url(#lf-vault-bg)" />
+    <rect x="10.75" y="10.75" width="106.5" height="106.5" rx="27.25" fill="none" stroke="url(#lf-rim-light)" stroke-width="1.5" />
 
-    <!-- Inner Core -->
-    <path d="M 28 42 C 28 32, 38 24, 60 24 C 82 24, 92 32, 92 42 L 92 78 C 92 88, 82 96, 60 96 C 38 96, 28 88, 28 78 Z" fill="#0b0f19" opacity="0.88" />
-    <path d="M 38 48 C 38 40, 48 35, 60 35 C 72 35, 82 40, 82 48 C 82 58, 60 62, 60 74" fill="none" stroke="url(#lf-gold)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round" />
-    <circle cx="60" cy="76" r="4.5" fill="url(#lf-emerald)" />
-    <line x1="44" y1="47" x2="76" y2="47" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.9" />
-    <line x1="48" y1="56" x2="72" y2="56" stroke="url(#lf-gold)" stroke-width="2.5" stroke-linecap="round" />
+    <!-- Inner Micro-Chamber -->
+    <rect x="18" y="18" width="92" height="92" rx="20" fill="#030712" opacity="0.65" />
+
+    <!-- Outer Wallet Perimeter Arc -->
+    <path d="M 46 28 C 76 28 98 42 98 64 C 98 86 76 100 46 100" 
+          fill="none" stroke="#6366f1" stroke-width="3.5" stroke-linecap="round" opacity="0.35" />
+
+    <!-- 1. Top Wing -->
+    <path d="M 44 28 L 80 28 C 83.5 28 86.5 29.5 88.5 32 L 94 39 C 95.5 41 94.5 44 92 44 L 44 44 Z" fill="url(#lf-top-wing)" />
+    <path d="M 45 29.5 L 79.5 29.5 C 82 29.5 84.5 30.8 86 32.8 L 91.5 39.5" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="1.2" stroke-linecap="round" />
+
+    <!-- 2. Bottom Wing -->
+    <path d="M 44 84 L 80 84 C 84 84 87 86 89 89 L 94 95 C 95 96.5 94 99 92 100 L 44 100 Z" fill="url(#lf-bottom-wing)" />
+    <path d="M 45 85.5 L 79.5 85.5 C 82.5 85.5 85 87 86.5 89.5 L 91 95" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.2" stroke-linecap="round" />
+
+    <!-- 3. Central Clasp -->
+    <path d="M 44 58 L 64 58 L 70 54 L 80 54 L 86 64 L 80 74 L 70 74 L 64 70 L 44 70 Z" fill="url(#lf-gold-core)" />
+    <polygon points="75,57 82,64 75,71 68,64" fill="#fffbeb" opacity="0.85" />
+
+    <!-- 4. Titanium Spine -->
+    <path d="M 37 28 L 46 28 L 46 100 L 37 100 C 33.7 100 31 97.3 31 94 L 31 34 C 31 30.7 33.7 28 37 28 Z" fill="url(#lf-spine)" />
+    <line x1="33" y1="33" x2="33" y2="95" stroke="#ffffff" stroke-width="1.4" stroke-linecap="round" opacity="0.9" />
+
+    <!-- Nodes -->
+    <circle cx="34" cy="36" r="1.6" fill="#38bdf8" />
+    <circle cx="34" cy="64" r="1.6" fill="#f59e0b" />
+    <circle cx="34" cy="92" r="1.6" fill="#10b981" />
   </g>
 
   <!-- Typography: E-CÜZDAN -->
-  <text x="82" y="44" font-family="'Outfit', system-ui, -apple-system, sans-serif" font-size="26" font-weight="900" letter-spacing="-0.03em" fill="url(#lf-text-grad)">E-CÜZDAN</text>
+  <text x="86" y="44" font-family="'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="900" letter-spacing="-0.03em" fill="url(#lf-text-grad)">E-CÜZDAN</text>
   
-  <!-- Subtitle: WEALTH & INTELLIGENCE -->
-  <text x="84" y="60" font-family="'Outfit', system-ui, -apple-system, sans-serif" font-size="9" font-weight="800" letter-spacing="0.28em" fill="#818cf8">INTELLIGENT WEALTH</text>
-  
-  <!-- Subtle Badge Gem -->
-  <circle cx="280" cy="36" r="3" fill="#10b981" />
-  <text x="288" y="39" font-family="'Outfit', sans-serif" font-size="8" font-weight="800" letter-spacing="0.15em" fill="#10b981">PRO</text>
+  <!-- Subtitle: PORTFOLIO & WEALTH INTELLIGENCE OS -->
+  <text x="88" y="61" font-family="'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="8.5" font-weight="800" letter-spacing="0.24em" fill="#818cf8">WEALTH INTELLIGENCE OS</text>
+
+  <!-- Enterprise / Fintech Grade Pill Badge -->
+  <g transform="translate(268, 26)">
+    <rect x="0" y="0" width="82" height="22" rx="11" fill="rgba(16, 185, 129, 0.1)" stroke="rgba(16, 185, 129, 0.3)" stroke-width="1" />
+    <circle cx="11" cy="11" r="3" fill="#10b981" />
+    <text x="20" y="14" font-family="'Outfit', system-ui, sans-serif" font-size="8" font-weight="800" letter-spacing="0.14em" fill="#10b981">FINTECH</text>
+  </g>
 </svg>
