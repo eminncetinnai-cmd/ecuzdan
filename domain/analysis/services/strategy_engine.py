@@ -240,7 +240,10 @@ class StrategyEngine:
         # çevrilir ki Fisher denklemi boyunca 'Decimal / float' karışımı oluşmasın.
         try:
             from market_data_service import get_macro_economic_data
-            macro_data = get_macro_economic_data()
+            try:
+                macro_data = get_macro_economic_data(allow_network=False)
+            except TypeError:
+                macro_data = get_macro_economic_data()
             annual_inflation = to_decimal(macro_data.get('inflation_rate', 40.0)) / 100
             policy_rate = to_decimal(macro_data.get('interest_rate', 37.0)) / 100
         except Exception as e:

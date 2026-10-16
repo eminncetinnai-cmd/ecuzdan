@@ -50,6 +50,10 @@ class StrategyService:
         total_investable = sum(a.value for a in assets) + get_actual_cash()
         monte_carlo = engine.generate_monte_carlo_paths(total_investable)
         real_yields_data = engine.calculate_real_yields(assets)
+        try:
+            macro_data = get_macro_economic_data(allow_network=False)
+        except TypeError:
+            macro_data = get_macro_economic_data()
         context = {
             'mc_scenarios': json.dumps(monte_carlo['scenarios']),
             'mc_success_rates': json.dumps(monte_carlo['success_rates']),
@@ -63,7 +67,7 @@ class StrategyService:
             're_analysis': self._real_estate_analysis(assets),
             'total_investable': total_investable,
             'settings': engine.settings,
-            'macro_data': get_macro_economic_data(),
+            'macro_data': macro_data,
         }
 
         with _STRATEGY_CACHE_LOCK:

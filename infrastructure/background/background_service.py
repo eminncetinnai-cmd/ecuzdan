@@ -266,6 +266,11 @@ class BackgroundService:
             self._update_live_data()
             if not self._market_cache_is_fresh():
                 self._update_market_data()
+            try:
+                from infrastructure.market.market_data_service import get_macro_economic_data
+                get_macro_economic_data(allow_network=True)
+            except Exception as macro_exc:
+                logger.debug("Arka plan makro veri yenilemesi atlandı: %s", macro_exc)
             self._save_cache()
             logger.debug("Tüm veriler başarıyla güncellendi ve diske kaydedildi.")
         except Exception as e:

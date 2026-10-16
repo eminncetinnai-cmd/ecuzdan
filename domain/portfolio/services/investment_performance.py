@@ -36,7 +36,10 @@ def _get_current_macro_inflation_context():
         from market_data_service import get_macro_economic_data
         from shared.decimal_precision import to_decimal
 
-        macro = get_macro_economic_data()
+        try:
+            macro = get_macro_economic_data(allow_network=False)
+        except TypeError:
+            macro = get_macro_economic_data()
         rate = macro.get('inflation_rate') if macro else None
         if rate is not None:
             return to_decimal(rate), macro.get('source', 'macro_service')
