@@ -17,10 +17,14 @@ def _parse_budget_limit(raw_value):
         raise ValueError("Aylık bütçe geçerli bir sayı olmalıdır.") from exc
     if not value.is_finite() or value < 0:
         raise ValueError("Aylık bütçe sıfır veya daha büyük olmalıdır.")
+    if value > Decimal('999999999999999.9999'):
+        raise ValueError("Aylık bütçe tutarı sistem sınırlarını aşıyor.")
     return value
 
 
 class CatalogService:
+    VALID_CATEGORY_TYPES = ('Gelir', 'Gider', 'Yatırım', 'Transfer')
+
     def __init__(self, repository=None):
         self.repository = repository
 
@@ -40,8 +44,9 @@ class CatalogService:
         action = form.get('action')
         if action == 'add_cat':
             name = form.get('name', '').strip()
-            category_type = form.get('type', '')
-            code = form.get('code', '').strip() or None
+            category_type = form.get('type', '').strip()
+            raw_code = form.get('code', '').strip()
+            code = raw_code.upper() if raw_code else None
             budget_limit = _parse_budget_limit(form.get('budget_limit', None))
             color = form.get('color', '').strip() or None
             icon = form.get('icon', '').strip() or None
@@ -56,8 +61,29 @@ class CatalogService:
 
             if not name:
                 raise ValueError("Kategori adı boş olamaz.")
+            if len(name) < 2:
+                raise ValueError("Kategori adı en az 2 karakter olmalıdır.")
+            if len(name) > 100:
+                raise ValueError("Kategori adı en fazla 100 karakter olabilir.")
+
+            if category_type not in self.VALID_CATEGORY_TYPES:
+                raise ValueError(f"Geçersiz kategori türü: '{category_type}'. Geçerli türler: {', '.join(self.VALID_CATEGORY_TYPES)}")
+
             if self.repository.category_exists(name, tenant_id):
                 raise ValueError("Bu kategori zaten mevcut.")
+
+            if parent_id:
+                parent_cat = self.repository.get_category(parent_id) if hasattr(self.repository, 'get_category') else None
+                if not parent_cat:
+                    raise ValueError("Seçilen üst kategori bulunamadı.")
+                if getattr(parent_cat, 'type', None) != category_type:
+                    raise ValueError(f"Üst kategori türü ({getattr(parent_cat, 'type', '')}) ile kategori türü ({category_type}) aynı olmalıdır.")
+
+            if code and hasattr(self.repository, 'find_category_by_code'):
+                existing_code = self.repository.find_category_by_code(code, tenant_id)
+                if existing_code:
+                    raise ValueError(f"'{code}' GL kodu zaten '{existing_code.name}' kategorisinde tanımlı.")
+
             self.repository.add_category(
                 name=name,
                 category_type=category_type,
@@ -73,9 +99,11 @@ class CatalogService:
             cat_id = form.get('cat_id')
             if not cat_id:
                 raise ValueError("Güncellenecek kategori seçilmedi.")
+            cat_id_int = int(cat_id)
             name = form.get('name', '').strip()
-            category_type = form.get('type', '')
-            code = form.get('code', '').strip() or None
+            category_type = form.get('type', '').strip()
+            raw_code = form.get('code', '').strip()
+            code = raw_code.upper() if raw_code else None
             color = form.get('color', '').strip() or None
             icon = form.get('icon', '').strip() or None
             budget_present = 'budget_limit' in form
@@ -101,8 +129,31 @@ class CatalogService:
 
             if not name:
                 raise ValueError("Kategori adı boş olamaz.")
+            if len(name) < 2:
+                raise ValueError("Kategori adı en az 2 karakter olmalıdır.")
+            if len(name) > 100:
+                raise ValueError("Kategori adı en fazla 100 karakter olabilir.")
+
+            if category_type not in self.VALID_CATEGORY_TYPES:
+                raise ValueError(f"Geçersiz kategori türü: '{category_type}'. Geçerli türler: {', '.join(self.VALID_CATEGORY_TYPES)}")
+
+            if parent_id and parent_id == cat_id_int:
+                raise ValueError("Bir kategori kendisinin üst kategorisi olamaz.")
+
+            if parent_id and parent_id != 0:
+                parent_cat = self.repository.get_category(parent_id) if hasattr(self.repository, 'get_category') else None
+                if not parent_cat:
+                    raise ValueError("Seçilen üst kategori bulunamadı.")
+                if getattr(parent_cat, 'type', None) != category_type:
+                    raise ValueError(f"Üst kategori türü ({getattr(parent_cat, 'type', '')}) ile kategori türü ({category_type}) aynı olmalıdır.")
+
+            if code and hasattr(self.repository, 'find_category_by_code'):
+                existing_code = self.repository.find_category_by_code(code, tenant_id)
+                if existing_code and getattr(existing_code, 'id', None) != cat_id_int:
+                    raise ValueError(f"'{code}' GL kodu zaten '{existing_code.name}' kategorisinde tanımlı.")
+
             self.repository.update_category(
-                category_id=int(cat_id),
+                category_id=cat_id_int,
                 new_name=name,
                 new_type=category_type,
                 tenant_id=tenant_id,
@@ -147,11 +198,34 @@ class CatalogService:
 
 
     def update_category(self, category_id, name, category_type, tenant_id=None, code=None, parent_id=None, budget_limit=None, budget_limit_provided=False, is_active=True, version=None, user_id=None, color=None, icon=None):
+        if not name:
+            raise ValueError("Kategori adı boş olamaz.")
+        if len(name) < 2:
+            raise ValueError("Kategori adı en az 2 karakter olmalıdır.")
+        if len(name) > 100:
+            raise ValueError("Kategori adı en fazla 100 karakter olabilir.")
+        if category_type not in self.VALID_CATEGORY_TYPES:
+            raise ValueError(f"Geçersiz kategori türü: '{category_type}'. Geçerli türler: {', '.join(self.VALID_CATEGORY_TYPES)}")
+        if parent_id and parent_id == category_id:
+            raise ValueError("Bir kategori kendisinin üst kategorisi olamaz.")
+        if parent_id and parent_id != 0:
+            parent_cat = self.repository.get_category(parent_id) if hasattr(self.repository, 'get_category') else None
+            if not parent_cat:
+                raise ValueError("Seçilen üst kategori bulunamadı.")
+            if getattr(parent_cat, 'type', None) != category_type:
+                raise ValueError(f"Üst kategori türü ({getattr(parent_cat, 'type', '')}) ile kategori türü ({category_type}) aynı olmalıdır.")
+
+        clean_code = code.strip().upper() if code else None
+        if clean_code and hasattr(self.repository, 'find_category_by_code'):
+            existing_code = self.repository.find_category_by_code(clean_code, tenant_id)
+            if existing_code and getattr(existing_code, 'id', None) != category_id:
+                raise ValueError(f"'{clean_code}' GL kodu zaten '{existing_code.name}' kategorisinde tanımlı.")
+
         normalized_budget = _parse_budget_limit(budget_limit) if budget_limit_provided else None
         return self.repository.update_category(
             category_id, name, category_type,
             tenant_id=tenant_id,
-            code=code,
+            code=clean_code,
             parent_id=parent_id,
             budget_limit=normalized_budget,
             budget_limit_provided=budget_limit_provided,

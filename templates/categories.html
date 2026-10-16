@@ -213,7 +213,7 @@
                                         class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition">
                                     <option value="">— Yok (Ana Kategori) —</option>
                                     {% for p in parent_cats %}
-                                    <option value="{{ p.id }}">{{ p.name }} ({{ p.type }})</option>
+                                    <option value="{{ p.id }}" data-type="{{ p.type }}">{{ p.name }} ({{ p.type }})</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -429,7 +429,9 @@
                                 data-id="{{ c.id }}"
                                 data-type="{{ c.type }}"
                                 data-name="{{ c.name|lower }}"
+                                data-raw-name="{{ c.name }}"
                                 data-code="{{ c.code|lower if c.code else '' }}"
+                                data-raw-code="{{ c.code or '' }}"
                                 data-budget="{{ b_limit }}"
                                 data-spent="{{ spent }}"
                                 data-pct="{{ pct }}"
@@ -439,6 +441,7 @@
                                 data-parent-id="{{ c.parent_id or '' }}"
                                 data-color="{{ c.color or '' }}"
                                 data-icon="{{ c.icon or '' }}"
+                                data-version="{{ c.version or 1 }}"
                                 data-usage="{{ tot_amt }}"
                                 data-tx-count="{{ tx_cnt }}">
                                 <td>
@@ -458,7 +461,7 @@
                                                 <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-slate-200 text-slate-600 uppercase tracking-wider">Arşiv</span>
                                                 {% endif %}
                                             </div>
-                                            {% if c.parent %}
+                                            {% if c.parent_id and c.parent %}
                                              <p class="text-[9.5px] text-slate-400 font-medium">Üst: {{ c.parent.name }}</p>
                                             {% endif %}
                                         </div>
@@ -503,7 +506,7 @@
                                 <td>
                                     {% if c.budget_limit %}
                                         <div class="space-y-1 min-w-[130px] cursor-pointer group"
-                                             onclick="editCategory({{ c.id }}, '{{ c.name }}', '{{ c.type }}', '{{ c.code or '' }}', '{{ c.budget_limit or '' }}', {{ c.version or 1 }}, {{ 'true' if c.tenant_id is none else 'false' }}, '{{ c.parent_id or '' }}', '{{ c.color or '' }}', '{{ c.icon or '' }}', this)"
+                                             onclick="editCategoryFromElement(this)"
                                              title="Aylık bütçe limitini düzenlemek için tıklayın">
                                             <div class="flex items-center justify-between text-[10px]">
                                                 <span class="font-extrabold {% if pct > 100 %}text-rose-600{% elif pct >= 80 %}text-amber-600{% else %}text-slate-700{% endif %}">
@@ -535,7 +538,7 @@
                                         </div>
                                     {% else %}
                                         <div class="cursor-pointer group flex items-center gap-1"
-                                             onclick="editCategory({{ c.id }}, '{{ c.name }}', '{{ c.type }}', '{{ c.code or '' }}', '', {{ c.version or 1 }}, {{ 'true' if c.tenant_id is none else 'false' }}, '{{ c.parent_id or '' }}', '{{ c.color or '' }}', '{{ c.icon or '' }}', this)"
+                                             onclick="editCategoryFromElement(this)"
                                              title="Aylık bütçe limiti belirlemek için tıklayın">
                                             <span class="text-[10px] text-slate-300 group-hover:text-indigo-600 transition font-medium">+ Bütçe Ekle</span>
                                         </div>
@@ -544,7 +547,7 @@
                                 <td class="text-right">
                                     <div class="flex items-center justify-end gap-1">
                                         {% if c.is_active %}
-                                            <button data-macro="button_secondary" type="button" onclick="editCategory({{ c.id }}, '{{ c.name }}', '{{ c.type }}', '{{ c.code or '' }}', '{{ c.budget_limit or '' }}', {{ c.version or 1 }}, {{ 'true' if c.tenant_id is none else 'false' }}, '{{ c.parent_id or '' }}', '{{ c.color or '' }}', '{{ c.icon or '' }}', this)"
+                                            <button data-macro="button_secondary" type="button" onclick="editCategoryFromElement(this)"
                                                     class="action-btn bg-slate-100 text-slate-500 hover:bg-indigo-600 hover:text-white"
                                                     aria-label="{{ c.name }} kategorisini düzenle"
                                                     title="{{ 'Aylık bütçeyi düzenle' if c.tenant_id is none else 'Düzenle' }}">

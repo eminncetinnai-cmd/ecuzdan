@@ -23,6 +23,7 @@ def _generate_gl_code(category_type: str, category_id: int) -> str:
     Prefix + hesap grubu numarası formatında üretilir:
       GLR-6001, GLR-6002 … (Gelir)
       GDR-7001, GDR-7002 … (Gider)
+      TRF-5001, TRF-5002 … (Transfer)
       YTR-1001, YTR-1002 … (Yatırım)
     """
     if category_type == 'Gelir':
@@ -31,6 +32,9 @@ def _generate_gl_code(category_type: str, category_id: int) -> str:
     elif category_type == 'Gider':
         base = 7000
         prefix = 'GDR'
+    elif category_type == 'Transfer':
+        base = 5000
+        prefix = 'TRF'
     else:  # Yatırım
         base = 1000
         prefix = 'YTR'
@@ -53,19 +57,32 @@ class CatalogRepository(BaseRepository, BaseRepositoryContract, CatalogRepositor
             )
         return query
 
+    def get_category(self, category_id):
+        return db.session.get(Category, category_id)
+
     def list_visible_categories(self, tenant_id=None, include_inactive=False):
-        categories = get_cached('categories', lambda: Category.query.options(joinedload(Category.parent)).order_by(Category.type, Category.name).all())
+        query = self.visible_categories_query(tenant_id).options(joinedload(Category.parent)).order_by(Category.type, Category.name)
         if not include_inactive:
-            categories = [cat for cat in categories if getattr(cat, 'is_active', True) is not False]
-        if tenant_id:
-            return [cat for cat in categories if cat.tenant_id is None or cat.tenant_id == tenant_id]
-        return categories
+            query = query.filter(Category.is_active.is_(True))
+        return query.all()
 
     def list_categories_by_type(self, category_type, tenant_id=None):
         return self.visible_categories_query(tenant_id).filter_by(type=category_type).all()
 
     def find_category_by_name(self, name, tenant_id=None):
-        query = Category.query.filter_by(name=name)
+        clean_name = (name or '').strip()
+        query = Category.query.filter(db.func.lower(Category.name) == clean_name.lower())
+        if tenant_id:
+            query = query.filter(
+                db.or_(Category.tenant_id.is_(None), Category.tenant_id == tenant_id)
+            )
+        return query.first()
+
+    def find_category_by_code(self, code, tenant_id=None):
+        if not code:
+            return None
+        clean_code = str(code).strip().upper()
+        query = Category.query.filter(db.func.upper(Category.code) == clean_code)
         if tenant_id:
             query = query.filter(
                 db.or_(Category.tenant_id.is_(None), Category.tenant_id == tenant_id)

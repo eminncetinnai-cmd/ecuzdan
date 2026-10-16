@@ -74,8 +74,32 @@ document.addEventListener('DOMContentLoaded', function () {
         if (targetTab) selectTab(targetTab, false);
     }
 
+    // Form submit validation & whitespace trimming
+    const catForm = document.getElementById('cat_form');
+    if (catForm) {
+        catForm.addEventListener('submit', function(e) {
+            const nameInput = document.getElementById('cat_name');
+            if (!nameInput) return;
+            const val = nameInput.value.trim();
+            if (!val || val.length < 2) {
+                e.preventDefault();
+                alert('Kategori adı en az 2 karakter olmalıdır.');
+                nameInput.focus();
+                return;
+            }
+            if (val.length > 100) {
+                e.preventDefault();
+                alert('Kategori adı en fazla 100 karakter olabilir.');
+                nameInput.focus();
+                return;
+            }
+            nameInput.value = val;
+        });
+    }
+
     // Başlangıç filtresi: Yalnızca aktifleri göster
     filterCats('all');
+    updateParentCategoryOptions();
 });
 
 // ── Renk seçici ───────────────────────────────────────────────────────────
@@ -91,6 +115,28 @@ function selectColor(color) {
     });
 }
 
+// ── Üst Kategori Filtreleme (Seçilen Türe Göre Dinamik Eşleşme) ───────────
+function updateParentCategoryOptions() {
+    const selectedRadio = document.querySelector('input[name="type"][type="radio"]:checked');
+    const standardInput = document.getElementById('cat_standard_type');
+    const selectedType = (standardInput && !standardInput.disabled && standardInput.value)
+        ? standardInput.value
+        : (selectedRadio?.value || 'Gider');
+    const parentSelect = document.getElementById('cat_parent_id');
+    if (!parentSelect) return;
+    const currentVal = parentSelect.value;
+    Array.from(parentSelect.options).forEach(opt => {
+        if (!opt.value) return; // 'Yok (Ana Kategori)' seçeneği her zaman aktif
+        const optType = opt.dataset.type;
+        const matches = !optType || optType === selectedType;
+        opt.hidden = !matches;
+        opt.disabled = !matches;
+        if (!matches && opt.value === currentVal) {
+            parentSelect.value = '';
+        }
+    });
+}
+
 // ── Tür seçici (radio buton görsel) ──────────────────────────────────────
 function updateTypeVisual() {
     document.querySelectorAll('input[name="type"][type="radio"]').forEach(radio => {
@@ -102,6 +148,7 @@ function updateTypeVisual() {
             div.classList.remove('border-current', 'shadow-sm');
         }
     });
+    updateParentCategoryOptions();
 }
 
 // ── Kategori arama ────────────────────────────────────────────────────────
@@ -297,6 +344,24 @@ function exportCategoriesToCsv() {
 
 // ── Kategori Düzenle ──────────────────────────────────────────────────────
 let currentCatRow = null;
+
+function editCategoryFromElement(el) {
+    if (!el) return;
+    const row = el.closest('tr');
+    if (!row) return;
+    const d = row.dataset;
+    const id = parseInt(d.id, 10);
+    const name = d.rawName || d.name || '';
+    const type = d.type || 'Gider';
+    const code = d.rawCode || d.code || '';
+    const budget = parseFloat(d.budget || '0') > 0 ? d.budget : '';
+    const version = parseInt(d.version || '1', 10);
+    const isStandard = d.standard === 'true';
+    const parentId = d.parentId || '';
+    const color = d.color || '';
+    const icon = d.icon || '';
+    editCategory(id, name, type, code, budget, version, isStandard, parentId, color, icon, el);
+}
 
 function editCategory(id, name, type, code, budgetLimit, version, isStandard, parentId, color, icon, btn) {
     if (currentCatRow) currentCatRow.classList.remove('edit-mode-active');

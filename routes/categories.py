@@ -43,21 +43,30 @@ def register_category_routes(bp):
                     msg = 'Varlık sınıfı başarıyla kaydedildi!'
                 elif 'asset_sector' in action:
                     msg = 'Varlık sektörü başarıyla kaydedildi!'
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+                    return {'status': 'success', 'message': msg}, 200
                 flash(msg, 'success')
+                return redirect(url_for('categories.categories_page'))
             except ValueError as e:
                 rollback_session()
-                flash(i18n.gettext("ui_auto_fd071d7a0a0b", **{"str(e)": str(e)}), 'error')
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+                    return {'status': 'error', 'message': str(e)}, 400
+                flash(str(e), 'error')
+                return redirect(url_for('categories.categories_page'))
             except Exception as e:
                 logger.exception(f"Category page POST error: {e}")
                 rollback_session()
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+                    return {'status': 'error', 'message': i18n.gettext("ui_auto_620f4a506b50")}, 500
                 flash(i18n.gettext("ui_auto_620f4a506b50"), 'error')
+                return redirect(url_for('categories.categories_page'))
 
         try:
             return render_template('categories.html', **catalog_service.page_context(get_tenant_id()))
         except Exception as e:
             logger.exception(f"Categories page error: {e}")
             flash(i18n.gettext("ui_auto_4a9393fda386"), 'error')
-            return render_template('categories.html', cats=[], asset_types=[], asset_sectors=[])
+            return render_template('categories.html', cats=[], asset_types=[], asset_sectors=[], metrics={}, parent_cats=[])
 
     @bp.route('/update_category/<int:id>', methods=['POST'])
     @login_required
