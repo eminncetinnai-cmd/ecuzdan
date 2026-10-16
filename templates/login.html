@@ -566,6 +566,102 @@
             color: var(--color-slate-600);
             margin-top: 1.75rem;
         }
+
+        /* ─── MOBILE BRAND BANNER & RESPONSIVE REFINEMENTS (< 1024px) ─── */
+        .mobile-brand-banner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            width: 100%;
+        }
+
+        .mobile-brand-cluster {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            padding: 0.45rem 1rem;
+            border-radius: var(--border-radius-16, 16px);
+            background: rgba(255, 255, 255, 0.035);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.3s ease;
+        }
+
+        .mobile-brand-cluster:hover,
+        .mobile-brand-cluster:active {
+            transform: scale(1.03) translateY(-1px);
+            border-color: rgba(139, 92, 246, 0.35);
+        }
+
+        .mobile-brand-emblem-wrap {
+            width: 44px;
+            height: 44px;
+            flex-shrink: 0;
+            position: relative;
+            filter: drop-shadow(0 8px 20px rgba(139, 92, 246, 0.45));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mobile-brand-emblem-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .mobile-brand-titles {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+
+        .mobile-brand-name-text {
+            font-size: var(--font-size-20, 20px);
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #ffffff 0%, var(--color-slate-300) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.15;
+        }
+
+        .mobile-brand-tag-text {
+            font-size: var(--font-size-9, 9px);
+            font-weight: 800;
+            letter-spacing: 0.22em;
+            color: var(--color-violet-500);
+            text-transform: uppercase;
+        }
+
+        @media (min-width: 1024px) {
+            .mobile-brand-banner {
+                display: none !important;
+            }
+        }
+
+        @media (max-width: 1023px) {
+            .viewport-shell {
+                overflow-y: auto;
+                height: 100%;
+                min-height: 100vh;
+            }
+            .login-stage {
+                padding: 1.5rem 1rem;
+                width: 100%;
+            }
+            .login-card {
+                padding: 2rem 1.5rem;
+                border-radius: var(--border-radius-24, 24px);
+            }
+            .card-header-cluster {
+                margin-bottom: 1.5rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -653,6 +749,19 @@
                     <div class="card-glare"></div>
                     <div class="card-inner">
                         
+                        <!-- Mobile Brand Logo (< 1024px) -->
+                        <div class="mobile-brand-banner">
+                            <a href="/" class="mobile-brand-cluster">
+                                <div class="mobile-brand-emblem-wrap">
+                                    <img src="{{ static_asset_url('img/logo-icon.svg') }}" alt="E-Cüzdan Logo" width="44" height="44">
+                                </div>
+                                <div class="mobile-brand-titles">
+                                    <span class="mobile-brand-name-text">E-CÜZDAN</span>
+                                    <span class="mobile-brand-tag-text">{{ _('ui_auto_385373bdc571') }}</span>
+                                </div>
+                            </a>
+                        </div>
+
                         <!-- Header inside card -->
                         <div class="card-header-cluster">
                             <div class="card-eyebrow">{{ _('ui_auto_9975f2bf7f5f') }}</div>
