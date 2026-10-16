@@ -496,7 +496,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                 </svg>
                             </button>
-                            <div id="userDropdownPanel" class="user-dropdown-panel hidden absolute right-0 top-full mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200/50 p-2 z-50">
+                            <div id="userDropdownPanel" class="user-dropdown-panel hidden absolute right-0 top-full mt-2 w-56 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200/50 dark:border-slate-800/80 p-2 z-50">
                                 <!-- Notifications Link -->
                                 <a href="#" onclick="openNotificationModal(); return false;" class="dropdown-control-row flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 transition">
                                     <div class="relative">
@@ -506,12 +506,12 @@
                                     <span class="text-xs font-semibold text-slate-700">{{ _('nav_notifications') }}</span>
                                 </a>
                                 <!-- Theme Toggle -->
-                                <button data-macro="button_secondary" type="button" onclick="toggleTheme()" class="dropdown-control-row header-control dropdown-theme-control theme-toggle-btn flex items-center justify-center w-10 h-10 rounded-xl transition-all" title="{{ _('theme_toggle') }}" aria-label="{{ _('theme_toggle') }}" aria-pressed="false" data-theme-toggle data-theme-state="light">
+                                <button data-macro="button_secondary" type="button" onclick="toggleTheme()" class="dropdown-control-row dropdown-theme-control theme-toggle-btn flex items-center w-full rounded-xl transition-all cursor-pointer" title="{{ _('theme_toggle') }}" aria-label="{{ _('theme_toggle') }}" aria-pressed="false" data-theme-toggle data-theme-state="light">
                                     <span class="theme-toggle-icon-wrap" aria-hidden="true">
-                                        <svg class="w-5 h-5 text-slate-600 dark-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-4 h-4 text-slate-600 dark-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
                                         </svg>
-                                        <svg class="w-5 h-5 text-slate-600 light-icon hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-4 h-4 text-slate-600 light-icon hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
                                         </svg>
                                     </span>
