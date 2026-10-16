@@ -50,6 +50,10 @@ _ROOT_ALLOWED_FILES = {
     "package-lock.json",
     "tailwind.config.js",
     "requirements.txt",
+    "render.yaml",
+    "neon.ts",
+    "skills-lock.json",
+    ".neon",
 }
 _ROOT_ALLOWED_PATTERNS = [
     re.compile(r"^client_secret_.*\.json$"),

@@ -98,6 +98,14 @@ _ROOT_ALLOWED_EXACT = {
     "start_e_cuzdan.bat",
     "README.md",
     "AGENTS.md",
+    "package.json",
+    "package-lock.json",
+    "tailwind.config.js",
+    "requirements.txt",
+    "render.yaml",
+    "neon.ts",
+    "skills-lock.json",
+    ".neon",
 }
 
 _ROOT_ALLOWED_PATTERNS = [
