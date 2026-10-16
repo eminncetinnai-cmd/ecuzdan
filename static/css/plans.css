@@ -334,21 +334,25 @@ html.dark .plan-desktop-table table tbody tr:hover td:last-child {
     color: #e2e8f0;
 }
 
+html.dark .plan-btn-secondary:hover,
 [data-theme="dark"] .plan-btn-secondary:hover {
     background: rgba(49, 46, 129, 0.4);
     border-color: #818cf8;
 }
 
+html.dark .plan-detail-panel,
 [data-theme="dark"] .plan-detail-panel {
     background: #0f172a;
     border-color: rgba(51, 65, 85, 0.8);
 }
 
+html.dark .plan-empty-state,
 [data-theme="dark"] .plan-empty-state {
     background: rgba(15, 23, 42, 0.6);
     border-color: rgba(51, 65, 85, 0.6);
 }
 
+html.dark .tab-btn.active,
 [data-theme="dark"] .tab-btn.active {
     background-color: rgba(30, 41, 59, 0.8);
     color: #818cf8;

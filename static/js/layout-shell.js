@@ -109,13 +109,13 @@ async function loadNotifications() {
 
             // Show error message only if there's an actual error, not just empty results
             if (data.message) {
-                list.innerHTML = '<div class="text-center py-8 text-slate-500 text-sm">' + __t('notifications_load_failed') + '</div>';
+                list.innerHTML = '<div class="text-center py-8 text-slate-500 dark:text-slate-400 text-sm">' + __t('notifications_load_failed') + '</div>';
             } else {
-                list.innerHTML = '<div class="text-center py-8 text-slate-500 text-sm">' + __t('notifications_empty_text') + '</div>';
+                list.innerHTML = '<div class="text-center py-8 text-slate-500 dark:text-slate-400 text-sm">' + __t('notifications_empty_text') + '</div>';
             }
         }
         } catch (error) {
-        list.innerHTML = '<div class="text-center py-8 text-slate-500 text-sm">' + __t('notifications_load_failed') + '</div>';
+        list.innerHTML = '<div class="text-center py-8 text-slate-500 dark:text-slate-400 text-sm">' + __t('notifications_load_failed') + '</div>';
     }
 
 }
@@ -126,18 +126,18 @@ function renderNotifications(items) {
     
         if (!items || items.length === 0) {
 
-        list.innerHTML = '<div class="text-center py-8 text-slate-500 text-sm">' + __t('notifications_empty_text') + '</div>';
+        list.innerHTML = '<div class="text-center py-8 text-slate-500 dark:text-slate-400 text-sm">' + __t('notifications_empty_text') + '</div>';
         return;
     }
     
     list.innerHTML = items.map(item => `
-        <div class="notification-item p-3 rounded-xl hover:bg-slate-50 transition cursor-pointer ${item.is_read ? 'opacity-60' : ''}" onclick="markAsRead(${item.id})">
+        <div class="notification-item p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition cursor-pointer ${item.is_read ? 'opacity-60' : ''}" onclick="markAsRead(${item.id})">
             <div class="flex items-start gap-3">
                 <div class="flex-shrink-0 w-2 h-2 rounded-full mt-2 ${getSeverityColor(item.severity)}"></div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-xs font-semibold text-slate-800 truncate">${escapeHtml(item.title)}</p>
-                    <p class="text-[10px] text-slate-500 mt-1 line-clamp-2">${escapeHtml(item.body)}</p>
-                    <p class="text-[9px] text-slate-400 mt-1">${item.created_at}</p>
+                    <p class="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate">${escapeHtml(item.title)}</p>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">${escapeHtml(item.body)}</p>
+                    <p class="text-[9px] text-slate-400 dark:text-slate-500 mt-1">${item.created_at}</p>
                 </div>
             </div>
         </div>

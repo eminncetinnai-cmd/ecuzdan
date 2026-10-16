@@ -1,23 +1,23 @@
 <!-- Global Confirm Modal Widget -->
 <div id="globalConfirmModal" class="modal-overlay hidden z-[10000]">
     <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeGlobalConfirm()"></div>
-    <div class="relative bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full mx-4 border border-slate-100 transform transition-all">
+    <div class="relative bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-8 max-w-sm w-full mx-4 border border-slate-100 dark:border-slate-800 transform transition-all">
         <div class="flex items-center gap-4 mb-5">
-            <div id="globalConfirmIconContainer" class="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 bg-indigo-100 text-indigo-600">
+            <div id="globalConfirmIconContainer" class="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">
                 <svg id="globalConfirmIcon" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
             </div>
             <div>
-                <h3 id="globalConfirmTitle" class="font-black text-slate-900 text-base uppercase tracking-tight">{{ _('confirm_waiting') }}</h3>
-                <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">{{ _('confirm_instruction') }}</p>
+                <h3 id="globalConfirmTitle" class="font-black text-slate-900 dark:text-white text-base uppercase tracking-tight">{{ _('confirm_waiting') }}</h3>
+                <p class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">{{ _('confirm_instruction') }}</p>
             </div>
         </div>
 
-        <p id="globalConfirmMessage" class="text-sm text-slate-600 font-medium mb-6">{{ _('confirm_message') }}</p>
+        <p id="globalConfirmMessage" class="text-sm text-slate-600 dark:text-slate-300 font-medium mb-6">{{ _('confirm_message') }}</p>
 
         <div class="flex gap-3">
-            <button data-macro="button_secondary" type="button" onclick="closeGlobalConfirm()" class="flex-1 px-4 py-3 rounded-xl font-bold text-[11px] uppercase bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">
+            <button data-macro="button_secondary" type="button" onclick="closeGlobalConfirm()" class="flex-1 px-4 py-3 rounded-xl font-bold text-[11px] uppercase bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer">
                 {{ _('cancel') if _('cancel') != 'cancel' else 'İptal' }}
             </button>
             <button data-macro="button_secondary" type="button" id="globalConfirmBtn" class="flex-1 px-4 py-3 rounded-xl font-black text-[11px] uppercase text-white shadow-lg transition cursor-pointer">

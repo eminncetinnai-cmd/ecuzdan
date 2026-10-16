@@ -1083,11 +1083,6 @@ footer {
         height: 36px;
     }
     
-    .theme-toggle-btn {
-        width: 36px;
-        height: 36px;
-    }
-    
     .privacy-toggle {
         width: 36px;
         height: 36px;
@@ -1155,7 +1150,6 @@ footer {
     }
     
     .calculator-btn,
-    .theme-toggle-btn,
     .privacy-toggle {
         width: 32px;
         height: 32px;
@@ -1303,7 +1297,6 @@ html.dark #headerBar {
     justify-content: center;
 }
 #headerBar .calculator-btn,
-#headerBar .theme-toggle-btn,
 #headerBar .privacy-toggle {
     width: 2.5rem;
     min-width: 2.5rem;
@@ -1427,8 +1420,7 @@ html.dark #headerBar {
         display: none;
     }
     #headerBar .calculator-btn,
-#headerBar .theme-toggle-btn,
-#headerBar .privacy-toggle {
+    #headerBar .privacy-toggle {
         width: 2.25rem;
         min-width: 2.25rem;
     }
@@ -1478,7 +1470,6 @@ html.dark #headerBar {
     #headerBar .global-search-btn,
 #headerBar .quick-actions-btn,
 #headerBar .calculator-btn,
-#headerBar .theme-toggle-btn,
 #headerBar .privacy-toggle {
         width: 2.1rem;
         min-width: 2.1rem;
@@ -1804,31 +1795,32 @@ html.theme-transition .theme-toggle-btn {
         transition: none !important;
     }
 }
-@media (max-width: 760px) {
-    #headerBar .theme-toggle-btn .theme-toggle-state {
-        display: none;
-    }
-    #headerBar .theme-toggle-btn .theme-toggle-icon-wrap {
-        margin-inline: auto;
-    }
+#headerBar .user-dropdown-panel .theme-toggle-btn {
+    display: flex !important;
+    width: 100% !important;
+    justify-content: flex-start !important;
+    min-height: 2.75rem;
+    height: auto;
+    padding: 0.65rem 0.75rem;
+    gap: 0.75rem;
+    background: var(--theme-toggle-bg) !important;
+    border: 1px solid var(--theme-toggle-border) !important;
+    color: var(--theme-toggle-text) !important;
+    box-shadow: var(--theme-toggle-glow);
 }
-@media (min-width: 761px) {
+#headerBar .user-dropdown-panel .theme-toggle-btn:hover,
+#headerBar .user-dropdown-panel .theme-toggle-btn:focus-visible {
+    background: var(--theme-toggle-bg-hover) !important;
+    border-color: var(--theme-toggle-border) !important;
+    box-shadow: var(--theme-toggle-glow);
+}
+#headerBar .user-dropdown-panel .theme-toggle-btn .theme-toggle-state {
+    display: inline-flex !important;
+}
+@media (max-width: 480px) {
     #headerBar .user-dropdown-panel .theme-toggle-btn {
-        justify-content: flex-start;
-        min-height: 2.75rem;
-        height: 2.75rem;
-        padding-inline: .75rem;
-        gap: .75rem;
-        background: var(--theme-toggle-bg) !important;
-        border-color: var(--theme-toggle-border) !important;
-        color: var(--theme-toggle-text) !important;
-        box-shadow: var(--theme-toggle-glow);
-    }
-    #headerBar .user-dropdown-panel .theme-toggle-btn:hover,
-    #headerBar .user-dropdown-panel .theme-toggle-btn:focus-visible {
-        background: var(--theme-toggle-bg-hover) !important;
-        border-color: var(--theme-toggle-border) !important;
-        box-shadow: var(--theme-toggle-glow);
+        min-height: 2.5rem;
+        padding: 0.55rem 0.65rem;
     }
 }
 
