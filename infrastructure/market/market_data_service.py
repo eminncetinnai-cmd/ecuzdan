@@ -442,7 +442,7 @@ def _fetch_macro_from_tcmb():
         return None, None
 
 
-def get_macro_economic_data():
+def get_macro_economic_data(allow_network: bool = True):
     """
     Türkiye makroekonomik verilerini dinamik olarak çeker.
     Kaynak önceliği:
@@ -491,6 +491,16 @@ def get_macro_economic_data():
     # Son geçerli önbellek değerlerini yedek olarak sakla
     cached_interest = MACRO_CACHE["data"].get('interest_rate', 37.0) if MACRO_CACHE["data"] else 37.0
     cached_inflation = MACRO_CACHE["data"].get('inflation_rate', 47.5) if MACRO_CACHE["data"] else 47.5
+
+    if not allow_network:
+        real_return = max(0.0, cached_interest - cached_inflation)
+        return {
+            'inflation_rate': cached_inflation,
+            'interest_rate': cached_interest,
+            'real_return_rate': round(real_return, 1),
+            'last_updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'source': 'cache' if MACRO_CACHE["data"] else 'default',
+        }
 
     interest_rate = None
     inflation_rate = None

@@ -189,7 +189,7 @@ def setup_logging(app=None, level=logging.INFO):
     # Set specific log levels for external libraries
     logging.getLogger('werkzeug').setLevel(logging.WARNING)
     logging.getLogger('urllib3').setLevel(logging.WARNING)
-    logging.getLogger('yfinance').setLevel(logging.WARNING)
+    logging.getLogger('yfinance').setLevel(logging.CRITICAL)
     logging.getLogger('peewee').setLevel(logging.WARNING)      # peewee SQL sorgularını bastır
     logging.getLogger('hpack').setLevel(logging.WARNING)
     logging.getLogger('httpcore').setLevel(logging.WARNING)

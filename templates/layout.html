@@ -87,7 +87,7 @@
     {% include 'widgets/notification_modal.html' %}
 
     <script>
-        window.ECuzdanI18n = {{ translation_catalog|tojson }};
+        window.ECuzdanI18n = {{ (client_translation_catalog if client_translation_catalog is defined else translation_catalog)|tojson }};
         window.BASE_CURRENCY_CODE = {{ (base_currency_code or 'TRY')|tojson }};
         window.BASE_CURRENCY_SYMBOL = {{ (base_currency_symbol or '₺')|tojson }};
     </script>

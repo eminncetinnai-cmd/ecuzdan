@@ -384,14 +384,18 @@
     </section>
 
     <!-- ── 5. Institutional Comparison Matrix Table ──────────────────────── -->
-    <section class="modern-table-surface" aria-label="20 Rasyo Karşılaştırma Matrisi">
-        <div class="table-surface-header">
+    <details class="modern-table-surface group" aria-label="20 Rasyo Karşılaştırma Matrisi">
+        <summary class="table-surface-header cursor-pointer list-none select-none">
             <div>
                 <h2 class="table-surface-title">20 Makro Rasyo Karşılaştırma ve Analiz Matrisi</h2>
                 <p class="table-surface-subtitle">Sütun başlıklarına tıklayarak artan veya azalan sıralayabilirsiniz</p>
             </div>
-            <span class="matrix-filter-count" id="tableRowCountDisplay">20 Rasyo Listelendi</span>
-        </div>
+            <div class="flex items-center gap-2">
+                <span class="matrix-filter-count" id="tableRowCountDisplay">20 Rasyo Listelendi</span>
+                <span class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 group-open:hidden">Tabloyu Aç ▼</span>
+                <span class="text-xs font-semibold text-slate-400 hidden group-open:inline">Gizle ▲</span>
+            </div>
+        </summary>
 
         <div class="fin-table-scroll">
             <table class="fin-matrix-table" id="ratiosMatrixTable">
@@ -462,7 +466,7 @@
                 </tbody>
             </table>
         </div>
-    </section>
+    </details>
 
     <!-- ── 6. Executive Briefing Modal (Printable & Copyable) ────────────── -->
     <div id="executiveBriefingModal" class="fin-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="briefingModalTitle">

@@ -91,7 +91,19 @@ class LedgerWatchdogWorker:
                 else:
                     self.run_once()
             except Exception as exc:
-                logger.exception("Unexpected error in LedgerWatchdogWorker execution: %s", exc)
+                try:
+                    from shared.db import db
+                    if self._app:
+                        with self._app.app_context():
+                            db.session.rollback()
+                    else:
+                        db.session.rollback()
+                except Exception:
+                    pass
+                if "no such table" in str(exc).lower():
+                    logger.debug("LedgerWatchdogWorker schema not ready yet: %s", exc)
+                else:
+                    logger.exception("Unexpected error in LedgerWatchdogWorker execution: %s", exc)
 
             # Wait for next interval or stop event
             if self._stop_event.wait(float(self._interval)):

@@ -393,7 +393,8 @@
                 </thead>
                 <tbody id="tcmbMonthlyTableBody">
                     {% for row in data.monthly_table %}
-                    <tr data-year="{{ row.date.split('-')[0] }}"
+                    <tr class="{% if loop.index > 12 %}tcmb-older-row hidden{% endif %}"
+                        data-year="{{ row.date.split('-')[0] }}"
                         data-date="{{ row.date }}"
                         data-gross="{{ row.gross_total }}"
                         data-fx="{{ row.gross_fx }}"
@@ -429,6 +430,15 @@
                 </tbody>
             </table>
         </div>
+        {% if data.monthly_table|length > 12 %}
+        <div class="p-3 border-t border-slate-100 dark:border-slate-800 flex justify-center">
+            <button data-macro="button_secondary" type="button" id="btnToggleTcmbHistory"
+                onclick="const rows = document.querySelectorAll('.tcmb-older-row'); const isHidden = rows[0] && rows[0].classList.contains('hidden'); rows.forEach(r => r.classList.toggle('hidden', !isHidden)); this.textContent = isHidden ? 'Son 12 Döneme Daralt ▲' : 'Tüm {{ data.monthly_table|length }} Dönemi Göster ▼';"
+                class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 px-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/70 transition-colors">
+                Tüm {{ data.monthly_table|length }} Dönemi Göster ▼
+            </button>
+        </div>
+        {% endif %}
     </section>
 
     <!-- ── 6. Executive Reserve Briefing Modal (Printable & Copyable) ────── -->

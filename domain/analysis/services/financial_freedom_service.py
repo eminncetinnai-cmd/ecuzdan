@@ -57,14 +57,23 @@ def _resolve_freedom_assumptions(preferences):
     }
 
 
-def get_dynamic_return_rate():
+def _fetch_macro_data_fast():
+    """HTTP isteğini bloklamadan önbellek/varsayılan makro veriyi döndürür."""
+    from market_data_service import get_macro_economic_data
+    try:
+        return get_macro_economic_data(allow_network=False)
+    except TypeError:
+        return get_macro_economic_data()
+
+
+def get_dynamic_return_rate(macro_data=None):
     """Dinamik reel getiri oranını piyasa verisinden çeker.
 
     Varsayılan %7, piyasa verisi varsa güncel değer kullanılır.
     """
     try:
-        from market_data_service import get_macro_economic_data
-        macro_data = get_macro_economic_data()
+        if macro_data is None:
+            macro_data = _fetch_macro_data_fast()
         if macro_data and 'real_return_rate' in macro_data:
             return macro_data['real_return_rate'] / 100  # %'yi decimal'e çevir
     except Exception as e:
@@ -247,15 +256,9 @@ def calculate_financial_freedom_analysis(tenant_id=None, preferences=None):
         or (safe_withdrawal_monthly >= monthly_avg_expenses and fi_progress_pct >= 100)
     )
 
-    years_to_fi = _years_to_financial_independence(
-        investable, monthly_savings, monthly_avg_expenses,
-        fi_multiplier=assumptions['fi_multiplier'],
-    )
-
-    # Makroekonomik verileri çek
+    # Makroekonomik verileri bir kez çek (ağ bloklaması olmadan)
     try:
-        from market_data_service import get_macro_economic_data
-        macro_data = get_macro_economic_data()
+        macro_data = _fetch_macro_data_fast()
     except Exception as e:
         logger.warning(f"Failed to fetch macro data: {e}")
         macro_data = {
@@ -264,6 +267,13 @@ def calculate_financial_freedom_analysis(tenant_id=None, preferences=None):
             'real_return_rate': 7,
             'source': 'default'
         }
+
+    dynamic_return = get_dynamic_return_rate(macro_data=macro_data)
+    years_to_fi = _years_to_financial_independence(
+        investable, monthly_savings, monthly_avg_expenses,
+        annual_return=dynamic_return,
+        fi_multiplier=assumptions['fi_multiplier'],
+    )
     estimated_freedom_date = None
     if years_to_fi is not None and years_to_fi > 0:
         est = datetime.now() + timedelta(days=int(years_to_fi * 365.25))

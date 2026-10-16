@@ -98,6 +98,7 @@ class BackgroundService:
     def __init__(self, flask_app=None):
         self._flask_app = flask_app
         self._lock = threading.Lock()
+        self._yf_lock = threading.Lock()
         self._live_data = {"weather": "--°C", "usd": "--", "eur": "--", "gold": "--", "last_updated": "", "is_stale": False}
         self._live_provider_status = {
             "provider_by_field": {},
@@ -245,12 +246,26 @@ class BackgroundService:
         except Exception as exc:
             logger.debug('Log alert check skipped: %s', exc)
 
+    def _market_cache_is_fresh(self, max_age_seconds: float = 3600.0) -> bool:
+        """Diskteki piyasa verisi önbelleği tüm varlıkları içeriyor ve tazeyse True döner."""
+        with self._lock:
+            if not self._market_data or not all(k in self._market_data for k in MARKET_ASSETS):
+                return False
+        market_file = os.path.join(self._instance_dir, 'market_data_cache.json')
+        if not os.path.exists(market_file) and os.path.exists(MARKET_CACHE_FILE):
+            market_file = MARKET_CACHE_FILE
+        try:
+            return os.path.exists(market_file) and (time.time() - os.path.getmtime(market_file)) < max_age_seconds
+        except OSError:
+            return False
+
     def _update_all(self):
         """Tüm verileri güncelle ve kaydet"""
         try:
             logger.debug("Piyasa ve canlı veriler güncelleniyor...")
             self._update_live_data()
-            self._update_market_data()
+            if not self._market_cache_is_fresh():
+                self._update_market_data()
             self._save_cache()
             logger.debug("Tüm veriler başarıyla güncellendi ve diske kaydedildi.")
         except Exception as e:
@@ -359,7 +374,8 @@ class BackgroundService:
         """yfinance üzerinden tek bir varlığın tarihsel verisini zaman sınırlı çeker."""
         try:
             logger.debug("yfinance ile veri çekiliyor: %s", ticker)
-            data = _yf().download(ticker, period='10y', interval='1mo', progress=False, timeout=6.0)
+            with self._yf_lock:
+                data = _yf().download(ticker, period='10y', interval='1mo', progress=False, timeout=6.0)
             if data is not None and not data.empty:
                 close_prices = data[['Close']].copy()
                 close_prices.columns = ['price']

@@ -10,6 +10,34 @@ SESSION_LANGUAGE_SOURCE_EXPLICIT = 'explicit'
 SESSION_LANGUAGE_SOURCE_USER = 'user'
 
 
+CLIENT_KEY_PREFIXES = (
+    'btn_',
+    'common_',
+    'error_',
+    'fd_',
+    'fe_',
+    'logbook_',
+    'nav_',
+    'notification_',
+    'notifications_',
+    'plans_',
+    'tx_',
+)
+CLIENT_EXACT_KEYS = frozenset({
+    'loading',
+    'ui_auto_0327cf1e733b',
+    'ui_auto_17a41349037a',
+    'ui_auto_34474ae1b0ec',
+    'ui_auto_384b26b24495',
+    'ui_auto_8744a7512d1b',
+    'ui_auto_9792f0920af8',
+    'ui_auto_9816fd0aaa5f',
+    'ui_auto_a100c3d23a60',
+    'ui_auto_ce3b7a0ce97b',
+    'ui_auto_ddf6a1f0ce8c',
+})
+
+
 class _PreserveMissingFormat(dict):
     """Keep untranslated format placeholders intact when no runtime value is supplied."""
 
@@ -21,6 +49,7 @@ class I18n:
     def __init__(self, app=None):
         self.app = app
         self.translations = {}
+        self.client_translations = {}
         self.default_lang = DEFAULT_LANGUAGE
         if app is not None:
             self.init_app(app)
@@ -42,13 +71,25 @@ class I18n:
             app.context_processor(self.inject_gettext)
         extensions['e_cuzdan_i18n'] = self
 
+    @staticmethod
+    def _build_client_catalog(catalog):
+        if not catalog:
+            return {}
+        return {
+            k: v
+            for k, v in catalog.items()
+            if k in CLIENT_EXACT_KEYS or k.startswith(CLIENT_KEY_PREFIXES)
+        }
+
     def load_translations(self):
         for filename in os.listdir(self.translation_folder):
             if filename.endswith('.json'):
                 lang_code = filename.split('.')[0]
                 filepath = os.path.join(self.translation_folder, filename)
                 with open(filepath, 'r', encoding='utf-8') as f:
-                    self.translations[lang_code] = json.load(f)
+                    catalog = json.load(f)
+                    self.translations[lang_code] = catalog
+                    self.client_translations[lang_code] = self._build_client_catalog(catalog)
 
     def normalize_locale(self, value):
         """Return a supported base locale, or ``None`` for invalid input."""
@@ -102,13 +143,21 @@ class I18n:
         return translation.format_map(_PreserveMissingFormat(variables))
 
     def inject_gettext(self):
-        locale = self.get_locale() if has_request_context() else self.default_lang
+        if has_request_context():
+            locale = g.get('lang') or self.get_locale()
+        else:
+            locale = self.default_lang
+        full_catalog = self.translations.get(locale, {})
+        client_catalog = self.client_translations.get(locale)
+        if client_catalog is None:
+            client_catalog = self._build_client_catalog(full_catalog)
         return dict(
             _=self.gettext,
             get_locale=self.get_locale,
             lang=locale,
             available_languages=tuple(sorted(self.translations)),
-            translation_catalog=self.translations.get(locale, {}),
+            translation_catalog=full_catalog,
+            client_translation_catalog=client_catalog,
         )
 
 i18n = I18n() # Global i18n objesi

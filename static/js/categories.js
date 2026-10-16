@@ -383,6 +383,8 @@ function editCategory(id, name, type, code, budgetLimit, version, isStandard, pa
     }
     const cancelBtn = document.getElementById('cat_cancel_btn');
     if (cancelBtn) cancelBtn.classList.remove('hidden');
+    const advDetails = document.getElementById('cat_advanced_fields');
+    if (advDetails) advDetails.open = true;
 
     if (catForm) {
         catForm.scrollIntoView({ behavior: 'smooth', block: 'start' });

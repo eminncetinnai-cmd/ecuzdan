@@ -52,7 +52,10 @@ def get_dynamic_turkey_macro(preferences=None):
     macro = TURKEY_MACRO
     try:
         from market_data_service import get_macro_economic_data
-        macro_data = get_macro_economic_data()
+        try:
+            macro_data = get_macro_economic_data(allow_network=False)
+        except TypeError:
+            macro_data = get_macro_economic_data()
         if macro_data and 'inflation_rate' in macro_data:
             inflation = macro_data['inflation_rate'] / 100
             interest = macro_data['interest_rate'] / 100

@@ -216,14 +216,20 @@
             </div>
 
             <!-- Özel Kod (Special Code) -->
-            <div class="mt-4 pt-4 border-t border-slate-200">
-                <div class="flex items-center gap-3 mb-3">
-                    <div class="bg-amber-100 p-2 rounded-lg">
-                        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 7a2 2 0 012 2h4a2 2 0 012 2v9a2 2 0 01-2 2h-4a2 2 0 01-2-2V9a2 2 0 012-2zm-6 0H5a2 2 0 00-2 2v9a2 2 0 002 2h4a2 2 0 002-2V9a2 2 0 00-2-2z"></path><path d="M15 7V9a2 2 0 012 2h4M9 7V9a2 2 0 00-2 2H5M9 7H5a2 2 0 00-2 2v9a2 2 0 002 2h4a2 2 0 002-2V9a2 2 0 00-2-2z"></path></svg>
+            <details class="mt-4 pt-3 border-t border-slate-200 group">
+                <summary class="flex items-center justify-between cursor-pointer list-none select-none">
+                    <div class="flex items-center gap-2.5">
+                        <div class="bg-amber-100 p-1.5 rounded-lg">
+                            <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 7a2 2 0 012 2h4a2 2 0 012 2v9a2 2 0 01-2 2h-4a2 2 0 01-2-2V9a2 2 0 012-2zm-6 0H5a2 2 0 00-2 2v9a2 2 0 002 2h4a2 2 0 002-2V9a2 2 0 00-2-2z"></path></svg>
+                        </div>
+                        <h3 class="text-xs font-black text-slate-800 uppercase tracking-tight">{{ _('settings_special_code') }}</h3>
                     </div>
-                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">{{ _('settings_special_code') }}</h3>
-                </div>
-
+                    <span class="text-[10px] font-bold text-slate-400 flex items-center gap-1">
+                        <span>Göster</span>
+                        <svg class="w-3.5 h-3.5 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                    </span>
+                </summary>
+                <div class="mt-3">
                 {% if current_user.special_code_used_at %}
                 <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
                     <div class="flex items-center gap-2 mb-2">
@@ -252,18 +258,25 @@
                     </p>
                 </form>
                 {% endif %}
-            </div>
+                </div>
+            </details>
         </div>
 
-        <!-- {{ _('settings_record_information') }} -->
-        <div class="settings-section premium-card p-5 bg-white/80 border-l-4 border-indigo-400 shadow-lg">
-            <div class="flex items-center gap-3 mb-3">
-                <div class="bg-indigo-100 p-2 rounded-lg">
-                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        <!-- {{ _('settings_record_information') }} (Daraltılabilir) -->
+        <details class="settings-section premium-card bg-white/80 border-l-4 border-indigo-400 shadow-lg group overflow-hidden">
+            <summary class="p-4 flex items-center justify-between cursor-pointer list-none select-none hover:bg-slate-50/60 transition">
+                <div class="flex items-center gap-3">
+                    <div class="bg-indigo-100 p-2 rounded-lg">
+                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    </div>
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">{{ _('settings_record_information') }}</h3>
                 </div>
-                <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">{{ _('settings_record_information') }}</h3>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <span class="text-[10px] font-bold text-slate-500 flex items-center gap-1">
+                    <span>Detayları Göster</span>
+                    <svg class="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                </span>
+            </summary>
+            <div class="px-5 pb-5 pt-2 border-t border-slate-100 grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
                     <div class="text-[8px] font-bold text-slate-400 uppercase mb-1">{{ _('settings_gender') }}</div>
                     <div class="text-xs font-black text-slate-800 truncate">
@@ -303,7 +316,7 @@
                     <div class="text-xs font-black text-slate-800 truncate">{{ current_user.created_at.strftime('%d.%m.%Y %H:%M') if current_user.created_at else '—' }}</div>
                 </div>
             </div>
-        </div>
+        </details>
 
         <!-- {{ _('settings_session_security') }} -->
         <div class="settings-section premium-card p-5 bg-white/80 border-l-4 border-rose-400 shadow-lg">
@@ -813,17 +826,23 @@
         {% endif %}
 
         {% if can_reset_data %}
-        <div class="settings-section premium-card p-5 border-2 border-rose-500/50 bg-gradient-to-br from-rose-50/30 to-rose-100/20 shadow-xl shadow-rose-500/10">
-            <div class="flex items-center mb-3">
-                <div class="bg-rose-500 p-2 rounded-lg mr-3">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        <details class="settings-section premium-card border-2 border-rose-500/50 bg-gradient-to-br from-rose-50/30 to-rose-100/20 shadow-xl shadow-rose-500/10 group overflow-hidden">
+            <summary class="p-4 flex items-center justify-between cursor-pointer list-none select-none">
+                <div class="flex items-center">
+                    <div class="bg-rose-500 p-2 rounded-lg mr-3">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-black text-rose-600 uppercase tracking-tight">{{ _('settings_danger_zone') }}</h3>
+                        <p class="text-[9px] text-rose-500 font-semibold mt-0.5">Yalnızca {{ _('settings_tab_data') }} sekmesinde kullanılabilecek kalıcı işlemler.</p>
+                    </div>
                 </div>
-                <div class="flex-grow">
-                    <h3 class="text-sm font-black text-rose-600 uppercase tracking-tight">{{ _('settings_danger_zone') }}</h3>
-                    <p class="text-[9px] text-rose-500 font-semibold mt-1">Yalnızca {{ _('settings_tab_data') }} sekmesinde kullanılabilecek kalıcı işlemler.</p>
-                </div>
-            </div>
-            <div id="danger-zone-content">
+                <span class="text-[10px] font-bold text-rose-600 flex items-center gap-1">
+                    <span>Göster</span>
+                    <svg class="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                </span>
+            </summary>
+            <div id="danger-zone-content" class="px-5 pb-5 pt-2 border-t border-rose-200/60">
                 <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3 flex gap-2 items-start">
                     <span class="text-base flex-shrink-0">🏢</span>
                     <div>
@@ -842,52 +861,59 @@
                     </form>
                 </div>
             </div>
-        </div>
+        </details>
 
         {% endif %}
 
         {% if can_load_demo_data %}
         <!-- Örnek Veri (Sandbox) -->
-        <div class="settings-section premium-card p-5 bg-white/80 border-l-4 border-green-600 shadow-lg">
-            <div class="flex items-center gap-3 mb-3">
-                <div class="bg-green-100 p-2 rounded-lg">
-                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5 9 6.343 9 8s1.343 3 3 3zM12 14c-4.418 0-8 2.239-8 5v1h16v-1c0-2.761-3.582-5-8-5z"/></svg>
+        <details class="settings-section premium-card bg-white/80 border-l-4 border-green-600 shadow-lg group overflow-hidden">
+            <summary class="p-4 flex items-center justify-between cursor-pointer list-none select-none hover:bg-slate-50/60 transition">
+                <div class="flex items-center gap-3">
+                    <div class="bg-green-100 p-2 rounded-lg">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5 9 6.343 9 8s1.343 3 3 3zM12 14c-4.418 0-8 2.239-8 5v1h16v-1c0-2.761-3.582-5-8-5z"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">{{ _('settings_demo_data_title') }}</h3>
+                        <span class="text-[8px] font-bold text-slate-400 uppercase">{{ _('settings_demo_data_subtitle') }}</span>
+                    </div>
                 </div>
-                <div>
-                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">{{ _('settings_demo_data_title') }}</h3>
-                    <span class="text-[8px] font-bold text-slate-400 uppercase">{{ _('settings_demo_data_subtitle') }}</span>
+                <span class="text-[10px] font-bold text-slate-500 flex items-center gap-1">
+                    <span>Göster</span>
+                    <svg class="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                </span>
+            </summary>
+            <div class="px-5 pb-5 pt-2 border-t border-slate-100">
+                <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 mb-3 flex gap-2 items-start">
+                    <span class="text-base flex-shrink-0">⚠️</span>
+                    <div class="text-[9px] text-rose-700 leading-relaxed font-medium">
+                        {{ _('settings_demo_data_warning') }}
+                    </div>
                 </div>
-            </div>
 
-            <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 mb-3 flex gap-2 items-start">
-                <span class="text-base flex-shrink-0">⚠️</span>
-                <div class="text-[9px] text-rose-700 leading-relaxed font-medium">
-                    {{ _('settings_demo_data_warning') }}
-                </div>
+                <form method="post" action="/settings" class="space-y-3" id="adminAutoDataForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="action" id="adminAutoDataAction" value="admin_advanced_fill">
+                    <div>
+                        <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">{{ _('settings_password_label') }}</label>
+                        <input type="password" name="admin_pass" placeholder="{{ _('settings_password_placeholder') }}" class="w-full md:w-1/2 p-2.5 border border-slate-200 rounded-lg bg-slate-50 text-xs focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition font-bold" required>
+                    </div>
+                    <div class="bg-indigo-50 p-3 rounded-lg border border-indigo-100">
+                        <p class="text-[9px] text-indigo-700 font-semibold leading-relaxed">
+                            {{ _('settings_demo_data_description') }}
+                        </p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button data-macro="button_secondary" type="submit" onclick="return confirmSettingSubmit(this.form, '{{ _('settings_demo_data_fill') }}', 'Geliştirilmiş 3 yıllık demo veri seti oluşturulacak. Bu işlem birkaç dakika sürebilir. Devam etmek istiyor musunuz?', false, 'admin_advanced_fill')" class="flex-1 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-4 py-2.5 rounded-lg font-black text-[9px] uppercase tracking-wider shadow-lg hover:shadow-xl transition">
+                            {{ _('settings_demo_data_fill') }}
+                        </button>
+                        <button data-macro="button_secondary" type="submit" onclick="return confirmSettingSubmit(this.form, '{{ _('settings_demo_data_clear') }}', 'Otomatik oluşturulan tüm veriler silinecek. Devam etmek istiyor musunuz?', true, 'admin_clear_data')" class="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-2.5 rounded-lg font-black text-[9px] uppercase tracking-wider shadow-lg hover:shadow-xl transition">
+                            {{ _('settings_demo_data_clear') }}
+                        </button>
+                    </div>
+                </form>
             </div>
-
-            <form method="post" action="/settings" class="space-y-3" id="adminAutoDataForm">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="hidden" name="action" id="adminAutoDataAction" value="admin_advanced_fill">
-                <div>
-                    <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">{{ _('settings_password_label') }}</label>
-                    <input type="password" name="admin_pass" placeholder="{{ _('settings_password_placeholder') }}" class="w-full md:w-1/2 p-2.5 border border-slate-200 rounded-lg bg-slate-50 text-xs focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition font-bold" required>
-                </div>
-                <div class="bg-indigo-50 p-3 rounded-lg border border-indigo-100">
-                    <p class="text-[9px] text-indigo-700 font-semibold leading-relaxed">
-                        {{ _('settings_demo_data_description') }}
-                    </p>
-                </div>
-                <div class="flex flex-col sm:flex-row gap-3">
-                    <button data-macro="button_secondary" type="submit" onclick="return confirmSettingSubmit(this.form, '{{ _('settings_demo_data_fill') }}', 'Geliştirilmiş 3 yıllık demo veri seti oluşturulacak. Bu işlem birkaç dakika sürebilir. Devam etmek istiyor musunuz?', false, 'admin_advanced_fill')" class="flex-1 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-4 py-2.5 rounded-lg font-black text-[9px] uppercase tracking-wider shadow-lg hover:shadow-xl transition">
-                        {{ _('settings_demo_data_fill') }}
-                    </button>
-                    <button data-macro="button_secondary" type="submit" onclick="return confirmSettingSubmit(this.form, '{{ _('settings_demo_data_clear') }}', 'Otomatik oluşturulan tüm veriler silinecek. Devam etmek istiyor musunuz?', true, 'admin_clear_data')" class="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-2.5 rounded-lg font-black text-[9px] uppercase tracking-wider shadow-lg hover:shadow-xl transition">
-                        {{ _('settings_demo_data_clear') }}
-                    </button>
-                </div>
-            </form>
-        </div>
+        </details>
         {% endif %}
     </div>
     {% endif %}

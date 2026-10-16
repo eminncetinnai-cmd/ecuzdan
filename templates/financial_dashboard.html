@@ -59,19 +59,26 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
-     YASAL UYARI
+     YASAL UYARI (Daraltılabilir Kompakt Bar)
 ══════════════════════════════════════════════════════════════════════════════ -->
-<div class="mb-8 fade-up delay-1 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 flex items-start gap-3">
-    <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-    </svg>
-    <div>
-        <p class="font-black text-amber-800 text-xs mb-0.5">{{ _('ui_auto_5192a6be5548') }}</p>
-        <p class="text-[11px] text-amber-700 leading-relaxed">
-            {{ _('ui_auto_7160bc910925') }} <strong>{{ _('ui_auto_0cdb376c9ca8') }}</strong>{{ _('ui_auto_6bc23f884b7f') }}
-        </p>
-    </div>
-</div>
+<details class="mb-6 fade-up delay-1 group rounded-2xl border border-amber-200/80 bg-amber-50/70 px-4 py-2.5">
+    <summary class="flex items-center justify-between gap-3 cursor-pointer list-none select-none">
+        <div class="flex items-center gap-2.5">
+            <svg class="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <span class="font-black text-amber-800 text-xs">{{ _('ui_auto_5192a6be5548') }}</span>
+            <span class="text-[10px] font-semibold text-amber-700/80 hidden sm:inline">— Metodoloji ve yatırım tavsiyesi bildirimi</span>
+        </div>
+        <span class="text-[10px] font-bold text-amber-700 flex items-center gap-1">
+            <span>Detay</span>
+            <svg class="w-3.5 h-3.5 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </span>
+    </summary>
+    <p class="text-[11px] text-amber-700 leading-relaxed mt-2 pt-2 border-t border-amber-200/60">
+        {{ _('ui_auto_7160bc910925') }} <strong>{{ _('ui_auto_0cdb376c9ca8') }}</strong>{{ _('ui_auto_6bc23f884b7f') }}
+    </p>
+</details>
 
 {% if not analysis or not analysis.data_available %}
 <!-- ─── Veri Yok Durumu ─────────────────────────────────────────────────── -->
@@ -720,20 +727,23 @@
 {% endif %}{# /data_available #}
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
-     BÖLÜM 8 — FİNANSAL TERİMLER SÖZLÜĞÜ & ÖRNEK HESAPLAMALAR
+     BÖLÜM 8 — FİNANSAL TERİMLER SÖZLÜĞÜ & ÖRNEK HESAPLAMALAR (Daraltılabilir)
 ══════════════════════════════════════════════════════════════════════════════ -->
-<div class="mb-3 fade-up">
-    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-        <span class="w-1.5 h-4 bg-slate-500 rounded-full inline-block"></span>
-        {{ _('ui_auto_3a0ffe87f566') }}
-    </h3>
-</div>
-
-<div class="quant-card p-8 bg-white/80 mb-10 fade-up">
-    <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-6">{{ _('ui_auto_98a2c2a6d2c8') }}</h4>
-    <p class="text-[10px] text-slate-500 mb-6">
-        {{ _('ui_auto_a546bb288a92') }}
-    </p>
+<details class="quant-card bg-white/80 mb-10 fade-up group overflow-hidden">
+    <summary class="p-6 flex items-center justify-between gap-4 cursor-pointer list-none select-none hover:bg-slate-50/70 transition">
+        <div class="flex items-center gap-3">
+            <span class="w-1.5 h-6 bg-indigo-500 rounded-full inline-block"></span>
+            <div>
+                <h3 class="font-black text-sm uppercase text-slate-800 tracking-tight">{{ _('ui_auto_98a2c2a6d2c8') }}</h3>
+                <p class="text-[10px] text-slate-500 mt-0.5">{{ _('ui_auto_3a0ffe87f566') }} — {{ _('ui_auto_a546bb288a92') }}</p>
+            </div>
+        </div>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold shrink-0">
+            <span>Sözlük &amp; Formülleri Aç</span>
+            <svg class="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </span>
+    </summary>
+    <div class="px-8 pb-8 pt-2 border-t border-slate-100">
 
     <!-- Sekme Navigasyonu -->
     <div class="flex flex-wrap gap-2 mb-6">
@@ -985,7 +995,8 @@
             </div>
         </div>
     </div>
-</div>
+    </div>
+</details>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
      JAVASCRIPT

@@ -195,86 +195,96 @@
                         <input type="hidden" name="type" id="cat_standard_type" value="" disabled>
                     </div>
 
-                    <!-- Üst Kategori -->
-                    <div>
-                        <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
-                            Üst Kategori <span class="text-slate-400 font-normal normal-case">(İsteğe Bağlı)</span>
-                        </label>
-                        <select name="parent_id" id="cat_parent_id"
-                                class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition">
-                            <option value="">— Yok (Ana Kategori) —</option>
-                            {% for p in parent_cats %}
-                            <option value="{{ p.id }}">{{ p.name }} ({{ p.type }})</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+                    <!-- Gelişmiş / İsteğe Bağlı Kategori Ayarları (Bütçe, Üst Kategori, Renk, İkon, GL Kodu) -->
+                    <details id="cat_advanced_fields" class="group rounded-xl border border-slate-200/80 bg-slate-50/50 p-3">
+                        <summary class="flex items-center justify-between cursor-pointer list-none select-none">
+                            <span class="text-[10px] font-black uppercase tracking-wider text-slate-600">Gelişmiş Ayarlar (Bütçe, Üst Kategori, Renk, GL)</span>
+                            <span class="text-[10px] font-bold text-indigo-600 group-open:hidden">Aç ▼</span>
+                            <span class="text-[10px] font-bold text-slate-400 hidden group-open:inline">Gizle ▲</span>
+                        </summary>
+                        <div class="space-y-3 mt-3 pt-2.5 border-t border-slate-200/60">
+                            <!-- Üst Kategori -->
+                            <div>
+                                <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                                    Üst Kategori <span class="text-slate-400 font-normal normal-case">(İsteğe Bağlı)</span>
+                                </label>
+                                <select name="parent_id" id="cat_parent_id"
+                                        class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                                    <option value="">— Yok (Ana Kategori) —</option>
+                                    {% for p in parent_cats %}
+                                    <option value="{{ p.id }}">{{ p.name }} ({{ p.type }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
 
-                    <!-- Renk & İkon Seçimi -->
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
-                                Renk <span class="text-slate-400 font-normal normal-case">(İsteğe Bağlı)</span>
-                            </label>
-                            <input type="hidden" name="color" id="cat_color" value="">
-                            <div class="flex items-center gap-1.5 flex-wrap pt-0.5" id="color_palette">
-                                <button data-macro="button_secondary" type="button" class="w-5 h-5 rounded-full bg-indigo-500 border-2 border-transparent hover:scale-110 transition color-dot" data-color="indigo" title="İndigo"></button>
-                                <button data-macro="button_secondary" type="button" class="w-5 h-5 rounded-full bg-emerald-500 border-2 border-transparent hover:scale-110 transition color-dot" data-color="emerald" title="Zümrüt"></button>
-                                <button data-macro="button_secondary" type="button" class="w-5 h-5 rounded-full bg-rose-500 border-2 border-transparent hover:scale-110 transition color-dot" data-color="rose" title="Gül"></button>
-                                <button data-macro="button_secondary" type="button" class="w-5 h-5 rounded-full bg-amber-500 border-2 border-transparent hover:scale-110 transition color-dot" data-color="amber" title="Kehribar"></button>
-                                <button data-macro="button_secondary" type="button" class="w-5 h-5 rounded-full bg-sky-500 border-2 border-transparent hover:scale-110 transition color-dot" data-color="sky" title="Gök"></button>
-                                <button data-macro="button_secondary" type="button" class="w-5 h-5 rounded-full bg-purple-500 border-2 border-transparent hover:scale-110 transition color-dot" data-color="purple" title="Mor"></button>
-                                <button data-macro="button_secondary" type="button" class="w-5 h-5 rounded-full bg-slate-500 border-2 border-transparent hover:scale-110 transition color-dot" data-color="slate" title="Kül"></button>
-                                <button data-macro="button_secondary" type="button" class="w-5 h-5 rounded-full border border-dashed border-slate-300 text-slate-400 text-[10px] flex items-center justify-center hover:bg-slate-50 transition color-clear-btn" title="Temizle">&times;</button>
+                            <!-- Renk & İkon Seçimi -->
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                                        Renk <span class="text-slate-400 font-normal normal-case">(İsteğe Bağlı)</span>
+                                    </label>
+                                    <input type="hidden" name="color" id="cat_color" value="">
+                                    <div class="flex items-center gap-1.5 flex-wrap pt-0.5" id="color_palette">
+                                        <button data-macro="button_secondary" type="button" class="w-5 h-5 rounded-full bg-indigo-500 border-2 border-transparent hover:scale-110 transition color-dot" data-color="indigo" title="İndigo"></button>
+                                        <button data-macro="button_secondary" type="button" class="w-5 h-5 rounded-full bg-emerald-500 border-2 border-transparent hover:scale-110 transition color-dot" data-color="emerald" title="Zümrüt"></button>
+                                        <button data-macro="button_secondary" type="button" class="w-5 h-5 rounded-full bg-rose-500 border-2 border-transparent hover:scale-110 transition color-dot" data-color="rose" title="Gül"></button>
+                                        <button data-macro="button_secondary" type="button" class="w-5 h-5 rounded-full bg-amber-500 border-2 border-transparent hover:scale-110 transition color-dot" data-color="amber" title="Kehribar"></button>
+                                        <button data-macro="button_secondary" type="button" class="w-5 h-5 rounded-full bg-sky-500 border-2 border-transparent hover:scale-110 transition color-dot" data-color="sky" title="Gök"></button>
+                                        <button data-macro="button_secondary" type="button" class="w-5 h-5 rounded-full bg-purple-500 border-2 border-transparent hover:scale-110 transition color-dot" data-color="purple" title="Mor"></button>
+                                        <button data-macro="button_secondary" type="button" class="w-5 h-5 rounded-full bg-slate-500 border-2 border-transparent hover:scale-110 transition color-dot" data-color="slate" title="Kül"></button>
+                                        <button data-macro="button_secondary" type="button" class="w-5 h-5 rounded-full border border-dashed border-slate-300 text-slate-400 text-[10px] flex items-center justify-center hover:bg-slate-50 transition color-clear-btn" title="Temizle">&times;</button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                                        İkon <span class="text-slate-400 font-normal normal-case">(İsteğe Bağlı)</span>
+                                    </label>
+                                    <select name="icon" id="cat_icon"
+                                            class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                                        <option value="">— Yok —</option>
+                                        <option value="shopping-bag">Alışveriş / Market</option>
+                                        <option value="utensils">Yeme / İçme</option>
+                                        <option value="home">Ev / Barınma</option>
+                                        <option value="car">Ulaşım / Araç</option>
+                                        <option value="zap">Faturalar / Enerji</option>
+                                        <option value="briefcase">Maaş / İş</option>
+                                        <option value="trending-up">Yatırım / Getiri</option>
+                                        <option value="heart-pulse">Sağlık</option>
+                                        <option value="graduation-cap">Eğitim</option>
+                                        <option value="film">Eğlence</option>
+                                        <option value="plane">Seyahat</option>
+                                        <option value="gift">Hediye / Bağış</option>
+                                        <option value="repeat">Abonelik</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- GL Kodu & Bütçe Limiti -->
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                                        {{ _('ui_auto_7cd6f2038c7a') }}
+                                        <span class="text-slate-400 font-normal normal-case ml-1">{{ _('ui_auto_55a0d5a15bba') }}</span>
+                                    </label>
+                                    <input type="text" name="code" id="cat_code"
+                                           placeholder="{{ _('ui_auto_6d348a641325') }}"
+                                           class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50/50 text-xs
+                                                  font-mono font-bold text-slate-600 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                                    <p class="text-[9px] text-slate-400 mt-0.5 font-medium">{{ _('ui_auto_851807822709') }}</p>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                                        {{ _('ui_auto_1e28fa79b9c2') }}
+                                        <span class="text-slate-400 font-normal normal-case ml-1">({{ base_currency_symbol }})</span>
+                                    </label>
+                                    <input type="number" step="0.01" min="0" name="budget_limit" id="cat_budget_limit"
+                                           placeholder="{{ _('ui_auto_d93900014388') }}"
+                                           class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-xs
+                                                  font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                                </div>
                             </div>
                         </div>
-                        <div>
-                            <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
-                                İkon <span class="text-slate-400 font-normal normal-case">(İsteğe Bağlı)</span>
-                            </label>
-                            <select name="icon" id="cat_icon"
-                                    class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition">
-                                <option value="">— Yok —</option>
-                                <option value="shopping-bag">Alışveriş / Market</option>
-                                <option value="utensils">Yeme / İçme</option>
-                                <option value="home">Ev / Barınma</option>
-                                <option value="car">Ulaşım / Araç</option>
-                                <option value="zap">Faturalar / Enerji</option>
-                                <option value="briefcase">Maaş / İş</option>
-                                <option value="trending-up">Yatırım / Getiri</option>
-                                <option value="heart-pulse">Sağlık</option>
-                                <option value="graduation-cap">Eğitim</option>
-                                <option value="film">Eğlence</option>
-                                <option value="plane">Seyahat</option>
-                                <option value="gift">Hediye / Bağış</option>
-                                <option value="repeat">Abonelik</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- GL Kodu & Bütçe Limiti -->
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
-                                {{ _('ui_auto_7cd6f2038c7a') }}
-                                <span class="text-slate-400 font-normal normal-case ml-1">{{ _('ui_auto_55a0d5a15bba') }}</span>
-                            </label>
-                            <input type="text" name="code" id="cat_code"
-                                   placeholder="{{ _('ui_auto_6d348a641325') }}"
-                                   class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50/50 text-xs
-                                          font-mono font-bold text-slate-600 focus:ring-2 focus:ring-indigo-500 outline-none transition">
-                            <p class="text-[9px] text-slate-400 mt-0.5 font-medium">{{ _('ui_auto_851807822709') }}</p>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
-                                {{ _('ui_auto_1e28fa79b9c2') }}
-                                <span class="text-slate-400 font-normal normal-case ml-1">({{ base_currency_symbol }})</span>
-                            </label>
-                            <input type="number" step="0.01" min="0" name="budget_limit" id="cat_budget_limit"
-                                   placeholder="{{ _('ui_auto_d93900014388') }}"
-                                   class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-xs
-                                          font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition">
-                        </div>
-                    </div>
+                    </details>
 
                     <!-- Düzenleme uyarısı -->
                     <div id="cat_edit_hint" class="hidden flex items-center gap-2 p-2.5 rounded-xl
@@ -303,9 +313,13 @@
             </div>
 
             <!-- GL Kodu Açıklama Kartı -->
-            <div class="premium-card p-4 bg-white/70 shadow mt-3 border-l-4 border-slate-300">
-                <p class="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2">{{ _('ui_auto_892606e78dc5') }}</p>
-                <div class="space-y-1.5">
+            <details class="premium-card p-3.5 bg-white/70 shadow mt-3 border-l-4 border-slate-300 group">
+                <summary class="flex items-center justify-between cursor-pointer list-none select-none">
+                    <span class="text-[10px] font-black uppercase tracking-wider text-slate-500">{{ _('ui_auto_892606e78dc5') }}</span>
+                    <span class="text-[10px] font-bold text-indigo-600 group-open:hidden">Rehberi Gör ▼</span>
+                    <span class="text-[10px] font-bold text-slate-400 hidden group-open:inline">Gizle ▲</span>
+                </summary>
+                <div class="space-y-1.5 mt-2.5 pt-2 border-t border-slate-100">
                     <div class="flex items-center gap-2">
                         <span class="gl-chip glr">{{ _('ui_auto_3553d52d9134') }}</span>
                         <span class="text-[10px] text-slate-600 font-semibold">{{ _('ui_auto_fc417353b662') }}</span>
@@ -319,7 +333,7 @@
                         <span class="text-[10px] text-slate-600 font-semibold">{{ _('ui_auto_07403deb8fbe') }}</span>
                     </div>
                 </div>
-            </div>
+            </details>
         </div>
 
         <!-- SAĞ: Kategori listesi -->

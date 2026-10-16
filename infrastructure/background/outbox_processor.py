@@ -214,11 +214,24 @@ class OutboxProcessor:
                 consecutive_failures = 0
             except SQLAlchemyError as exc:
                 consecutive_failures += 1
-                self._safe_log_exception(
-                    "OutboxProcessor database failure during poll cycle (attempt %d): %s",
-                    consecutive_failures,
-                    exc,
-                )
+                try:
+                    from shared.db import db
+                    with self._app.app_context():
+                        db.session.rollback()
+                except Exception:
+                    pass
+                if "no such table" in str(exc).lower():
+                    self._safe_log_debug(
+                        "OutboxProcessor schema not ready yet (attempt %d): %s",
+                        consecutive_failures,
+                        exc,
+                    )
+                else:
+                    self._safe_log_exception(
+                        "OutboxProcessor database failure during poll cycle (attempt %d): %s",
+                        consecutive_failures,
+                        exc,
+                    )
             except Exception as exc:
                 consecutive_failures += 1
                 self._safe_log_exception(

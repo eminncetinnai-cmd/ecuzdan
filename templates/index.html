@@ -355,55 +355,66 @@
     </div>
 
     <!-- ═══ 5. İKİNCİL TELEMETRİ KARTLARI ═════════════════════════════════════ -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-        <!-- Card 1: Yıl içi gerçekleşen nakit -->
-        <div class="dash-card p-3 sm:p-4">
-            <div class="flex items-center justify-between mb-1.5">
-                <h3 class="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">{{ _('ui_auto_f56ff94fd347') }}</h3>
-                <span class="info-tip" title="{{ _('ui_auto_4f3c5b56d16f') }}">?</span>
+    <details class="dash-card p-4 sm:p-5 group">
+        <summary class="flex items-center justify-between cursor-pointer list-none select-none">
+            <div class="flex items-center gap-2.5">
+                <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                <span class="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">Yıllık Gerçekleşen &amp; Bekleyen Telemetri Özeti</span>
+                <span class="text-[11px] font-semibold text-slate-400 hidden sm:inline">· Tasarruf Oranı: %{{ investment_ratio }}</span>
             </div>
-            <p class="text-base sm:text-lg font-black tracking-tight truncate {% if year_paid_cash >= 0 %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
-                {{ year_paid_cash|format_money }} <span class="text-xs font-bold text-slate-400">{{ base_currency_symbol }}</span>
-            </p>
-        </div>
+            <span class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 group-open:hidden">Detayları Göster ▼</span>
+            <span class="text-xs font-semibold text-slate-400 hidden group-open:inline">Gizle ▲</span>
+        </summary>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <!-- Card 1: Yıl içi gerçekleşen nakit -->
+            <div class="dash-card p-3 sm:p-4">
+                <div class="flex items-center justify-between mb-1.5">
+                    <h3 class="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">{{ _('ui_auto_f56ff94fd347') }}</h3>
+                    <span class="info-tip" title="{{ _('ui_auto_4f3c5b56d16f') }}">?</span>
+                </div>
+                <p class="text-base sm:text-lg font-black tracking-tight truncate {% if year_paid_cash >= 0 %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
+                    {{ year_paid_cash|format_money }} <span class="text-xs font-bold text-slate-400">{{ base_currency_symbol }}</span>
+                </p>
+            </div>
 
-        <!-- Card 2: Ödenmiş yatırım transferi -->
-        <div class="dash-card p-3 sm:p-4">
-            <div class="flex items-center justify-between mb-1.5">
-                <h3 class="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">{{ _('ui_auto_57117158a1d5') }}</h3>
-                <span class="info-tip" title="{{ _('ui_auto_1d78a2044fed') }}">?</span>
+            <!-- Card 2: Ödenmiş yatırım transferi -->
+            <div class="dash-card p-3 sm:p-4">
+                <div class="flex items-center justify-between mb-1.5">
+                    <h3 class="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">{{ _('ui_auto_57117158a1d5') }}</h3>
+                    <span class="info-tip" title="{{ _('ui_auto_1d78a2044fed') }}">?</span>
+                </div>
+                <p class="text-base sm:text-lg font-black tracking-tight text-blue-600 dark:text-blue-400 truncate">
+                    {{ paid_investment_transfers|format_money }} <span class="text-xs font-bold text-slate-400">{{ base_currency_symbol }}</span>
+                </p>
             </div>
-            <p class="text-base sm:text-lg font-black tracking-tight text-blue-600 dark:text-blue-400 truncate">
-                {{ paid_investment_transfers|format_money }} <span class="text-xs font-bold text-slate-400">{{ base_currency_symbol }}</span>
-            </p>
-        </div>
 
-        <!-- Card 3: Yatırım / Gelir Oranı -->
-        <div class="dash-card p-3 sm:p-4">
-            <div class="flex items-center justify-between mb-1.5">
-                <h3 class="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">{{ _('ui_auto_d2a074d8a2e0') }}</h3>
-                <span class="info-tip" title="{{ _('ui_auto_a552dff813df') }}">?</span>
+            <!-- Card 3: Yatırım / Gelir Oranı -->
+            <div class="dash-card p-3 sm:p-4">
+                <div class="flex items-center justify-between mb-1.5">
+                    <h3 class="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">{{ _('ui_auto_d2a074d8a2e0') }}</h3>
+                    <span class="info-tip" title="{{ _('ui_auto_a552dff813df') }}">?</span>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <p class="text-base sm:text-lg font-black tracking-tight text-sky-600 dark:text-sky-400">%{{ investment_ratio }}</p>
+                    <span class="text-[10px] font-semibold text-slate-400 hidden sm:inline">Tasarruf Oranı</span>
+                </div>
             </div>
-            <div class="flex items-baseline gap-2">
-                <p class="text-base sm:text-lg font-black tracking-tight text-sky-600 dark:text-sky-400">%{{ investment_ratio }}</p>
-                <span class="text-[10px] font-semibold text-slate-400 hidden sm:inline">Tasarruf Oranı</span>
-            </div>
-        </div>
 
-        <!-- Card 4: Bekleyen yıl etkisi -->
-        <div class="dash-card p-3 sm:p-4">
-            <div class="flex items-center justify-between mb-1.5">
-                <h3 class="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">{{ _('ui_auto_f36eca03ef93') }}</h3>
-                <span class="info-tip" title="{{ _('ui_auto_aa5c94745742') }}">?</span>
-            </div>
-            <p class="text-base sm:text-lg font-black tracking-tight text-amber-600 dark:text-amber-400 truncate">
-                {{ pending_year_cash|format_money }} <span class="text-xs font-bold text-slate-400">{{ base_currency_symbol }}</span>
-            </p>
-            <div class="mt-1 text-[10px] text-slate-400 font-bold uppercase truncate" title="{{ _('dashboard_pending_investment') }}: {{ pending_investment_transfers|format_ticker_price }} {{ base_currency_symbol }}">
-                {{ _('dashboard_pending_investment') }}: {{ pending_investment_transfers|format_money }} {{ base_currency_symbol }}
+            <!-- Card 4: Bekleyen yıl etkisi -->
+            <div class="dash-card p-3 sm:p-4">
+                <div class="flex items-center justify-between mb-1.5">
+                    <h3 class="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">{{ _('ui_auto_f36eca03ef93') }}</h3>
+                    <span class="info-tip" title="{{ _('ui_auto_aa5c94745742') }}">?</span>
+                </div>
+                <p class="text-base sm:text-lg font-black tracking-tight text-amber-600 dark:text-amber-400 truncate">
+                    {{ pending_year_cash|format_money }} <span class="text-xs font-bold text-slate-400">{{ base_currency_symbol }}</span>
+                </p>
+                <div class="mt-1 text-[10px] text-slate-400 font-bold uppercase truncate" title="{{ _('dashboard_pending_investment') }}: {{ pending_investment_transfers|format_ticker_price }} {{ base_currency_symbol }}">
+                    {{ _('dashboard_pending_investment') }}: {{ pending_investment_transfers|format_money }} {{ base_currency_symbol }}
+                </div>
             </div>
         </div>
-    </div>
+    </details>
 
     <!-- ═══ 6. İNTERAKTİF GRAFİKLER (7 GÜNLÜK & AYLIK PROJEKSİYONLAR) ═══════════ -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
