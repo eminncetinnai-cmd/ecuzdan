@@ -64,12 +64,12 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = config.SQLALCHEMY_TRACK_MODIFICAT
 if config.APP_BOOT_ID:
     app.config['APP_BOOT_ID'] = config.APP_BOOT_ID
 elif os.getenv('RENDER') == 'true' or config.FLASK_ENV == 'production':
-    app.config['APP_BOOT_ID'] = hashlib.sha256(f"boot-{app.secret_key}".encode()).hexdigest()
+    app.config['APP_BOOT_ID'] = secrets.token_hex(16)
 else:
     app.config['APP_BOOT_ID'] = secrets.token_hex(32)
 app.config['GOOGLE_CLIENT_ID'] = config.GOOGLE_CLIENT_ID
 app.config['GOOGLE_CLIENT_SECRET'] = config.GOOGLE_CLIENT_SECRET
-app.config['TEMPLATES_AUTO_RELOAD'] = config.FLASK_ENV in ('development', 'testing')
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 app.config['BACKGROUND_SERVICE_ENABLED'] = config.BACKGROUND_SERVICE_ENABLED
 app.config['BACKGROUND_WORKER_OWNER'] = config.BACKGROUND_WORKER_OWNER

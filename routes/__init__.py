@@ -5,6 +5,7 @@ Blueprint pattern ile route'ların mantıksal gruplara ayrılması
 
 import logging
 import math
+import os
 import secrets
 from datetime import datetime
 from decimal import Decimal
@@ -201,6 +202,19 @@ def register_template_filters(app):
 
 # --- Context Processor ---
 
+def _get_versioned_static_url(filename: str) -> str:
+    boot_id = (current_app.config.get("APP_BOOT_ID") or "v15")[:8]
+    try:
+        static_folder = current_app.static_folder or os.path.join(current_app.root_path, "static")
+        filepath = os.path.join(static_folder, filename)
+        if os.path.isfile(filepath):
+            mtime = int(os.path.getmtime(filepath))
+            return url_for("static", filename=filename, v=f"{boot_id}_{mtime}")
+    except Exception:
+        pass
+    return url_for("static", filename=filename, v=boot_id)
+
+
 def register_context_processor(app):
     """
     Context processor'ı kaydeder
@@ -267,7 +281,7 @@ def register_context_processor(app):
             current_user=current_user,
             user_theme=theme,
             privacy_mode=privacy_mode,
-            static_asset_url=lambda filename: url_for("static", filename=filename, v=(current_app.config.get("APP_BOOT_ID") or "v15")[:8]),
+            static_asset_url=_get_versioned_static_url,
             base_currency_code=base_currency_code,
             base_currency_symbol=base_currency_symbol,
         )
