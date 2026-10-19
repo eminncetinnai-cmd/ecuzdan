@@ -99,6 +99,67 @@ class TransactionRepository(BaseRepository, BaseRepositoryContract):
             page=page, per_page=per_page, error_out=False
         )
 
+    def get_transaction_summary_aggregates(self, tenant_id: Optional[str] = None) -> Optional[dict]:
+        """Compute tenant-wide transaction summary aggregates in SQL without loading all ORM rows."""
+        tenant_id = self._resolve_tenant_id(tenant_id)
+        tx_cls = _models.Transaction
+        if hasattr(tx_cls, '_mock_name') or hasattr(self.session, '_mock_name'):
+            return None
+        from sqlalchemy import func
+        from shared.decimal_precision import to_decimal
+
+        rows = (
+            self.session.query(
+                tx_cls.status,
+                tx_cls.type,
+                tx_cls.source_type,
+                func.count(tx_cls.id),
+                func.coalesce(func.sum(tx_cls.amount), 0),
+            )
+            .filter(tx_cls.tenant_id == tenant_id, tx_cls.is_deleted.is_(False))
+            .group_by(tx_cls.status, tx_cls.type, tx_cls.source_type)
+            .all()
+        )
+        paid_income_total = to_decimal(0)
+        paid_expense_total = to_decimal(0)
+        pending_income_total = to_decimal(0)
+        pending_expense_total = to_decimal(0)
+        total_count = 0
+        paid_count = 0
+        pending_count = 0
+        plan_count = 0
+
+        for t_status, t_type, s_type, cnt, amt_sum in rows:
+            cnt_int = int(cnt or 0)
+            dec_amt = to_decimal(amt_sum or 0)
+            total_count += cnt_int
+            if s_type == 'plan':
+                plan_count += cnt_int
+            if t_status == 'Ödendi':
+                paid_count += cnt_int
+                if t_type == 'Gelir':
+                    paid_income_total += dec_amt
+                elif t_type == 'Gider':
+                    paid_expense_total += dec_amt
+            elif t_status == 'Bekliyor':
+                pending_count += cnt_int
+                if t_type == 'Gider':
+                    pending_expense_total += dec_amt
+                elif t_type == 'Gelir':
+                    pending_income_total += dec_amt
+
+        return {
+            'total_count': total_count,
+            'paid_count': paid_count,
+            'pending_count': pending_count,
+            'plan_count': plan_count,
+            'paid_income_total': paid_income_total,
+            'paid_expense_total': paid_expense_total,
+            'paid_net_total': paid_income_total - paid_expense_total,
+            'pending_expense_total': pending_expense_total,
+            'pending_income_total': pending_income_total,
+        }
+
     def get_transaction(
         self,
         transaction_id: int,

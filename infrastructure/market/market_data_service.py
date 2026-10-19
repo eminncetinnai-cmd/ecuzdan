@@ -8,7 +8,25 @@ import time
 from datetime import datetime
 
 import requests
-import yfinance as yf
+
+
+class _LazyYfProxy:
+    """Lazy proxy for yfinance to avoid heavy import overhead during application boot."""
+
+    def __init__(self):
+        self._mod = None
+
+    def _load(self):
+        if self._mod is None:
+            import yfinance as _yf_mod
+            self._mod = _yf_mod
+        return self._mod
+
+    def __getattr__(self, name):
+        return getattr(self._load(), name)
+
+
+yf = _LazyYfProxy()
 
 logger = logging.getLogger(__name__)
 

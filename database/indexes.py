@@ -33,8 +33,10 @@ def _create_indexes_if_not_exist():
             ('idx_transaction_date_type', '"transaction"', 'date, type'),
             # Transaction kritik kompozit indeksleri (Nakit akışı, mutabakat, varlık silme hızlandırma)
             ('idx_transaction_source', '"transaction"', 'source_id, source_type'),
+            ('idx_transaction_tenant_source', '"transaction"', 'tenant_id, source_type, source_id'),
             ('idx_transaction_tenant_date', '"transaction"', 'tenant_id, date'),
             ('idx_transaction_tenant_del_date', '"transaction"', 'tenant_id, is_deleted, date'),
+            ('idx_transaction_tenant_status_date', '"transaction"', 'tenant_id, is_deleted, status, date'),
             ('idx_transaction_tenant_status', '"transaction"', 'tenant_id, status'),
             # Recurring plan indeksleri
             ('idx_recurring_plan_flow_type', 'recurring_plan', 'flow_type'),

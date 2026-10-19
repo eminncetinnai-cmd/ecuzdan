@@ -127,6 +127,7 @@ function initSharpeChart(sharpeData) {
             }]
         },
         options: {
+            indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
@@ -217,8 +218,28 @@ function toggleGlossary() {
 }
 
 // ─── Grafik Başlatıcılar (isimli sarıcılar) ───────────────────────────────
-// Grafik başlatma IIFE'ler zaten yukarıda çalıştırıldı;
-// Bu isimli fonksiyonlar dış testler ve yeniden çizim için referans sağlar.
 function initMainChartWrapper()   { /* IIFE ile başlatıldı */ }
 function initSharpeChartWrapper() { /* IIFE ile başlatıldı */ }
 function initStressGaugeWrapper() { /* IIFE ile başlatıldı */ }
+
+(function() {
+    const pageData = document.getElementById('financial-dashboard-page');
+    if (!pageData) return;
+    try {
+        const marketStress = parseFloat(pageData.getAttribute('data-market-stress') || '0');
+        const marketAssets = JSON.parse(pageData.getAttribute('data-market-assets') || '[]');
+        const sharpeRatios = JSON.parse(pageData.getAttribute('data-sharpe-ratios') || '{}');
+
+        if (marketStress && typeof initStressGauge === 'function') {
+            initStressGauge(marketStress);
+        }
+        if (marketAssets && (Array.isArray(marketAssets) ? marketAssets.length > 0 : Object.keys(marketAssets).length > 0) && typeof initMainChart === 'function') {
+            initMainChart(marketAssets);
+        }
+        if (sharpeRatios && Object.keys(sharpeRatios).length > 0 && typeof initSharpeChart === 'function') {
+            initSharpeChart(sharpeRatios);
+        }
+    } catch (e) {
+        console.error('Error parsing financial dashboard data:', e);
+    }
+})();

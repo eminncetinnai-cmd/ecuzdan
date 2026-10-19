@@ -23,7 +23,6 @@ from domain.transactions.services import (
 )
 from engines.financial_engine import invalidate_financial_cache, today_display
 from infrastructure.i18n import i18n
-from models import RecurringPlan
 from shared.decimal_precision import to_decimal
 from utils.ajax_helpers import handle_ajax_or_flash, is_ajax_request
 from utils.db_session import rollback_session
@@ -43,30 +42,18 @@ def register_transaction_crud_routes(bp, ui_options_fn, request_payload_fn):
     def transactions():
         try:
             page = request.args.get('page', 1, type=int)
+            per_page = request.args.get('per_page', 100, type=int)
+            per_page = max(10, min(per_page, 1000))
             edit_id = request.args.get('edit', type=int)
             tenant_id = g.get('tenant_id')
-            context = queries['get_transaction_page'].execute(page=page, edit_id=edit_id, tenant_id=tenant_id)
+            context = queries['get_transaction_page'].execute(
+                page=page, edit_id=edit_id, tenant_id=tenant_id, per_page=per_page
+            )
             bank_accounts = list_bank_accounts(tenant_id)
             tx_items = context['last_t'].items if context.get('last_t') else []
 
-            tx_summary = calculate_transaction_batch_summary(tx_items)
-
-            plan_names = {}
-            plan_ids = {
-                t.source_id for t in tx_items
-                if getattr(t, 'source_type', None) == 'plan' and getattr(t, 'source_id', None)
-            }
-            if plan_ids and tenant_id:
-                try:
-                    plan_rows = (
-                        RecurringPlan.query
-                        .filter(RecurringPlan.tenant_id == tenant_id, RecurringPlan.id.in_(plan_ids))
-                        .with_entities(RecurringPlan.id, RecurringPlan.name)
-                        .all()
-                    )
-                    plan_names = {row[0]: row[1] for row in plan_rows}
-                except Exception as ex:
-                    logger.warning("Failed to fetch plan names for transactions: %s", ex)
+            tx_summary = context.get('tx_summary') or calculate_transaction_batch_summary(tx_items)
+            plan_names = context.get('plan_names') or {}
 
             active_tab = request.args.get('tab', '')
             if not active_tab:

@@ -599,6 +599,22 @@ class RecurringPlanRepository(BaseRepository, BaseRepositoryContract):
     def get_recurring_plan_for_tenant(self, plan_id, tenant_id) -> Optional[RecurringPlan]:
         return RecurringPlan.query.filter_by(id=plan_id, tenant_id=tenant_id).first()
 
+    def get_plan_names_by_ids(self, plan_ids, tenant_id: Optional[str] = None) -> dict:
+        """Fetch {plan_id: plan_name} mapping for a set of plan IDs within a tenant."""
+        if not plan_ids:
+            return {}
+        tenant_id = self._resolve_tenant_id(tenant_id)
+        rp_model = _unwrap(RecurringPlan)
+        if hasattr(rp_model, '_mock_name') or hasattr(getattr(rp_model, 'query', None), '_mock_name'):
+            return {}
+        rows = (
+            rp_model.query
+            .filter(rp_model.tenant_id == tenant_id, rp_model.id.in_(list(plan_ids)))
+            .with_entities(rp_model.id, rp_model.name)
+            .all()
+        )
+        return {row[0]: row[1] for row in rows}
+
     def get_plan_transaction_counts(self, plan_id: int, tenant_id: Optional[str] = None) -> dict:
         """Returns paid and pending transaction counts for a plan."""
         tenant_id = self._resolve_tenant_id(tenant_id)

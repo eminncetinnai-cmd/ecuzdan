@@ -38,8 +38,10 @@ class Transaction(db.Model):
         db.Index('idx_transaction_is_deleted', 'is_deleted'),
         db.Index('idx_transaction_tenant_date', 'tenant_id', 'date'),
         db.Index('idx_transaction_tenant_del_date', 'tenant_id', 'is_deleted', 'date'),
+        db.Index('idx_transaction_tenant_status_date', 'tenant_id', 'is_deleted', 'status', 'date'),
         db.Index('idx_transaction_tenant_status_type', 'tenant_id', 'is_deleted', 'status', 'type'),
         db.Index('idx_transaction_tenant_category', 'tenant_id', 'is_deleted', 'category'),
+        db.Index('idx_transaction_tenant_source', 'tenant_id', 'source_type', 'source_id'),
         db.UniqueConstraint('tenant_id', 'date', 'category', 'description', 'amount', name='uq_transaction_dedup'),
     )
 

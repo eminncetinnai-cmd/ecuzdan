@@ -517,9 +517,11 @@
 
 </div>
 
-<!-- Initial payload injection for client-side rendering -->
+{% endblock %}
+
+{% block extra_js %}
 <script>
-    window.__RESERVES_INITIAL_DATA__ = {{ data|tojson|safe }};
+    window.__RESERVES_INITIAL_DATA__ = {{ {'charts': {'tcmb': data.charts.tcmb if (data is defined and data.charts is defined and data.charts.tcmb is defined) else {}}}|tojson|safe }};
 </script>
 <script src="{{ static_asset_url('js/central_bank_reserves.js') }}"></script>
 {% endblock %}

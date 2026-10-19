@@ -369,6 +369,22 @@
             </div>
             {% endif %}
         </div>
+        {% if last_t and last_t.pages is defined and last_t.pages > 1 %}
+        <div class="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200/70 bg-slate-50/70 px-3 py-2 text-xs dark:border-slate-800 dark:bg-slate-900/50">
+            <span class="font-semibold text-slate-500 dark:text-slate-400">
+                Sayfa <strong class="text-slate-800 dark:text-white">{{ last_t.page }}</strong> / {{ last_t.pages }} · Toplam <strong class="text-slate-800 dark:text-white">{{ last_t.total }}</strong> kayıt
+            </span>
+            <div class="flex items-center gap-1.5">
+                {% if last_t.has_prev %}
+                <a href="{{ url_for('transactions.transactions', page=last_t.prev_num, tab=active_tab) }}" class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">← Önceki</a>
+                {% endif %}
+                {% if last_t.has_next %}
+                <a href="{{ url_for('transactions.transactions', page=last_t.next_num, tab=active_tab) }}" class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">Sonraki →</a>
+                {% endif %}
+                <a href="{{ url_for('transactions.transactions', per_page=1000, tab=active_tab) }}" class="rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1 font-bold text-indigo-700 hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300">Tümünü Yükle</a>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 

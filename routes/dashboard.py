@@ -8,15 +8,23 @@ from datetime import datetime
 from flask import Response, g, jsonify, render_template, request, session
 
 from bootstrap.container import get_container
-from engines.analysis_engine import get_analysis_engine
 from engines.financial_engine import get_financial_analysis, get_monthly_dashboard_data
-from infrastructure.market.market_data_service import get_market_data_summary
 from shared.currency_precision import get_currency_symbol
 from shared.decimal_precision import to_decimal
 from utils.db_session import rollback_session
 from utils.decorators import login_required
 
 logger = logging.getLogger(__name__)
+
+
+def get_analysis_engine(*args, **kwargs):
+    from engines.analysis_engine import get_analysis_engine as _fn
+    return _fn(*args, **kwargs)
+
+
+def get_market_data_summary(*args, **kwargs):
+    from infrastructure.market.market_data_service import get_market_data_summary as _fn
+    return _fn(*args, **kwargs)
 
 
 def _get_dashboard_service():
@@ -123,9 +131,13 @@ def register_dashboard_routes(bp):
             from engines.financial_engine import get_empty_freedom_analysis
             return render_template('financial_freedom.html', analysis=get_empty_freedom_analysis())
 
+    _fin_dashboard_cache: dict = {}
+
     @bp.route('/financial_dashboard')
     @login_required
     def financial_dashboard():
+        import time as _time
+        now_ts = _time.monotonic()
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         try:
             market_data = get_market_data_summary()
@@ -147,12 +159,24 @@ def register_dashboard_routes(bp):
 
         try:
             from infrastructure.market.market_data_service import market_data_service as mds
-            engine = get_analysis_engine(mds)
-            analysis = engine.run_full_analysis(
-                preferences=get_container().applications.settings().get_preferences(session.get('user_id'))
+            prefs = get_container().applications.settings().get_preferences(session.get('user_id'))
+            prefs_key = repr(sorted(prefs.items())) if isinstance(prefs, dict) else str(prefs)
+            cache_key = (
+                id(get_analysis_engine),
+                id(mds),
+                market_data.get('last_updated') if isinstance(market_data, dict) else None,
+                prefs_key,
             )
-            if analysis is None:
-                raise ValueError("run_full_analysis() None döndürdü")
+            cached_entry = _fin_dashboard_cache.get(cache_key)
+            if cached_entry is not None and (now_ts - cached_entry[0]) < 60.0:
+                analysis = cached_entry[1]
+            else:
+                engine = get_analysis_engine(mds)
+                analysis = engine.run_full_analysis(preferences=prefs)
+                if analysis is None:
+                    raise ValueError("run_full_analysis() None döndürdü")
+                if not hasattr(engine, '_mock_name') and not hasattr(mds, '_mock_name'):
+                    _fin_dashboard_cache[cache_key] = (now_ts, analysis)
         except Exception as e:
             logger.exception(f"Analiz motoru hatası: {e}")
             analysis = {

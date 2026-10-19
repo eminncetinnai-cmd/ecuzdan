@@ -5,7 +5,24 @@ Strateji Planı Motor - Dinamik hesaplamalar ve optimizasyonlar
 import logging
 from datetime import datetime, timedelta
 
-import numpy as np
+
+class _LazyNpProxy:
+    """Lazy proxy for numpy so app startup does not pay numpy import cost."""
+
+    def __init__(self):
+        self._mod = None
+
+    def _load(self):
+        if self._mod is None:
+            import numpy as _np_mod
+            self._mod = _np_mod
+        return self._mod
+
+    def __getattr__(self, name):
+        return getattr(self._load(), name)
+
+
+np = _LazyNpProxy()
 
 from database import get_actual_cash
 from models import StrategySettings, Transaction
