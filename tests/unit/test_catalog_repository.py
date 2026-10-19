@@ -130,11 +130,17 @@ def test_list_visible_categories():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
+    mock_categories = [Mock()]
+    mock_query = Mock()
 
-    with patch('repositories.catalog_repository.get_cached') as mock_get_cached:
-        mock_categories = [Mock()]
-        mock_categories[0].tenant_id = None
-        mock_get_cached.return_value = mock_categories
+    with patch('repositories.catalog_repository.Category') as mock_category_class, \
+         patch('repositories.catalog_repository.joinedload'), \
+         patch('repositories.catalog_repository.db.or_'):
+        mock_category_class.query = mock_query
+        mock_query.filter.return_value = mock_query
+        mock_query.options.return_value = mock_query
+        mock_query.order_by.return_value = mock_query
+        mock_query.all.return_value = mock_categories
 
         repo = CatalogRepository(database=mock_db)
         result = repo.list_visible_categories(tenant_id='test_tenant')
@@ -148,10 +154,16 @@ def test_list_visible_categories_no_tenant():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
+    mock_categories = [Mock()]
+    mock_query = Mock()
 
-    with patch('repositories.catalog_repository.get_cached') as mock_get_cached:
-        mock_categories = [Mock()]
-        mock_get_cached.return_value = mock_categories
+    with patch('repositories.catalog_repository.Category') as mock_category_class, \
+         patch('repositories.catalog_repository.joinedload'):
+        mock_category_class.query = mock_query
+        mock_query.options.return_value = mock_query
+        mock_query.order_by.return_value = mock_query
+        mock_query.filter.return_value = mock_query
+        mock_query.all.return_value = mock_categories
 
         repo = CatalogRepository(database=mock_db)
         result = repo.list_visible_categories()
@@ -185,19 +197,20 @@ def test_find_category_by_name():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    Mock()
-    mock_filtered_query = Mock()
+    mock_query = Mock()
     mock_category = Mock()
 
-    with patch('repositories.catalog_repository.Category') as mock_category_class:
-        mock_category_class.query.filter_by.return_value = mock_filtered_query
+    with patch('repositories.catalog_repository.Category') as mock_category_class, \
+         patch('repositories.catalog_repository.db.func.lower'), \
+         patch('repositories.catalog_repository.db.or_'):
+        mock_category_class.query = mock_query
+        mock_query.filter.return_value = mock_query
+        mock_query.first.return_value = mock_category
 
         repo = CatalogRepository(database=mock_db)
-        with patch('repositories.catalog_repository.db.or_'):
-            mock_filtered_query.filter.return_value.first.return_value = mock_category
-            result = repo.find_category_by_name('Test Category', tenant_id='test_tenant')
+        result = repo.find_category_by_name('Test Category', tenant_id='test_tenant')
 
-            assert result == mock_category
+        assert result == mock_category
 
 
 @pytest.mark.unit
@@ -209,8 +222,10 @@ def test_find_category_by_name_no_tenant():
     mock_query = Mock()
     mock_category = Mock()
 
-    with patch('repositories.catalog_repository.Category') as mock_category_class:
-        mock_category_class.query.filter_by.return_value = mock_query
+    with patch('repositories.catalog_repository.Category') as mock_category_class, \
+         patch('repositories.catalog_repository.db.func.lower'):
+        mock_category_class.query = mock_query
+        mock_query.filter.return_value = mock_query
         mock_query.first.return_value = mock_category
 
         repo = CatalogRepository(database=mock_db)
@@ -225,19 +240,13 @@ def test_category_exists():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    Mock()
-    mock_filtered_query = Mock()
     mock_category = Mock()
 
-    with patch('repositories.catalog_repository.Category') as mock_category_class:
-        mock_category_class.query.filter_by.return_value = mock_filtered_query
+    repo = CatalogRepository(database=mock_db)
+    with patch.object(repo, 'find_category_by_name', return_value=mock_category):
+        result = repo.category_exists('Test Category', tenant_id='test_tenant')
 
-        repo = CatalogRepository(database=mock_db)
-        with patch('repositories.catalog_repository.db.or_'):
-            mock_filtered_query.filter.return_value.first.return_value = mock_category
-            result = repo.category_exists('Test Category', tenant_id='test_tenant')
-
-            assert result is True
+        assert result is True
 
 
 @pytest.mark.unit
@@ -246,18 +255,12 @@ def test_category_exists_not_found():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
-    Mock()
-    mock_filtered_query = Mock()
 
-    with patch('repositories.catalog_repository.Category') as mock_category_class:
-        mock_category_class.query.filter_by.return_value = mock_filtered_query
+    repo = CatalogRepository(database=mock_db)
+    with patch.object(repo, 'find_category_by_name', return_value=None):
+        result = repo.category_exists('Test Category', tenant_id='test_tenant')
 
-        repo = CatalogRepository(database=mock_db)
-        with patch('repositories.catalog_repository.db.or_'):
-            mock_filtered_query.filter.return_value.first.return_value = None
-            result = repo.category_exists('Test Category', tenant_id='test_tenant')
-
-            assert result is False
+        assert result is False
 
 
 @pytest.mark.unit
@@ -917,9 +920,16 @@ def test_list_visible_categories_filters_inactive():
     cat_inactive.type = 'Gider'
 
     repo = CatalogRepository(database=Mock())
-    with patch('repositories.catalog_repository.get_cached') as mock_cached:
-        mock_cached.return_value = [cat_active, cat_inactive]
+    mock_query = Mock()
+    mock_filtered_query = Mock()
+    mock_query.options.return_value.order_by.return_value = mock_query
+    mock_query.filter.return_value = mock_filtered_query
+    mock_filtered_query.all.return_value = [cat_active]
+    mock_query.all.return_value = [cat_active, cat_inactive]
 
+    repo.visible_categories_query = Mock(return_value=mock_query)
+    with patch('repositories.catalog_repository.joinedload'), \
+         patch('repositories.catalog_repository.Category'):
         active_only = repo.list_visible_categories(include_inactive=False)
         assert len(active_only) == 1
         assert active_only[0].name == 'Aktif'
