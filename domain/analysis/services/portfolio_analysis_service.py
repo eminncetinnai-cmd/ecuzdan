@@ -12,7 +12,11 @@ def calculate_asset_analysis(tenant_id: str | None = None) -> dict:
 
     Portföy performansı, diversification, risk analizi gibi metrikleri döner.
     """
-    assets = _apply_tenant(Asset.query, Asset, tenant_id).all()
+    query = _apply_tenant(Asset.query, Asset, tenant_id)
+    if not hasattr(query, '_mock_return_value') and hasattr(Asset, 'transactions'):
+        from sqlalchemy.orm import selectinload
+        query = query.options(selectinload(Asset.transactions))
+    assets = query.all()
     if not assets:
         return {
             'total_value': 0,

@@ -81,9 +81,11 @@ if config.BACKGROUND_SERVICE_ENABLED:
     except Exception as bg_err:
         logger.warning("BackgroundService başlatılamadı: %s", bg_err)
 
-# Jinja2 globals ve filters
+# Jinja2 globals, filters ve whitespace optimizasyonu
 from shared.currency_precision import get_currency_symbol
 
+app.jinja_env.trim_blocks = True
+app.jinja_env.lstrip_blocks = True
 app.jinja_env.globals.update(min=min, max=max)
 app.jinja_env.filters['currency_symbol'] = lambda v: get_currency_symbol(str(v)) or str(v) if v else ''
 

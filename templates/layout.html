@@ -87,24 +87,15 @@
     {% include 'widgets/notification_modal.html' %}
 
     <script>
-        window.ECuzdanI18n = {{ (client_translation_catalog if client_translation_catalog is defined else translation_catalog)|tojson }};
+        window.ECuzdanI18n = {{ client_translation_catalog_json if client_translation_catalog_json is defined else (client_translation_catalog if client_translation_catalog is defined else translation_catalog)|tojson }};
         window.BASE_CURRENCY_CODE = {{ (base_currency_code or 'TRY')|tojson }};
         window.BASE_CURRENCY_SYMBOL = {{ (base_currency_symbol or '₺')|tojson }};
-    </script>
-
-    <!-- Flash Messages Data -->
-    <script id="flash-messages-data" type="application/json">
-        {% with msgs = get_flashed_messages(with_categories=true) %}
-        [
-        {% for cat, msg in msgs %}
-            {"message": {{ msg|tojson }}, "category": {{ cat|tojson }}}{% if not loop.last %},{% endif %}
-        {% endfor %}
-        ]
-        {% endwith %}
-    </script>
-
-    <script>
         window._pendingToasts = window._pendingToasts || [];
+    </script>
+    {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% if msgs %}
+    <script id="flash-messages-data" type="application/json">[{% for cat, msg in msgs %}{"message": {{ msg|tojson }}, "category": {{ cat|tojson }}}{% if not loop.last %},{% endif %}{% endfor %}]</script>
+    <script>
         (function() {
             var flashData = document.getElementById('flash-messages-data');
             if (flashData) {
@@ -117,6 +108,8 @@
             }
         })();
     </script>
+    {% endif %}
+    {% endwith %}
 
     {% macro render_sidebar_nav(is_mobile=False) %}
             <nav {% if not is_mobile %}id="sidebar-nav"{% endif %} class="sidebar-middle">
@@ -583,14 +576,7 @@
     <!-- Gizlilik modu: module DEĞİL — window.privacyMode'u inline onclick'e açar -->
 
     <script src="{{ static_asset_url('js/privacy-mode.js') }}"></script>
-    <script type="module" src="{{ static_asset_url('js/main.js') }}"></script>
-    <script type="module" src="{{ static_asset_url('js/tables.js') }}"></script>
-    <script type="module" src="{{ static_asset_url('js/forms.js') }}"></script>
-    <script type="module" src="{{ static_asset_url('js/utils.js') }}"></script>
-    <script type="module" src="{{ static_asset_url('js/navigation.js') }}"></script>
-    <script type="module" src="{{ static_asset_url('js/undo.js') }}"></script>
-    <script type="module" src="{{ static_asset_url('js/lazyload.js') }}"></script>
-    <script type="module" src="{{ static_asset_url('js/date-picker.js') }}"></script>
+    <script type="module" src="{{ static_asset_url('js/core-bundle.js') }}"></script>
     
     <!-- Modals -->
     {% include 'widgets/calculator_modal.html' %}

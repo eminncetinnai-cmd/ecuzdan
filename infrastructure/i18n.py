@@ -2,6 +2,7 @@ import json
 import os
 
 from flask import g, has_request_context, request, session  # noqa: F401
+from markupsafe import Markup
 
 DEFAULT_LANGUAGE = 'tr'
 SESSION_LANGUAGE_KEY = 'lang'
@@ -11,20 +12,19 @@ SESSION_LANGUAGE_SOURCE_USER = 'user'
 
 
 CLIENT_KEY_PREFIXES = (
-    'btn_',
-    'common_',
-    'error_',
-    'fd_',
     'fe_',
     'logbook_',
-    'nav_',
     'notification_',
     'notifications_',
-    'plans_',
-    'tx_',
 )
 CLIENT_EXACT_KEYS = frozenset({
     'loading',
+    'nav_financial_education',
+    'nav_investor_profile',
+    'nav_plans',
+    'nav_settings',
+    'nav_transactions',
+    'tx_cancel_btn',
     'ui_auto_0327cf1e733b',
     'ui_auto_17a41349037a',
     'ui_auto_34474ae1b0ec',
@@ -36,6 +36,12 @@ CLIENT_EXACT_KEYS = frozenset({
     'ui_auto_ce3b7a0ce97b',
     'ui_auto_ddf6a1f0ce8c',
 })
+
+
+def _serialize_client_catalog(catalog):
+    return Markup(
+        json.dumps(catalog or {}, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
+    )
 
 
 class _PreserveMissingFormat(dict):
@@ -50,6 +56,7 @@ class I18n:
         self.app = app
         self.translations = {}
         self.client_translations = {}
+        self.client_translations_json = {}
         self.default_lang = DEFAULT_LANGUAGE
         if app is not None:
             self.init_app(app)
@@ -89,7 +96,9 @@ class I18n:
                 with open(filepath, 'r', encoding='utf-8') as f:
                     catalog = json.load(f)
                     self.translations[lang_code] = catalog
-                    self.client_translations[lang_code] = self._build_client_catalog(catalog)
+                    client_catalog = self._build_client_catalog(catalog)
+                    self.client_translations[lang_code] = client_catalog
+                    self.client_translations_json[lang_code] = _serialize_client_catalog(client_catalog)
 
     def normalize_locale(self, value):
         """Return a supported base locale, or ``None`` for invalid input."""
@@ -118,7 +127,12 @@ class I18n:
 
         if 'user_id' in session:
             from models import User, db
-            user = db.session.get(User, session['user_id'])
+            from utils.auth_helpers import _is_bound_user
+            user = getattr(g, 'current_user', None) if has_request_context() else None
+            if not _is_bound_user(user) or getattr(user, 'id', None) != session['user_id']:
+                user = db.session.get(User, session['user_id'])
+                if user is not None and has_request_context():
+                    g.current_user = user
             if user and user.language:
                 user_lang = self._normalize_locale(user.language)
                 session[SESSION_LANGUAGE_KEY] = user_lang
@@ -151,6 +165,9 @@ class I18n:
         client_catalog = self.client_translations.get(locale)
         if client_catalog is None:
             client_catalog = self._build_client_catalog(full_catalog)
+        client_catalog_json = self.client_translations_json.get(locale)
+        if client_catalog_json is None:
+            client_catalog_json = _serialize_client_catalog(client_catalog)
         return dict(
             _=self.gettext,
             get_locale=self.get_locale,
@@ -158,6 +175,7 @@ class I18n:
             available_languages=tuple(sorted(self.translations)),
             translation_catalog=full_catalog,
             client_translation_catalog=client_catalog,
+            client_translation_catalog_json=client_catalog_json,
         )
 
 i18n = I18n() # Global i18n objesi

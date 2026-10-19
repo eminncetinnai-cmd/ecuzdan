@@ -11,6 +11,7 @@ class GetRatiosDashboardQuery:
 
     # Class-level cache of updated definitions if live sync occurred
     _cached_definitions: Optional[List] = None
+    _result_cache: Dict[Any, Dict[str, Any]] = {}
 
     def __init__(self, service: Optional[MacroRatioService] = None, live_provider=None) -> None:
         if service is not None:
@@ -32,6 +33,7 @@ class GetRatiosDashboardQuery:
             base_definitions = get_all_ratio_definitions()
             updated_definitions = provider.apply_live_values_to_definitions(base_definitions, live_values)
             GetRatiosDashboardQuery._cached_definitions = updated_definitions
+            GetRatiosDashboardQuery._result_cache.clear()
             self._service = MacroRatioService(definitions=updated_definitions)
 
         return {
@@ -41,6 +43,11 @@ class GetRatiosDashboardQuery:
 
     def execute(self, range_key: str = "all", category_filter: Optional[str] = None) -> Dict[str, Any]:
         """Execute the query and return a structured dictionary for templates and API responses."""
+        defs_ref = getattr(self._service, "_definitions", None)
+        cache_key = (id(defs_ref) if defs_ref is not None else None, range_key, category_filter)
+        if defs_ref is not None and cache_key in GetRatiosDashboardQuery._result_cache:
+            return GetRatiosDashboardQuery._result_cache[cache_key]
+
         dashboard: RatiosDashboardDTO = self._service.build_dashboard(
             range_key=range_key,
             category_filter=category_filter
@@ -185,7 +192,7 @@ class GetRatiosDashboardQuery:
             "cds_status": pulse_map.get("turkey_cds", {}).get("signal_label", "İyileşiyor"),
         }
 
-        return {
+        result = {
             "kpis": {
                 "total_ratios": dashboard.total_ratios,
                 "healthy_count": dashboard.healthy_count,
@@ -201,3 +208,6 @@ class GetRatiosDashboardQuery:
             "executive_briefing": executive_briefing,
             "selected_range": range_key,
         }
+        if defs_ref is not None:
+            GetRatiosDashboardQuery._result_cache[cache_key] = result
+        return result

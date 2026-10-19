@@ -202,13 +202,24 @@ def register_template_filters(app):
 
 # --- Context Processor ---
 
+_STATIC_MTIME_CACHE: dict[str, tuple[float, int | None]] = {}
+_STATIC_MTIME_TTL = 10.0  # saniye
+
+
 def _get_versioned_static_url(filename: str) -> str:
+    import time
     boot_id = (current_app.config.get("APP_BOOT_ID") or "v15")[:8]
     try:
-        static_folder = current_app.static_folder or os.path.join(current_app.root_path, "static")
-        filepath = os.path.join(static_folder, filename)
-        if os.path.isfile(filepath):
-            mtime = int(os.path.getmtime(filepath))
+        now = time.monotonic()
+        cached = _STATIC_MTIME_CACHE.get(filename)
+        if cached is not None and (now - cached[0]) < _STATIC_MTIME_TTL:
+            mtime = cached[1]
+        else:
+            static_folder = current_app.static_folder or os.path.join(current_app.root_path, "static")
+            filepath = os.path.join(static_folder, filename)
+            mtime = int(os.path.getmtime(filepath)) if os.path.isfile(filepath) else None
+            _STATIC_MTIME_CACHE[filename] = (now, mtime)
+        if mtime is not None:
             return url_for("static", filename=filename, v=f"{boot_id}_{mtime}")
     except Exception:
         pass
@@ -237,9 +248,11 @@ def register_context_processor(app):
                 logger.exception(f"CSRF token oluşturma hatası: {e}")
         current_user = None # Initialize current_user
         if has_request_context():
-            # Cache check: Eğer user zaten g'de varsa tekrar DB'ye gitme
-            if hasattr(g, 'current_user') and g.current_user is not None:
-                current_user = g.current_user
+            # Cache check: Eğer user zaten g'de varsa ve aktif session'a bağlıysa tekrar DB'ye gitme
+            from utils.auth_helpers import _is_bound_user
+            cached_user = getattr(g, 'current_user', None)
+            if _is_bound_user(cached_user):
+                current_user = cached_user
             else:
                 current_user = _get_session_service().get_current_user(session.get('user_id')) if 'user_id' in session else None
                 g.current_user = current_user # i18n için g.current_user'ı set et
@@ -558,7 +571,8 @@ def register_session_check(app):
                 flash('Bu hesap başka bir yerden giriş yapıldı. Oturumunuz kapatıldı.', 'warning')
                 return redirect(url_for('auth.login'))
 
-            # Tenant context set et
+            # Tenant ve current_user context set et
+            g.current_user = user
             g.tenant_id = user.tenant_id
         else:
             session.clear()
@@ -614,7 +628,7 @@ def register_security_headers(app):
             try:
                 data = response.get_data()
                 if len(data) > 500:
-                    compressed = gzip.compress(data, compresslevel=6)
+                    compressed = gzip.compress(data, compresslevel=2)
                     response.set_data(compressed)
                     response.headers['Content-Encoding'] = 'gzip'
                     response.headers['Content-Length'] = len(compressed)

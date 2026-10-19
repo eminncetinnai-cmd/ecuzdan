@@ -84,6 +84,19 @@ def require_role(*roles):
     return decorator
 
 
+def _is_bound_user(user) -> bool:
+    if user is None:
+        return False
+    try:
+        from sqlalchemy import inspect as sa_inspect
+        state = sa_inspect(user, raiseerr=False)
+        if state is not None and (getattr(state, 'detached', False) or getattr(state, 'expired', False)):
+            return False
+    except Exception:
+        return False
+    return True
+
+
 def get_current_user():
     """
     session'dan User nesnesini döndürür, cache'li
@@ -91,9 +104,10 @@ def get_current_user():
     if 'user_id' not in session:
         return None
 
-    # g'de cache'li var mı?
-    if hasattr(g, 'current_user') and g.current_user:
-        return g.current_user
+    # g'de cache'li ve aktif session'a bağlı var mı?
+    cached = getattr(g, 'current_user', None)
+    if _is_bound_user(cached) and getattr(cached, 'id', None) == session['user_id']:
+        return cached
 
     # DB'den çek
     user = db.session.get(User, session['user_id'])
@@ -115,7 +129,9 @@ def set_tenant_context():
         pass
 
     if 'user_id' in session:
-        user = db.session.get(User, session['user_id'])
+        user = getattr(g, 'current_user', None)
+        if not _is_bound_user(user) or getattr(user, 'id', None) != session['user_id']:
+            user = db.session.get(User, session['user_id'])
         if user:
             g.current_user = user
             g.tenant_id = user.tenant_id
@@ -160,7 +176,7 @@ def capability_required(*capabilities):
             if 'user_id' not in session:
                 return redirect(url_for('auth.login'))
 
-            user = db.session.get(User, session['user_id'])
+            user = get_current_user()
             if not user:
                 flash(i18n.gettext("ui_auto_fd71ebc8847d"), 'error')
                 return redirect(url_for('auth.login'))

@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% set skip_chart_vendor = true %}
 {% from 'macros/forms.html' import date_field with context %}
 {% from 'macros/buttons.html' import button_primary, button_secondary, button_danger, button_success, button_sm with context %}
 {% from 'macros/ui.html' import badge_premium, empty_state with context %}
@@ -291,6 +292,19 @@
             </div>
         </div>
 
+        <!-- İşlem Tablosu İkon Sprite Tanımları (DOM Tekrarını Önler) -->
+        <svg class="hidden" aria-hidden="true">
+            <symbol id="tx-ico-bank" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M3 10h18M5 10v11m4-11v11m6-11v11m4-11v11M4 10l8-6 8 6"/></symbol>
+            <symbol id="tx-ico-plan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></symbol>
+            <symbol id="tx-ico-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></symbol>
+            <symbol id="tx-ico-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></symbol>
+            <symbol id="tx-ico-lineage" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688 16 5.879a3 3 0 1 1 4.243 4.242l-2.846 2.846m-4.207 2.207-2.846 2.846a3 3 0 1 1-4.243-4.242l2.81-2.81m1.5-1.5 3.5-3.5"/></symbol>
+            <symbol id="tx-ico-adjust" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6"/></symbol>
+            <symbol id="tx-ico-reverse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7H5v4m0-4 4 4m6-4a7 7 0 1 1-4.95 11.95"/></symbol>
+            <symbol id="tx-ico-asset" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5h5v5m0-5-7 7m5 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2"/></symbol>
+            <symbol id="tx-ico-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 3.487 3.65 3.65M4 20l3.75-.75L19.06 7.94a2.12 2.12 0 0 0-3-3L4.75 16.25 4 20Z"/></symbol>
+            <symbol id="tx-ico-delete" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12m-9 0V5h6v2m-7 4v5m4-5v5m4-7-1 10H8L7 7"/></symbol>
+        </svg>
         <!-- İşlem Tablosu -->
         <div class="overflow-x-auto rounded-xl border border-slate-200/80 dark:border-slate-800">
             <table id="transTable" class="w-full text-left text-[11px] display responsive-card-table">
@@ -312,144 +326,41 @@
                     </tr>
                 </thead>
                 <tbody class="font-semibold text-slate-700 dark:text-slate-200 divide-y divide-slate-100 dark:divide-slate-800/60">
-                    {% for t in (last_t.items if last_t else []) %}
-                    <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition tx-row"
-                        data-category="{{ t.category }}"
-                        data-type="{{ t.type }}"
-                        data-status="{{ t.status }}"
-                        data-amount="{{ t.amount }}"
-                        data-source-type="{{ t.source_type }}"
-                        data-search="{{ ((t.description or '') ~ ' ' ~ (t.note or '') ~ ' ' ~ (t.category or ''))|lower }}">
-                        <td class="py-2 px-2 text-slate-600 dark:text-slate-400 text-[11px] whitespace-nowrap" data-order="{{ t.date }}">
-                            <div class="flex items-center gap-1.5">
-                                <input type="checkbox" class="tx-row-select rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 cursor-pointer w-3.5 h-3.5" onclick="event.stopPropagation(); onTxRowSelectChange();" data-id="{{ t.id }}" data-status="{{ t.status }}" data-desc="{{ t.description|e }}" data-amount="{{ t.amount }}">
-                                <span>{{ t.date|format_date }}</span>
-                            </div>
-                        </td>
-                        <td class="py-2 px-2 whitespace-nowrap">
-                            <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9.5px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700 max-w-[85px] truncate" title="{{ t.category }}">
-                                {{ t.category }}
-                            </span>
-                        </td>
-                        <td class="py-2 px-2 text-[10px]">
-                            {% if t.bank_account_id and bank_account_names.get(t.bank_account_id) %}
-                            <span class="inline-flex items-center gap-1 text-slate-700 dark:text-slate-300 font-semibold text-[10.5px] max-w-[90px] truncate" title="{{ bank_account_names.get(t.bank_account_id) }}">
-                                <svg class="w-3 h-3 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M3 10h18M5 10v11m4-11v11m6-11v11m4-11v11M4 10l8-6 8 6"/></svg>
-                                <span class="truncate">{{ bank_account_names.get(t.bank_account_id) }}</span>
-                            </span>
-                            {% else %}
-                            <span class="text-slate-300 dark:text-slate-600 font-normal select-none" title="{{ _('tx_account_unassigned') }}">—</span>
-                            {% endif %}
-                        </td>
-                        <td class="py-2 px-2 text-[11px]">
-                            <div class="flex items-center gap-1.5 flex-wrap">
-                                <span class="font-bold text-slate-800 dark:text-white truncate max-w-[130px] md:max-w-[160px] lg:max-w-[200px] block" title="{{ t.description }}">{{ t.description }}</span>
-                                {% if t.source_type == 'plan' %}
-                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900 shrink-0" title="Planlı Ödeme Kaydı: {{ plan_names.get(t.source_id, 'Planlı') }}">
-                                    <svg class="w-2.5 h-2.5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                    <span class="max-w-[75px] truncate">{{ plan_names.get(t.source_id, 'Planlı') }}{% if t.installment_number %} ({{ t.installment_number }}){% endif %}</span>
-                                </span>
-                                {% endif %}
-                            </div>
-                        </td>
-                        <td class="py-2 px-2 text-[10.5px] text-slate-500 dark:text-slate-400">
-                            {% if t.note %}
-                            <span class="italic truncate max-w-[95px] block" title="{{ t.note }}">{{ t.note }}</span>
-                            {% else %}
-                            <span class="text-slate-300 dark:text-slate-600 font-normal select-none" title="{{ _('tx_explorer_no_value') }}">—</span>
-                            {% endif %}
-                        </td>
-                        <td class="py-2 px-2 font-black text-xs text-right whitespace-nowrap {% if t.type == type_values.income %}text-emerald-600 dark:text-emerald-400{% elif t.type == type_values.investment %}text-sky-600 dark:text-sky-400{% elif t.type == type_values.transfer %}text-violet-600 dark:text-violet-400{% else %}text-rose-600 dark:text-rose-400{% endif %}" data-order="{{ t.amount }}">
-                            <span class="inline-flex items-center justify-end gap-0.5">
-                                {% if t.type == type_values.income %}+{% elif t.type == type_values.investment %}◆{% elif t.type == type_values.transfer %}⇄{% else %}−{% endif %}
-                                {{ t.amount|format_money }}<span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 ml-0.5">{{ bank_account_currencies.get(t.bank_account_id) or base_currency_symbol }}</span>
-                            </span>
-                        </td>
-                        <td class="py-2 px-2 text-center whitespace-nowrap">
-                            {% if t.status == status_values.paid %}
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                                <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                                {{ _(status_label_keys.get(t.status, 'tx_explorer_no_value')) }}
-                            </span>
-                            {% else %}
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
-                                <svg class="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                {{ _(status_label_keys.get(t.status, 'tx_explorer_no_value')) }}
-                            </span>
-                            {% endif %}
-                        </td>
-                        <td class="text-right py-2 px-2 whitespace-nowrap">
-                            <div class="tx-table-actions">
-                                <button data-macro="button_secondary" type="button" class="lineage-tx-btn tx-table-action tx-table-action-lineage"
-                                    data-testid="transaction-lineage-{{ t.id }}"
-                                    data-id="{{ t.id }}"
-                                    title="{{ _('tx_lineage') }}"
-                                    aria-label="{{ _('tx_lineage') }}">
-                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688 16 5.879a3 3 0 1 1 4.243 4.242l-2.846 2.846m-4.207 2.207-2.846 2.846a3 3 0 1 1-4.243-4.242l2.81-2.81m1.5-1.5 3.5-3.5"/></svg>
-                                    <span class="sr-only">{{ _('tx_lineage') }}</span>
-                                </button>
-                                {% if t.status == status_values.paid %}
-                                <button data-macro="button_secondary" type="button" class="adjustment-tx-btn tx-table-action tx-table-action-adjustment"
-                                        data-testid="transaction-adjustment-{{ t.id }}"
-                                        data-id="{{ t.id }}"
-                                        title="{{ _('tx_adjustment') }}"
-                                        aria-label="{{ _('tx_adjustment') }}">
-                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6"/></svg>
-                                    <span class="sr-only">{{ _('tx_adjustment') }}</span>
-                                </button>
-                                <button data-macro="button_secondary" type="button" class="reversal-tx-btn tx-table-action tx-table-action-reversal"
-                                        data-testid="transaction-reversal-{{ t.id }}"
-                                        data-id="{{ t.id }}"
-                                        title="{{ _('tx_reversal') }}"
-                                        aria-label="{{ _('tx_reversal') }}">
-                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7H5v4m0-4 4 4m6-4a7 7 0 1 1-4.95 11.95"/></svg>
-                                    <span class="sr-only">{{ _('tx_reversal') }}</span>
-                                </button>
-                                {% elif t.source_type in ['asset', 'asset_sale'] and t.source_id %}
-                                <a href="{{ url_for('assets.assets_view') }}"
-                                   data-macro="button_secondary"
-                                   class="tx-table-action tx-table-action-asset"
-                                   title="{{ _('table_asset_linked_hint') }}" aria-label="{{ _('table_go_to_asset') }}">
-                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5h5v5m0-5-7 7m5 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2"/></svg>
-                                    <span class="sr-only">{{ _('table_go_to_asset') }}</span>
-                                </a>
-                                {% else %}
-                                <button data-macro="button_secondary" type="button"
-                                        class="tx-table-action tx-table-action-quickpay quick-pay-tx-btn"
-                                        data-id="{{ t.id }}"
-                                        data-description="{{ t.description|e }}"
-                                        data-amount="{{ t.amount }}"
-                                        title="Tek tıkla ödendi olarak işaretle" aria-label="Ödendi Yap">
-                                    <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true" class="w-3.5 h-3.5 shrink-0"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                                    <span class="sr-only">Ödendi Yap</span>
-                                </button>
-                                <button data-macro="button_secondary" type="button" class="edit-tx-btn tx-table-action tx-table-action-edit"
-                                        data-id="{{ t.id }}"
-                                        data-date="{{ t.date|format_date }}"
-                                        data-category="{{ t.category }}"
-                                        data-amount="{{ t.amount }}"
-                                        data-version="{{ t.version|default(1) }}"
-                                        data-description="{{ t.description }}"
-                                        data-note="{{ t.note or '' }}"
-                                        data-status="{{ t.status }}"
-                                        data-bank-account-id="{{ t.bank_account_id or '' }}"
-                                        title="{{ _('table_edit') }}"
-                                        aria-label="{{ _('table_edit') }}">
-                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 3.487 3.65 3.65M4 20l3.75-.75L19.06 7.94a2.12 2.12 0 0 0-3-3L4.75 16.25 4 20Z"/></svg>
-                                    <span class="sr-only">{{ _('table_edit') }}</span>
-                                </button>
-                                <button data-macro="button_danger" type="button" class="delete-tx-btn tx-table-action tx-table-action-delete"
-                                        data-id="{{ t.id }}"
-                                        title="{{ _('table_delete') }}"
-                                        aria-label="{{ _('table_delete') }}">
-                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12m-9 0V5h6v2m-7 4v5m4-5v5m4-7-1 10H8L7 7"/></svg>
-                                    <span class="sr-only">{{ _('table_delete') }}</span>
-                                </button>
-                                {% endif %}
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
+{% set lbl_paid = _(status_label_keys.get(status_values.paid, 'tx_explorer_no_value')) %}
+{% set lbl_pending = _(status_label_keys.get(status_values.pending, 'tx_explorer_no_value')) %}
+{% set lbl_lineage = _('tx_lineage') %}
+{% set lbl_adjustment = _('tx_adjustment') %}
+{% set lbl_reversal = _('tx_reversal') %}
+{% set lbl_edit = _('table_edit') %}
+{% set lbl_delete = _('table_delete') %}
+{% set lbl_unassigned = _('tx_account_unassigned') %}
+{% set lbl_no_val = _('tx_explorer_no_value') %}
+{% set lbl_asset_hint = _('table_asset_linked_hint') %}
+{% set lbl_go_asset = _('table_go_to_asset') %}
+{% set assets_view_url = url_for('assets.assets_view') %}
+{% for t in (last_t.items if last_t else []) %}
+<tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition tx-row" data-category="{{ t.category }}" data-type="{{ t.type }}" data-status="{{ t.status }}" data-amount="{{ t.amount }}" data-source-type="{{ t.source_type }}" data-search="{{ ((t.description or '') ~ ' ' ~ (t.note or '') ~ ' ' ~ (t.category or ''))|lower }}">
+<td class="py-2 px-2 text-slate-600 dark:text-slate-400 text-[11px] whitespace-nowrap" data-order="{{ t.date }}"><div class="flex items-center gap-1.5"><input type="checkbox" class="tx-row-select rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 cursor-pointer w-3.5 h-3.5" onclick="event.stopPropagation(); onTxRowSelectChange();" data-id="{{ t.id }}" data-status="{{ t.status }}" data-desc="{{ t.description|e }}" data-amount="{{ t.amount }}"><span>{{ t.date|format_date }}</span></div></td>
+<td class="py-2 px-2 whitespace-nowrap"><span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9.5px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700 max-w-[85px] truncate" title="{{ t.category }}">{{ t.category }}</span></td>
+<td class="py-2 px-2 text-[10px]">{% if t.bank_account_id and bank_account_names.get(t.bank_account_id) %}<span class="inline-flex items-center gap-1 text-slate-700 dark:text-slate-300 font-semibold text-[10.5px] max-w-[90px] truncate" title="{{ bank_account_names.get(t.bank_account_id) }}"><svg class="w-3 h-3 text-slate-400 shrink-0" aria-hidden="true"><use href="#tx-ico-bank"/></svg><span class="truncate">{{ bank_account_names.get(t.bank_account_id) }}</span></span>{% else %}<span class="text-slate-300 dark:text-slate-600 font-normal select-none" title="{{ lbl_unassigned }}">—</span>{% endif %}</td>
+<td class="py-2 px-2 text-[11px]"><div class="flex items-center gap-1.5 flex-wrap"><span class="font-bold text-slate-800 dark:text-white truncate max-w-[130px] md:max-w-[160px] lg:max-w-[200px] block" title="{{ t.description }}">{{ t.description }}</span>{% if t.source_type == 'plan' %}<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900 shrink-0" title="Planlı Ödeme Kaydı: {{ plan_names.get(t.source_id, 'Planlı') }}"><svg class="w-2.5 h-2.5 text-indigo-600 shrink-0" aria-hidden="true"><use href="#tx-ico-plan"/></svg><span class="max-w-[75px] truncate">{{ plan_names.get(t.source_id, 'Planlı') }}{% if t.installment_number %} ({{ t.installment_number }}){% endif %}</span></span>{% endif %}</div></td>
+<td class="py-2 px-2 text-[10.5px] text-slate-500 dark:text-slate-400">{% if t.note %}<span class="italic truncate max-w-[95px] block" title="{{ t.note }}">{{ t.note }}</span>{% else %}<span class="text-slate-300 dark:text-slate-600 font-normal select-none" title="{{ lbl_no_val }}">—</span>{% endif %}</td>
+<td class="py-2 px-2 font-black text-xs text-right whitespace-nowrap {% if t.type == type_values.income %}text-emerald-600 dark:text-emerald-400{% elif t.type == type_values.investment %}text-sky-600 dark:text-sky-400{% elif t.type == type_values.transfer %}text-violet-600 dark:text-violet-400{% else %}text-rose-600 dark:text-rose-400{% endif %}" data-order="{{ t.amount }}"><span class="inline-flex items-center justify-end gap-0.5">{% if t.type == type_values.income %}+{% elif t.type == type_values.investment %}◆{% elif t.type == type_values.transfer %}⇄{% else %}−{% endif %}{{ t.amount|format_money }}<span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 ml-0.5">{{ bank_account_currencies.get(t.bank_account_id) or base_currency_symbol }}</span></span></td>
+<td class="py-2 px-2 text-center whitespace-nowrap">{% if t.status == status_values.paid %}<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"><svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true"><use href="#tx-ico-check"/></svg>{{ lbl_paid }}</span>{% else %}<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800"><svg class="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" aria-hidden="true"><use href="#tx-ico-clock"/></svg>{{ lbl_pending }}</span>{% endif %}</td>
+<td class="text-right py-2 px-2 whitespace-nowrap"><div class="tx-table-actions">
+<button data-macro="button_secondary" type="button" class="lineage-tx-btn tx-table-action tx-table-action-lineage" data-testid="transaction-lineage-{{ t.id }}" data-id="{{ t.id }}" title="{{ lbl_lineage }}" aria-label="{{ lbl_lineage }}"><svg aria-hidden="true" class="w-3.5 h-3.5"><use href="#tx-ico-lineage"/></svg></button>
+{% if t.status == status_values.paid %}
+<button data-macro="button_secondary" type="button" class="adjustment-tx-btn tx-table-action tx-table-action-adjustment" data-testid="transaction-adjustment-{{ t.id }}" data-id="{{ t.id }}" title="{{ lbl_adjustment }}" aria-label="{{ lbl_adjustment }}"><svg aria-hidden="true" class="w-3.5 h-3.5"><use href="#tx-ico-adjust"/></svg></button>
+<button data-macro="button_secondary" type="button" class="reversal-tx-btn tx-table-action tx-table-action-reversal" data-testid="transaction-reversal-{{ t.id }}" data-id="{{ t.id }}" title="{{ lbl_reversal }}" aria-label="{{ lbl_reversal }}"><svg aria-hidden="true" class="w-3.5 h-3.5"><use href="#tx-ico-reverse"/></svg></button>
+{% elif t.source_type in ['asset', 'asset_sale'] and t.source_id %}
+<a href="{{ assets_view_url }}" data-macro="button_secondary" class="tx-table-action tx-table-action-asset" title="{{ lbl_asset_hint }}" aria-label="{{ lbl_go_asset }}"><svg aria-hidden="true" class="w-3.5 h-3.5"><use href="#tx-ico-asset"/></svg></a>
+{% else %}
+<button data-macro="button_secondary" type="button" class="tx-table-action tx-table-action-quickpay quick-pay-tx-btn" data-id="{{ t.id }}" data-description="{{ t.description|e }}" data-amount="{{ t.amount }}" title="Tek tıkla ödendi olarak işaretle" aria-label="Ödendi Yap"><svg aria-hidden="true" class="w-3.5 h-3.5 shrink-0"><use href="#tx-ico-check"/></svg></button>
+<button data-macro="button_secondary" type="button" class="edit-tx-btn tx-table-action tx-table-action-edit" data-id="{{ t.id }}" data-date="{{ t.date|format_date }}" data-category="{{ t.category }}" data-amount="{{ t.amount }}" data-version="{{ t.version|default(1) }}" data-description="{{ t.description }}" data-note="{{ t.note or '' }}" data-status="{{ t.status }}" data-bank-account-id="{{ t.bank_account_id or '' }}" title="{{ lbl_edit }}" aria-label="{{ lbl_edit }}"><svg aria-hidden="true" class="w-3.5 h-3.5"><use href="#tx-ico-edit"/></svg></button>
+<button data-macro="button_danger" type="button" class="delete-tx-btn tx-table-action tx-table-action-delete" data-id="{{ t.id }}" title="{{ lbl_delete }}" aria-label="{{ lbl_delete }}"><svg aria-hidden="true" class="w-3.5 h-3.5"><use href="#tx-ico-delete"/></svg></button>
+{% endif %}
+</div></td></tr>
+{% endfor %}
                 </tbody>
             </table>
             {% if not (last_t and last_t.items) %}

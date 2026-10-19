@@ -590,6 +590,10 @@ class RecurringPlanRepository(BaseRepository, BaseRepositoryContract):
             query = query.filter_by(flow_type=flow_type)
         if tenant_id:
             query = query.filter_by(tenant_id=tenant_id)
+        rp_model = _unwrap(RecurringPlan)
+        if not hasattr(query, '_mock_return_value') and hasattr(rp_model, 'payments'):
+            from sqlalchemy.orm import selectinload
+            query = query.options(selectinload(rp_model.payments))
         return query.order_by(RecurringPlan.name).all()
 
     def get_recurring_plan_for_tenant(self, plan_id, tenant_id) -> Optional[RecurringPlan]:

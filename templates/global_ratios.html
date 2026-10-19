@@ -614,7 +614,7 @@
 
 <!-- Pass ratios JSON payload to client script -->
 <script>
-    window.__GLOBAL_RATIOS_INITIAL_DATA__ = {{ data|tojson|safe }};
+    window.__GLOBAL_RATIOS_INITIAL_DATA__ = {{ {'ratios': ratios_list}|tojson|safe }};
 </script>
 <script src="{{ static_asset_url('js/global_ratios.js') }}"></script>
 {% endblock %}

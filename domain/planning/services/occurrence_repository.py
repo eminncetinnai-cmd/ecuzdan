@@ -81,9 +81,10 @@ class OccurrenceRepository(TenantScopedRepository):
             self.session.commit()
             return self.list_for_plan(plan.id, tenant_id)
 
+        changed = False
         if plan_status == "Aktif":
             today_iso = date.today().isoformat()
-            self.session.query(PlanOccurrence).filter(
+            reopened = self.session.query(PlanOccurrence).filter(
                 PlanOccurrence.plan_id == plan.id,
                 PlanOccurrence.tenant_id == tenant_id,
                 PlanOccurrence.status.in_(["cancelled", "skipped"]),
@@ -91,7 +92,9 @@ class OccurrenceRepository(TenantScopedRepository):
                 PlanOccurrence.paid_at.is_(None),
                 PlanOccurrence.scheduled_date >= today_iso,
             ).update({"status": "scheduled"}, synchronize_session="fetch")
-            self.session.flush()
+            if reopened:
+                changed = True
+                self.session.flush()
 
         canonical = CanonicalPlan.from_model(plan)
         generated = OccurrenceCalculator.generate(
@@ -145,6 +148,7 @@ class OccurrenceRepository(TenantScopedRepository):
                     with self.session.begin_nested():
                         self.session.add(row)
                         self.session.flush()
+                    changed = True
                 except IntegrityError:
                     row = (
                         self.session.query(PlanOccurrence)
@@ -157,6 +161,8 @@ class OccurrenceRepository(TenantScopedRepository):
                     )
                 existing_rows[occurrence_number] = row
             elif row.status == "scheduled":
+                if row.scheduled_date != scheduled_date or row.amount != plan.amount or is_tx_paid:
+                    changed = True
                 row.scheduled_date = scheduled_date
                 row.amount = plan.amount
                 if is_tx_paid:
@@ -169,6 +175,7 @@ class OccurrenceRepository(TenantScopedRepository):
                             row.paid_at = utcnow_naive()
             elif row.status == "paid" and not row.transaction_id and matching_tx:
                 row.transaction_id = matching_tx.id
+                changed = True
             result.append(row)
 
         generated_numbers = {expected.occurrence_number for expected in generated}
@@ -176,8 +183,10 @@ class OccurrenceRepository(TenantScopedRepository):
             if num not in generated_numbers and row.status == "scheduled":
                 row.status = "cancelled"
                 row.notes = "Taksit sayısı güncellendiği için iptal edildi."
+                changed = True
 
-        self.session.commit()
+        if changed:
+            self.session.commit()
         return result
 
     def get_for_tenant(self, occurrence_id, tenant_id=None):
@@ -331,38 +340,60 @@ class OccurrenceRepository(TenantScopedRepository):
             self.session.commit()
         return updated_count
 
-    def ensure_rolling_occurrences_for_active_plans(self, tenant_id=None) -> int:
+    def ensure_rolling_occurrences_for_active_plans(self, tenant_id=None, plans=None) -> int:
         """Ensure active indefinite/rolling plans maintain a future occurrence horizon."""
         tenant_id = self.require_tenant_id(tenant_id)
-        active_rolling_plans = (
-            self.session.query(RecurringPlan)
-            .filter(
-                RecurringPlan.tenant_id == tenant_id,
-                RecurringPlan.status == "Aktif",
-                or_(
-                    RecurringPlan.installments.in_([0, 9999]),
-                    RecurringPlan.plan_type.in_(["Abonelik", "DCA"]),
-                ),
+        target_horizon = (date.today() + relativedelta(months=2)).isoformat()
+        if plans is not None:
+            active_rolling_plans = [
+                p for p in plans
+                if getattr(p, "status", None) == "Aktif"
+                and (
+                    getattr(p, "installments", None) in (0, 9999)
+                    or getattr(p, "plan_type", None) in ("Abonelik", "DCA")
+                )
+                and (
+                    not getattr(p, "end_date", None)
+                    or str(getattr(p, "end_date", "")) >= target_horizon
+                )
+            ]
+        else:
+            active_rolling_plans = (
+                self.session.query(RecurringPlan)
+                .filter(
+                    RecurringPlan.tenant_id == tenant_id,
+                    RecurringPlan.status == "Aktif",
+                    or_(
+                        RecurringPlan.installments.in_([0, 9999]),
+                        RecurringPlan.plan_type.in_(["Abonelik", "DCA"]),
+                    ),
+                    or_(
+                        RecurringPlan.end_date.is_(None),
+                        RecurringPlan.end_date == "",
+                        RecurringPlan.end_date >= target_horizon,
+                    ),
+                )
+                .all()
             )
-            .all()
-        )
         if not active_rolling_plans:
             return 0
 
-        target_horizon = (date.today() + relativedelta(months=2)).isoformat()
+        plan_ids = [plan.id for plan in active_rolling_plans]
+        plans_with_future = {
+            row[0]
+            for row in self.session.query(PlanOccurrence.plan_id)
+            .filter(
+                PlanOccurrence.plan_id.in_(plan_ids),
+                PlanOccurrence.tenant_id == tenant_id,
+                PlanOccurrence.scheduled_date >= target_horizon,
+                PlanOccurrence.status.in_(["scheduled", "paid"]),
+            )
+            .distinct()
+            .all()
+        }
         updated_count = 0
         for plan in active_rolling_plans:
-            has_future = (
-                self.session.query(PlanOccurrence.id)
-                .filter(
-                    PlanOccurrence.plan_id == plan.id,
-                    PlanOccurrence.tenant_id == tenant_id,
-                    PlanOccurrence.scheduled_date >= target_horizon,
-                    PlanOccurrence.status.in_(["scheduled", "paid"]),
-                )
-                .first()
-            )
-            if not has_future:
+            if plan.id not in plans_with_future:
                 self.get_or_create_occurrences(plan, tenant_id=tenant_id)
                 updated_count += 1
         return updated_count

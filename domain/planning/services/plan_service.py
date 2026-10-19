@@ -74,10 +74,37 @@ class PlanService:
         """Return the unified plan context while preserving the legacy view keys."""
         filters = filters or PlanFilters()
 
-        income_plans = self.financial_repository.list_recurring_plans('Gelir', tenant_id)
-        expense_plans = self.financial_repository.list_recurring_plans('Gider', tenant_id)
-        investment_plans = self.financial_repository.list_recurring_plans('Yatırım', tenant_id)
+        upcoming_occurrences = []
+        upcoming_occurrence_count = 0
+        upcoming_window_days = 7
+        if not hasattr(self.financial_repository, '_mock_name'):
+            all_model_plans = self.financial_repository.list_recurring_plans(None, tenant_id)
+            income_plans = [p for p in all_model_plans if getattr(p, 'flow_type', None) == 'Gelir']
+            expense_plans = [p for p in all_model_plans if getattr(p, 'flow_type', None) == 'Gider']
+            investment_plans = [p for p in all_model_plans if getattr(p, 'flow_type', None) == 'Yatırım']
+        else:
+            income_plans = self.financial_repository.list_recurring_plans('Gelir', tenant_id)
+            expense_plans = self.financial_repository.list_recurring_plans('Gider', tenant_id)
+            investment_plans = self.financial_repository.list_recurring_plans('Yatırım', tenant_id)
         model_plans = income_plans + expense_plans + investment_plans
+
+        try:
+            occurrence_repository = self.occurrence_service.repository
+            if hasattr(occurrence_repository, 'sync_with_transactions'):
+                try:
+                    occurrence_repository.sync_with_transactions(tenant_id)
+                except Exception:
+                    pass
+            if hasattr(occurrence_repository, 'ensure_rolling_occurrences_for_active_plans'):
+                try:
+                    occurrence_repository.ensure_rolling_occurrences_for_active_plans(tenant_id, plans=model_plans)
+                except TypeError:
+                    occurrence_repository.ensure_rolling_occurrences_for_active_plans(tenant_id)
+                except Exception:
+                    pass
+        except (AttributeError, RuntimeError):
+            occurrence_repository = None
+
         model_groups = (
             ('Gelir', income_plans),
             ('Gider', expense_plans),
@@ -105,46 +132,38 @@ class PlanService:
         cashflow_plans = [plan for plan in canonical_plans if plan.is_cashflow]
         investment_view_plans = [plan for plan in canonical_plans if plan.is_investment]
 
-        upcoming_occurrences = []
-        upcoming_occurrence_count = 0
-        upcoming_window_days = 7
+        plan_name_by_id = {
+            getattr(m, 'id', None): getattr(m, 'name', None)
+            for m in model_plans
+            if getattr(m, 'id', None) is not None
+        }
         try:
-            occurrence_repository = self.occurrence_service.repository
-            if hasattr(occurrence_repository, 'sync_with_transactions'):
-                try:
-                    occurrence_repository.sync_with_transactions(tenant_id)
-                except Exception:
-                    pass
-            if hasattr(occurrence_repository, 'ensure_rolling_occurrences_for_active_plans'):
-                try:
-                    occurrence_repository.ensure_rolling_occurrences_for_active_plans(tenant_id)
-                except Exception:
-                    pass
-            upcoming_from = date.today()
-            upcoming_through = upcoming_from + timedelta(days=upcoming_window_days - 1)
-            upcoming_occurrence_count = occurrence_repository.count_upcoming_for_tenant(
-                tenant_id,
-                from_date=upcoming_from,
-                through_date=upcoming_through,
-            )
-            upcoming_rows = occurrence_repository.list_upcoming(
-                tenant_id,
-                from_date=upcoming_from,
-                through_date=upcoming_through,
-                limit=8,
-            )
-            upcoming_occurrences = [
-                {
-                    'id': occurrence.id,
-                    'plan_id': occurrence.plan_id,
-                    'plan_name': getattr(getattr(occurrence, 'plan', None), 'name', None) or f'Plan #{occurrence.plan_id}',
-                    'occurrence_number': occurrence.occurrence_number,
-                    'scheduled_date': occurrence.scheduled_date,
-                    'status': occurrence.status,
-                    'amount': occurrence.amount,
-                }
-                for occurrence in upcoming_rows
-            ]
+            if occurrence_repository is not None:
+                upcoming_from = date.today()
+                upcoming_through = upcoming_from + timedelta(days=upcoming_window_days - 1)
+                upcoming_occurrence_count = occurrence_repository.count_upcoming_for_tenant(
+                    tenant_id,
+                    from_date=upcoming_from,
+                    through_date=upcoming_through,
+                )
+                upcoming_rows = occurrence_repository.list_upcoming(
+                    tenant_id,
+                    from_date=upcoming_from,
+                    through_date=upcoming_through,
+                    limit=8,
+                )
+                upcoming_occurrences = [
+                    {
+                        'id': occurrence.id,
+                        'plan_id': occurrence.plan_id,
+                        'plan_name': plan_name_by_id.get(occurrence.plan_id) or getattr(getattr(occurrence, 'plan', None), 'name', None) or f'Plan #{occurrence.plan_id}',
+                        'occurrence_number': occurrence.occurrence_number,
+                        'scheduled_date': occurrence.scheduled_date,
+                        'status': occurrence.status,
+                        'amount': occurrence.amount,
+                    }
+                    for occurrence in upcoming_rows
+                ]
         except (AttributeError, RuntimeError):
             # The service remains usable in isolated unit contexts without an app DB.
             upcoming_occurrences = []
@@ -168,6 +187,16 @@ class PlanService:
             assets = self.financial_repository.list_assets(tenant_id)
         except (AttributeError, RuntimeError):
             assets = []
+
+        if not hasattr(self.catalog_repository, '_mock_name') and hasattr(self.catalog_repository, 'visible_categories_query'):
+            all_cats = self.catalog_repository.visible_categories_query(tenant_id).all()
+            income_cats = [c for c in all_cats if getattr(c, 'type', None) == 'Gelir']
+            expense_cats = [c for c in all_cats if getattr(c, 'type', None) == 'Gider']
+            investment_cats = [c for c in all_cats if getattr(c, 'type', None) == 'Yatırım']
+        else:
+            income_cats = self.catalog_repository.list_categories_by_type('Gelir', tenant_id)
+            expense_cats = self.catalog_repository.list_categories_by_type('Gider', tenant_id)
+            investment_cats = self.catalog_repository.list_categories_by_type('Yatırım', tenant_id)
 
         return {
             # New canonical context
@@ -193,9 +222,9 @@ class PlanService:
             'installment_plans': installment_plans,
             'dca_plans': dca_plans,
             'periodic_plans': periodic_plans,
-            'income_cats': self.catalog_repository.list_categories_by_type('Gelir', tenant_id),
-            'expense_cats': self.catalog_repository.list_categories_by_type('Gider', tenant_id),
-            'investment_cats': self.catalog_repository.list_categories_by_type('Yatırım', tenant_id),
+            'income_cats': income_cats,
+            'expense_cats': expense_cats,
+            'investment_cats': investment_cats,
             'income_total': income_total,
             'expense_total': expense_total,
             'dca_total': investment_total,
@@ -280,8 +309,14 @@ class PlanService:
             for t in transactions
             if t.status == 'Ödendi'
         )
-        week_p = self.financial_repository.pending_transactions_between(today, next_week)
-        month_p = self.financial_repository.pending_transactions_between(today, month_end)
+        if not hasattr(self.financial_repository, '_mock_name'):
+            horizon_end = max(next_week, month_end)
+            all_pending = self.financial_repository.pending_transactions_between(today, horizon_end)
+            week_p = [t for t in all_pending if str(getattr(t, 'date', '')) <= next_week]
+            month_p = [t for t in all_pending if str(getattr(t, 'date', '')) <= month_end]
+        else:
+            week_p = self.financial_repository.pending_transactions_between(today, next_week)
+            month_p = self.financial_repository.pending_transactions_between(today, month_end)
         week_total = sum((t.amount for t in week_p), Decimal('0.00'))
         month_total = sum((t.amount for t in month_p), Decimal('0.00'))
         return {

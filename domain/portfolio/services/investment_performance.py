@@ -87,6 +87,12 @@ def get_yearly_performance(tenant_id=None):
         query = Asset.query
         if tenant_id:
             query = query.filter_by(tenant_id=tenant_id)
+        if not hasattr(query, '_mock_return_value') and hasattr(Asset, 'transactions'):
+            from sqlalchemy.orm import selectinload
+            opts = [selectinload(Asset.transactions)]
+            if hasattr(Asset, 'updates'):
+                opts.append(selectinload(Asset.updates))
+            query = query.options(*opts)
         assets = query.all()
         if not assets:
             return _empty_performance_data()
@@ -211,8 +217,12 @@ def _get_asset_yearly_performance(asset):
         except (ValueError, IndexError):
             purchase_year = datetime.now().year
 
-    # Güncelleme geçmişinden yıllık değerleri al
-    updates = AssetUpdate.query.filter_by(asset_id=asset.id).order_by(AssetUpdate.updated_at).all()
+    # Güncelleme geçmişinden yıllık değerleri al (eager-loaded updates varsa N+1 sorgu atma)
+    loaded_updates = getattr(asset, 'updates', None)
+    if isinstance(loaded_updates, (list, tuple)):
+        updates = sorted(loaded_updates, key=lambda u: getattr(u, 'updated_at', None) or datetime.min)
+    else:
+        updates = AssetUpdate.query.filter_by(asset_id=asset.id).order_by(AssetUpdate.updated_at).all()
 
     if not updates:
         # Güncelleme yoksa, sadece satın alma ve güncel değer

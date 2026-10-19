@@ -13,16 +13,34 @@ from datetime import datetime, timedelta, timezone
 
 from flask import Blueprint, g, jsonify, render_template, request, session
 
-from domain.analysis.services import (
-    PROGRAM_ANALYSES,
-    PROGRAM_CALCULATIONS,
-    TECHNICAL_TERMS,
-    get_all_phases,
-    get_all_topics,
-    get_formula_function,
-    get_guide_data,
-)
+import domain.analysis.services as _analysis_services
 from infrastructure.i18n import i18n
+
+_LAZY_GUIDE_EXPORTS = frozenset({
+    "PROGRAM_ANALYSES",
+    "PROGRAM_CALCULATIONS",
+    "TECHNICAL_TERMS",
+    "get_all_phases",
+    "get_all_topics",
+    "get_formula_function",
+    "get_guide_data",
+})
+
+
+def __getattr__(name: str):
+    if name in _LAZY_GUIDE_EXPORTS:
+        val = getattr(_analysis_services, name)
+        globals()[name] = val
+        return val
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def _resolve_guide_export(name: str):
+    if name in globals():
+        return globals()[name]
+    val = getattr(_analysis_services, name)
+    globals()[name] = val
+    return val
 from models import QuizAttempt, QuizQuestion, UserAchievement, UserProgress  # noqa: F401
 from repositories.financial_education_repository import FinancialEducationRepository
 from shared.db import db
@@ -89,7 +107,8 @@ def register_financial_education_routes(bp):
 
         if view_type == 'dictionary':
             # Sözlük görünümü
-            technical_terms = TECHNICAL_TERMS.get(lang, TECHNICAL_TERMS['en'])['terms']
+            tech_terms_map = _resolve_guide_export("TECHNICAL_TERMS")
+            technical_terms = tech_terms_map.get(lang, tech_terms_map['en'])['terms']
 
             return render_template(
                 'financial_education.html',
@@ -113,7 +132,7 @@ def register_financial_education_routes(bp):
             )
         elif view_type == 'calculations':
             # Hesaplamalar görünümü
-            program_calculations = PROGRAM_CALCULATIONS
+            program_calculations = _resolve_guide_export("PROGRAM_CALCULATIONS")
             # Convert to language-specific format
             calculations_data = {}
             for key, data in program_calculations.items():
@@ -127,7 +146,8 @@ def register_financial_education_routes(bp):
             )
         elif view_type == 'analyses':
             # Analizler görünümü
-            program_analyses = PROGRAM_ANALYSES.get(lang, PROGRAM_ANALYSES['en'])['analyses']
+            prog_analyses_map = _resolve_guide_export("PROGRAM_ANALYSES")
+            program_analyses = prog_analyses_map.get(lang, prog_analyses_map['en'])['analyses']
 
             return render_template(
                 'financial_education.html',
@@ -143,11 +163,11 @@ def register_financial_education_routes(bp):
             return render_template(
                 'financial_education.html',
                 view_type='guide',
-                phases=get_all_phases(),
-                topics=get_all_topics(phase),
+                phases=_resolve_guide_export("get_all_phases")(),
+                topics=_resolve_guide_export("get_all_topics")(phase),
                 current_phase=phase,
                 current_topic=topic,
-                guide_data=get_guide_data(phase, topic, lang),
+                guide_data=_resolve_guide_export("get_guide_data")(phase, topic, lang),
                 lang=lang
             )
 
@@ -167,7 +187,7 @@ def register_financial_education_routes(bp):
                     params[key] = 0.0
 
         # Formül fonksiyonunu al
-        func = get_formula_function(formula_name)
+        func = _resolve_guide_export("get_formula_function")(formula_name)
 
         if func:
             try:
@@ -364,9 +384,9 @@ def register_financial_education_routes(bp):
             phase = data.get('phase', 'beginner')
             if not isinstance(topic, str) or not topic.strip():
                 return jsonify({'success': False, 'error': i18n.gettext('fe_topic_required')}), 400
-            if not isinstance(phase, str) or phase not in set(get_all_phases()):
+            if not isinstance(phase, str) or phase not in set(_resolve_guide_export("get_all_phases")()):
                 return jsonify({'success': False, 'error': i18n.gettext('fe_invalid_level')}), 422
-            if topic not in set(get_all_topics(phase)):
+            if topic not in set(_resolve_guide_export("get_all_topics")(phase)):
                 return jsonify({'success': False, 'error': i18n.gettext('fe_invalid_topic')}), 422
 
             try:

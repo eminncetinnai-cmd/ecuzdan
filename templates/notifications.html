@@ -1,4 +1,5 @@
 {% extends 'layout.html' %}
+{% set skip_chart_vendor = true %}
 {% from 'macros/buttons.html' import button_secondary, button_danger %}
 
 {% block title %}{{ _('notifications_title') }} | {{ brand }}{% endblock %}
