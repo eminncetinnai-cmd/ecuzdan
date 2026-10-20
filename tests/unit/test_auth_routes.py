@@ -445,3 +445,26 @@ def test_oauth_callback_missing_credentials(client, app, monkeypatch):
 
     assert result.status_code == 302
     assert result.location.endswith('/login')
+
+
+@pytest.mark.unit
+def test_login_with_remember_me_sets_permanent_session(client):
+    """Test login with remember_me sets permanent session."""
+    resp = client.post('/login', data={'username': 'testuser', 'password': 'testpass', 'remember_me': 'true'})
+    assert resp.status_code == 302
+    with client.session_transaction() as sess:
+        assert sess.get('username') == 'testuser'
+        assert sess.get('remember_me') is True
+        assert sess.permanent is True
+
+
+@pytest.mark.unit
+def test_login_without_remember_me_sets_temporary_session(client):
+    """Test login without remember_me sets temporary (non-permanent) session."""
+    resp = client.post('/login', data={'username': 'testuser', 'password': 'testpass'})
+    assert resp.status_code == 302
+    with client.session_transaction() as sess:
+        assert sess.get('username') == 'testuser'
+        assert sess.get('remember_me') is False
+        assert sess.permanent is False
+

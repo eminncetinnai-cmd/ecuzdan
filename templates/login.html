@@ -483,6 +483,62 @@
         }
         .lux-icon-right:hover { color: var(--color-slate-50); }
 
+        /* Remember Me Row */
+        .lux-remember-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: var(--space-pad-12, 12px) 2px var(--space-pad-16, 16px) 2px;
+        }
+        .lux-remember-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            user-select: none;
+            min-height: 40px;
+        }
+        .lux-remember-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: var(--border-radius-4, 4px);
+            border: 1px solid var(--border-subtle);
+            background: rgba(15, 23, 42, 0.9);
+            cursor: pointer;
+            position: relative;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        .lux-remember-checkbox:checked {
+            background: linear-gradient(135deg, var(--color-violet-500), var(--color-indigo-500));
+            border-color: var(--color-violet-400);
+        }
+        .lux-remember-checkbox:checked::after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 2px;
+            width: 5px;
+            height: 9px;
+            border: solid var(--color-white, #ffffff);
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        .lux-remember-checkbox:focus-visible {
+            box-shadow: 0 0 0 2px var(--color-violet-400);
+        }
+        .lux-remember-text {
+            font-size: var(--font-size-13, 13px);
+            font-weight: 500;
+            color: var(--text-muted);
+            transition: color 0.2s ease;
+        }
+        .lux-remember-label:hover .lux-remember-text {
+            color: var(--text-main);
+        }
+
         /* Submit Button */
         .btn-submit-quantum {
             width: 100%;
@@ -818,6 +874,13 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                     </svg>
                                 </button>
+                            </div>
+
+                            <div class="lux-remember-row">
+                                <label class="lux-remember-label" for="remember_me">
+                                    <input type="checkbox" id="remember_me" name="remember_me" value="true" checked class="lux-remember-checkbox">
+                                    <span class="lux-remember-text">{{ _('login_remember_me') }}</span>
+                                </label>
                             </div>
 
                             <button data-macro="button_secondary" type="submit" id="login-submit-btn" class="btn-submit-quantum">

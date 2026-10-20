@@ -33,6 +33,7 @@ def register_auth_routes(bp):
             if request.method == 'POST':
                 username = request.form.get('username', '').strip()
                 password = request.form.get('password', '')
+                remember_me = request.form.get('remember_me') in ('true', '1', 'on', 'yes')
                 if not username or not password:
                     flash('Kullanıcı adı ve şifre gereklidir.', 'error')
                     return render_template('login.html', daily_insight=daily_insight)
@@ -40,7 +41,8 @@ def register_auth_routes(bp):
                 user = auth_service.authenticate(username, password)
                 if user:
                     session.clear()
-                    session.permanent = False
+                    session.permanent = bool(remember_me)
+                    session['remember_me'] = bool(remember_me)
                     session['user_id'] = user.id
                     session['username'] = user.username
                     session['lang'] = user.language
@@ -293,7 +295,8 @@ def register_auth_routes(bp):
 
                 # Create session
                 session.clear()
-                session.permanent = False
+                session.permanent = True
+                session['remember_me'] = True
                 session['user_id'] = existing_user.id
                 session['username'] = existing_user.username
                 session['lang'] = existing_user.language
@@ -405,7 +408,8 @@ def register_auth_routes(bp):
                     db.session.commit()
 
                     session.clear()
-                    session.permanent = False
+                    session.permanent = True
+                    session['remember_me'] = True
                     session['user_id'] = existing_user.id
                     session['username'] = existing_user.username
                     session['lang'] = existing_user.language
@@ -565,7 +569,8 @@ def register_auth_routes(bp):
                 # Create session
                 logger.info("[OAuthSignup] Creating user session")
                 session.clear()
-                session.permanent = False
+                session.permanent = True
+                session['remember_me'] = True
                 session['user_id'] = user.id
                 session['username'] = user.username
                 session['lang'] = user.language

@@ -522,7 +522,7 @@ def register_session_check(app):
             return redirect(url_for('auth.login'))
 
         # Session timeout kontrolü
-        session_timeout_hours = Config.SESSION_TIMEOUT_HOURS
+        is_remembered = bool(session.get('remember_me', False))
         if 'session_created_at' in session:
             from datetime import datetime
             try:
@@ -533,20 +533,21 @@ def register_session_check(app):
                 flash('Oturum bilgisi bozulmuş. Güvenliğiniz için lütfen tekrar giriş yapın.', 'warning')
                 return redirect(url_for('auth.login'))
             session_age = datetime.now() - session_created_at
-            if session_age.total_seconds() > (session_timeout_hours * 3600):
+            timeout_seconds = (getattr(Config, 'REMEMBER_COOKIE_DAYS', 30) * 86400) if is_remembered else (Config.SESSION_TIMEOUT_HOURS * 3600)
+            if session_age.total_seconds() > timeout_seconds:
                 session.clear()
                 if _should_return_json():
                     return jsonify({
                         'success': False,
                         'error_code': 'session_expired',
-                        'message': f'Oturumunuz {session_timeout_hours} saat sonra zaman aşımına uğradı.',
+                        'message': 'Oturumunuz zaman aşımına uğradı.',
                     }), 401
-                flash(f'Oturumunuz {session_timeout_hours} saat sonra otomatik olarak kapatıldı. Lütfen tekrar giriş yapın.', 'warning')
+                flash('Oturumunuz zaman aşımına uğradı. Lütfen tekrar giriş yapın.', 'warning')
                 return redirect(url_for('auth.login'))
 
-        # Program yeniden açıldığında eski tarayıcı session'larını geçersiz say.
-        # Böylece http://127.0.0.1:5000/ doğrudan açılsa bile yeniden şifre istenir.
-        if not app.config.get('TESTING') and session.get('app_boot_id') != app.config.get('APP_BOOT_ID'):
+        # Program yeniden açıldığında eski geçici tarayıcı session'larını geçersiz say.
+        # "Beni Hatırla" seçilmiş oturumlar için boot ID kontrolü atlanır.
+        if not app.config.get('TESTING') and not is_remembered and session.get('app_boot_id') != app.config.get('APP_BOOT_ID'):
             session.clear()
             if _should_return_json():
                 return jsonify({

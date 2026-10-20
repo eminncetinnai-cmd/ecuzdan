@@ -122,7 +122,7 @@ def inject_csrf_token():
     return {'csrf_token': csrf_token}
 
 # Session ve Cookie Güvenlik Ayarları
-app.permanent_session_lifetime = timedelta(hours=config.SESSION_TIMEOUT_HOURS)
+app.permanent_session_lifetime = timedelta(days=config.REMEMBER_COOKIE_DAYS)
 app.config.update(
     SESSION_COOKIE_HTTPONLY=config.SESSION_COOKIE_HTTPONLY,
     SESSION_COOKIE_SAMESITE=config.SESSION_COOKIE_SAMESITE,

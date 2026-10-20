@@ -174,6 +174,8 @@ def test_get_current_user_with_cache():
     with app.test_request_context():
         session['user_id'] = '123'
         mock_user = Mock()
+        mock_user.id = '123'
+        mock_user._sa_instance_state = None
         g.current_user = mock_user
         result = get_current_user()
         assert result == mock_user
