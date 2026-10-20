@@ -2,7 +2,12 @@
 <html lang="{{ lang }}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="E-Cüzdan">
+    <meta name="theme-color" content="rgb(3, 7, 18)">
     <title>{{ _('btn_login') }} | E-Cüzdan — Intelligent Wealth Platform</title>
     <meta name="description" content="E-Cüzdan — Akıllı kişisel finans ve varlık yönetim sistemi. Güvenle giriş yapın.">
     <link rel="icon" type="image/svg+xml" href="{{ static_asset_url('favicon.svg') }}">
@@ -714,6 +719,7 @@
                 margin-bottom: 1.5rem;
             }
         }
+        .lux-input { font-size: var(--font-size-16, 16px); }
     </style>
 </head>
 <body>

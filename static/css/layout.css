@@ -921,11 +921,59 @@ footer {
     .mobile-bottom-nav {
         padding-bottom: calc(0.35rem + env(safe-area-inset-bottom, 0px)) !important;
         min-height: calc(3.85rem + env(safe-area-inset-bottom, 0px));
+        transition: opacity 0.2s ease, visibility 0.2s ease;
     }
     .mobile-bottom-nav a,
     .mobile-bottom-nav button {
         min-width: 44px;
         min-height: 44px;
+    }
+
+    /* Prevent footer overlap behind fixed mobile bottom nav */
+    footer {
+        padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    /* Hide mobile bottom nav when drawer menu is open to prevent bleeding through backdrop */
+    html.mobile-menu-open .mobile-bottom-nav,
+    body:has(#mobile-sidebar:not(.hidden)) .mobile-bottom-nav {
+        opacity: 0 !important;
+        pointer-events: none !important;
+        visibility: hidden !important;
+    }
+
+    /* Prevent iOS Safari auto-zoom on input focus (< 16px font-size) */
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]),
+    select,
+    textarea,
+    .form-input,
+    .form-textarea,
+    .edit-modal-input,
+    .lux-input {
+        font-size: 16px !important;
+    }
+
+    /* Clean mobile tab bars: hide ugly scrollbar track on WebKit/iOS */
+    [role="tablist"],
+    .tx-tab-bar,
+    .subnav-scroll {
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+    }
+    [role="tablist"]::-webkit-scrollbar,
+    .tx-tab-bar::-webkit-scrollbar,
+    .subnav-scroll::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+
+    /* Transaction checkbox touch target ergonomics */
+    .tx-row-select {
+        width: 1.15rem !important;
+        height: 1.15rem !important;
+        min-width: 1.15rem !important;
+        min-height: 1.15rem !important;
     }
 }
 
@@ -1457,22 +1505,22 @@ html.dark #headerBar {
     }
     #headerBar .header-control,
     #headerBar .user-dropdown-btn {
-        min-height: 2.1rem;
-        height: 2.1rem;
-        width: 2.1rem;
-        min-width: 2.1rem;
+        min-height: 2.35rem;
+        height: 2.35rem;
+        width: 2.35rem;
+        min-width: 2.35rem;
     }
     #headerBar .user-dropdown-btn .user-avatar-mini,
     #headerBar .user-dropdown-btn .user-avatar-mini > * {
-        width: 1.75rem;
-        height: 1.75rem;
+        width: 1.9rem;
+        height: 1.9rem;
     }
     #headerBar .global-search-btn,
 #headerBar .quick-actions-btn,
 #headerBar .calculator-btn,
 #headerBar .privacy-toggle {
-        width: 2.1rem;
-        min-width: 2.1rem;
+        width: 2.35rem;
+        min-width: 2.35rem;
     }
     #headerBar .header-left .global-search-wrapper {
         flex: 0 0 auto;

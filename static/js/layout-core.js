@@ -445,10 +445,12 @@ window.toggleMobileMenu = function() {
     if (mobileSidebar) {
         var isHidden = mobileSidebar.classList.toggle('hidden');
         document.body.style.overflow = isHidden ? '' : 'hidden';
+        document.documentElement.classList.toggle('mobile-menu-open', !isHidden);
         if (btn) btn.setAttribute('aria-expanded', String(!isHidden));
     } else if (sidebar) {
         var isOpen = sidebar.classList.toggle('open');
         document.body.style.overflow = isOpen ? 'hidden' : '';
+        document.documentElement.classList.toggle('mobile-menu-open', isOpen);
         if (btn) btn.setAttribute('aria-expanded', String(isOpen));
     }
 };

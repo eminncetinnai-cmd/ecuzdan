@@ -18,16 +18,16 @@
      data-risk-analysis='{{ analysis.by_risk | tojson if analysis and analysis.by_risk else "{}" }}'>
 
 <!-- Header -->
-<div class="mb-10 flex flex-wrap justify-between items-end gap-4">
+<div class="mb-10 flex flex-wrap justify-between items-center gap-4">
     <div>
         <h2 class="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-none bg-gradient-to-r from-slate-900 to-indigo-900 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">{{ _('ui_auto_b5630992c5ab') }}</h2>
         <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">{{ _('ui_auto_5bfcbacd3cf1') }}</p>
     </div>
-    <div class="flex gap-3">
-        <a href="{{ url_for('assets.investment_performance') }}" class="bg-gradient-to-tr from-emerald-600 to-emerald-500 text-white px-6 py-3 rounded-2xl shadow-lg font-black text-[10px] uppercase hover:from-emerald-700 hover:to-emerald-600 transition">
+    <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+        <a href="{{ url_for('assets.investment_performance') }}" class="inline-flex items-center justify-center self-center bg-gradient-to-tr from-emerald-600 to-emerald-500 text-white px-5 py-3 rounded-2xl shadow-lg font-black text-[11px] uppercase hover:from-emerald-700 hover:to-emerald-600 transition min-h-[44px]">
             {{ _('ui_auto_b65eb5ea71ae') }}
         </a>
-        <div class="bg-gradient-to-tr from-slate-900 to-indigo-950 dark:from-slate-800 dark:to-indigo-900 text-white p-6 rounded-2xl shadow-xl">
+        <div class="flex-1 sm:flex-initial bg-gradient-to-tr from-slate-900 to-indigo-950 dark:from-slate-800 dark:to-indigo-900 text-white p-5 sm:p-6 rounded-2xl shadow-xl">
             <h3 class="text-[9px] font-black uppercase opacity-70 tracking-tighter">{{ _('ui_auto_8429fe807ee9') }}</h3>
             <p class="text-3xl font-black">{{ analysis.total_value|format_money }} {{ base_currency_symbol }}</p>
         </div>
@@ -367,7 +367,7 @@
             <p id="deleteAssetName" class="font-black text-rose-700 text-sm">—</p>
             <p class="text-[10px] text-rose-500 mt-0.5">{{ _('ui_auto_fc6e5fa95f15') }}</p>
         </div>
-        <div class="flex gap-3">
+        <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
             <button data-macro="button_secondary" type="button" onclick="closeDeleteModal()" class="flex-1 px-4 py-3 rounded-xl font-bold text-[11px] uppercase bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">
                 İptal
             </button>
@@ -450,7 +450,7 @@
 
             <div id="sellError" class="hidden bg-rose-50 border border-rose-200 rounded-xl px-4 py-3 mb-4 text-xs text-rose-600 font-bold"></div>
 
-            <div class="flex gap-3">
+            <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
                 <button data-macro="button_secondary" type="button" onclick="closeSellModal()" class="flex-1 px-4 py-3 rounded-xl font-bold text-[11px] uppercase bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">
                     İptal
                 </button>

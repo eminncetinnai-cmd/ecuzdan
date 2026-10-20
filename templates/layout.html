@@ -38,9 +38,15 @@
             window.location.replace(refreshUrl.toString());
         };
     </script>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="{{ brand }}">
+    <meta name="theme-color" content="rgb(15, 23, 42)">
     <meta name="csrf-token" content="{{ session.get('csrf_token', '') }}">
     <link rel="icon" type="image/svg+xml" href="{{ static_asset_url('favicon.svg') }}">
+    <link rel="apple-touch-icon" href="{{ static_asset_url('favicon.svg') }}">
     <link rel="alternate icon" href="{{ static_asset_url('favicon.ico') }}">
     <title>{% block document_title %}{{ brand }} | {{ _('sidebar_premium_wealth') }}{% endblock %}</title>
 

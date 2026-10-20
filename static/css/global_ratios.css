@@ -1535,3 +1535,10 @@ html.dark .alert-modal-footer,
         max-width: 100% !important;
     }
 }
+
+@media (max-width: 640px) {
+    .timeframe-pill-btn {
+        min-height: 36px;
+        padding: 0.4rem 0.75rem;
+    }
+}
