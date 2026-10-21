@@ -414,28 +414,6 @@
                 </div>
 
                 <div>
-                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">Ödeme Süresi / Modeli</label>
-                    <div class="grid grid-cols-2 gap-2.5">
-                        <label id="duration_card_indefinite" class="duration-mode-card relative flex flex-col p-3 rounded-2xl border-2 cursor-pointer transition select-none border-indigo-500 bg-indigo-50/50">
-                            <div class="flex items-center gap-2">
-                                <input type="radio" name="duration_mode_choice" id="duration_mode_indefinite" value="indefinite" checked class="accent-indigo-600 w-4 h-4" onchange="onDurationModeChange('indefinite')">
-                                <span class="text-xs font-black text-slate-800">♾️ Süresiz / Düzenli</span>
-                            </div>
-                            <p class="text-[10px] text-slate-500 font-medium mt-1.5 ml-6">Maaş, kira, fatura, abonelik vb. İptal edilene kadar devam eder.</p>
-                        </label>
-
-                        <label id="duration_card_installment" class="duration-mode-card relative flex flex-col p-3 rounded-2xl border-2 cursor-pointer transition select-none border-slate-200 bg-slate-50/50 hover:bg-slate-50">
-                            <div class="flex items-center gap-2">
-                                <input type="radio" name="duration_mode_choice" id="duration_mode_installment" value="installment" class="accent-indigo-600 w-4 h-4" onchange="onDurationModeChange('installment')">
-                                <span class="text-xs font-black text-slate-800">🔢 Belirli Süreli / Taksitli</span>
-                            </div>
-                            <p class="text-[10px] text-slate-500 font-medium mt-1.5 ml-6">Kredi, borç, cihaz taksiti vb. Belirli taksit sayısında biter.</p>
-                        </label>
-                    </div>
-                    <input type="hidden" name="plan_type" id="plan_type" value="Abonelik">
-                </div>
-
-                <div>
                     <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('plans_table_name') }}</label>
                     <input type="text" name="name" id="plan_name" placeholder="{{ _('ui_auto_dc5465a9d2e7') }}" class="edit-modal-input" required>
                 </div>
@@ -457,19 +435,45 @@
                 </div>
                 
                 <div>
-                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('plans_label_note_optional') }}</label>
-                    <input type="text" name="note" id="plan_note" placeholder="{{ _('plans_note_placeholder') }}" class="edit-modal-input">
-                </div>
-                
-                <div>
                     <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('ui_auto_a58f6e554fa2') }}</label>
-                    <input type="number" step="0.01" min="0.01" name="amount" id="plan_amount" placeholder="0.00" class="edit-modal-input font-bold text-indigo-700" oninput="updateDurationLiveSummary()" required>
+                    <input type="number" step="0.01" min="0.01" name="amount" id="plan_amount" placeholder="0.00" class="edit-modal-input font-bold text-indigo-700 dark:text-indigo-400" oninput="updateDurationLiveSummary()" required>
                 </div>
 
-                <!-- Süresiz Mod Açıklama Rozeti -->
-                <div id="indefinite_info_box" class="rounded-2xl border border-indigo-100 bg-indigo-50/70 p-3 text-[11px] text-indigo-800 font-medium flex items-center gap-2.5">
-                    <span class="text-base flex-shrink-0">💡</span>
-                    <span>Bu plan, siz duraklatana veya iptal edene kadar her ay belirlenen günde düzenli olarak tekrarlanır. Taksit sayısı gerekmez.</span>
+                <!-- Zamanlama: İlk Ödeme Tarihi & Ayın Ödeme Günü (Birbirine Tam Entegre ve Senkron) -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="sm:col-span-2">
+                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">📅 İlk Ödeme Tarihi</label>
+                        <input type="date" name="start_date" id="plan_start_date" class="edit-modal-input font-bold" onchange="onStartDateChange()" required>
+                        <p class="text-[8px] text-slate-400 mt-1">İlk işlemin yapılacağı tarih. Ödeme günü otomatik belirlenir.</p>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">Ayın Günü</label>
+                        <input type="number" min="1" max="31" name="payment_day" id="plan_payment_day" placeholder="1-31" class="edit-modal-input font-bold text-center" oninput="onPaymentDayInput()" required>
+                        <p class="text-[8px] text-slate-400 mt-1">Ödeme günü (1-31).</p>
+                    </div>
+                </div>
+
+                <!-- Ödeme Modeli: Süresiz / Düzenli vs. Taksitli / Belirli Süreli -->
+                <div>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">Ödeme Süresi / Modeli</label>
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <label id="duration_card_indefinite" class="duration-mode-card relative flex flex-col p-3 rounded-2xl border-2 cursor-pointer transition select-none border-indigo-500 bg-indigo-50/50 dark:border-indigo-500 dark:bg-indigo-950/40">
+                            <div class="flex items-center gap-2">
+                                <input type="radio" name="duration_mode_choice" id="duration_mode_indefinite" value="indefinite" checked class="accent-indigo-600 w-4 h-4" onchange="onDurationModeChange('indefinite')">
+                                <span class="text-xs font-black text-slate-800 dark:text-slate-100">♾️ Süresiz / Düzenli</span>
+                            </div>
+                            <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-1.5 ml-6">Maaş, kira, fatura, abonelik vb. İptal edilene kadar devam eder.</p>
+                        </label>
+
+                        <label id="duration_card_installment" class="duration-mode-card relative flex flex-col p-3 rounded-2xl border-2 cursor-pointer transition select-none border-slate-200 bg-slate-50/50 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-800/40 dark:hover:bg-slate-800">
+                            <div class="flex items-center gap-2">
+                                <input type="radio" name="duration_mode_choice" id="duration_mode_installment" value="installment" class="accent-indigo-600 w-4 h-4" onchange="onDurationModeChange('installment')">
+                                <span class="text-xs font-black text-slate-800 dark:text-slate-100">🔢 Belirli Süreli / Taksitli</span>
+                            </div>
+                            <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-1.5 ml-6">Kredi, borç, cihaz taksiti vb. Belirli taksit sayısında biter.</p>
+                        </label>
+                    </div>
+                    <input type="hidden" name="plan_type" id="plan_type" value="Abonelik">
                 </div>
 
                 <!-- Taksitli / Süreli Mod Alanları (Sadece Belirli Süreli seçilince görünür) -->
@@ -483,31 +487,30 @@
                         <div>
                             <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">Bitiş Tarihi</label>
                             <input type="date" name="end_date" id="plan_end_date" class="edit-modal-input font-bold" onchange="onEndDateInput()">
-                            <p class="text-[8px] text-slate-400 mt-1">Taksit sayısı veya bitiş tarihi girildiğinde diğeri otomatik hesaplanır.</p>
-                        </div>
-                    </div>
-                    <div id="plan_duration_summary" class="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-3 text-[11px] font-bold text-emerald-800 flex flex-wrap items-center justify-between gap-2">
-                        <div class="flex items-center gap-2">
-                            <span class="text-base">📅</span>
-                            <span id="duration_summary_text">12 Taksit • Son Ödeme: —</span>
-                        </div>
-                        <div id="duration_total_text" class="text-xs font-black text-emerald-900 whitespace-nowrap">
-                            Toplam: —
+                            <p class="text-[8px] text-slate-400 mt-1">Taksit sayısı girildiğinde otomatik hesaplanır (veya tersi).</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('ui_auto_130653bb9ed1') }}</label>
-                        <input type="number" min="1" max="31" name="payment_day" id="plan_payment_day" placeholder="1-31" class="edit-modal-input" required>
-                        <p class="text-[8px] text-slate-400 mt-1">Her ayın hangi günü (1-31).</p>
+                <!-- Canlı Akıllı İnsan Dili Önizleme Kartı (Her iki modda anlık ve çift yönlü çalışır) -->
+                <div id="plan_live_summary_box" class="rounded-2xl border border-indigo-100 dark:border-indigo-900/60 bg-indigo-50/70 dark:bg-indigo-950/40 p-3.5 text-[11px] font-medium text-indigo-900 dark:text-indigo-200 flex items-start gap-2.5">
+                    <span id="plan_live_summary_icon" class="text-base flex-shrink-0 mt-0.5">💡</span>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between gap-2 mb-1">
+                            <span id="plan_live_summary_title" class="text-[10px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Plan Özeti</span>
+                            <span id="duration_total_text" class="text-xs font-black text-indigo-900 dark:text-indigo-200">Toplam: —</span>
+                        </div>
+                        <p id="plan_live_summary_text" class="text-xs font-semibold text-slate-800 dark:text-slate-100 leading-snug">Seçilen tarihten itibaren düzenli olarak tekrarlanacaktır.</p>
+                        <p id="plan_live_summary_subtext" class="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 mt-1.5 flex items-center gap-1.5"></p>
                     </div>
-                    <div>
-                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('ui_auto_72f8822a6d0d') }}</label>
-                        <input type="date" name="start_date" id="plan_start_date" class="edit-modal-input" onchange="onStartDateChange()">
-                        <p class="text-[8px] text-slate-400 mt-1">{{ _('ui_auto_99b289e4b185') }}</p>
-                    </div>
+                </div>
+                <!-- Legacy element hook for existing selectors if referenced -->
+                <span id="duration_summary_text" class="hidden"></span>
+                <div id="indefinite_info_box" class="hidden"></div>
+
+                <div>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('plans_label_note_optional') }}</label>
+                    <input type="text" name="note" id="plan_note" placeholder="{{ _('plans_note_placeholder') }}" class="edit-modal-input">
                 </div>
 
                 <div id="plan_status_wrapper">

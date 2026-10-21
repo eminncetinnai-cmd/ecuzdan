@@ -324,13 +324,23 @@ function switchTab(tabId, btn) {
 let currentDurationMode = 'indefinite';
 const TR_MONTHS = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
 
+function addMonthsToDate(date, months) {
+    const target = new Date(date.getTime());
+    const originalDay = date.getDate();
+    target.setDate(1);
+    target.setMonth(target.getMonth() + months);
+    const maxDays = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+    target.setDate(Math.min(originalDay, maxDays));
+    return target;
+}
+window.addMonthsToDate = addMonthsToDate;
+
 function onDurationModeChange(mode) {
     currentDurationMode = mode === 'installment' ? 'installment' : 'indefinite';
     const cardIndefinite = document.getElementById('duration_card_indefinite');
     const cardInstallment = document.getElementById('duration_card_installment');
     const radioIndefinite = document.getElementById('duration_mode_indefinite');
     const radioInstallment = document.getElementById('duration_mode_installment');
-    const infoBox = document.getElementById('indefinite_info_box');
     const fieldsGroup = document.getElementById('installment_fields_group');
     const planTypeInput = document.getElementById('plan_type');
     const installmentsInput = document.getElementById('plan_installments');
@@ -348,7 +358,6 @@ function onDurationModeChange(mode) {
         cardInstallment?.classList.remove('border-indigo-500', 'bg-indigo-50/50');
         cardInstallment?.classList.add('border-slate-200', 'bg-slate-50/50');
 
-        infoBox?.classList.remove('hidden');
         fieldsGroup?.classList.add('hidden');
 
         if (installmentsInput) {
@@ -372,7 +381,6 @@ function onDurationModeChange(mode) {
         cardIndefinite?.classList.remove('border-indigo-500', 'bg-indigo-50/50');
         cardIndefinite?.classList.add('border-slate-200', 'bg-slate-50/50');
 
-        infoBox?.classList.add('hidden');
         fieldsGroup?.classList.remove('hidden');
 
         if (installmentsInput) {
@@ -410,15 +418,15 @@ function syncEndDateFromInstallments() {
         }
     }
     const freq = freqInput ? freqInput.value : 'Aylık';
-    const endDate = new Date(startDate.getTime());
+    let endDate = new Date(startDate.getTime());
     if (freq === 'Haftalık') {
         endDate.setDate(endDate.getDate() + (installments - 1) * 7);
     } else if (freq === '3-Aylık') {
-        endDate.setMonth(endDate.getMonth() + (installments - 1) * 3);
+        endDate = addMonthsToDate(startDate, (installments - 1) * 3);
     } else if (freq === 'Yıllık') {
-        endDate.setFullYear(endDate.getFullYear() + (installments - 1));
+        endDate = addMonthsToDate(startDate, (installments - 1) * 12);
     } else {
-        endDate.setMonth(endDate.getMonth() + (installments - 1));
+        endDate = addMonthsToDate(startDate, installments - 1);
     }
 
     const y = endDate.getFullYear();
@@ -515,37 +523,71 @@ function onStartDateChange() {
 }
 window.onStartDateChange = onStartDateChange;
 
-function updateDurationLiveSummary() {
-    const summaryText = document.getElementById('duration_summary_text');
-    const totalText = document.getElementById('duration_total_text');
-    if (!summaryText || !totalText) return;
+function onPaymentDayInput() {
+    const paymentDayInput = document.getElementById('plan_payment_day');
+    const startInput = document.getElementById('plan_start_date');
+    if (!paymentDayInput || !startInput) return;
 
-    if (currentDurationMode === 'indefinite') {
-        return;
+    let day = parseInt(paymentDayInput.value, 10);
+    if (isNaN(day)) return;
+    if (day < 1) day = 1;
+    if (day > 31) day = 31;
+
+    let currentStart = new Date();
+    if (startInput.value) {
+        const parts = startInput.value.split('-');
+        if (parts.length === 3) {
+            currentStart = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, 1);
+        }
     }
+
+    const year = currentStart.getFullYear();
+    const month = currentStart.getMonth();
+    // Clamp to max days in current selected month
+    const maxDays = new Date(year, month + 1, 0).getDate();
+    const clampedDay = Math.min(day, maxDays);
+
+    const yStr = year;
+    const mStr = String(month + 1).padStart(2, '0');
+    const dStr = String(clampedDay).padStart(2, '0');
+    startInput.value = `${yStr}-${mStr}-${dStr}`;
+
+    if (currentDurationMode === 'installment') {
+        const instInput = document.getElementById('plan_installments');
+        const endInput = document.getElementById('plan_end_date');
+        if (instInput && parseInt(instInput.value || '0', 10) > 0) {
+            syncEndDateFromInstallments();
+        } else if (endInput && endInput.value) {
+            syncInstallmentsFromEndDate();
+        }
+    }
+    updateDurationLiveSummary();
+}
+window.onPaymentDayInput = onPaymentDayInput;
+
+function updateDurationLiveSummary() {
+    const summaryBox = document.getElementById('plan_live_summary_box');
+    const summaryIcon = document.getElementById('plan_live_summary_icon');
+    const summaryTitle = document.getElementById('plan_live_summary_title');
+    const summaryText = document.getElementById('plan_live_summary_text');
+    const summarySubtext = document.getElementById('plan_live_summary_subtext');
+    const legacySummaryText = document.getElementById('duration_summary_text');
+    const totalText = document.getElementById('duration_total_text');
 
     const instInput = document.getElementById('plan_installments');
     const amtInput = document.getElementById('plan_amount');
     const startInput = document.getElementById('plan_start_date');
+    const dayInput = document.getElementById('plan_payment_day');
     const freqInput = document.getElementById('plan_frequency');
+    const flowEl = document.getElementById('flow_type_selector');
     const curr = getPlanCurrencySymbol();
 
-    const installments = parseInt(instInput?.value || '0', 10);
     const amount = parseFloat(amtInput?.value || '0');
     const freq = freqInput?.value || 'Aylık';
+    const flow = flowEl?.value || 'Gider';
+    const dayVal = parseInt(dayInput?.value || '1', 10);
+    const actionVerb = flow === 'Gelir' ? 'tahsil edilecektir' : 'ödenecektir';
 
-    if (!installments || installments <= 0) {
-        summaryText.textContent = 'Lütfen taksit sayısı veya bitiş tarihi belirleyin.';
-        totalText.textContent = 'Toplam: —';
-        return;
-    }
-
-    // Calculate total amount
-    const total = amount > 0 ? (amount * installments) : 0;
-    const formattedTotal = total > 0 ? planAmount(total) + ' ' + curr : '—';
-    totalText.textContent = `Toplam: ${formattedTotal}`;
-
-    // Calculate completion date based on start date + frequency * installments
     let startDate = new Date();
     if (startInput?.value) {
         const parts = startInput.value.split('-');
@@ -554,23 +596,87 @@ function updateDurationLiveSummary() {
         }
     }
 
-    const endDate = new Date(startDate.getTime());
+    const startDay = startDate.getDate();
+    const startMonthName = TR_MONTHS[startDate.getMonth()] || '';
+    const startYear = startDate.getFullYear();
+    const formattedStartDate = `${startDay} ${startMonthName} ${startYear}`;
+
+    // Frequency label
+    let freqScheduleDesc = `her ayın ${dayVal}'inde`;
+    if (freq === 'Haftalık') {
+        freqScheduleDesc = 'her hafta';
+    } else if (freq === '3-Aylık') {
+        freqScheduleDesc = `3 ayda bir (ayın ${dayVal}'inde)`;
+    } else if (freq === 'Yıllık') {
+        freqScheduleDesc = `her yıl (${startDay} ${startMonthName})`;
+    }
+
+    const formattedAmount = amount > 0 ? `${planAmount(amount)} ${curr}` : `0,00 ${curr}`;
+
+    if (currentDurationMode === 'indefinite') {
+        if (summaryIcon) summaryIcon.textContent = '💡';
+        if (summaryTitle) summaryTitle.textContent = 'Plan Özeti';
+        if (totalText) totalText.textContent = `Dönem Başı: ${formattedAmount}`;
+        if (summaryText) {
+            summaryText.textContent = `${formattedStartDate} tarihinden itibaren ${freqScheduleDesc} ${formattedAmount} ${actionVerb}.`;
+        }
+        if (summarySubtext) {
+            summarySubtext.textContent = '♾️ Süresiz Düzenli Plan: Siz duraklatana veya iptal edene kadar düzenli olarak tekrarlanır.';
+            summarySubtext.classList.remove('hidden');
+        }
+        if (legacySummaryText) {
+            legacySummaryText.textContent = `Süresiz • ${freqScheduleDesc}`;
+        }
+        return;
+    }
+
+    // Installment Mode
+    const installments = parseInt(instInput?.value || '0', 10);
+    if (!installments || installments <= 0) {
+        if (summaryIcon) summaryIcon.textContent = '📅';
+        if (summaryTitle) summaryTitle.textContent = 'Taksitli Plan Özeti';
+        if (summaryText) summaryText.textContent = 'Lütfen taksit sayısı veya bitiş tarihi belirleyin.';
+        if (summarySubtext) summarySubtext.classList.add('hidden');
+        if (totalText) totalText.textContent = 'Toplam: —';
+        if (legacySummaryText) legacySummaryText.textContent = 'Lütfen taksit sayısı veya bitiş tarihi belirleyin.';
+        return;
+    }
+
+    // Calculate total amount
+    const total = amount > 0 ? (amount * installments) : 0;
+    const formattedTotal = total > 0 ? `${planAmount(total)} ${curr}` : '—';
+    if (totalText) totalText.textContent = `Toplam: ${formattedTotal}`;
+
+    // Calculate completion date based on start date + frequency * installments
+    let endDate = new Date(startDate.getTime());
     if (freq === 'Haftalık') {
         endDate.setDate(endDate.getDate() + (installments - 1) * 7);
     } else if (freq === '3-Aylık') {
-        endDate.setMonth(endDate.getMonth() + (installments - 1) * 3);
+        endDate = addMonthsToDate(startDate, (installments - 1) * 3);
     } else if (freq === 'Yıllık') {
-        endDate.setFullYear(endDate.getFullYear() + (installments - 1));
+        endDate = addMonthsToDate(startDate, (installments - 1) * 12);
     } else {
-        // Aylık (default)
-        endDate.setMonth(endDate.getMonth() + (installments - 1));
+        endDate = addMonthsToDate(startDate, installments - 1);
     }
 
+    const endDay = endDate.getDate();
     const endMonthName = TR_MONTHS[endDate.getMonth()] || '';
     const endYear = endDate.getFullYear();
+    const formattedEndDate = `${endDay} ${endMonthName} ${endYear}`;
     const periodLabel = freq === 'Haftalık' ? `${installments} hafta` : (freq === 'Yıllık' ? `${installments} yıl` : `${installments} ay`);
 
-    summaryText.textContent = `${installments} Taksit • Son Ödeme: ${endMonthName} ${endYear} (${periodLabel} süresince)`;
+    if (summaryIcon) summaryIcon.textContent = '📅';
+    if (summaryTitle) summaryTitle.textContent = 'Taksitli Plan Özeti';
+    if (summaryText) {
+        summaryText.textContent = `${formattedStartDate} tarihinden itibaren ${freqScheduleDesc} ${formattedAmount} ${actionVerb}.`;
+    }
+    if (summarySubtext) {
+        summarySubtext.textContent = `🔢 Toplam ${installments} taksit • Son Ödeme: ${formattedEndDate} (${periodLabel} süresince) • Toplam Tutar: ${formattedTotal}`;
+        summarySubtext.classList.remove('hidden');
+    }
+    if (legacySummaryText) {
+        legacySummaryText.textContent = `${installments} Taksit • Son Ödeme: ${endMonthName} ${endYear} (${periodLabel} süresince)`;
+    }
 }
 window.updateDurationLiveSummary = updateDurationLiveSummary;
 
@@ -656,16 +762,22 @@ function openPlanModal() {
     const titleEl = document.getElementById('planModalTitle');
     if (titleEl) titleEl.textContent = getPlanCopy().createTitle || 'Yeni Plan Oluştur';
 
-    // Set today as default start date if empty
+    // Set today as default start date if empty using local timezone
+    const now = new Date();
+    const localY = now.getFullYear();
+    const localM = String(now.getMonth() + 1).padStart(2, '0');
+    const localD = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${localY}-${localM}-${localD}`;
+
     const startDateInput = document.getElementById('plan_start_date');
-    if (startDateInput && !startDateInput.value) {
-        startDateInput.value = new Date().toISOString().slice(0, 10);
+    if (startDateInput) {
+        startDateInput.value = todayStr;
     }
 
     // Set default payment day to today's day of month
     const paymentDayInput = document.getElementById('plan_payment_day');
-    if (paymentDayInput && !paymentDayInput.value) {
-        paymentDayInput.value = new Date().getDate();
+    if (paymentDayInput) {
+        paymentDayInput.value = now.getDate();
     }
 
     const endDateInput = document.getElementById('plan_end_date');
@@ -673,6 +785,7 @@ function openPlanModal() {
 
     updateCategoriesAndAction();
     onDurationModeChange('indefinite');
+    updateDurationLiveSummary();
     window.openModal('unifiedPlanModal');
     setTimeout(() => document.getElementById('plan_name')?.focus(), 100);
 }
