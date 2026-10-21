@@ -53,6 +53,13 @@ def _yf():
     if mod is None:
         import yfinance as mod
         globals()['yf'] = mod
+        try:
+            import logging
+            logging.getLogger('yfinance').setLevel(logging.CRITICAL)
+            if hasattr(mod, 'utils') and hasattr(mod.utils, 'get_yf_logger'):
+                mod.utils.get_yf_logger().setLevel(logging.CRITICAL)
+        except Exception:
+            pass
     return mod
 
 
@@ -120,6 +127,11 @@ class BackgroundService:
 
         # Önbellekten yükle
         self._load_cache()
+
+    @property
+    def is_running(self) -> bool:
+        """Return True if background worker thread is active and alive."""
+        return self._thread is not None and self._thread.is_alive() and not self._stop_event.is_set()
 
     def start(self, flask_app=None):
         """Servisi başlat."""
@@ -402,6 +414,12 @@ class BackgroundService:
         with self._lock:
             temp_market_data = dict(self._market_data)
 
+        if getattr(self, '_stop_event', None) and self._stop_event.is_set():
+            return
+        import sys
+        if getattr(sys, 'is_finalizing', lambda: False)():
+            return
+
         workers = min(3, len(MARKET_ASSETS))
         try:
             with concurrent.futures.ThreadPoolExecutor(max_workers=workers, thread_name_prefix="YFWorker") as executor:
@@ -420,6 +438,11 @@ class BackgroundService:
                         logger.warning("Ticker %s işleme hatası: %s", ticker, exc)
         except TimeoutError:
             logger.warning("Piyasa verileri indirme genel zaman aşımına (12s) uğradı; mevcut önbellek korundu.")
+        except RuntimeError as exc:
+            if "cannot schedule new futures" in str(exc) or "interpreter shutdown" in str(exc):
+                logger.debug("Tercüman kapanırken piyasa verileri görevi sonlandırıldı: %s", exc)
+            else:
+                logger.warning("Piyasa verileri havuzunda çalışma zamanı hatası: %s", exc)
         except Exception as exc:
             logger.warning("Piyasa verileri havuzunda istisna: %s", exc)
 

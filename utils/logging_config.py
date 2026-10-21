@@ -132,6 +132,15 @@ def setup_logging(app=None, level=logging.INFO):
     error_handler.setLevel(logging.ERROR)
     _attach_common_filters(error_handler)
 
+    class ApplicationErrorFilter(logging.Filter):
+        def filter(self, record):
+            # Suppress noisy external library errors (e.g. yfinance ticker delisted / offline misses)
+            if record.name == 'yfinance' or record.name.startswith('yfinance.'):
+                return record.levelno >= logging.CRITICAL
+            return True
+
+    error_handler.addFilter(ApplicationErrorFilter())
+
     # SECURITY log file handler (separate file)
     security_handler = NonDeletingRotatingFileHandler(
         os.path.join(log_dir, 'e_cuzdan_security.log'),
@@ -166,6 +175,7 @@ def setup_logging(app=None, level=logging.INFO):
             json_main_handler, json_error_handler = setup_structured_logging(log_dir, level)
             _attach_common_filters(json_main_handler)
             _attach_common_filters(json_error_handler)
+            json_error_handler.addFilter(ApplicationErrorFilter())
             root_logger.addHandler(json_main_handler)
             root_logger.addHandler(json_error_handler)
         except Exception as e:

@@ -57,7 +57,7 @@ class Category(db.Model):
     updated_at = db.Column(db.DateTime, nullable=True)
 
     # İlişkiler
-    parent = db.relationship('Category', remote_side=[id], backref=db.backref('children', cascade='all, delete-orphan'))
+    parent = db.relationship('Category', remote_side=[id], backref=db.backref('children', cascade='all, delete-orphan'), lazy='joined')
     account = db.relationship('Account', backref='categories')
     creator = db.relationship('User', foreign_keys=[created_by])
     updater = db.relationship('User', foreign_keys=[updated_by])

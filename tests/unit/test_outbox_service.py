@@ -173,3 +173,19 @@ def test_save_to_outbox_uses_asdict():
                 save_to_outbox(mock_event)
 
                 mock_asdict.assert_called_once_with(mock_event)
+
+
+@pytest.mark.unit
+def test_count_pending_outbox_messages():
+    """Test count_pending_outbox_messages queries processed_on=None."""
+    from infrastructure.database.outbox_service import count_pending_outbox_messages
+
+    with patch('infrastructure.database.outbox_service.OutboxMessageModel') as mock_model:
+        mock_filter = mock_model.query.filter_by.return_value
+        mock_filter.count.return_value = 42
+
+        count = count_pending_outbox_messages()
+
+        assert count == 42
+        mock_model.query.filter_by.assert_called_once_with(processed_on=None)
+

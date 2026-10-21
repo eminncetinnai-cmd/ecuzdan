@@ -26,4 +26,4 @@ def save_to_outbox(event: DomainEvent) -> None:
 
 def count_pending_outbox_messages() -> int:
     """Return the number of pending outbox messages."""
-    return OutboxMessageModel.query.filter_by(status='PENDING').count()
+    return OutboxMessageModel.query.filter_by(processed_on=None).count()

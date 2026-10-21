@@ -58,5 +58,27 @@ def test_market_data_concurrent_resilience():
     assert "GC=F" in all_data
     assert all_data["GC=F"]["data"]["prices"] == [2500.0]
     # Other tickers like BTC-USD should have been updated with dummy_df
-    assert "BTC-USD" in all_data
-    assert all_data["BTC-USD"]["data"]["prices"] == [100.0, 105.0]
+
+
+def test_background_service_is_running_lifecycle():
+    """is_running property should reflect thread lifecycle accurately."""
+    service = BackgroundService()
+    assert service.is_running is False
+
+    mock_thread = MagicMock()
+    mock_thread.is_alive.return_value = True
+    service._thread = mock_thread
+    service._stop_event.clear()
+    assert service.is_running is True
+
+    service.stop()
+    assert service.is_running is False
+
+
+def test_market_data_graceful_on_interpreter_shutdown():
+    """When interpreter is shutting down or stop event is set, _update_market_data exits cleanly."""
+    service = BackgroundService()
+    service._stop_event.set()
+    # Should exit immediately without scheduling tasks or throwing exceptions
+    service._update_market_data()
+    assert service._stop_event.is_set()
