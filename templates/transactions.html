@@ -162,25 +162,25 @@
 
         <!-- Segmented Tabs (Tümü / Ödenenler / Bekleyenler / Planlı) -->
         <div class="mb-5 border-b border-slate-200 dark:border-slate-800 flex gap-2 sm:gap-4 overflow-x-auto pb-1" role="tablist" aria-label="İşlem Sekmeleri">
-            <button data-macro="button_secondary" type="button" role="tab" aria-selected="true" class="tx-tab-btn active" data-tab="all" onclick="switchTxTab('all', this)">
+            <button data-macro="button_secondary" type="button" role="tab" aria-selected="{{ 'true' if active_tab == 'all' else 'false' }}" class="tx-tab-btn {{ 'active' if active_tab == 'all' else '' }}" data-tab="all" onclick="switchTxTab('all', this)">
                 <span>Tümü</span>
                 <span class="tab-count-badge badge-all" id="badgeAllCount">{{ tx_summary.total_count if tx_summary else (last_t.items|length if last_t else 0) }}</span>
             </button>
-            <button data-macro="button_secondary" type="button" role="tab" aria-selected="false" class="tx-tab-btn" data-tab="paid" onclick="switchTxTab('paid', this)">
+            <button data-macro="button_secondary" type="button" role="tab" aria-selected="{{ 'true' if active_tab == 'paid' else 'false' }}" class="tx-tab-btn {{ 'active' if active_tab == 'paid' else '' }}" data-tab="paid" onclick="switchTxTab('paid', this)">
                 <span class="inline-flex items-center gap-1.5">
                     <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                     <span>Ödenenler</span>
                 </span>
                 <span class="tab-count-badge badge-paid" id="badgePaidCount">{{ tx_summary.paid_count if tx_summary else 0 }}</span>
             </button>
-            <button data-macro="button_secondary" type="button" role="tab" aria-selected="false" class="tx-tab-btn" data-tab="pending" onclick="switchTxTab('pending', this)">
+            <button data-macro="button_secondary" type="button" role="tab" aria-selected="{{ 'true' if active_tab == 'pending' else 'false' }}" class="tx-tab-btn {{ 'active' if active_tab == 'pending' else '' }}" data-tab="pending" onclick="switchTxTab('pending', this)">
                 <span class="inline-flex items-center gap-1.5">
                     <svg class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <span>Bekleyenler</span>
                 </span>
                 <span class="tab-count-badge badge-pending" id="badgePendingCount">{{ tx_summary.pending_count if tx_summary else 0 }}</span>
             </button>
-            <button data-macro="button_secondary" type="button" role="tab" aria-selected="false" class="tx-tab-btn" data-tab="plan" onclick="switchTxTab('plan', this)">
+            <button data-macro="button_secondary" type="button" role="tab" aria-selected="{{ 'true' if active_tab == 'plan' else 'false' }}" class="tx-tab-btn {{ 'active' if active_tab == 'plan' else '' }}" data-tab="plan" onclick="switchTxTab('plan', this)">
                 <span class="inline-flex items-center gap-1.5">
                     <svg class="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                     <span>Planlı / Taksitler</span>

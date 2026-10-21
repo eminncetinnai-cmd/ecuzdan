@@ -55,7 +55,7 @@ def register_transaction_crud_routes(bp, ui_options_fn, request_payload_fn):
             tx_summary = context.get('tx_summary') or calculate_transaction_batch_summary(tx_items)
             plan_names = context.get('plan_names') or {}
 
-            active_tab = request.args.get('tab', '')
+            active_tab = request.args.get('tab', '').strip()
             if not active_tab:
                 status_arg = request.args.get('status')
                 if status_arg == TRANSACTION_STATUS_PENDING:
@@ -63,7 +63,9 @@ def register_transaction_crud_routes(bp, ui_options_fn, request_payload_fn):
                 elif status_arg == TRANSACTION_STATUS_PAID:
                     active_tab = 'paid'
                 else:
-                    active_tab = 'all'
+                    # Akıllı varsayılan: Bekleyen işlem varsa önce bekleyenler listelenir, yoksa tümü
+                    pending_count = (tx_summary.get('pending_count') if tx_summary else 0) or 0
+                    active_tab = 'pending' if pending_count > 0 else 'all'
 
             if request.args.get('format') == 'json' or request.headers.get('Accept') == 'application/json':
                 paginator = context.get('last_t')

@@ -362,6 +362,53 @@ def test_transactions_page_get(authenticated_client, app):
 
 
 @pytest.mark.unit
+def test_transactions_page_smart_default_tab_with_pending(authenticated_client, app):
+    """GET /transactions defaults to 'pending' when pending transactions exist."""
+    with app.app_context():
+        tx = Transaction.query.filter_by(status='Bekliyor', is_deleted=False).first()
+        if not tx:
+            tx = Transaction(
+                date='2026-10-25',
+                category='Maaş',
+                description='Test Bekleyen Fatura',
+                type='Gider',
+                amount=500,
+                status='Bekliyor',
+                tenant_id='default',
+            )
+            db.session.add(tx)
+            db.session.commit()
+
+        resp = authenticated_client.get('/transactions')
+        assert resp.status_code == 200
+        assert b'data-active-tab="pending"' in resp.data
+
+        # Explicit tab=all override should be respected
+        resp_all = authenticated_client.get('/transactions?tab=all')
+        assert resp_all.status_code == 200
+        assert b'data-active-tab="all"' in resp_all.data
+
+        # Explicit tab=paid override should be respected
+        resp_paid = authenticated_client.get('/transactions?tab=paid')
+        assert resp_paid.status_code == 200
+        assert b'data-active-tab="paid"' in resp_paid.data
+
+
+@pytest.mark.unit
+def test_transactions_page_smart_default_tab_without_pending(authenticated_client, app):
+    """GET /transactions defaults to 'all' when no pending transactions exist."""
+    with app.app_context():
+        pendings = Transaction.query.filter_by(status='Bekliyor').all()
+        for p in pendings:
+            p.status = 'Ödendi'
+        db.session.commit()
+
+        resp = authenticated_client.get('/transactions')
+        assert resp.status_code == 200
+        assert b'data-active-tab="all"' in resp.data
+
+
+@pytest.mark.unit
 def test_transactions_page_pagination(authenticated_client, app):
     """GET /transactions?page=2 handles pagination properly."""
     resp = authenticated_client.get('/transactions?page=2')

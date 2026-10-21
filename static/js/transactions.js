@@ -33,11 +33,12 @@
         const uiCopy = getUiCopy();
         const pageEl = document.getElementById('transactions-page-container');
         const initialTab = pageEl ? pageEl.getAttribute('data-active-tab') || 'all' : 'all';
+        const initialOrder = initialTab === 'pending' ? [[0, 'asc']] : [[0, 'desc']];
 
         // Initialize DataTable
         txDataTable = $('#transTable').DataTable({
             autoWidth: false,
-            order: [[0, 'desc']],
+            order: initialOrder,
             pageLength: 50,
             lengthMenu: [[25, 50, 100, -1], [25, 50, 100, uiCopy.tableAll]],
             dom: '<"flex flex-wrap justify-between items-center gap-3 mb-3"l>rt<"flex flex-wrap justify-between items-center gap-3 mt-4"ip>',
@@ -286,6 +287,12 @@
         window.history.replaceState({}, '', url);
 
         if (txDataTable) {
+            // Akıllı Dinamik Sıralama: Bekleyenler için en yakın tarihli en üstte (ASC), diğer sekmeler için en yeni işlem en üstte (DESC)
+            if (tabId === 'pending') {
+                txDataTable.order([[0, 'asc']]);
+            } else {
+                txDataTable.order([[0, 'desc']]);
+            }
             txDataTable.draw();
         }
     }
