@@ -669,6 +669,17 @@ function showEditIbanModal(ibanId) {
             const easyVal = document.getElementById('ibanEasyValue');
             if (easyVal) easyVal.value = item.easy_address || '';
 
+            // If advanced fields exist, expand the advanced section
+            const advSec = document.getElementById('ibanAdvancedSection');
+            const advToggle = document.querySelector('.iban-advanced-toggle');
+            if (item.easy_address || item.bank_name || item.note || item.category !== 'kendi_hesabim' || item.is_favorite) {
+                if (advSec) advSec.classList.remove('hidden');
+                if (advToggle) advToggle.classList.add('open');
+            } else {
+                if (advSec) advSec.classList.add('hidden');
+                if (advToggle) advToggle.classList.remove('open');
+            }
+
             const bankIndicator = document.getElementById('ibanBankIndicator');
             if (bankIndicator && item.bank_name) {
                 bankIndicator.textContent = item.bank_name;
