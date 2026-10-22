@@ -435,6 +435,7 @@ def test_reset_financial_data_for_tenant():
     mock_query = Mock()
 
     with patch('repositories.user_repository.LogbookEntry'), \
+         patch('repositories.user_repository.UserIban'), \
          patch('repositories.user_repository.LedgerAdjustment'), \
          patch('repositories.user_repository.LedgerAuditEvent'), \
          patch('repositories.user_repository.Account'), \
@@ -495,6 +496,7 @@ def test_reset_financial_data():
     mock_db.session = mock_session
 
     with patch('repositories.user_repository.LogbookEntry'), \
+         patch('repositories.user_repository.UserIban'), \
          patch('repositories.user_repository.LedgerAdjustment'), \
          patch('repositories.user_repository.LedgerAuditEvent'), \
          patch('repositories.user_repository.Payment'), \

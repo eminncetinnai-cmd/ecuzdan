@@ -34,11 +34,11 @@ class BackupValidationService:
         'payment', 'plan_occurrence', 'profile_question', 'quiz_attempt',
         'quiz_question', 'recurring_plan', 'strategy_settings', 'tag',
         'tenant', 'tenant_invite', 'transaction', 'user',
-        'user_achievement', 'user_preference', 'user_progress',
+        'user_achievement', 'user_iban', 'user_preference', 'user_progress',
     }
     # These were introduced after earlier backups. Their absence is valid;
     # when present, their rows and columns are validated normally.
-    OPTIONAL_TABLES = {'bank_account', 'bank_statement_snapshot'}
+    OPTIONAL_TABLES = {'bank_account', 'bank_statement_snapshot', 'user_iban'}
 
     def __init__(self):
 

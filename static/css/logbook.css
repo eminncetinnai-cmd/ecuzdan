@@ -338,3 +338,613 @@
 .dark .action-btn:hover {
     background: #334155;
 }
+
+/* ==========================================================================
+   IBAN & Account Directory Styles
+   ========================================================================== */
+
+.logbook-tabs-nav {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem 0 1.5rem;
+    border-bottom: 1px solid var(--color-slate-200, #e2e8f0);
+    background: var(--color-slate-50, #f8fafc);
+}
+
+.logbook-tab-btn {
+    padding: 0.65rem 1.25rem;
+    border: none;
+    background: transparent;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--color-slate-500, #64748b);
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.15s ease;
+    border-radius: var(--border-radius-6, 6px) var(--border-radius-6, 6px) 0 0;
+}
+
+.logbook-tab-btn:hover {
+    color: var(--color-slate-800, #1e293b);
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.logbook-tab-btn.active {
+    color: var(--color-indigo-600, #4f46e5);
+    border-bottom: 2px solid var(--color-indigo-600, #4f46e5);
+    background: white;
+}
+
+.iban-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 1.25rem;
+    padding: 1.5rem;
+}
+
+.iban-card {
+    background: white;
+    border: 1px solid var(--color-slate-200, #e2e8f0);
+    border-radius: var(--border-radius-12, 12px);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.iban-card:hover {
+    border-color: var(--color-indigo-300, #a5b4fc);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.08);
+}
+
+.iban-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+    gap: 0.5rem;
+}
+
+.iban-badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.bank-badge {
+    background: var(--color-indigo-50, #eef2ff);
+    color: var(--color-indigo-700, #4338ca);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.2rem 0.55rem;
+    border-radius: 9999px;
+    letter-spacing: 0.02em;
+    border: 1px solid var(--color-indigo-100, #e0e7ff);
+}
+
+.category-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 9999px;
+}
+
+.category-badge.kendi_hesabim {
+    background: var(--color-emerald-50, #ecfdf5);
+    color: var(--color-emerald-700, #047857);
+    border: 1px solid var(--color-emerald-100, #d1fae5);
+}
+
+.category-badge.alici {
+    background: var(--color-sky-50, #f0f9ff);
+    color: var(--color-sky-700, #0369a1);
+    border: 1px solid var(--color-sky-100, #e0f2fe);
+}
+
+.iban-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.iban-menu-wrapper {
+    position: relative;
+}
+
+.iban-menu-trigger {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.2rem 0.45rem;
+    font-size: 1.1rem;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--color-slate-400, #94a3b8);
+    border-radius: var(--border-radius-6, 6px);
+    transition: all 0.15s ease;
+}
+
+.iban-menu-trigger:hover {
+    color: var(--color-slate-700, #334155);
+    background: var(--color-slate-100, #f1f5f9);
+}
+
+.iban-menu-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    background: white;
+    border: 1px solid var(--color-slate-200, #e2e8f0);
+    border-radius: var(--border-radius-8, 8px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    min-width: 130px;
+    z-index: 50;
+    overflow: hidden;
+    padding: 0.25rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.iban-menu-dropdown.hidden {
+    display: none;
+}
+
+.iban-menu-item {
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    padding: 0.45rem 0.65rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-slate-700, #334155);
+    border-radius: var(--border-radius-6, 6px);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.12s ease;
+}
+
+.iban-menu-item:hover {
+    background: var(--color-slate-100, #f1f5f9);
+    color: var(--color-slate-900, #0f172a);
+}
+
+.iban-menu-item.iban-menu-danger {
+    color: var(--color-rose-600, #e11d48);
+}
+
+.iban-menu-item.iban-menu-danger:hover {
+    background: var(--color-rose-50, #fff1f2);
+    color: var(--color-rose-700, #be123c);
+}
+
+.iban-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--color-slate-900, #0f172a);
+    margin-bottom: 0.2rem;
+    line-height: 1.25;
+}
+
+.iban-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.iban-holder {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-slate-500, #64748b);
+}
+
+.iban-easy-pill {
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    color: #4f46e5;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.15rem 0.45rem;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.iban-easy-pill:hover {
+    background: rgba(99, 102, 241, 0.18);
+    border-color: #6366f1;
+}
+
+/* One-Touch Tap to Copy IBAN Box */
+.iban-touch-box {
+    background: var(--color-slate-50, #f8fafc);
+    border: 1px solid var(--color-slate-200, #e2e8f0);
+    border-radius: var(--border-radius-10, 10px);
+    padding: 0.7rem 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    cursor: pointer;
+    margin-bottom: 0.75rem;
+    transition: all 0.18s ease;
+    user-select: none;
+}
+
+.iban-touch-box:hover {
+    background: white;
+    border-color: var(--color-indigo-400, #818cf8);
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.08);
+}
+
+.iban-text {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--color-slate-800, #1e293b);
+    letter-spacing: 0.03em;
+    word-break: break-all;
+}
+
+.iban-touch-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--color-slate-500, #64748b);
+    background: white;
+    border: 1px solid var(--color-slate-200, #e2e8f0);
+    padding: 0.25rem 0.55rem;
+    border-radius: var(--border-radius-6, 6px);
+    flex-shrink: 0;
+    transition: all 0.18s ease;
+}
+
+.iban-touch-box:hover .iban-touch-badge {
+    color: var(--color-indigo-600, #4f46e5);
+    border-color: var(--color-indigo-200, #c7d2fe);
+    background: var(--color-indigo-50, #eef2ff);
+}
+
+.iban-touch-box.copied {
+    border-color: var(--color-emerald-500, #10b981) !important;
+    background: rgba(16, 185, 129, 0.06) !important;
+}
+
+.iban-touch-box.copied .iban-touch-badge {
+    background: var(--color-emerald-500, #10b981) !important;
+    border-color: var(--color-emerald-600, #059669) !important;
+    color: white !important;
+}
+
+.iban-note {
+    font-size: 0.75rem;
+    color: var(--color-slate-600, #475569);
+    background: var(--color-amber-50, #fffbeb);
+    border: 1px solid var(--color-amber-100, #fef3c7);
+    padding: 0.4rem 0.6rem;
+    border-radius: var(--border-radius-6, 6px);
+    line-height: 1.35;
+    margin-bottom: 0.75rem;
+}
+
+/* Minimal Bottom Action Footer */
+.iban-card-footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+
+.iban-footer-btn {
+    padding: 0.45rem 0.6rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    border-radius: var(--border-radius-6, 6px);
+    border: 1px solid var(--color-slate-200, #e2e8f0);
+    background: white;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    transition: all 0.15s ease;
+    text-decoration: none;
+}
+
+.iban-btn-quick-tx {
+    color: #0369a1;
+    background: rgba(14, 165, 233, 0.05);
+    border-color: rgba(14, 165, 233, 0.25);
+}
+
+.iban-btn-quick-tx:hover {
+    background: rgba(14, 165, 233, 0.14);
+    border-color: #0ea5e9;
+    color: #0284c7;
+}
+
+.iban-btn-share {
+    color: var(--color-slate-700, #334155);
+}
+
+.iban-btn-share:hover {
+    background: var(--color-slate-100, #f1f5f9);
+    border-color: var(--color-slate-300, #cbd5e1);
+    color: var(--color-slate-900, #0f172a);
+}
+
+.iban-btn-share.copied {
+    background: var(--color-sky-500, #0ea5e9) !important;
+    border-color: var(--color-sky-600, #0284c7) !important;
+    color: white !important;
+}
+
+/* Progressive Disclosure (Modal Form) */
+.iban-advanced-toggle {
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    margin: 0.75rem 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--color-slate-600, #475569);
+    background: var(--color-slate-100, #f1f5f9);
+    border: 1px solid var(--color-slate-200, #e2e8f0);
+    border-radius: var(--border-radius-8, 8px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.iban-advanced-toggle:hover {
+    background: var(--color-slate-200, #e2e8f0);
+    color: var(--color-slate-900, #0f172a);
+}
+
+.iban-toggle-arrow {
+    font-size: 0.85rem;
+    transition: transform 0.2s ease;
+}
+
+.iban-advanced-toggle.open .iban-toggle-arrow {
+    transform: rotate(180deg);
+}
+
+.iban-advanced-section {
+    padding-top: 0.5rem;
+    border-top: 1px dashed var(--color-slate-200, #e2e8f0);
+}
+
+.iban-advanced-section.hidden {
+    display: none;
+}
+
+/* Privacy Mode Support */
+html.privacy .iban-text,
+html.privacy .iban-easy-pill span {
+    filter: blur(7px);
+    transition: filter 0.15s ease;
+    user-select: none;
+}
+
+html.privacy .iban-text:hover,
+html.privacy .iban-easy-pill span:hover {
+    filter: none;
+    user-select: auto;
+}
+
+/* Favorite / Pinning Card Styles */
+.iban-card.is-favorite {
+    border-color: rgba(245, 158, 11, 0.45);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.08);
+}
+
+.favorite-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.15rem;
+    line-height: 1;
+    padding: 0.2rem;
+    color: var(--color-slate-300, #cbd5e1);
+    transition: all 0.15s ease;
+}
+
+.favorite-btn:hover {
+    color: var(--color-amber-400, #fbbf24);
+    transform: scale(1.15);
+}
+
+.favorite-btn.active {
+    color: var(--color-amber-500, #f59e0b);
+}
+
+/* Dark Mode Overrides for IBAN */
+.dark .logbook-tabs-nav {
+    background: rgba(30, 41, 59, 0.7);
+    border-color: #334155;
+}
+
+.dark .logbook-tab-btn {
+    color: #94a3b8;
+}
+
+.dark .logbook-tab-btn:hover {
+    color: #f1f5f9;
+}
+
+.dark .logbook-tab-btn.active {
+    color: #818cf8;
+    border-bottom-color: #818cf8;
+    background: #0f172a;
+}
+
+.dark .iban-card {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.dark .iban-card:hover {
+    border-color: #6366f1;
+}
+
+.dark .iban-title {
+    color: #f8fafc;
+}
+
+.dark .iban-holder {
+    color: #94a3b8;
+}
+
+.dark .bank-badge {
+    background: rgba(99, 102, 241, 0.15);
+    color: #a5b4fc;
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+.dark .category-badge.kendi_hesabim {
+    background: rgba(16, 185, 129, 0.15);
+    color: #6ee7b7;
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.dark .category-badge.alici {
+    background: rgba(14, 165, 233, 0.15);
+    color: #7dd3fc;
+    border-color: rgba(14, 165, 233, 0.3);
+}
+
+.dark .iban-touch-box {
+    background: #0f172a;
+    border-color: #334155;
+}
+
+.dark .iban-touch-box:hover {
+    background: #1e293b;
+    border-color: #818cf8;
+}
+
+.dark .iban-text {
+    color: #f1f5f9;
+}
+
+.dark .iban-touch-badge {
+    background: #1e293b;
+    border-color: #475569;
+    color: #cbd5e1;
+}
+
+.dark .iban-touch-box:hover .iban-touch-badge {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: #818cf8;
+    color: #c7d2fe;
+}
+
+.dark .iban-menu-trigger {
+    color: #64748b;
+}
+
+.dark .iban-menu-trigger:hover {
+    color: #f1f5f9;
+    background: #334155;
+}
+
+.dark .iban-menu-dropdown {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+}
+
+.dark .iban-menu-item {
+    color: #cbd5e1;
+}
+
+.dark .iban-menu-item:hover {
+    background: #334155;
+    color: #f8fafc;
+}
+
+.dark .iban-menu-item.iban-menu-danger {
+    color: #fb7185;
+}
+
+.dark .iban-menu-item.iban-menu-danger:hover {
+    background: rgba(225, 29, 72, 0.15);
+    color: #fda4af;
+}
+
+.dark .iban-easy-pill {
+    background: rgba(99, 102, 241, 0.15);
+    border-color: rgba(99, 102, 241, 0.35);
+    color: #a5b4fc;
+}
+
+.dark .iban-easy-pill:hover {
+    background: rgba(99, 102, 241, 0.25);
+}
+
+.dark .iban-footer-btn {
+    background: #1e293b;
+    border-color: #334155;
+    color: #cbd5e1;
+}
+
+.dark .iban-footer-btn:hover {
+    background: #334155;
+    color: white;
+}
+
+.dark .iban-btn-quick-tx {
+    background: rgba(14, 165, 233, 0.12);
+    border-color: rgba(14, 165, 233, 0.35);
+    color: #38bdf8;
+}
+
+.dark .iban-btn-quick-tx:hover {
+    background: rgba(14, 165, 233, 0.22);
+    border-color: #0ea5e9;
+    color: #7dd3fc;
+}
+
+.dark .iban-advanced-toggle {
+    background: #1e293b;
+    border-color: #334155;
+    color: #94a3b8;
+}
+
+.dark .iban-advanced-toggle:hover {
+    background: #334155;
+    color: #f1f5f9;
+}
+
+.dark .iban-advanced-section {
+    border-color: #334155;
+}
+
+.dark .iban-note {
+    background: rgba(245, 158, 11, 0.1);
+    color: #fcd34d;
+    border-color: rgba(245, 158, 11, 0.25);
+}
+
+.dark .iban-card.is-favorite {
+    border-color: rgba(245, 158, 11, 0.5);
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.15);
+}
+

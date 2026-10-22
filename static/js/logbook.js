@@ -39,6 +39,14 @@ document.addEventListener('DOMContentLoaded', function() {
         showEditModal(parseInt(openEditId));
         window.history.replaceState({}, document.title, window.location.pathname);
     }
+    const openEditIbanId = urlParams.get('open_edit_iban');
+    if (openEditIbanId) {
+        showEditIbanModal(parseInt(openEditIbanId));
+        window.history.replaceState({}, document.title, window.location.pathname + '?tab=ibans');
+    }
+    if (urlParams.get('tab') === 'ibans') {
+        switchLogbookTab('ibans', false);
+    }
     
     // ESC key listener for modal
     document.addEventListener('keydown', function(e) {
@@ -247,4 +255,563 @@ function resetLogbookFilters() {
     url.searchParams.delete('category');
     url.searchParams.delete('date');
     window.location = url.pathname;
+}
+
+// ── IBAN Management & Directory ──────────────────────────────────────────────
+
+const TR_BANK_CODES = {
+    '00010': 'T.C. Ziraat Bankası',
+    '00012': 'Türkiye Halk Bankası (Halkbank)',
+    '00015': 'Türkiye Vakıflar Bankası (VakıfBank)',
+    '00032': 'Türk Ekonomi Bankası (TEB)',
+    '00046': 'Akbank',
+    '00059': 'Şekerbank',
+    '00062': 'Garanti BBVA',
+    '00064': 'Türkiye İş Bankası',
+    '00067': 'Yapı ve Kredi Bankası',
+    '00099': 'ING Bank',
+    '00103': 'Fibabanka',
+    '00108': 'Burgan Bank',
+    '00111': 'QNB Finansbank',
+    '00123': 'HSBC Bank',
+    '00124': 'Alternatif Bank',
+    '00125': 'Burgan Bank',
+    '00134': 'DenizBank',
+    '00135': 'Anadolubank',
+    '00143': 'Aktif Yatırım Bankası',
+    '00146': 'Odeabank',
+    '00203': 'Albaraka Türk Katılım Bankası',
+    '00205': 'Kuveyt Türk Katılım Bankası',
+    '00206': 'Türkiye Finans Katılım Bankası',
+    '00209': 'Ziraat Katılım Bankası',
+    '00210': 'Vakıf Katılım Bankası',
+    '00211': 'Türkiye Emlak Katılım Bankası',
+    '00801': 'Papara',
+    '00802': 'Paycell',
+    '00803': 'İninal',
+    '00804': 'Enpara',
+    '00805': 'Hayhay',
+    '00806': 'PeP',
+    '00807': 'Param'
+};
+
+function switchLogbookTab(tabName, updateUrl = true) {
+    const notesTabBtn = document.getElementById('tab-btn-notes');
+    const ibansTabBtn = document.getElementById('tab-btn-ibans');
+    const timelineView = document.getElementById('timeline-view');
+    const ibanView = document.getElementById('iban-view');
+    const filterNotes = document.getElementById('filter-panel-notes');
+    const filterIbans = document.getElementById('filter-panel-ibans');
+    const btnCreateNote = document.getElementById('btn-create-note');
+    const btnCreateIban = document.getElementById('btn-create-iban');
+
+    if (tabName === 'ibans') {
+        if (notesTabBtn) notesTabBtn.classList.remove('active');
+        if (ibansTabBtn) ibansTabBtn.classList.add('active');
+        if (timelineView) timelineView.classList.add('hidden');
+        if (ibanView) ibanView.classList.remove('hidden');
+        if (filterNotes) filterNotes.classList.add('hidden');
+        if (filterIbans) filterIbans.classList.remove('hidden');
+        if (btnCreateNote) btnCreateNote.classList.add('hidden');
+        if (btnCreateIban) btnCreateIban.classList.remove('hidden');
+
+        if (updateUrl) {
+            const url = new URL(window.location);
+            url.searchParams.set('tab', 'ibans');
+            window.history.replaceState({}, '', url.toString());
+        }
+    } else {
+        if (ibansTabBtn) ibansTabBtn.classList.remove('active');
+        if (notesTabBtn) notesTabBtn.classList.add('active');
+        if (ibanView) ibanView.classList.add('hidden');
+        if (timelineView) timelineView.classList.remove('hidden');
+        if (filterIbans) filterIbans.classList.add('hidden');
+        if (filterNotes) filterNotes.classList.remove('hidden');
+        if (btnCreateIban) btnCreateIban.classList.add('hidden');
+        if (btnCreateNote) btnCreateNote.classList.remove('hidden');
+
+        if (updateUrl) {
+            const url = new URL(window.location);
+            url.searchParams.delete('tab');
+            window.history.replaceState({}, '', url.pathname);
+        }
+    }
+}
+
+function copyIban(btn) {
+    if (!btn) return;
+    const iban = btn.getAttribute('data-iban') || '';
+    if (!iban) return;
+
+    function onCopied() {
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<span>✓</span> <span>Kopyalandı!</span>';
+        btn.classList.add('copied');
+        showToast('IBAN başarıyla kopyalandı: ' + iban, 'success');
+        setTimeout(() => {
+            btn.innerHTML = originalHtml;
+            btn.classList.remove('copied');
+        }, 2200);
+    }
+
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(iban).then(onCopied).catch(() => {
+            fallbackCopyText(iban, onCopied);
+        });
+    } else {
+        fallbackCopyText(iban, onCopied);
+    }
+}
+
+function copyIbanBox(box) {
+    if (!box) return;
+    const iban = box.getAttribute('data-iban') || '';
+    if (!iban) return;
+
+    function onCopied() {
+        const badge = box.querySelector('.iban-touch-badge');
+        const origHtml = badge ? badge.innerHTML : '';
+        box.classList.add('copied');
+        if (badge) {
+            badge.innerHTML = '<span>✓</span> <span>Kopyalandı!</span>';
+        }
+        showToast('IBAN kopyalandı: ' + iban, 'success');
+        setTimeout(() => {
+            box.classList.remove('copied');
+            if (badge) badge.innerHTML = origHtml;
+        }, 2000);
+    }
+
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(iban).then(onCopied).catch(() => {
+            fallbackCopyText(iban, onCopied);
+        });
+    } else {
+        fallbackCopyText(iban, onCopied);
+    }
+}
+
+function toggleIbanMenu(btn, event) {
+    if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+    const wrapper = btn.closest('.iban-menu-wrapper');
+    const dropdown = wrapper ? wrapper.querySelector('.iban-menu-dropdown') : null;
+    if (!dropdown) return;
+
+    const isHidden = dropdown.classList.contains('hidden');
+    // Close other open menus
+    document.querySelectorAll('.iban-menu-dropdown').forEach(dd => dd.classList.add('hidden'));
+
+    if (isHidden) {
+        dropdown.classList.remove('hidden');
+    }
+}
+
+// Global click listener to dismiss floating menus
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.iban-menu-wrapper')) {
+        document.querySelectorAll('.iban-menu-dropdown').forEach(dd => dd.classList.add('hidden'));
+    }
+});
+
+function toggleIbanAdvanced() {
+    const sec = document.getElementById('ibanAdvancedSection');
+    const toggle = document.querySelector('.iban-advanced-toggle');
+    if (!sec) return;
+    const isHidden = sec.classList.contains('hidden');
+    if (isHidden) {
+        sec.classList.remove('hidden');
+        if (toggle) toggle.classList.add('open');
+    } else {
+        sec.classList.add('hidden');
+        if (toggle) toggle.classList.remove('open');
+    }
+}
+
+function shareIban(btn) {
+    if (!btn) return;
+    const shareText = btn.getAttribute('data-share') || '';
+    if (!shareText) return;
+
+    function onShared() {
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<span>✓</span> <span>Paylaşıldı!</span>';
+        btn.classList.add('copied');
+        showToast('Hesap bilgileri paylaşıma hazır kopyalandı!', 'success');
+        setTimeout(() => {
+            btn.innerHTML = originalHtml;
+            btn.classList.remove('copied');
+        }, 2200);
+    }
+
+    if (navigator.share && window.isSecureContext && /Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+        navigator.share({
+            title: 'Hesap Bilgileri',
+            text: shareText
+        }).catch(() => {
+            copyText(shareText, 'Hesap bilgileri panoya kopyalandı!');
+            onShared();
+        });
+    } else {
+        copyText(shareText, 'Hesap bilgileri panoya kopyalandı!');
+        onShared();
+    }
+}
+
+function copyText(text, successMsg) {
+    if (!text) return;
+    function onSuccess() {
+        showToast(successMsg || 'Panoya kopyalandı.', 'success');
+    }
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(onSuccess).catch(() => {
+            fallbackCopyText(text, onSuccess);
+        });
+    } else {
+        fallbackCopyText(text, onSuccess);
+    }
+}
+
+function toggleFavoriteIban(ibanId, btn) {
+    const formData = new FormData();
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    formData.append('csrf_token', csrfToken);
+
+    fetch(`/logbook/ibans/${ibanId}/toggle-favorite`, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message, 'success');
+            const card = btn.closest('.iban-card');
+            if (data.is_favorite) {
+                btn.classList.add('active');
+                btn.title = 'Favorilerden Çıkar';
+                if (card) card.classList.add('is-favorite');
+            } else {
+                btn.classList.remove('active');
+                btn.title = 'Favorilere Ekle';
+                if (card) card.classList.remove('is-favorite');
+            }
+            // Smoothly re-sort or refresh tab to reflect favorite ordering
+            setTimeout(() => {
+                const targetUrl = new URL(window.location);
+                targetUrl.searchParams.set('tab', 'ibans');
+                window.location = targetUrl.toString();
+            }, 600);
+        } else {
+            showToast(data.message || 'İşlem başarısız.', 'error');
+        }
+    })
+    .catch(err => {
+        showToast('Favori güncelleme hatası: ' + err.message, 'error');
+    });
+}
+
+function startTxFromIban(title, bank, category, iban) {
+    if (typeof window.openGlobalQuickTxModal === 'function') {
+        window.openGlobalQuickTxModal();
+        const flowSelect = document.getElementById('globalQuickTxFlowType');
+        if (flowSelect) {
+            flowSelect.value = category === 'kendi_hesabim' ? 'Yatırım' : 'Gider';
+            if (typeof window.updateGlobalQuickTxCategory === 'function') {
+                window.updateGlobalQuickTxCategory();
+            }
+        }
+        const descInput = document.querySelector('#globalQuickTxForm input[name="description"]');
+        if (descInput) {
+            const shortIban = iban ? iban.slice(-7) : '';
+            descInput.value = `${title} (${bank ? bank + ' ' : ''}...${shortIban})`;
+        }
+        const amountInput = document.querySelector('#globalQuickTxForm input[name="amount"]');
+        if (amountInput) {
+            setTimeout(() => amountInput.focus(), 150);
+        }
+        showToast(`Hızlı işlem başlatıldı: ${title}`, 'info');
+    } else {
+        const shortIban = iban ? iban.slice(-7) : '';
+        const desc = encodeURIComponent(`${title} (${bank ? bank + ' ' : ''}...${shortIban})`);
+        const flow = category === 'kendi_hesabim' ? 'Yatırım' : 'Gider';
+        window.location = `/transactions?action=new&description=${desc}&type=${flow}`;
+    }
+}
+
+function fallbackCopyText(text, callback) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+        const successful = document.execCommand('copy');
+        if (successful && typeof callback === 'function') callback();
+    } catch (err) {
+        showToast('Panoya kopyalanamadı.', 'error');
+    }
+    document.body.removeChild(textArea);
+}
+
+function onIbanFieldInput(input) {
+    if (!input) return;
+    let raw = (input.value || '').replace(/[\s\-_.:]+/g, '').toUpperCase();
+    if (!raw.startsWith('TR') && raw.length > 0 && /^\d/.test(raw)) {
+        raw = 'TR' + raw;
+    }
+    
+    // Auto-detect bank from digits 5 to 9 (e.g. TRxx 00062 ...)
+    if (raw.startsWith('TR') && raw.length >= 9) {
+        const bankCode = raw.substring(4, 9);
+        const bankName = TR_BANK_CODES[bankCode];
+        const bankInput = document.getElementById('ibanBankName');
+        const bankIndicator = document.getElementById('ibanBankIndicator');
+        if (bankName) {
+            if (bankInput && (!bankInput.value || bankInput.getAttribute('data-auto') === 'true')) {
+                bankInput.value = bankName;
+                bankInput.setAttribute('data-auto', 'true');
+            }
+            if (bankIndicator) {
+                bankIndicator.textContent = bankName;
+                bankIndicator.classList.remove('hidden');
+            }
+        }
+    }
+
+    // Format into 4-character chunks
+    const chunks = [];
+    for (let i = 0; i < raw.length && i < 26; i += 4) {
+        chunks.push(raw.substring(i, i + 4));
+    }
+    input.value = chunks.join(' ');
+}
+
+function showCreateIbanModal() {
+    const form = document.getElementById('ibanForm');
+    if (form) form.reset();
+    const idEl = document.getElementById('ibanId');
+    if (idEl) idEl.value = '';
+    const modalTitle = document.getElementById('ibanModalTitle');
+    if (modalTitle) modalTitle.textContent = 'Yeni IBAN Kaydet';
+    const bankIndicator = document.getElementById('ibanBankIndicator');
+    if (bankIndicator) {
+        bankIndicator.textContent = '';
+        bankIndicator.classList.add('hidden');
+    }
+    const bankInput = document.getElementById('ibanBankName');
+    if (bankInput) bankInput.removeAttribute('data-auto');
+    const favInput = document.getElementById('ibanIsFavorite');
+    if (favInput) favInput.checked = false;
+    const easyType = document.getElementById('ibanEasyType');
+    if (easyType) easyType.value = '';
+    const easyVal = document.getElementById('ibanEasyValue');
+    if (easyVal) easyVal.value = '';
+
+    // Reset progressive disclosure section
+    const advSec = document.getElementById('ibanAdvancedSection');
+    if (advSec) advSec.classList.add('hidden');
+    const advToggle = document.querySelector('.iban-advanced-toggle');
+    if (advToggle) advToggle.classList.remove('open');
+
+    if (typeof window.openModal === 'function') {
+        window.openModal('ibanModal');
+    } else {
+        const modal = document.getElementById('ibanModal');
+        if (modal) modal.classList.remove('hidden');
+    }
+    setTimeout(() => {
+        const titleInput = document.getElementById('ibanTitle');
+        if (titleInput) titleInput.focus();
+    }, 50);
+}
+
+function showEditIbanModal(ibanId) {
+    fetch(`/logbook/ibans/${ibanId}`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('IBAN yüklenemedi.');
+        return response.json();
+    })
+    .then(data => {
+        if (data.success && data.iban) {
+            const item = data.iban;
+            const modalTitle = document.getElementById('ibanModalTitle');
+            if (modalTitle) modalTitle.textContent = 'IBAN Düzenle';
+
+            const idEl = document.getElementById('ibanId');
+            if (idEl) idEl.value = item.id;
+            const titleEl = document.getElementById('ibanTitle');
+            if (titleEl) titleEl.value = item.title;
+            const ibanEl = document.getElementById('ibanNumber');
+            if (ibanEl) ibanEl.value = item.formatted_iban || item.iban;
+            const bankEl = document.getElementById('ibanBankName');
+            if (bankEl) {
+                bankEl.value = item.bank_name || '';
+                bankEl.removeAttribute('data-auto');
+            }
+            const holderEl = document.getElementById('ibanAccountHolder');
+            if (holderEl) holderEl.value = item.account_holder || '';
+            const catEl = document.getElementById('ibanCategory');
+            if (catEl) catEl.value = item.category || 'kendi_hesabim';
+            const noteEl = document.getElementById('ibanNote');
+            if (noteEl) noteEl.value = item.note || '';
+            const favInput = document.getElementById('ibanIsFavorite');
+            if (favInput) favInput.checked = !!item.is_favorite;
+            const easyType = document.getElementById('ibanEasyType');
+            if (easyType) easyType.value = item.easy_address_type || '';
+            const easyVal = document.getElementById('ibanEasyValue');
+            if (easyVal) easyVal.value = item.easy_address || '';
+
+            const bankIndicator = document.getElementById('ibanBankIndicator');
+            if (bankIndicator && item.bank_name) {
+                bankIndicator.textContent = item.bank_name;
+                bankIndicator.classList.remove('hidden');
+            }
+
+            if (typeof window.openModal === 'function') {
+                window.openModal('ibanModal');
+            } else {
+                const modal = document.getElementById('ibanModal');
+                if (modal) modal.classList.remove('hidden');
+            }
+        } else {
+            showToast(data.message || 'IBAN bulunamadı.', 'error');
+        }
+    })
+    .catch(err => {
+        showToast('IBAN bilgisi alınırken hata: ' + err.message, 'error');
+    });
+}
+
+function hideIbanModal() {
+    if (typeof window.closeModal === 'function') {
+        window.closeModal('ibanModal');
+    } else {
+        const modal = document.getElementById('ibanModal');
+        if (modal) modal.classList.add('hidden');
+    }
+    const form = document.getElementById('ibanForm');
+    if (form) form.reset();
+}
+
+function saveIban() {
+    const idEl = document.getElementById('ibanId');
+    const ibanId = idEl ? idEl.value : '';
+    const form = document.getElementById('ibanForm');
+    if (!form) return;
+
+    const title = (document.getElementById('ibanTitle')?.value || '').trim();
+    const iban = (document.getElementById('ibanNumber')?.value || '').trim();
+
+    if (!title) {
+        showToast('Lütfen hesap başlığı giriniz.', 'warning');
+        document.getElementById('ibanTitle')?.focus();
+        return;
+    }
+    if (!iban) {
+        showToast('Lütfen geçerli bir IBAN giriniz.', 'warning');
+        document.getElementById('ibanNumber')?.focus();
+        return;
+    }
+
+    const formData = new FormData(form);
+    const url = ibanId ? `/logbook/ibans/${ibanId}/update` : '/logbook/ibans/create';
+
+    fetch(url, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(errData => {
+                throw new Error(errData.message || 'Kayıt başarısız.');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            hideIbanModal();
+            showToast(data.message || 'IBAN başarıyla kaydedildi.', 'success');
+            const targetUrl = new URL(window.location);
+            targetUrl.searchParams.set('tab', 'ibans');
+            window.location = targetUrl.toString();
+        } else {
+            showToast(data.message || 'Kayıt başarısız.', 'error');
+        }
+    })
+    .catch(err => {
+        showToast(err.message || 'İşlem sırasında hata oluştu.', 'error');
+    });
+}
+
+function deleteIban(ibanId) {
+    const confirmMessage = 'Bu IBAN numarasını silmek istediğinize emin misiniz?';
+    function doDelete() {
+        const formData = new FormData();
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        formData.append('csrf_token', csrfToken);
+
+        fetch(`/logbook/ibans/${ibanId}/delete`, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message || 'IBAN silindi.', 'success');
+                const targetUrl = new URL(window.location);
+                targetUrl.searchParams.set('tab', 'ibans');
+                window.location = targetUrl.toString();
+            } else {
+                showToast(data.message || 'Silme işlemi başarısız.', 'error');
+            }
+        })
+        .catch(err => {
+            showToast('Silme hatası: ' + err.message, 'error');
+        });
+    }
+
+    if (typeof window.showGlobalConfirm === 'function') {
+        window.showGlobalConfirm('IBAN Sil', confirmMessage, doDelete, true);
+    } else if (confirm(confirmMessage)) {
+        doDelete();
+    }
+}
+
+function searchIbanCards(query) {
+    const term = (query || '').trim().toLowerCase();
+    const cards = document.querySelectorAll('.iban-card');
+    cards.forEach(card => {
+        const title = (card.querySelector('.iban-title')?.textContent || '').toLowerCase();
+        const holder = (card.querySelector('.iban-holder')?.textContent || '').toLowerCase();
+        const bank = (card.querySelector('.bank-badge')?.textContent || '').toLowerCase();
+        const iban = (card.querySelector('.iban-text')?.textContent || '').toLowerCase().replace(/\s+/g, '');
+        const note = (card.querySelector('.iban-note')?.textContent || '').toLowerCase();
+        const easy = (card.querySelector('.iban-easy-address-val')?.textContent || '').toLowerCase();
+
+        const matches = !term || title.includes(term) || holder.includes(term) || bank.includes(term) || iban.includes(term.replace(/\s+/g, '')) || note.includes(term) || easy.includes(term);
+        card.style.display = matches ? '' : 'none';
+    });
+}
+
+function filterIbanCategory(cat) {
+    const cards = document.querySelectorAll('.iban-card');
+    cards.forEach(card => {
+        const category = card.getAttribute('data-category') || '';
+        if (!cat || category === cat) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
 }

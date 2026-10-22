@@ -43,6 +43,7 @@ from domain.transactions.models.transaction_models import (
     PlanOccurrence,
     RecurringPlan,
     Transaction,
+    UserIban,
 )
 from domain.users.models.profile_models import InvestorProfile, InvestorProfileAnswer, ProfileQuestion
 from domain.users.models.user_models import StrategySettings, TenantInvite, User, UserPreference
@@ -85,6 +86,7 @@ __all__ = [
     'LedgerAdjustment',
     'LedgerAuditEvent',
     'LogbookEntry',
+    'UserIban',
     # Banking & Reconciliation
     'BankAccount',
     'BankStatementSnapshot',

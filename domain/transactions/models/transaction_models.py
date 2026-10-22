@@ -571,3 +571,80 @@ class LogbookEntry(db.Model):
         if len(self.content) > 100:
             return self.content[:97] + '...'
         return self.content
+
+
+class UserIban(db.Model):
+    """Kayıtlı IBAN numaraları ve alıcı rehberi."""
+    __tablename__ = 'user_iban'
+    __table_args__ = (
+        db.Index('idx_user_iban_category', 'category'),
+        db.Index('idx_user_iban_tenant_category', 'tenant_id', 'category'),
+        db.Index('idx_user_iban_tenant_fav', 'tenant_id', 'is_favorite'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.String(50), db.ForeignKey('tenant.id'), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True, index=True)
+
+    # Temel bilgiler
+    title = db.Column(db.String(120), nullable=False)
+    iban = db.Column(db.String(34), nullable=False)
+    bank_name = db.Column(db.String(100), nullable=True)
+    account_holder = db.Column(db.String(150), nullable=True)
+    category = db.Column(db.String(50), nullable=False, default='kendi_hesabim')  # 'kendi_hesabim', 'alici'
+    note = db.Column(db.String(255), nullable=True)
+    is_favorite = db.Column(db.Boolean, default=False, nullable=False)
+    easy_address_type = db.Column(db.String(30), nullable=True)  # 'Telefon', 'TCKN', 'E-posta', 'VKN'
+    easy_address = db.Column(db.String(100), nullable=True)
+
+    # Zaman damgaları
+    created_at = db.Column(db.DateTime, default=utcnow_naive, nullable=False)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive, nullable=False)
+
+    # İlişkiler
+    tenant = db.relationship('Tenant', backref='user_ibans')
+    user = db.relationship('User', backref='user_ibans')
+
+    @property
+    def formatted_iban(self) -> str:
+        """4'erli bloklar halinde formatlanmış IBAN string'i."""
+        if not self.iban:
+            return ""
+        clean = self.iban.replace(" ", "").upper()
+        return " ".join([clean[i:i + 4] for i in range(0, len(clean), 4)])
+
+    @property
+    def share_text(self) -> str:
+        """Paylaşım metni."""
+        from domain.analysis.services.iban_service import IbanService
+        return IbanService.generate_share_text(
+            title=self.title,
+            iban=self.iban,
+            bank_name=self.bank_name,
+            account_holder=self.account_holder,
+            easy_address_type=self.easy_address_type,
+            easy_address=self.easy_address,
+            note=self.note,
+        )
+
+    def to_dict(self) -> dict:
+        """JSON serileştirme sözlüğü."""
+        return {
+            'id': self.id,
+            'tenant_id': self.tenant_id,
+            'user_id': self.user_id,
+            'title': self.title,
+            'iban': self.iban,
+            'formatted_iban': self.formatted_iban,
+            'bank_name': self.bank_name or '',
+            'account_holder': self.account_holder or '',
+            'category': self.category,
+            'note': self.note or '',
+            'is_favorite': bool(self.is_favorite),
+            'easy_address_type': self.easy_address_type or '',
+            'easy_address': self.easy_address or '',
+            'share_text': self.share_text,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+        }
+

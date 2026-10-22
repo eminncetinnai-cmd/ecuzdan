@@ -118,6 +118,7 @@ class ExportService:
             RecurringPlan,
             Tag,
             Transaction,
+            UserIban,
             UserPreference,
         )
 
@@ -152,6 +153,7 @@ class ExportService:
             "payments": _rows(Payment, tenant_id=tenant_id),
             "tags": _rows(Tag, tenant_id=tenant_id),
             "logbook_entries": _rows(LogbookEntry, tenant_id=tenant_id),
+            "user_ibans": _rows(UserIban, tenant_id=tenant_id),
             "investor_profiles": _rows(InvestorProfile, user_id=user_id),
             "investor_profile_answers": _rows(InvestorProfileAnswer, user_id=user_id),
             "user_preferences": _rows(UserPreference, user_id=user_id),

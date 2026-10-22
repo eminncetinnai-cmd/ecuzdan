@@ -23,6 +23,7 @@ from models import (
     TenantInvite,
     Transaction,
     User,
+    UserIban,
     UserPreference,
 )
 
@@ -127,6 +128,7 @@ class UserRepository(BaseRepository):
 
         # 1. Transaction bağımlıları
         self.session.query(LogbookEntry).filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
+        self.session.query(UserIban).filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
         self.session.query(LedgerAuditEvent).filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
         self.session.query(LedgerAdjustment).filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
 
@@ -160,6 +162,7 @@ class UserRepository(BaseRepository):
         kullanmalı. Hiçbir kullanıcı-facing UI bu metodu çağırmamalı.
         """
         self.session.query(LogbookEntry).delete(synchronize_session=False)
+        self.session.query(UserIban).delete(synchronize_session=False)
         self.session.query(LedgerAuditEvent).delete(synchronize_session=False)
         self.session.query(LedgerAdjustment).delete(synchronize_session=False)
         self.session.query(LedgerLine).delete(synchronize_session=False)

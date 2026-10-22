@@ -8,6 +8,7 @@ from .transaction_models import (
     PlanOccurrence,
     RecurringPlan,
     Transaction,
+    UserIban,
 )
 
 __all__ = [
@@ -18,4 +19,5 @@ __all__ = [
     'LedgerAdjustment',
     'LedgerAuditEvent',
     'LogbookEntry',
+    'UserIban',
 ]

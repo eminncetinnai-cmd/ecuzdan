@@ -18,6 +18,7 @@ from models import (
     RecurringPlan,
     Transaction,
     User,
+    UserIban,
     db,
 )
 
@@ -426,6 +427,7 @@ def _ensure_schema():
     for table_name, label in (
         (BankAccount.__tablename__, 'BankAccount'),
         (BankStatementSnapshot.__tablename__, 'BankStatementSnapshot'),
+        (UserIban.__tablename__, 'UserIban'),
     ):
         if table_name not in inspector.get_table_names():
             logger.info('%s tablosu oluşturuluyor...', label)
@@ -443,6 +445,22 @@ def _ensure_schema():
                     'ALTER TABLE "transaction" ADD COLUMN bank_account_id INTEGER'
                 ))
             logger.info('Transaction tablosuna bank_account_id sütunu eklendi')
+
+    # UserIban tablosu ek sütunları (Favori ve FAST Kolay Adres)
+    if UserIban.__tablename__ in inspector.get_table_names():
+        iban_columns = {
+            col['name'] for col in inspector.get_columns(UserIban.__tablename__)
+        }
+        with db.engine.begin() as conn:
+            if 'is_favorite' not in iban_columns:
+                conn.execute(text('ALTER TABLE "user_iban" ADD COLUMN is_favorite BOOLEAN DEFAULT 0 NOT NULL'))
+                logger.info('UserIban tablosuna is_favorite sütunu eklendi')
+            if 'easy_address_type' not in iban_columns:
+                conn.execute(text('ALTER TABLE "user_iban" ADD COLUMN easy_address_type VARCHAR(30)'))
+                logger.info('UserIban tablosuna easy_address_type sütunu eklendi')
+            if 'easy_address' not in iban_columns:
+                conn.execute(text('ALTER TABLE "user_iban" ADD COLUMN easy_address VARCHAR(100)'))
+                logger.info('UserIban tablosuna easy_address sütunu eklendi')
 
     # Profil ranking soru/cevap alanları (Ranking soru tipi)
     inspector = inspect(db.engine)

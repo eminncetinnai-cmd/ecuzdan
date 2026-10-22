@@ -127,6 +127,14 @@ class ApplicationProvider:
             return LogbookApplicationService(logbook_service=self.domains.logbook_svc())
         return self._get_or_create('logbook_app', _factory)
 
+    def iban(self):
+        from application.analysis.iban_application import IbanApplicationService
+        def _factory():
+            return IbanApplicationService(
+                iban_domain_service=self.domains.iban_svc(),
+            )
+        return self._get_or_create('iban_app', _factory)
+
     def strategy(self):
         from application.analysis.strategy_application import StrategyApplicationService
         def _factory():

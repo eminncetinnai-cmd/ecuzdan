@@ -62,3 +62,7 @@ class RepositoryProvider:
     def logbook(self):
         from repositories.logbook_repository import LogbookRepository
         return self._get_or_create('logbook', LogbookRepository)
+
+    def iban(self):
+        from repositories.iban_repository import IbanRepository
+        return self._get_or_create('iban', IbanRepository)

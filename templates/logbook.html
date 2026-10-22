@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% set skip_chart_vendor = true %}
 
-{% block title %}Finansal Seyir Defteri - E-Cüzdan{% endblock %}
+{% block title %}Finansal Seyir Defteri & IBAN Rehberi - E-Cüzdan{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ static_asset_url('css/logbook.css') }}">
@@ -30,14 +30,35 @@
     <div id="toastContainer" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
 
     <div class="logbook-card">
-        <div class="logbook-card-header">
-            <h2 class="modal-title">{{ _('logbook_title') }}</h2>
-            <button data-macro="button_secondary" type="button" class="create-entry-btn" onclick="showCreateModal()">
-                + {{ _('logbook_new_entry') }}
+        <!-- Segmented Tab Navigation -->
+        <div class="logbook-tabs-nav" role="tablist">
+            <button data-macro="button_secondary" role="tab" id="tab-btn-notes" class="logbook-tab-btn {% if active_tab != 'ibans' %}active{% endif %}" onclick="switchLogbookTab('notes')" aria-selected="{% if active_tab != 'ibans' %}true{% else %}false{% endif %}">
+                <span>📝</span> <span>{{ _('logbook_title') }}</span>
+            </button>
+            <button data-macro="button_secondary" role="tab" id="tab-btn-ibans" class="logbook-tab-btn {% if active_tab == 'ibans' %}active{% endif %}" onclick="switchLogbookTab('ibans')" aria-selected="{% if active_tab == 'ibans' %}true{% else %}false{% endif %}">
+                <span>💳</span> <span>IBAN & Hesap Rehberi</span>
+                {% if ibans %}
+                <span class="ml-1 text-xs px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-bold">{{ ibans|length }}</span>
+                {% endif %}
             </button>
         </div>
+
+        <div class="logbook-card-header">
+            <h2 class="modal-title" id="logbookSectionTitle">
+                {% if active_tab == 'ibans' %}Kayıtlı IBAN Numaralarım{% else %}{{ _('logbook_title') }}{% endif %}
+            </h2>
+            <div class="flex items-center gap-2">
+                <button data-macro="button_secondary" type="button" id="btn-create-note" class="create-entry-btn {% if active_tab == 'ibans' %}hidden{% endif %}" onclick="showCreateModal()">
+                    + {{ _('logbook_new_entry') }}
+                </button>
+                <button data-macro="button_primary" type="button" id="btn-create-iban" class="create-entry-btn {% if active_tab != 'ibans' %}hidden{% endif %}" onclick="showCreateIbanModal()">
+                    + Yeni IBAN Kaydet
+                </button>
+            </div>
+        </div>
         
-        <div class="filter-panel">
+        <!-- Filter Panel for Notes -->
+        <div class="filter-panel {% if active_tab == 'ibans' %}hidden{% endif %}" id="filter-panel-notes">
             <div class="filter-row">
                 <div class="filter-group">
                     <label for="filter-search">Canlı Arama</label>
@@ -67,9 +88,27 @@
             </div>
             {% endif %}
         </div>
+
+        <!-- Filter Panel for IBANs -->
+        <div class="filter-panel {% if active_tab != 'ibans' %}hidden{% endif %}" id="filter-panel-ibans">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="filter-iban-search">Hızlı IBAN / Alıcı Arama</label>
+                    <input type="search" class="filter-select" id="filter-iban-search" placeholder="Banka, başlık, alıcı veya IBAN ara..." oninput="searchIbanCards(this.value)">
+                </div>
+                <div class="filter-group">
+                    <label for="filter-iban-category">Kategori Filtresi</label>
+                    <select class="filter-select" id="filter-iban-category" onchange="filterIbanCategory(this.value)">
+                        <option value="">Tüm Hesaplar</option>
+                        <option value="kendi_hesabim">Kendi Hesaplarım</option>
+                        <option value="alici">Alıcı / Diğer</option>
+                    </select>
+                </div>
+            </div>
+        </div>
         
-        <!-- Timeline Görünümü -->
-        <div id="timeline-view">
+        <!-- Timeline View (Notes) -->
+        <div id="timeline-view" class="{% if active_tab == 'ibans' %}hidden{% endif %}">
             {% if entries %}
                 <div class="timeline">
                     {% for entry in entries %}
@@ -108,10 +147,101 @@
                 </div>
             {% endif %}
         </div>
+
+        <!-- IBAN Directory View -->
+        <div id="iban-view" class="{% if active_tab != 'ibans' %}hidden{% endif %}">
+            {% if ibans %}
+                <div class="iban-grid">
+                    {% for item in ibans %}
+                    <div class="iban-card {% if item.is_favorite %}is-favorite{% endif %}" data-category="{{ item.category }}">
+                        <div>
+                            <div class="iban-card-top">
+                                <div class="iban-badges">
+                                    {% if item.bank_name %}
+                                    <span class="bank-badge">{{ item.bank_name }}</span>
+                                    {% endif %}
+                                    <span class="category-badge {{ item.category }}">
+                                        {% if item.category == 'kendi_hesabim' %}Kendi Hesabım{% else %}Alıcı{% endif %}
+                                    </span>
+                                </div>
+                                <div class="iban-card-actions">
+                                    <button data-macro="button_secondary" type="button" class="favorite-btn {% if item.is_favorite %}active{% endif %}" onclick="toggleFavoriteIban({{ item.id }}, this)" aria-label="Favori: {{ item.title }}" title="{% if item.is_favorite %}Favorilerden Çıkar{% else %}Favorilere Ekle{% endif %}">
+                                        <span aria-hidden="true">★</span>
+                                    </button>
+                                    <div class="iban-menu-wrapper">
+                                        <button data-macro="button_secondary" type="button" class="iban-menu-trigger" onclick="toggleIbanMenu(this, event)" aria-label="Seçenekler" title="Seçenekler">
+                                            <span aria-hidden="true">•••</span>
+                                        </button>
+                                        <div class="iban-menu-dropdown hidden">
+                                            <button data-macro="button_secondary" type="button" class="iban-menu-item" onclick="showEditIbanModal({{ item.id }})">
+                                                <span>✎</span> <span>Düzenle</span>
+                                            </button>
+                                            <button data-macro="button_danger" type="button" class="iban-menu-item iban-menu-danger" onclick="deleteIban({{ item.id }})">
+                                                <span>🗑</span> <span>Sil</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="iban-info">
+                                <h3 class="iban-title">{{ item.title }}</h3>
+                                <div class="iban-meta-row">
+                                    {% if item.account_holder %}
+                                    <span class="iban-holder">👤 {{ item.account_holder }}</span>
+                                    {% endif %}
+                                    {% if item.easy_address %}
+                                    <button data-macro="button_secondary" type="button" class="iban-easy-pill" onclick="copyText('{{ item.easy_address }}', 'FAST Kolay Adres kopyalandı!')" title="Kopyalamak için tıklayın">
+                                        <span>📱 {{ item.easy_address }}</span>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <!-- One-Touch Tap to Copy IBAN Box -->
+                            <div class="iban-touch-box" data-iban="{{ item.iban }}" onclick="copyIbanBox(this)" title="IBAN'ı kopyalamak için tıklayın">
+                                <div class="iban-text">{{ item.formatted_iban }}</div>
+                                <div class="iban-touch-badge">
+                                    <span class="iban-badge-icon">📋</span>
+                                    <span class="iban-badge-text">Kopyala</span>
+                                </div>
+                            </div>
+
+                            {% if item.note %}
+                            <div class="iban-note">
+                                <span>💡</span> {{ item.note }}
+                            </div>
+                            {% endif %}
+
+                            <!-- Minimal Bottom Actions -->
+                            <div class="iban-card-footer">
+                                <button data-macro="button_secondary" type="button" class="iban-footer-btn iban-btn-quick-tx" onclick="startTxFromIban('{{ item.title|e }}', '{{ item.bank_name|e if item.bank_name else '' }}', '{{ item.category }}', '{{ item.formatted_iban|e }}')">
+                                    <span>⚡</span> <span>Hızlı İşlem</span>
+                                </button>
+                                <button data-macro="button_secondary" type="button" class="iban-footer-btn iban-btn-share" data-share="{{ item.share_text }}" onclick="shareIban(this)">
+                                    <span>💬</span> <span>Paylaş</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">💳</div>
+                    <p class="empty-state-text">Henüz kayıtlı bir IBAN numaranız bulunmuyor. Sık kullandığınız banka hesaplarınızı veya alıcıları kaydederek tek tıkla kopyalayabilirsiniz.</p>
+                    <button data-macro="button_primary" type="button" class="create-entry-btn" onclick="showCreateIbanModal()">
+                        + İlk IBAN'ını Kaydet
+                    </button>
+                </div>
+            {% endif %}
+        </div>
     </div>
 </div>
 
-<!-- Create/Edit Modal -->
+<!-- Create/Edit Note Modal -->
 <div class="modal-overlay hidden" id="entryModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal-content">
         <div class="modal-header">
@@ -156,6 +286,101 @@
             <button data-macro="button_secondary" type="button" onclick="saveEntry()">{{ _('logbook_save') }}</button>
         </div>
     </div>
+</div>
+
+<!-- Create/Edit IBAN Modal -->
+<div class="modal-overlay hidden" id="ibanModal" role="dialog" aria-modal="true" aria-labelledby="ibanModalTitle">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title" id="ibanModalTitle">Yeni IBAN Kaydet</h3>
+            <button data-macro="button_secondary" type="button" onclick="hideIbanModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="ibanForm">
+                <input type="hidden" id="ibanId" name="iban_id">
+                <input type="hidden" name="csrf_token" value="{{ session.get('csrf_token', '') }}">
+                
+                <!-- 1. IBAN Numarası ve Canlı Banka Tespiti -->
+                <div class="form-group">
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="form-label mb-0" for="ibanNumber">IBAN Numarası *</label>
+                        <span id="ibanBankIndicator" class="bank-badge hidden"></span>
+                    </div>
+                    <input type="text" class="form-input font-mono uppercase tracking-wider" id="ibanNumber" name="iban" placeholder="TR00 0000 0000 0000 0000 0000 00" maxlength="32" oninput="onIbanFieldInput(this)" required>
+                    <p class="text-xs text-slate-400 mt-1">Türkiye IBAN'ları otomatik formatlanır ve bankası tespit edilir.</p>
+                </div>
+
+                <!-- 2. Temel Alanlar: Başlık ve Hesap Sahibi -->
+                <div class="filter-row">
+                    <div class="form-group">
+                        <label class="form-label" for="ibanTitle">Hesap / Alıcı Başlığı *</label>
+                        <input type="text" class="form-input" id="ibanTitle" name="title" placeholder="Örn: Garanti Maaş, Ev Sahibi Kira" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="ibanAccountHolder">Hesap Sahibi (Ad Soyad)</label>
+                        <input type="text" class="form-input" id="ibanAccountHolder" name="account_holder" placeholder="Örn: Ahmet Yılmaz">
+                    </div>
+                </div>
+
+                <!-- 3. Kademeli Gösterim (Progressive Disclosure) Butonu -->
+                <button data-macro="button_secondary" type="button" class="iban-advanced-toggle" onclick="toggleIbanAdvanced()">
+                    <span>⚙️ Ek Detaylar & FAST Kolay Adres</span>
+                    <span class="iban-toggle-arrow" id="ibanAdvancedArrow">▾</span>
+                </button>
+
+                <!-- 4. Katlanabilir Gelişmiş Seçenekler -->
+                <div id="ibanAdvancedSection" class="iban-advanced-section hidden">
+                    <div class="filter-row">
+                        <div class="form-group">
+                            <label class="form-label" for="ibanBankName">Banka Adı (Manuel)</label>
+                            <input type="text" class="form-input" id="ibanBankName" name="bank_name" placeholder="Örn: Garanti BBVA">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="ibanCategory">Hesap Türü</label>
+                            <select class="form-select" id="ibanCategory" name="category">
+                                <option value="kendi_hesabim">Kendi Hesabım</option>
+                                <option value="alici">Alıcı / Diğer</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="flex items-center gap-2 cursor-pointer font-bold text-xs text-slate-700 dark:text-slate-300">
+                            <input type="checkbox" id="ibanIsFavorite" name="is_favorite" value="1" class="w-4 h-4 text-amber-500 rounded border-slate-300 focus:ring-amber-400">
+                            <span>Sık Kullanılanlara Sabitle ⭐</span>
+                        </label>
+                    </div>
+
+                    <div class="filter-row">
+                        <div class="form-group">
+                            <label class="form-label" for="ibanEasyType">FAST Kolay Adres Türü</label>
+                            <select class="form-select" id="ibanEasyType" name="easy_address_type">
+                                <option value="">Yok / Belirtilmedi</option>
+                                <option value="Telefon">Telefon Numarası</option>
+                                <option value="TCKN">T.C. Kimlik No</option>
+                                <option value="E-posta">E-posta Adresi</option>
+                                <option value="VKN">Vergi Kimlik No (VKN)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="ibanEasyValue">Kolay Adres Değeri</label>
+                            <input type="text" class="form-input" id="ibanEasyValue" name="easy_address" placeholder="Örn: 0532 123 45 67">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="ibanNote">Not / Hatırlatma</label>
+                        <textarea class="form-textarea" id="ibanNote" name="note" rows="2" placeholder="Örn: Kira ödemesi her ayın 1'inde Fast ile"></textarea>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button data-macro="button_secondary" type="button" onclick="hideIbanModal()">{{ _('btn_cancel') }}</button>
+            <button data-macro="button_primary" type="button" onclick="saveIban()">{{ _('logbook_save') }}</button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}

@@ -58,13 +58,14 @@ def _create_indexes_if_not_exist():
             ('idx_ledger_audit_tx', 'ledger_audit_event', 'transaction_id'),
             ('idx_plan_occurrence_plan_status', 'plan_occurrence', 'plan_id, status'),
             ('idx_payment_plan', 'payment', 'plan_id, installment_number'),
+            ('idx_user_iban_category', 'user_iban', 'category'),
         ]
 
         target_tables = [
             'transaction', 'recurring_plan', 'asset', 'user', 'asset_update',
             'account', 'ledger_line', 'journal_entry',
             'ledger_adjustment', 'ledger_audit_event', 'plan_occurrence', 'payment',
-            'notification', 'quiz_attempt'
+            'notification', 'quiz_attempt', 'user_iban'
         ]
 
         inspector = inspect(db.engine)
@@ -116,6 +117,7 @@ def _create_indexes_if_not_exist():
                 "DROP INDEX IF EXISTS idx_asset_transaction_tenant_id",
                 "DROP INDEX IF EXISTS idx_user_username",
                 "DROP INDEX IF EXISTS idx_tag_name",
+                "DROP INDEX IF EXISTS idx_user_iban_tenant_id",
             ]
             for drop_sql in cleanup_drops:
                 try:

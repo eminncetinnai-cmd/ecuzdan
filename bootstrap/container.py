@@ -75,6 +75,10 @@ class RepositoryProvider:
         from repositories.logbook_repository import LogbookRepository
         return self._get_or_create('logbook', LogbookRepository)
 
+    def iban(self):
+        from repositories.iban_repository import IbanRepository
+        return self._get_or_create('iban', IbanRepository)
+
     def strategy(self):
         from repositories.strategy_repository import StrategyRepository
         return self._get_or_create('strategy', StrategyRepository)
@@ -205,6 +209,10 @@ class DomainProvider:
         def _factory():
             return LogbookService(repository=self.repositories.logbook())
         return self._get_or_create('logbook_svc', _factory)
+
+    def iban_svc(self):
+        from domain.analysis.services.iban_service import IbanService
+        return self._get_or_create('iban_svc', IbanService)
 
     def strategy_svc(self):
         from domain.analysis.services.strategy_service import StrategyService
@@ -397,6 +405,14 @@ class ApplicationProvider:
         def _factory():
             return LogbookApplicationService(logbook_service=self.domains.logbook_svc())
         return self._get_or_create('logbook_app', _factory)
+
+    def iban(self):
+        from application.analysis.iban_application import IbanApplicationService
+        def _factory():
+            return IbanApplicationService(
+                iban_domain_service=self.domains.iban_svc(),
+            )
+        return self._get_or_create('iban_app', _factory)
 
     def analysis(self):
         from application.analysis.analysis_application import AnalysisApplicationService
