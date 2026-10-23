@@ -40,24 +40,24 @@
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
         <div class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-800/50 p-4 sm:p-5 shadow-sm">
             <p class="text-[10px] uppercase tracking-[0.25em] text-slate-500 dark:text-slate-400 font-bold mb-2">Kasa &amp; Likidite</p>
-            <p class="text-xl sm:text-2xl font-black {% if today_cash >= 0 %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
+            <p id="cal-kpi-today-cash" data-raw-val="{{ today_cash }}" class="text-xl sm:text-2xl font-black {% if today_cash >= 0 %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
                 {{ today_cash|format_money }} {{ base_currency_symbol }}
             </p>
             <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-1">Ödenen Net Nakit Bakiyesi</p>
         </div>
         <div class="rounded-3xl border border-rose-200/80 dark:border-rose-900/40 bg-rose-50/50 dark:bg-rose-950/20 p-4 sm:p-5 shadow-sm">
             <p class="text-[10px] uppercase tracking-[0.25em] text-rose-600 dark:text-rose-400 font-bold mb-2">Kritik (Bu Hafta / 7 Gün)</p>
-            <p class="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400">
+            <p id="cal-kpi-week-total" data-raw-val="{{ week_total }}" class="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400">
                 {{ week_total|format_money }} {{ base_currency_symbol }}
             </p>
-            <p class="text-[10px] font-bold text-rose-500/80 dark:text-rose-400/80 mt-1">{{ week_p|length }} Bekleyen Ödeme</p>
+            <p id="cal-kpi-week-count" class="text-[10px] font-bold text-rose-500/80 dark:text-rose-400/80 mt-1">{{ week_p|length }} Bekleyen Ödeme</p>
         </div>
         <div class="rounded-3xl border border-amber-200/80 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-950/20 p-4 sm:p-5 shadow-sm">
             <p class="text-[10px] uppercase tracking-[0.25em] text-amber-600 dark:text-amber-400 font-bold mb-2">Aylık Yükümlülük (Bu Ay)</p>
-            <p class="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400">
+            <p id="cal-kpi-month-total" data-raw-val="{{ month_total }}" class="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400">
                 {{ month_total|format_money }} {{ base_currency_symbol }}
             </p>
-            <p class="text-[10px] font-bold text-amber-500/80 dark:text-amber-400/80 mt-1">{{ month_p|length }} Bekleyen Ödeme</p>
+            <p id="cal-kpi-month-count" class="text-[10px] font-bold text-amber-500/80 dark:text-amber-400/80 mt-1">{{ month_p|length }} Bekleyen Ödeme</p>
         </div>
     </div>
 
@@ -77,18 +77,23 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-xs text-left">
                     <thead class="text-slate-400 dark:text-slate-500 text-[9px] uppercase border-b border-slate-100 dark:border-slate-800">
-                        <tr><th class="py-3">{{ _('table_date') }}</th><th>{{ _('table_category') }}</th><th>{{ _('table_description') }}</th><th class="text-right">{{ _('table_amount') }}</th></tr>
+                        <tr><th class="py-3">{{ _('table_date') }}</th><th>{{ _('table_category') }}</th><th>{{ _('table_description') }}</th><th class="text-right">{{ _('table_amount') }}</th><th class="text-right py-3 pr-1">İşlem</th></tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                         {% for p in week_p %}
-                        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition">
+                        <tr class="cal-tx-row hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition" data-tx-id="{{ p.id }}" data-amount="{{ p.amount }}">
                             <td class="py-4 font-bold text-slate-800 dark:text-slate-200">{{ p.date|format_date }}</td>
                             <td class="text-slate-700 dark:text-slate-300">{{ p.category }}</td>
                             <td class="italic text-slate-500 dark:text-slate-400">{{ p.description }}{% if p.note %} <span class="text-slate-400">({{ p.note }})</span>{% endif %}</td>
-                            <td class="text-right font-black text-rose-600 dark:text-rose-400">{{ p.amount|format_money }} {{ base_currency_symbol }}</td>
+                            <td class="text-right font-black text-rose-600 dark:text-rose-400 whitespace-nowrap">{{ p.amount|format_money }} {{ base_currency_symbol }}</td>
+                            <td class="text-right py-2 pr-1 whitespace-nowrap">
+                                <button data-macro="button_secondary" type="button" class="btn-cal-quick-pay px-2.5 py-1 text-[11px] font-bold rounded-lg bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500 hover:text-white dark:bg-emerald-500/20 dark:text-emerald-400 dark:hover:bg-emerald-600 transition inline-flex items-center gap-1" onclick="quickPayFromCalendar({{ p.id }}, this)" data-tx-id="{{ p.id }}" data-amount="{{ p.amount }}" title="Tek tıkla ödendi olarak işaretle">
+                                    <span class="pay-icon" aria-hidden="true">✓</span> <span class="pay-label">Ödendi</span>
+                                </button>
+                            </td>
                         </tr>
                         {% else %}
-                        <tr><td colspan="4" class="py-6 text-center text-slate-400 dark:text-slate-500 italic">{{ _('calendar_list_empty_week') }}</td></tr>
+                        <tr><td colspan="5" class="py-6 text-center text-slate-400 dark:text-slate-500 italic">{{ _('calendar_list_empty_week') }}</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -101,18 +106,23 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-xs text-left">
                     <thead class="text-slate-400 dark:text-slate-500 text-[9px] uppercase border-b border-slate-100 dark:border-slate-800">
-                        <tr><th class="py-3">{{ _('table_date') }}</th><th>{{ _('table_category') }}</th><th>{{ _('table_description') }}</th><th class="text-right">{{ _('table_amount') }}</th></tr>
+                        <tr><th class="py-3">{{ _('table_date') }}</th><th>{{ _('table_category') }}</th><th>{{ _('table_description') }}</th><th class="text-right">{{ _('table_amount') }}</th><th class="text-right py-3 pr-1">İşlem</th></tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                         {% for p in month_p %}
-                        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition">
+                        <tr class="cal-tx-row hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition" data-tx-id="{{ p.id }}" data-amount="{{ p.amount }}">
                             <td class="py-4 font-bold text-slate-800 dark:text-slate-200">{{ p.date|format_date }}</td>
                             <td class="text-slate-700 dark:text-slate-300">{{ p.category }}</td>
                             <td class="italic text-slate-500 dark:text-slate-400">{{ p.description }}{% if p.note %} <span class="text-slate-400">({{ p.note }})</span>{% endif %}</td>
-                            <td class="text-right font-black text-amber-600 dark:text-amber-400">{{ p.amount|format_money }} {{ base_currency_symbol }}</td>
+                            <td class="text-right font-black text-amber-600 dark:text-amber-400 whitespace-nowrap">{{ p.amount|format_money }} {{ base_currency_symbol }}</td>
+                            <td class="text-right py-2 pr-1 whitespace-nowrap">
+                                <button data-macro="button_secondary" type="button" class="btn-cal-quick-pay px-2.5 py-1 text-[11px] font-bold rounded-lg bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500 hover:text-white dark:bg-emerald-500/20 dark:text-emerald-400 dark:hover:bg-emerald-600 transition inline-flex items-center gap-1" onclick="quickPayFromCalendar({{ p.id }}, this)" data-tx-id="{{ p.id }}" data-amount="{{ p.amount }}" title="Tek tıkla ödendi olarak işaretle">
+                                    <span class="pay-icon" aria-hidden="true">✓</span> <span class="pay-label">Ödendi</span>
+                                </button>
+                            </td>
                         </tr>
                         {% else %}
-                        <tr><td colspan="4" class="py-6 text-center text-slate-400 dark:text-slate-500 italic">{{ _('calendar_list_empty_month') }}</td></tr>
+                        <tr><td colspan="5" class="py-6 text-center text-slate-400 dark:text-slate-500 italic">{{ _('calendar_list_empty_month') }}</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -142,6 +152,9 @@
                             </td>
                             <td class="text-slate-700 dark:text-slate-300 font-medium">
                                 <span class="mr-1">{{ r.category_emoji }}</span>{{ r.title }}
+                                {% if r.document_url %}
+                                <a href="{{ r.document_url }}" target="_blank" rel="noopener" class="ml-1 text-[11px] text-indigo-500 hover:text-indigo-700" title="Poliçe / Belge Görseli">📎</a>
+                                {% endif %}
                             </td>
                             <td class="text-slate-500 dark:text-slate-400 text-[10px]">{{ r.frequency }}</td>
                             <td class="text-right font-black text-indigo-600 dark:text-indigo-400">

@@ -68,6 +68,7 @@ instance/*.json
 pytest_*.txt
 logs_archive_*/
 _backup/
+backups/
 
 # Virtual environment
 .venv/

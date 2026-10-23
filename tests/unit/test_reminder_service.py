@@ -96,6 +96,7 @@ def test_user_reminder_model_properties():
         due_month=10,
         amount=Decimal("500.00"),
         note="Pasta al",
+        document_url="/static/uploads/reminders/police.pdf",
     )
     assert reminder.category_emoji == '🎂'
     assert "24 Ekim" in reminder.target_date_display
@@ -104,6 +105,7 @@ def test_user_reminder_model_properties():
     assert data['title'] == "Eşimin Doğum Günü"
     assert data['category'] == "Doğum Günü"
     assert data['amount'] == 500.0
+    assert data['document_url'] == "/static/uploads/reminders/police.pdf"
 
 
 @pytest.mark.unit
@@ -126,8 +128,8 @@ def test_reminder_application_service_orchestration():
             due_day=5,
         )
 
-    # 2. Create with valid data
-    mock_repo.create_reminder.return_value = MagicMock(id=1, title="Kira")
+    # 2. Create with valid data and document_url
+    mock_repo.create_reminder.return_value = MagicMock(id=1, title="Kira", document_url="/static/uploads/reminders/kira.pdf")
     result = app_svc.create_reminder(
         tenant_id="t1",
         user_id=1,
@@ -136,6 +138,8 @@ def test_reminder_application_service_orchestration():
         frequency="Aylık",
         due_day=1,
         amount="15000",
+        document_url="/static/uploads/reminders/kira.pdf",
     )
     assert result.id == 1
+    assert result.document_url == "/static/uploads/reminders/kira.pdf"
     mock_repo.create_reminder.assert_called_once()

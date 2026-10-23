@@ -632,4 +632,108 @@
             }
         }
     };
+
+    window.quickPayFromCalendar = function (txId, buttonEl) {
+        if (!txId) return;
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+            || window.CSRF_TOKEN
+            || (document.querySelector('input[name="csrf_token"]') ? document.querySelector('input[name="csrf_token"]').value : '');
+
+        const originalHtml = buttonEl ? buttonEl.innerHTML : '';
+        if (buttonEl) {
+            buttonEl.disabled = true;
+            buttonEl.innerHTML = '<span class="inline-block animate-spin" aria-hidden="true">⏳</span> <span>İşleniyor...</span>';
+        }
+
+        fetch(`/transactions/${txId}/quick-pay`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ id: txId })
+        })
+        .then(function (res) {
+            if (!res.ok) {
+                return res.json().then(function (data) {
+                    throw new Error(data.message || 'Ödeme işlemi tamamlanamadı.');
+                });
+            }
+            return res.json();
+        })
+        .then(function (data) {
+            if (!data.success) {
+                throw new Error(data.message || 'Ödeme işlemi başarısız.');
+            }
+
+            const paidAmount = parseFloat(buttonEl?.getAttribute('data-amount') || data.data?.amount || '0');
+
+            // Find all matching rows in week_p and month_p
+            const matchingRows = document.querySelectorAll(`tr[data-tx-id="${txId}"]`);
+            matchingRows.forEach(function (row) {
+                row.classList.add('cal-tx-row--paid');
+                const btn = row.querySelector('.btn-cal-quick-pay');
+                if (btn) {
+                    btn.classList.add('is-paid');
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="text-emerald-500 font-black" aria-hidden="true">✓</span> <span class="text-emerald-600 dark:text-emerald-400 font-bold">Ödendi</span>';
+                    btn.title = 'Ödeme yapıldı';
+                }
+            });
+
+            // Adjust Live KPI values on client side
+            const sym = window.BASE_CURRENCY_SYMBOL || '₺';
+
+            // 1. Today cash: cash decreases by amount if expense
+            const todayCashEl = document.getElementById('cal-kpi-today-cash');
+            if (todayCashEl && !isNaN(paidAmount)) {
+                const currentCash = parseFloat(todayCashEl.getAttribute('data-raw-val') || '0');
+                const newCash = currentCash - paidAmount;
+                todayCashEl.setAttribute('data-raw-val', newCash.toFixed(2));
+                todayCashEl.textContent = formatMoney(newCash) + ' ' + sym;
+                if (newCash < 0) {
+                    todayCashEl.classList.remove('text-emerald-600', 'dark:text-emerald-400');
+                    todayCashEl.classList.add('text-rose-600', 'dark:text-rose-400');
+                }
+            }
+
+            // 2. Week total
+            const weekTotalEl = document.getElementById('cal-kpi-week-total');
+            if (weekTotalEl && !isNaN(paidAmount)) {
+                const curWeek = parseFloat(weekTotalEl.getAttribute('data-raw-val') || '0');
+                const newWeek = Math.max(0, curWeek - paidAmount);
+                weekTotalEl.setAttribute('data-raw-val', newWeek.toFixed(2));
+                weekTotalEl.textContent = formatMoney(newWeek) + ' ' + sym;
+            }
+
+            // 3. Month total
+            const monthTotalEl = document.getElementById('cal-kpi-month-total');
+            if (monthTotalEl && !isNaN(paidAmount)) {
+                const curMonth = parseFloat(monthTotalEl.getAttribute('data-raw-val') || '0');
+                const newMonth = Math.max(0, curMonth - paidAmount);
+                monthTotalEl.setAttribute('data-raw-val', newMonth.toFixed(2));
+                monthTotalEl.textContent = formatMoney(newMonth) + ' ' + sym;
+            }
+
+            if (window.ECuzdanHaptics) window.ECuzdanHaptics.success();
+            if (typeof showToast === 'function') {
+                showToast('İşlem başarıyla ödendi olarak işaretlendi.', 'success');
+            }
+        })
+        .catch(function (err) {
+            console.error('Quick pay calendar error:', err);
+            if (buttonEl) {
+                buttonEl.disabled = false;
+                buttonEl.innerHTML = originalHtml;
+            }
+            if (window.ECuzdanHaptics) window.ECuzdanHaptics.error();
+            if (typeof showToast === 'function') {
+                showToast(err.message || 'Ödeme işlemi sırasında bir hata oluştu.', 'error');
+            } else {
+                alert(err.message || 'Ödeme işlemi sırasında bir hata oluştu.');
+            }
+        });
+    };
 })();

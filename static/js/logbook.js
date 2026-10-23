@@ -55,9 +55,24 @@ document.addEventListener('DOMContentLoaded', function() {
         switchLogbookTab('ibans', false);
     }
     
-    // ESC key listener for modal
+    // ESC key listener for modals
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
+            const qrModal = document.getElementById('ibanQrModal');
+            if (qrModal && !qrModal.classList.contains('hidden')) {
+                hideIbanQrModal();
+                return;
+            }
+            const remModal = document.getElementById('reminderModal');
+            if (remModal && !remModal.classList.contains('hidden')) {
+                hideReminderModal();
+                return;
+            }
+            const ibanModal = document.getElementById('ibanModal');
+            if (ibanModal && !ibanModal.classList.contains('hidden')) {
+                hideIbanModal();
+                return;
+            }
             const modal = document.getElementById('entryModal');
             if (modal && (modal.classList.contains('active') || (!modal.classList.contains('hidden') && modal.style.display !== 'none'))) {
                 hideModal();
@@ -987,6 +1002,15 @@ function showCreateReminderModal() {
     const idInput = document.getElementById('reminderId');
     if (idInput) idInput.value = '';
 
+    const curDocBox = document.getElementById('reminderCurrentDocBox');
+    if (curDocBox) curDocBox.classList.add('hidden');
+
+    const rmBox = document.getElementById('reminderRemoveDoc');
+    if (rmBox) rmBox.checked = false;
+
+    const docInput = document.getElementById('reminderDocument');
+    if (docInput) docInput.value = '';
+
     const freqSelect = document.getElementById('reminderFrequency');
     if (freqSelect) {
         freqSelect.value = 'Aylık';
@@ -1060,6 +1084,20 @@ function showEditReminderModal(id) {
 
         const noteInput = document.getElementById('reminderNote');
         if (noteInput) noteInput.value = rem.note || '';
+
+        const curDocBox = document.getElementById('reminderCurrentDocBox');
+        const previewLink = document.getElementById('reminderDocPreviewLink');
+        const rmBox = document.getElementById('reminderRemoveDoc');
+        const docInput = document.getElementById('reminderDocument');
+        if (docInput) docInput.value = '';
+        if (rmBox) rmBox.checked = false;
+
+        if (rem.document_url && curDocBox && previewLink) {
+            previewLink.href = rem.document_url;
+            curDocBox.classList.remove('hidden');
+        } else if (curDocBox) {
+            curDocBox.classList.add('hidden');
+        }
 
         if (typeof window.openModal === 'function') {
             window.openModal('reminderModal');
@@ -1224,6 +1262,230 @@ function startTxFromReminder(title, amount, category) {
                 window.openModal('quickTxModal');
             }
         }
+    }
+}
+
+// ── TR Karekod / FAST IBAN QR Code Generator ─────────────────────────
+let currentQrData = {
+    title: '',
+    holder: '',
+    iban: '',
+    formattedIban: '',
+    bankName: '',
+    mode: 'fast',
+    amount: ''
+};
+
+function formatTlv(tag, value) {
+    if (!value) return '';
+    const valStr = String(value);
+    const len = String(valStr.length).padStart(2, '0');
+    return `${tag}${len}${valStr}`;
+}
+
+function computeCrc16(str) {
+    let crc = 0xFFFF;
+    for (let i = 0; i < str.length; i++) {
+        let c = str.charCodeAt(i);
+        crc ^= (c << 8);
+        for (let j = 0; j < 8; j++) {
+            if ((crc & 0x8000) !== 0) {
+                crc = ((crc << 1) ^ 0x1021) & 0xFFFF;
+            } else {
+                crc = (crc << 1) & 0xFFFF;
+            }
+        }
+    }
+    return crc.toString(16).toUpperCase().padStart(4, '0');
+}
+
+function buildFastPayload(iban, name, amount) {
+    const cleanIban = String(iban || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    const cleanName = String(name || '').trim().toUpperCase();
+    const hasAmt = amount && !isNaN(parseFloat(amount)) && parseFloat(amount) > 0;
+
+    // Sub-TLVs for Tag 26 (FAST Transfer info)
+    const subTlv = formatTlv('00', 'TR.FAST') +
+                   formatTlv('01', cleanIban) +
+                   (cleanName ? formatTlv('02', cleanName) : '');
+
+    let payload = '000201' + // Payload Format Indicator
+                  (hasAmt ? '010212' : '010211') + // Point of Initiation Method (12 dynamic, 11 static)
+                  formatTlv('26', subTlv) +
+                  '52040000' + // MCC
+                  '5303949';   // Currency (TRY = 949)
+
+    if (hasAmt) {
+        payload += formatTlv('54', parseFloat(amount).toFixed(2));
+    }
+
+    payload += '5802TR' + // Country
+               formatTlv('59', cleanName || 'ALICI') +
+               formatTlv('60', 'TURKIYE') +
+               '6304';
+
+    const crc = computeCrc16(payload);
+    return payload + crc;
+}
+
+function getActiveQrPayload() {
+    const cleanIban = String(currentQrData.iban || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    const cleanName = (currentQrData.holder || currentQrData.title || '').trim();
+    const amt = currentQrData.amount;
+
+    if (currentQrData.mode === 'fast') {
+        return buildFastPayload(cleanIban, cleanName, amt);
+    } else {
+        if (amt && !isNaN(parseFloat(amt)) && parseFloat(amt) > 0) {
+            return `IBAN: ${currentQrData.formattedIban || cleanIban}\nAlıcı: ${cleanName}\nTutar: ${parseFloat(amt).toFixed(2)} TL`;
+        }
+        return `IBAN: ${currentQrData.formattedIban || cleanIban}\nAlıcı: ${cleanName}`;
+    }
+}
+
+function renderIbanQr() {
+    const container = document.getElementById('ibanQrSvgContainer');
+    if (!container) return;
+
+    const payload = getActiveQrPayload();
+    if (!payload || typeof qrcode !== 'function') {
+        container.innerHTML = '<div class="text-xs text-rose-500">QR kod üretilemedi.</div>';
+        return;
+    }
+
+    try {
+        const qr = qrcode(0, 'M');
+        qr.addData(payload);
+        qr.make();
+        container.innerHTML = qr.createSvgTag({ scalable: true, margin: 1 });
+        const svg = container.querySelector('svg');
+        if (svg) {
+            svg.setAttribute('width', '100%');
+            svg.setAttribute('height', '100%');
+            svg.classList.add('w-full', 'h-full');
+        }
+    } catch (err) {
+        console.error('QR code generation error:', err);
+        container.innerHTML = `<div class="text-xs text-rose-500">QR kod üretimi başarısız: ${err.message}</div>`;
+    }
+}
+
+function showIbanQrModal(title, holder, iban, formattedIban, bankName) {
+    currentQrData = {
+        title: title || '',
+        holder: holder || '',
+        iban: iban || '',
+        formattedIban: formattedIban || iban || '',
+        bankName: bankName || '',
+        mode: 'fast',
+        amount: ''
+    };
+
+    const titleEl = document.getElementById('qrModalTitle');
+    if (titleEl) titleEl.textContent = title;
+
+    const bankBadge = document.getElementById('qrModalBankBadge');
+    if (bankBadge) {
+        if (bankName) {
+            bankBadge.textContent = bankName;
+            bankBadge.classList.remove('hidden');
+        } else {
+            bankBadge.classList.add('hidden');
+        }
+    }
+
+    const holderEl = document.getElementById('qrModalHolder');
+    if (holderEl) {
+        holderEl.textContent = holder ? `👤 ${holder}` : '';
+        holderEl.style.display = holder ? '' : 'none';
+    }
+
+    const ibanEl = document.getElementById('qrModalFormattedIban');
+    if (ibanEl) ibanEl.textContent = formattedIban || iban;
+
+    const amtInput = document.getElementById('qrAmountInput');
+    if (amtInput) amtInput.value = '';
+
+    setQrMode('fast', false);
+    renderIbanQr();
+
+    if (typeof window.openModal === 'function') {
+        window.openModal('ibanQrModal');
+    } else {
+        const m = document.getElementById('ibanQrModal');
+        if (m) m.classList.remove('hidden');
+    }
+
+    if (window.ECuzdanHaptics) window.ECuzdanHaptics.light();
+}
+
+function hideIbanQrModal() {
+    if (typeof window.closeModal === 'function') {
+        window.closeModal('ibanQrModal');
+    } else {
+        const m = document.getElementById('ibanQrModal');
+        if (m) m.classList.add('hidden');
+    }
+}
+
+function setQrMode(mode, reRender = true) {
+    currentQrData.mode = mode;
+    const tabFast = document.getElementById('qr-tab-fast');
+    const tabPlain = document.getElementById('qr-tab-plain');
+
+    if (mode === 'fast') {
+        tabFast?.classList.add('bg-white', 'dark:bg-slate-700', 'text-indigo-600', 'dark:text-indigo-300', 'shadow-sm');
+        tabFast?.classList.remove('text-slate-500', 'dark:text-slate-400');
+        tabPlain?.classList.remove('bg-white', 'dark:bg-slate-700', 'text-indigo-600', 'dark:text-indigo-300', 'shadow-sm');
+        tabPlain?.classList.add('text-slate-500', 'dark:text-slate-400');
+    } else {
+        tabPlain?.classList.add('bg-white', 'dark:bg-slate-700', 'text-indigo-600', 'dark:text-indigo-300', 'shadow-sm');
+        tabPlain?.classList.remove('text-slate-500', 'dark:text-slate-400');
+        tabFast?.classList.remove('bg-white', 'dark:bg-slate-700', 'text-indigo-600', 'dark:text-indigo-300', 'shadow-sm');
+        tabFast?.classList.add('text-slate-500', 'dark:text-slate-400');
+    }
+
+    if (reRender) renderIbanQr();
+}
+
+function onQrAmountChange() {
+    const amtInput = document.getElementById('qrAmountInput');
+    currentQrData.amount = amtInput ? amtInput.value.trim() : '';
+    renderIbanQr();
+}
+
+function copyQrPayload() {
+    const payload = getActiveQrPayload();
+    if (!payload) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(payload).then(() => {
+            if (window.ECuzdanHaptics) window.ECuzdanHaptics.success();
+            if (typeof showToast === 'function') {
+                showToast('Karekod verisi panoya kopyalandı!', 'success');
+            }
+        });
+    } else {
+        copyText(payload, 'Karekod verisi kopyalandı!');
+    }
+}
+
+function downloadQrSvg() {
+    const container = document.getElementById('ibanQrSvgContainer');
+    const svgEl = container?.querySelector('svg');
+    if (!svgEl) return;
+    const serializer = new XMLSerializer();
+    const source = '<?xml version="1.0" standalone="no"?>\r\n' + serializer.serializeToString(svgEl);
+    const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(source);
+    const a = document.createElement('a');
+    const cleanIban = String(currentQrData.iban || 'iban').replace(/[^A-Za-z0-9]/g, '');
+    a.download = `FAST_QR_${cleanIban}.svg`;
+    a.href = url;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    if (window.ECuzdanHaptics) window.ECuzdanHaptics.success();
+    if (typeof showToast === 'function') {
+        showToast('QR Kod SVG formatında indirildi.', 'success');
     }
 }
 

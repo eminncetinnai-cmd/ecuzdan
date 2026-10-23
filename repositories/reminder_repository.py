@@ -77,6 +77,7 @@ class ReminderRepository(TenantScopedRepository):
         due_date: str | None = None,
         amount: Decimal | float | None = None,
         note: str | None = None,
+        document_url: str | None = None,
     ) -> UserReminder:
         """Create and persist a new user reminder."""
         t_id = self.require_tenant_id(tenant_id)
@@ -91,6 +92,7 @@ class ReminderRepository(TenantScopedRepository):
             due_date=due_date.strip() if due_date else None,
             amount=Decimal(str(amount)) if amount is not None else None,
             note=note.strip() if note else None,
+            document_url=document_url.strip() if document_url else None,
             is_completed=False,
             created_at=_utcnow(),
             updated_at=_utcnow(),
@@ -111,6 +113,8 @@ class ReminderRepository(TenantScopedRepository):
         due_date: str | None = None,
         amount: Decimal | float | None = None,
         note: str | None = None,
+        document_url: str | None = None,
+        remove_document: bool = False,
         is_completed: bool | None = None,
     ) -> UserReminder | None:
         """Update fields on an existing reminder record."""
@@ -134,6 +138,10 @@ class ReminderRepository(TenantScopedRepository):
             record.amount = Decimal(str(amount)) if amount != "" else None
         if note is not None:
             record.note = note.strip() if note else None
+        if remove_document:
+            record.document_url = None
+        elif document_url is not None:
+            record.document_url = document_url.strip() if document_url else None
         if is_completed is not None:
             record.is_completed = bool(is_completed)
             if record.is_completed:

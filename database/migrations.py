@@ -465,6 +465,13 @@ def _ensure_schema():
 
     # Profil ranking soru/cevap alanları (Ranking soru tipi)
     inspector = inspect(db.engine)
+    if UserReminder.__tablename__ in inspector.get_table_names():
+        reminder_columns = {col['name'] for col in inspector.get_columns(UserReminder.__tablename__)}
+        if 'document_url' not in reminder_columns:
+            with db.engine.begin() as conn:
+                conn.execute(text('ALTER TABLE "user_reminder" ADD COLUMN document_url VARCHAR(255)'))
+            logger.info('UserReminder tablosuna document_url sütunu eklendi')
+
     profile_answer_columns = {column['name'] for column in inspector.get_columns(InvestorProfileAnswer.__tablename__)} if InvestorProfileAnswer.__tablename__ in inspector.get_table_names() else set()
     if InvestorProfileAnswer.__tablename__ in inspector.get_table_names() and 'answer_order' not in profile_answer_columns:
         with db.engine.begin() as conn:

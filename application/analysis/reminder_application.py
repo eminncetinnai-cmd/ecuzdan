@@ -54,6 +54,7 @@ class ReminderApplicationService(ApplicationService):
         due_date: str | None = None,
         amount: Any | None = None,
         note: str | None = None,
+        document_url: str | None = None,
     ) -> Any:
         """Validate and create a new reminder record."""
         def _action() -> Any:
@@ -86,6 +87,7 @@ class ReminderApplicationService(ApplicationService):
                 due_date=due_date,
                 amount=parsed_amount,
                 note=note,
+                document_url=document_url,
             )
 
         return self.execute(_action)
@@ -102,6 +104,8 @@ class ReminderApplicationService(ApplicationService):
         due_date: str | None = None,
         amount: Any | None = None,
         note: str | None = None,
+        document_url: str | None = None,
+        remove_document: bool = False,
         is_completed: bool | None = None,
     ) -> Any | None:
         """Validate and update an existing reminder record."""
@@ -145,6 +149,8 @@ class ReminderApplicationService(ApplicationService):
                 due_date=due_date,
                 amount=parsed_amount,
                 note=note,
+                document_url=document_url,
+                remove_document=remove_document,
                 is_completed=is_completed,
             )
 

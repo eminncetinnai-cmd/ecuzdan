@@ -231,3 +231,38 @@
         overflow-y: auto;
     }
 }
+
+/* Quick Pay State & Action in Calendar List Tab */
+.cal-tx-row {
+    transition: all 0.25s ease;
+}
+
+.cal-tx-row--paid {
+    opacity: 0.55;
+    background: rgba(16, 185, 129, 0.04) !important;
+}
+
+.cal-tx-row--paid td {
+    text-decoration: line-through;
+    color: var(--color-slate-400, #94a3b8) !important;
+}
+
+.cal-tx-row--paid td:last-child {
+    text-decoration: none;
+}
+
+.btn-cal-quick-pay {
+    cursor: pointer;
+    user-select: none;
+}
+
+.btn-cal-quick-pay:active {
+    transform: scale(0.96);
+}
+
+.btn-cal-quick-pay.is-paid {
+    background: rgba(16, 185, 129, 0.15) !important;
+    color: #10b981 !important;
+    cursor: default;
+    pointer-events: none;
+}

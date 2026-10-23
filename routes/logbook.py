@@ -3,7 +3,7 @@
 import logging
 import traceback
 
-from flask import g, jsonify, redirect, render_template, request, session, url_for
+from flask import current_app, g, jsonify, redirect, render_template, request, session, url_for
 
 from bootstrap.container import get_container  # noqa: F401
 from infrastructure.i18n import i18n
@@ -28,6 +28,59 @@ def _get_iban_service():
 def _get_reminder_service():
     from bootstrap import get_container as current_get_container
     return current_get_container().applications.reminder()
+
+
+def _handle_reminder_upload(file):
+    """Safely process and optimize uploaded reminder document/image."""
+    if not file or not getattr(file, 'filename', None) or not file.filename.strip():
+        return None
+    import os
+    import secrets
+    import time
+    from werkzeug.utils import secure_filename
+    from utils.profile_image import optimize_image_file
+
+    allowed_exts = {'.jpg', '.jpeg', '.png', '.webp', '.pdf'}
+    ext = os.path.splitext(file.filename)[1].lower()
+    if ext not in allowed_exts:
+        raise ValueError("Yalnızca JPG, PNG, WEBP veya PDF formatında belge yükleyebilirsiniz.")
+
+    # File size check (max 5MB)
+    file.seek(0, os.SEEK_END)
+    size = file.tell()
+    file.seek(0)
+    if size > 5 * 1024 * 1024:
+        raise ValueError("Belge boyutu 5 MB'tan büyük olamaz.")
+
+    filename = secure_filename(f"rem_{int(time.time())}_{secrets.token_hex(4)}{ext}")
+    upload_path = os.path.join('static', 'uploads', 'reminders')
+    abs_upload_dir = os.path.join(current_app.root_path, upload_path)
+    os.makedirs(abs_upload_dir, exist_ok=True)
+    target_filepath = os.path.join(abs_upload_dir, filename)
+
+    if ext in ('.jpg', '.jpeg', '.png', '.webp'):
+        if not optimize_image_file(file, target_filepath, max_dim=1200, quality=85):
+            file.seek(0)
+            file.save(target_filepath)
+    else:
+        file.save(target_filepath)
+
+    return f"/{upload_path}/{filename}".replace('\\', '/')
+
+
+def _delete_reminder_file(doc_url):
+    """Safely delete uploaded reminder file from disk."""
+    if not doc_url or not isinstance(doc_url, str):
+        return
+    import os
+    if doc_url.startswith('/static/uploads/reminders/'):
+        rel_path = doc_url.lstrip('/')
+        abs_path = os.path.join(current_app.root_path, rel_path)
+        if os.path.exists(abs_path) and os.path.isfile(abs_path):
+            try:
+                os.remove(abs_path)
+            except Exception as e:
+                logger.debug(f"Could not remove old reminder file {abs_path}: {e}")
 
 
 
@@ -454,6 +507,9 @@ def register_logbook_routes(bp):
             amount = request.form.get('amount') or None
             note = request.form.get('note') or None
 
+            file = request.files.get('document')
+            doc_url = _handle_reminder_upload(file)
+
             created = _get_reminder_service().create_reminder(
                 tenant_id=g.get('tenant_id'),
                 user_id=session.get('user_id'),
@@ -465,6 +521,7 @@ def register_logbook_routes(bp):
                 due_date=due_date,
                 amount=amount,
                 note=note,
+                document_url=doc_url,
             )
             if is_ajax:
                 return jsonify({'success': True, 'message': 'Hatırlatıcı başarıyla kaydedildi.', 'reminder': created.to_dict()})
@@ -522,6 +579,16 @@ def register_logbook_routes(bp):
             amount = request.form.get('amount') or None
             note = request.form.get('note') or None
 
+            existing = _get_reminder_service().get_reminder(id, g.get('tenant_id'))
+            file = request.files.get('document')
+            new_doc_url = _handle_reminder_upload(file)
+            remove_document = request.form.get('remove_document') in ('1', 'true', 'on')
+
+            if remove_document and existing and existing.document_url:
+                _delete_reminder_file(existing.document_url)
+            elif new_doc_url and existing and existing.document_url:
+                _delete_reminder_file(existing.document_url)
+
             updated = _get_reminder_service().update_reminder(
                 reminder_id=id,
                 tenant_id=g.get('tenant_id'),
@@ -533,6 +600,8 @@ def register_logbook_routes(bp):
                 due_date=due_date,
                 amount=amount,
                 note=note,
+                document_url=new_doc_url if new_doc_url else None,
+                remove_document=remove_document,
             )
             if not updated:
                 raise ValueError("Hatırlatıcı kaydı bulunamadı.")
@@ -584,6 +653,10 @@ def register_logbook_routes(bp):
     def delete_reminder(id):
         is_ajax = is_ajax_request()
         try:
+            existing = _get_reminder_service().get_reminder(id, g.get('tenant_id'))
+            if existing and existing.document_url:
+                _delete_reminder_file(existing.document_url)
+
             success = _get_reminder_service().delete_reminder(id, g.get('tenant_id'))
             if not success:
                 raise ValueError("Hatırlatıcı kaydı bulunamadı veya silinemedi.")

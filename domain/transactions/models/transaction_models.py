@@ -677,6 +677,9 @@ class UserReminder(db.Model):
     # Not / Açıklama
     note = db.Column(db.String(255), nullable=True)
 
+    # İsteğe bağlı poliçe / belge görseli (URL / dosya yolu)
+    document_url = db.Column(db.String(255), nullable=True)
+
     # Durum
     is_completed = db.Column(db.Boolean, default=False, nullable=False)
     last_completed_at = db.Column(db.DateTime, nullable=True)
@@ -744,6 +747,7 @@ class UserReminder(db.Model):
             'target_date_display': self.target_date_display,
             'amount': float(self.amount) if self.amount is not None else None,
             'note': self.note or '',
+            'document_url': self.document_url or '',
             'is_completed': bool(self.is_completed),
             'last_completed_at': self.last_completed_at.isoformat() if self.last_completed_at else None,
             'days_remaining': calc['days_remaining'],
