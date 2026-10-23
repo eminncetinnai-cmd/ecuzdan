@@ -10,6 +10,9 @@
         month: parseInt(document.getElementById('cal-root')?.dataset.month, 10),
         today: document.getElementById('cal-root')?.dataset.today || '',
         days: {},
+        hideReminders: (function () {
+            try { return localStorage.getItem('cal_hide_reminders') === '1'; } catch (e) { return false; }
+        })(),
     };
 
     const popover = document.getElementById('cal-popover');
@@ -145,6 +148,7 @@
         if (left < 12) left = 12;
         if (left + popW > window.innerWidth - 12) left = window.innerWidth - popW - 12;
         if (top + 360 > window.innerHeight - 12) top = rect.top - 8 - 280;
+        if (top < 12) top = 12;
         popover.style.left = left + 'px';
         popover.style.top = top + 'px';
     }
@@ -551,6 +555,7 @@
 
     window.toggleCalendarReminders = function () {
         state.hideReminders = !state.hideReminders;
+        try { localStorage.setItem('cal_hide_reminders', state.hideReminders ? '1' : '0'); } catch (e) { }
         const icon = document.getElementById('toggleReminderIcon');
         const text = document.getElementById('toggleReminderText');
         if (state.hideReminders) {
@@ -569,15 +574,38 @@
         if (window.ECuzdanHaptics) window.ECuzdanHaptics.light();
     };
 
+    if (state.hideReminders) {
+        const icon = document.getElementById('toggleReminderIcon');
+        const text = document.getElementById('toggleReminderText');
+        if (icon) icon.textContent = '🙈';
+        if (text) text.textContent = 'Hatırlatıcıları Göster';
+    }
+
     window.showCalendarSubscribeModal = function () {
-        const m = document.getElementById('calendarSubscribeModal');
-        if (m) m.classList.remove('hidden');
+        if (typeof window.openModal === 'function') {
+            window.openModal('calendarSubscribeModal');
+        } else {
+            const m = document.getElementById('calendarSubscribeModal');
+            if (m) {
+                m.classList.remove('hidden');
+                m.classList.add('active');
+                m.style.display = 'flex';
+            }
+        }
         if (window.ECuzdanHaptics) window.ECuzdanHaptics.light();
     };
 
     window.hideCalendarSubscribeModal = function () {
-        const m = document.getElementById('calendarSubscribeModal');
-        if (m) m.classList.add('hidden');
+        if (typeof window.closeModal === 'function') {
+            window.closeModal('calendarSubscribeModal');
+        } else {
+            const m = document.getElementById('calendarSubscribeModal');
+            if (m) {
+                m.classList.add('hidden');
+                m.classList.remove('active');
+                m.style.display = 'none';
+            }
+        }
     };
 
     window.copyCalendarSubscribeUrl = function () {

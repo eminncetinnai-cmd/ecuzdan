@@ -353,12 +353,19 @@ def register_plan_routes(bp):
             logger.warning(f"Error compiling calendar feed events: {e}")
 
         feed_content = CalendarFeedService.build_feed(events, cal_name="E-Cüzdan Takvimi")
+
+        import hashlib
+        etag = f'"{hashlib.md5(feed_content.encode("utf-8")).hexdigest()}"'
+        if request.headers.get('If-None-Match') == etag:
+            return Response(status=304, headers={"ETag": etag})
+
         return Response(
             feed_content,
             mimetype="text/calendar; charset=utf-8",
             headers={
                 "Content-Disposition": 'inline; filename="e-cuzdan-calendar.ics"',
                 "Cache-Control": "no-cache, no-store, must-revalidate",
+                "ETag": etag,
             },
         )
 

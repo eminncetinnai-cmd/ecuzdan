@@ -419,10 +419,34 @@ class PlanService:
             is_current_month = (year == now_dt.year and month == now_dt.month)
             is_future_month = (year > now_dt.year) or (year == now_dt.year and month > now_dt.month)
 
-            if is_current_month or is_future_month:
-                start_day = now_dt.day if is_current_month else 1
+            if is_current_month:
+                start_day = now_dt.day
                 running_balance = kasa_now
+            elif is_future_month:
+                start_day = 1
+                today_str = now_dt.strftime("%Y-%m-%d")
+                target_start = f"{year}-{month_str}-01"
+                try:
+                    from models import Transaction
+                    tx_q = Transaction.query.filter(
+                        Transaction.date >= today_str,
+                        Transaction.date < target_start,
+                        Transaction.is_deleted.is_(False),
+                    )
+                    if tenant_id:
+                        tx_q = tx_q.filter_by(tenant_id=tenant_id)
+                    net_inter = sum(
+                        (float(t.amount) if t.type == 'Gelir' else -float(t.amount))
+                        for t in tx_q.all()
+                    )
+                    running_balance = kasa_now + net_inter
+                except Exception:
+                    running_balance = kasa_now
+            else:
+                start_day = 1
+                running_balance = 0
 
+            if is_current_month or is_future_month:
                 for d_num in range(start_day, max_days + 1):
                     d_iso = f"{year}-{month_str}-{d_num:02d}"
                     d_data = days.get(d_iso)

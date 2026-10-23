@@ -381,3 +381,24 @@ def test_calendar_feed_route_registration():
 
     assert '/calendar/feed.ics' in registered_paths
 
+
+@pytest.mark.unit
+def test_calendar_feed_etag_handling(app):
+    """Verify that calendar_feed route supports ETag and HTTP 304 Not Modified."""
+    from domain.planning.services.calendar_feed_service import generate_calendar_token
+    from models import User
+
+    with app.app_context():
+        user = User.query.first()
+        if not user:
+            return
+        token = generate_calendar_token(user.id, user.tenant_id, app.config.get('SECRET_KEY', 'default-secret-key'))
+        with app.test_client() as client:
+            resp = client.get(f'/calendar/feed.ics?token={token}')
+            assert resp.status_code == 200
+            etag = resp.headers.get('ETag')
+            assert etag is not None
+            resp2 = client.get(f'/calendar/feed.ics?token={token}', headers={'If-None-Match': etag})
+            assert resp2.status_code == 304
+
+

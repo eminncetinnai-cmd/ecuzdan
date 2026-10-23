@@ -1253,6 +1253,8 @@ html.privacy .iban-easy-pill span:hover {
     cursor: pointer;
     transition: all 0.15s ease;
     white-space: nowrap;
+    touch-action: manipulation;
+    min-height: 32px;
 }
 
 .btn-template-chip:hover {
