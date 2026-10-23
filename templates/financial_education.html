@@ -53,7 +53,7 @@
                 <h2 class="text-2xl font-black text-white uppercase tracking-tight">🎯 {{ _('fe_quiz_title') }}</h2>
                 <p class="text-emerald-100 mt-2">{{ _('fe_quiz_subtitle') }}</p>
             </div>
-            <div class="p-8">
+            <div class="p-4 sm:p-6 lg:p-8">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <div class="bg-slate-50 rounded-xl p-6 border border-slate-200 text-center">
                         <div class="text-4xl font-black text-emerald-600 mb-2">15</div>
@@ -108,7 +108,7 @@
                 <h2 class="text-2xl font-black text-white uppercase tracking-tight">📊 {{ _('fe_progress_heading') }}</h2>
                 <p class="text-blue-100 mt-2">{{ _('fe_progress_subtitle') }}</p>
             </div>
-            <div class="p-8">
+            <div class="p-4 sm:p-6 lg:p-8">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                     <div class="bg-slate-50 rounded-xl p-6 border border-slate-200 text-center">
                         <div class="text-4xl font-black text-emerald-600 mb-2 progress-stats" data-type="completed">0</div>
@@ -202,7 +202,7 @@
             <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-6">
                 <h2 class="text-2xl font-black text-white uppercase tracking-tight">{{ calc_data.title }}</h2>
             </div>
-            <div class="p-8">
+            <div class="p-4 sm:p-6 lg:p-8">
                 <div class="space-y-6">
                     {% for calc in calc_data.calculations %}
                     <div class="bg-slate-50 rounded-xl p-6 border border-slate-200">
@@ -229,7 +229,7 @@
             <div class="bg-gradient-to-r from-orange-600 to-red-600 p-6">
                 <h2 class="text-2xl font-black text-white uppercase tracking-tight">{{ analysis.name }}</h2>
             </div>
-            <div class="p-8 space-y-6">
+            <div class="p-4 sm:p-6 lg:p-8 space-y-6">
                 <p class="text-slate-600 leading-relaxed">{{ analysis.description }}</p>
                 
                 <div>
@@ -321,7 +321,7 @@
         </div>
 
         <!-- Content -->
-        <div class="p-8 space-y-8">
+        <div class="p-4 sm:p-6 lg:p-8 space-y-8">
             <!-- Concept Definition -->
             <div data-progress-step="concept">
                 <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight mb-3 flex items-center gap-2">

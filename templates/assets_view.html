@@ -20,7 +20,7 @@
 <!-- Header -->
 <div class="mb-10 flex flex-wrap justify-between items-center gap-4">
     <div>
-        <h2 class="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-none bg-gradient-to-r from-slate-900 to-indigo-900 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">{{ _('ui_auto_b5630992c5ab') }}</h2>
+        <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-none bg-gradient-to-r from-slate-900 to-indigo-900 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">{{ _('ui_auto_b5630992c5ab') }}</h2>
         <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">{{ _('ui_auto_5bfcbacd3cf1') }}</p>
     </div>
     <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
@@ -64,33 +64,33 @@
 
 {% if analysis.total_value > 0 %}
 <!-- Performance Summary Cards -->
-<div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
-    <div class="premium-card p-6 border-b-4 border-emerald-500 bg-white/80 dark:bg-slate-900/80">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-6 mb-6 sm:mb-10">
+    <div class="premium-card p-3.5 sm:p-6 border-b-4 border-emerald-500 bg-white/80 dark:bg-slate-900/80">
         <h3 class="text-slate-400 text-[10px] font-black uppercase mb-1.5 tracking-wider">{{ _('ui_auto_19f5af81416f') }}</h3>
-        <p class="text-2xl font-black text-slate-800 dark:text-white">{{ analysis.total_cost|format_money }} {{ base_currency_symbol }}</p>
+        <p class="text-base sm:text-2xl font-black text-slate-800 dark:text-white truncate">{{ analysis.total_cost|format_money }} {{ base_currency_symbol }}</p>
     </div>
-    <div class="premium-card p-6 border-b-4 {% if analysis.total_gain_loss >= 0 %}border-emerald-500{% else %}border-rose-500{% endif %} bg-white/80 dark:bg-slate-900/80">
+    <div class="premium-card p-3.5 sm:p-6 border-b-4 {% if analysis.total_gain_loss >= 0 %}border-emerald-500{% else %}border-rose-500{% endif %} bg-white/80 dark:bg-slate-900/80">
         <h3 class="text-slate-400 text-[10px] font-black uppercase mb-1.5 tracking-wider">{{ _('ui_auto_7d5b0016f0f3') }}</h3>
-        <p class="text-2xl font-black {% if analysis.total_gain_loss >= 0 %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">{{ analysis.total_gain_loss|format_money }} {{ base_currency_symbol }}</p>
+        <p class="text-base sm:text-2xl font-black truncate {% if analysis.total_gain_loss >= 0 %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">{{ analysis.total_gain_loss|format_money }} {{ base_currency_symbol }}</p>
     </div>
-    <div class="premium-card p-6 border-b-4 {% if analysis.overall_roi >= 0 %}border-blue-500{% else %}border-rose-500{% endif %} bg-white/80 dark:bg-slate-900/80">
+    <div class="premium-card p-3.5 sm:p-6 border-b-4 {% if analysis.overall_roi >= 0 %}border-blue-500{% else %}border-rose-500{% endif %} bg-white/80 dark:bg-slate-900/80">
         <h3 class="text-slate-400 text-[10px] font-black uppercase mb-1.5 tracking-wider">{{ _('ui_auto_6bd93a58d1bb') }}</h3>
-        <p class="text-2xl font-black {% if analysis.overall_roi >= 0 %}text-blue-600 dark:text-blue-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">%{{ analysis.overall_roi|round(2) }}</p>
+        <p class="text-base sm:text-2xl font-black truncate {% if analysis.overall_roi >= 0 %}text-blue-600 dark:text-blue-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">%{{ analysis.overall_roi|round(2) }}</p>
     </div>
-    <div class="premium-card p-6 border-b-4 border-indigo-500 bg-white/80 dark:bg-slate-900/80">
+    <div class="premium-card p-3.5 sm:p-6 border-b-4 border-indigo-500 bg-white/80 dark:bg-slate-900/80">
         <h3 class="text-slate-400 text-[10px] font-black uppercase mb-1.5 tracking-wider">{{ _('ui_auto_c12a033a3137') }}</h3>
-        <p class="text-2xl font-black text-indigo-600 dark:text-indigo-400">{{ analysis.asset_count }}</p>
+        <p class="text-base sm:text-2xl font-black text-indigo-600 dark:text-indigo-400 truncate">{{ analysis.asset_count }}</p>
     </div>
 </div>
 
 <!-- Realized/Unrealized Gain Summary -->
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-    <div class="premium-card p-6 border-b-4 border-emerald-500 bg-white/80 dark:bg-slate-900/80">
+    <div class="premium-card p-3.5 sm:p-6 border-b-4 border-emerald-500 bg-white/80 dark:bg-slate-900/80">
         <h3 class="text-slate-400 text-[10px] font-black uppercase mb-1.5 tracking-wider">{{ _('ui_auto_1296af6f0dd2') }}</h3>
         <p class="text-2xl font-black text-emerald-600 dark:text-emerald-400">{{ analysis.total_realized_gain|format_money if analysis.total_realized_gain else '0'|format_money }} {{ base_currency_symbol }}</p>
         <p class="text-[9px] text-slate-400 mt-1">{{ _('ui_auto_d7a09f284c48') }}</p>
     </div>
-    <div class="premium-card p-6 border-b-4 border-blue-500 bg-white/80 dark:bg-slate-900/80">
+    <div class="premium-card p-3.5 sm:p-6 border-b-4 border-blue-500 bg-white/80 dark:bg-slate-900/80">
         <h3 class="text-slate-400 text-[10px] font-black uppercase mb-1.5 tracking-wider">{{ _('ui_auto_9f3f45a0e348') }}</h3>
         <p class="text-2xl font-black text-blue-600 dark:text-blue-400">{{ analysis.total_unrealized_gain|format_money if analysis.total_unrealized_gain else '0'|format_money }} {{ base_currency_symbol }}</p>
         <p class="text-[9px] text-slate-400 mt-1">{{ _('ui_auto_5339d408a4ab') }}</p>
@@ -99,7 +99,7 @@
 
 <!-- Risk and Liquidity Scores -->
 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-    <div class="premium-card p-8 bg-white/80 dark:bg-slate-900/80 border-t-8 {% if analysis.risk_score < 30 %}border-emerald-500{% elif analysis.risk_score < 60 %}border-amber-400{% else %}border-rose-500{% endif %}">
+    <div class="premium-card p-4 sm:p-6 lg:p-8 bg-white/80 dark:bg-slate-900/80 border-t-8 {% if analysis.risk_score < 30 %}border-emerald-500{% elif analysis.risk_score < 60 %}border-amber-400{% else %}border-rose-500{% endif %}">
         <div class="flex justify-between items-start mb-4">
             <h3 class="font-black text-sm text-slate-800 dark:text-white uppercase tracking-wider">{{ _('ui_auto_f708eb2d27c3') }}</h3>
             <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase {% if analysis.risk_score < 30 %}bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300{% elif analysis.risk_score < 60 %}bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300{% else %}bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300{% endif %}">
@@ -124,7 +124,7 @@
         </div>
     </div>
     
-    <div class="premium-card p-8 bg-white/80 dark:bg-slate-900/80 border-t-8 {% if analysis.liquidity_score > 70 %}border-emerald-500{% elif analysis.liquidity_score > 40 %}border-amber-400{% else %}border-rose-500{% endif %}">
+    <div class="premium-card p-4 sm:p-6 lg:p-8 bg-white/80 dark:bg-slate-900/80 border-t-8 {% if analysis.liquidity_score > 70 %}border-emerald-500{% elif analysis.liquidity_score > 40 %}border-amber-400{% else %}border-rose-500{% endif %}">
         <div class="flex justify-between items-start mb-4">
             <h3 class="font-black text-sm text-slate-800 dark:text-white uppercase tracking-wider">{{ _('ui_auto_9ff4cd991510') }}</h3>
             <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase {% if analysis.liquidity_score > 70 %}bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300{% elif analysis.liquidity_score > 40 %}bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300{% else %}bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300{% endif %}">
@@ -152,13 +152,13 @@
 
 <!-- Allocation Charts -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-    <div class="premium-card p-8 bg-white/80">
+    <div class="premium-card p-4 sm:p-6 lg:p-8 bg-white/80">
         <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-6">{{ _('ui_auto_db06c635ca41') }}</h4>
         <div class="chart-container">
             <canvas id="typePieChart"></canvas>
         </div>
     </div>
-    <div class="premium-card p-8 bg-white/80">
+    <div class="premium-card p-4 sm:p-6 lg:p-8 bg-white/80">
         <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-6">{{ _('ui_auto_6deb318456c3') }}</h4>
         <div class="chart-container">
             <canvas id="riskPieChart"></canvas>
@@ -168,7 +168,7 @@
 
 <!-- Top and Worst Performers -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-    <div class="premium-card p-8 bg-white/80 border-l-4 border-emerald-500">
+    <div class="premium-card p-4 sm:p-6 lg:p-8 bg-white/80 border-l-4 border-emerald-500">
         <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-4">{{ _('ui_auto_d843a84bc30f') }}</h4>
         {% if analysis.top_performers %}
         <div class="space-y-3">
@@ -190,7 +190,7 @@
         {% endif %}
     </div>
     
-    <div class="premium-card p-8 bg-white/80 border-l-4 border-rose-500">
+    <div class="premium-card p-4 sm:p-6 lg:p-8 bg-white/80 border-l-4 border-rose-500">
         <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-4">{{ _('ui_auto_2d70d185dad0') }}</h4>
         {% if analysis.worst_performers %}
         <div class="space-y-3">
@@ -215,7 +215,7 @@
 
 <!-- Portfolio Concentration Warning -->
 {% if analysis.portfolio_concentration.concentration_risk %}
-<div class="premium-card p-8 bg-rose-50/80 border-l-4 border-rose-500 mb-10">
+<div class="premium-card p-4 sm:p-6 lg:p-8 bg-rose-50/80 border-l-4 border-rose-500 mb-10">
     <h4 class="font-black text-sm uppercase text-rose-800 tracking-tight mb-4 flex items-center">
         <svg class="w-5 h-5 text-rose-500 mr-2" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
         {{ _('ui_auto_bf0422cff393') }}
@@ -230,7 +230,7 @@
 {% endif %}
 
 <!-- Detailed Asset Table -->
-<div class="premium-card p-8 bg-white/80 overflow-hidden">
+<div class="premium-card p-4 sm:p-6 lg:p-8 bg-white/80 overflow-hidden">
     <div class="flex flex-wrap justify-between items-start mb-6 gap-4">
         <h3 class="font-black text-sm text-slate-800 uppercase tracking-wider">{{ _('ui_auto_fb12369c2925') }}</h3>
         <a href="/assets_management" class="px-4 py-2 rounded-xl font-black text-[10px] uppercase bg-slate-900 text-white hover:bg-emerald-600 transition">{{ _('ui_auto_732175d30c35') }}</a>
@@ -350,7 +350,7 @@
 <!-- Modern Delete Confirm Modal -->
 <div id="deleteAssetModal" class="modal-overlay hidden">
     <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeDeleteModal()"></div>
-    <div class="relative bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full mx-4 border border-rose-100 transform transition-all">
+    <div class="relative bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-5 sm:p-8 max-w-sm w-full mx-4 border border-rose-100 transform transition-all">
         <div class="flex items-center gap-4 mb-5">
             <div class="w-12 h-12 rounded-2xl bg-rose-100 flex items-center justify-center flex-shrink-0">
                 <svg class="w-6 h-6 text-rose-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -385,7 +385,7 @@
 <!-- Sell Asset Modal -->
 <div id="sellAssetModal" class="modal-overlay hidden">
     <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeSellModal()"></div>
-    <div class="relative bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full mx-4 border border-emerald-100 transform transition-all">
+    <div class="relative bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-5 sm:p-8 max-w-sm w-full mx-4 border border-emerald-100 transform transition-all">
         <form id="sellAssetForm" onsubmit="submitSellAsset(event)">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             
