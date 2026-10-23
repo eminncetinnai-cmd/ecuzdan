@@ -44,6 +44,8 @@ CORE_ROUTES = [
     ('/profile', 'Profil'),
     ('/categories', 'Katalog & Kategoriler'),
     ('/logbook', 'Cüzdan Defteri'),
+    ('/monthly_dashboard', 'Aylık Bütçe Raporu'),
+    ('/investment_performance', 'Yatırım Performansı'),
 ]
 
 # Standard mobile device viewports

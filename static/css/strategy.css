@@ -204,3 +204,16 @@
 [data-theme="dark"] .protect-bar {
     background: #334155;
 }
+
+@media (max-width: 640px) {
+    .strat-card {
+        border-radius: 1.25rem;
+    }
+    .scenario-btn {
+        flex: 1 1 30%;
+        text-align: center;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+    }
+}
+

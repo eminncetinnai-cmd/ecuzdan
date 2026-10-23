@@ -48,3 +48,16 @@
 [data-theme="dark"] .perf-table tr:hover {
     background-color: rgba(30, 41, 59, 0.5);
 }
+
+@media (max-width: 640px) {
+    .premium-card {
+        border-radius: 1rem;
+    }
+    .chart-container {
+        height: 240px;
+    }
+    .chart-container canvas {
+        max-height: 240px !important;
+    }
+}
+

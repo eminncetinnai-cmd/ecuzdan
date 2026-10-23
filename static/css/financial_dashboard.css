@@ -94,3 +94,25 @@
 .delay-1 { animation-delay:.1s; }
 .delay-2 { animation-delay:.2s; }
 .delay-3 { animation-delay:.3s; }
+
+/* ─── Mobile Excellence & Responsive Styles ─────────────────────────── */
+@media (max-width: 640px) {
+    .quant-card {
+        border-radius: var(--radius-lg);
+    }
+    .tip-box {
+        width: min(280px, calc(100vw - 32px));
+        left: 0;
+        transform: none;
+    }
+    .tip-box::after {
+        left: 12px;
+        transform: none;
+    }
+    .corr-cell {
+        width: 36px;
+        height: 36px;
+        font-size: 8px;
+    }
+}
+
