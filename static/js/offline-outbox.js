@@ -31,6 +31,7 @@
             try {
                 localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(queue));
                 this.updateUIBadge();
+            this.initIOSStandaloneLinkGuard();
             } catch (e) {
                 console.error('[OfflineOutbox] Error saving queue:', e);
             }
@@ -164,6 +165,38 @@
         /**
          * Initialize event listeners
          */
+
+        /**
+         * iOS Safari Standalone Fullscreen Link Guard
+         * Prevents Mobile Safari from breaking out into a browser window with bottom navigation bar on link taps
+         */
+        initIOSStandaloneLinkGuard: function () {
+            var isStandalone = window.navigator.standalone === true || 
+                               window.matchMedia('(display-mode: standalone)').matches;
+            if (!isStandalone) {
+                return;
+            }
+            document.addEventListener('click', function(e) {
+                var el = e.target;
+                while (el && el.tagName !== 'A' && el !== document.body) {
+                    el = el.parentElement;
+                }
+                if (el && el.tagName === 'A' && el.href) {
+                    var rawHref = el.getAttribute('href') || '';
+                    if (rawHref.startsWith('#') || 
+                        el.hasAttribute('download') || 
+                        el.getAttribute('target') === '_blank') {
+                        return;
+                    }
+                    var targetUrl = new URL(el.href, window.location.origin);
+                    if (targetUrl.origin === window.location.origin && !targetUrl.pathname.startsWith('/logout')) {
+                        e.preventDefault();
+                        window.location.assign(el.href);
+                    }
+                }
+            }, false);
+        },
+
         init: function () {
             window.addEventListener('online', () => {
                 this.updateUIBadge();
