@@ -296,7 +296,7 @@ class PlanService:
             } if next_occurrence else None,
         }
 
-    def payment_calendar_context(self, now=None):
+    def payment_calendar_context(self, now=None, tenant_id=None):
         from decimal import Decimal
 
         now = now or datetime.now()
@@ -319,12 +319,31 @@ class PlanService:
             month_p = self.financial_repository.pending_transactions_between(today, month_end)
         week_total = sum((t.amount for t in week_p), Decimal('0.00'))
         month_total = sum((t.amount for t in month_p), Decimal('0.00'))
+
+        # Non-financial reminders for the list tab (isolated from cash flow)
+        upcoming_reminders = []
+        try:
+            from models import UserReminder
+            t_id = tenant_id or getattr(self.financial_repository, 'tenant_id', None)
+            rem_q = UserReminder.query
+            if t_id:
+                rem_q = rem_q.filter_by(tenant_id=t_id)
+            for r in rem_q.all():
+                d = r.to_dict()
+                if 0 <= d['days_remaining'] <= 31 and not r.is_completed:
+                    upcoming_reminders.append(d)
+            upcoming_reminders.sort(key=lambda x: x['days_remaining'])
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(f"Could not load upcoming reminders for calendar: {e}")
+
         return {
             'today_cash': today_cash,
             'week_p': week_p,
             'week_total': week_total,
             'month_p': month_p,
             'month_total': month_total,
+            'upcoming_reminders': upcoming_reminders,
             'cal_year': now.year,
             'cal_month': now.month,
             'cal_month_name': MONTH_NAMES_TR[now.month - 1],
@@ -336,12 +355,62 @@ class PlanService:
 
         logger = logging.getLogger(__name__)
         logger.info(f"month_data called with year={year}, month={month}, tenant_id={tenant_id}")
+        days = get_calendar_month_data(year, month, tenant_id)
+
+        # Enrich calendar days with reminders for this month without altering cash totals
+        try:
+            import calendar as cal_mod
+            from models import UserReminder
+
+            rem_query = UserReminder.query
+            if tenant_id:
+                rem_query = rem_query.filter_by(tenant_id=tenant_id)
+            reminders = rem_query.all()
+
+            max_days = cal_mod.monthrange(year, month)[1]
+            month_str = f"{month:02d}"
+
+            for rem in reminders:
+                target_day = None
+                if rem.frequency == 'Aylık':
+                    target_day = min(rem.due_day or 1, max_days)
+                elif rem.frequency == 'Yıllık':
+                    if rem.due_month == month:
+                        target_day = min(rem.due_day or 1, max_days)
+                elif rem.frequency == 'Tek Seferlik':
+                    if rem.due_date and rem.due_date.startswith(f"{year}-{month_str}-"):
+                        try:
+                            target_day = int(rem.due_date.split('-')[2])
+                        except (IndexError, ValueError):
+                            target_day = None
+
+                if target_day:
+                    date_key = f"{year}-{month_str}-{target_day:02d}"
+                    day_dict = days.setdefault(date_key, {
+                        'income': [], 'expense': [], 'investment': [],
+                        'income_total': 0, 'expense_total': 0, 'investment_total': 0,
+                        'net': 0,
+                    })
+                    rem_list = day_dict.setdefault('reminders', [])
+                    rem_list.append({
+                        'id': rem.id,
+                        'title': rem.title,
+                        'category': rem.category,
+                        'category_emoji': rem.category_emoji,
+                        'frequency': rem.frequency,
+                        'amount': float(rem.amount) if rem.amount is not None else None,
+                        'note': rem.note or '',
+                        'is_completed': bool(rem.is_completed),
+                    })
+        except Exception as e:
+            logger.warning(f"Could not load reminders for calendar: {e}")
+
         result = {
             'year': year,
             'month': month,
             'month_name': MONTH_NAMES_TR[month - 1],
             'today': datetime.now().strftime("%Y-%m-%d"),
-            'days': get_calendar_month_data(year, month, tenant_id),
+            'days': days,
         }
         logger.info(f"month_data returning {len(result.get('days', {}))} days")
         return result

@@ -62,6 +62,28 @@
         }).join('');
     }
 
+    function renderReminderList(items) {
+        if (!items || !items.length) return '';
+        return items.map(function (r) {
+            const amt = r.amount ? '<span class="font-bold text-slate-700 dark:text-slate-300 ml-1">' + formatMoney(r.amount) + ' ₺</span>' : '';
+            const status = r.is_completed ? '<span class="text-emerald-600 font-bold ml-1">✓ Tamamlandı</span>' : '';
+            const note = r.note ? '<div class="text-[9px] text-slate-500 italic mt-0.5">' + escapeHtml(r.note) + '</div>' : '';
+            return (
+                '<li class="py-1.5 border-b border-indigo-100/60 dark:border-slate-800 last:border-0">' +
+                '<div class="flex items-center justify-between gap-1">' +
+                '<div class="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200">' +
+                '<span>' + (r.category_emoji || '🔔') + '</span>' +
+                '<span>' + escapeHtml(r.title) + '</span>' +
+                '</div>' +
+                '<div class="text-[10px]">' + amt + status + '</div>' +
+                '</div>' +
+                '<div class="text-[9px] text-indigo-600 dark:text-indigo-400 font-semibold">' + escapeHtml(r.frequency) + ' · ' + escapeHtml(r.category) + '</div>' +
+                note +
+                '</li>'
+            );
+        }).join('');
+    }
+
     function showPopover(cell, isoDate) {
         if (!popover) return;
         const data = state.days[isoDate];
@@ -86,6 +108,15 @@
             html += '<div><h4 class="text-[9px] font-black uppercase text-rose-600 mb-1 flex justify-between"><span>Giderler</span><span>' + formatMoney(data.expense_total) + '</span></h4><ul class="text-[11px]">' + renderTxList(data.expense, 'text-rose-600') + '</ul></div>';
             if (data.investment && data.investment.length) {
                 html += '<div><h4 class="text-[9px] font-black uppercase text-blue-600 mb-1 flex justify-between"><span>Yatırım</span><span>' + formatMoney(data.investment_total) + '</span></h4><ul class="text-[11px]">' + renderTxList(data.investment, 'text-blue-600') + '</ul></div>';
+            }
+            if (data.reminders && data.reminders.length && !state.hideReminders) {
+                html += '<div class="pt-2.5 mt-2 border-t border-indigo-100 dark:border-slate-800">' +
+                    '<h4 class="text-[9px] font-black uppercase text-indigo-700 dark:text-indigo-400 mb-1 flex justify-between items-center">' +
+                    '<span class="flex items-center gap-1"><span>🔔</span> <span>Özel Gün & Hatırlatıcılar</span></span>' +
+                    '<span class="px-1.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[8px] font-bold">' + data.reminders.length + '</span>' +
+                    '</h4>' +
+                    '<ul class="text-[11px] space-y-1">' + renderReminderList(data.reminders) + '</ul>' +
+                    '</div>';
             }
             html += '<div class="pt-2 border-t border-slate-100 flex justify-end">';
             html += '<a href="/transactions?date=' + encodeURIComponent(isoDate) + '" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"><span>Günün İşlemlerini Gör</span><span>→</span></a>';
@@ -142,17 +173,26 @@
             const iso = dateKey(state.year, state.month, d);
             const data = state.days[iso];
             const isToday = iso === state.today;
-            const hasIncome = data && data.income.length > 0;
-            const hasExpense = data && data.expense.length > 0;
+            const hasIncome = data && data.income && data.income.length > 0;
+            const hasExpense = data && data.expense && data.expense.length > 0;
             const hasInv = data && data.investment && data.investment.length > 0;
+            const hasReminders = data && data.reminders && data.reminders.length > 0;
             let cls = 'cal-day';
             if (isToday) cls += ' cal-day--today';
-            if (data) cls += ' cal-day--has-data';
+            if (data && (hasIncome || hasExpense || hasInv || hasReminders)) cls += ' cal-day--has-data';
 
             let badges = '';
             if (hasIncome) badges += '<span class="cal-dot cal-dot--income" title="Gelir"></span>';
             if (hasExpense) badges += '<span class="cal-dot cal-dot--expense" title="Gider"></span>';
             if (hasInv) badges += '<span class="cal-dot cal-dot--inv" title="Yatırım"></span>';
+
+            let reminderBadge = '';
+            if (hasReminders) {
+                const rem = data.reminders[0];
+                const remCount = data.reminders.length > 1 ? ' <span class="text-[8px] font-bold">+' + (data.reminders.length - 1) + '</span>' : '';
+                const hideCls = state.hideReminders ? 'hidden' : '';
+                reminderBadge = '<span class="cal-reminder-badge ' + hideCls + '" title="' + escapeHtml(rem.title) + '">' + (rem.category_emoji || '🔔') + remCount + '</span>';
+            }
 
             let mini = '';
             if (data && (hasIncome || hasExpense)) {
@@ -163,7 +203,10 @@
             }
 
             html += '<div class="' + cls + '" data-date="' + iso + '" tabindex="0">' +
+                '<div class="flex justify-between items-start">' +
                 '<span class="cal-day-num">' + d + '</span>' +
+                reminderBadge +
+                '</div>' +
                 '<div class="cal-dots">' + badges + '</div>' + mini + '</div>';
         }
 
@@ -494,4 +537,24 @@
             }
         });
     });
+
+    window.toggleCalendarReminders = function () {
+        state.hideReminders = !state.hideReminders;
+        const icon = document.getElementById('toggleReminderIcon');
+        const text = document.getElementById('toggleReminderText');
+        if (state.hideReminders) {
+            if (icon) icon.textContent = '🙈';
+            if (text) text.textContent = 'Hatırlatıcıları Göster';
+            document.querySelectorAll('.cal-reminder-badge').forEach(function (el) {
+                el.classList.add('hidden');
+            });
+        } else {
+            if (icon) icon.textContent = '👁️';
+            if (text) text.textContent = 'Hatırlatıcıları Gizle';
+            document.querySelectorAll('.cal-reminder-badge').forEach(function (el) {
+                el.classList.remove('hidden');
+            });
+        }
+        if (window.ECuzdanHaptics) window.ECuzdanHaptics.light();
+    };
 })();

@@ -65,7 +65,7 @@
 
 <!-- Mevcut liste yapısı -->
 <div id="pay-tab-list" class="pay-tab-panel active">
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="diamond-card p-4 sm:p-6 lg:p-8 border-t-8 border-rose-500 bg-white/90 dark:bg-slate-900/80 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
             <h3 class="font-black text-xs uppercase text-rose-600 dark:text-rose-400 mb-4 sm:mb-6 flex items-center">
                 <span class="w-3 h-3 bg-rose-500 rounded-full mr-2"></span> {{ _('calendar_list_critical') }}
@@ -114,6 +114,43 @@
                 </table>
             </div>
         </div>
+        <div class="diamond-card p-4 sm:p-6 lg:p-8 border-t-8 border-indigo-500 bg-white/90 dark:bg-slate-900/80 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center justify-between mb-4 sm:mb-6">
+                <h3 class="font-black text-xs uppercase text-indigo-600 dark:text-indigo-400 flex items-center">
+                    <span class="w-3 h-3 bg-indigo-500 rounded-full mr-2"></span> Özel Günler &amp; Hatırlatıcılar
+                </h3>
+                <a href="{{ url_for('logbook.index') }}#tab-reminders" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300">Tümü →</a>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs text-left">
+                    <thead class="text-slate-400 dark:text-slate-500 text-[9px] uppercase border-b border-slate-100 dark:border-slate-800">
+                        <tr><th class="py-3">Kalan</th><th>Başlık</th><th>Tür</th><th class="text-right">Tutar</th></tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        {% for r in upcoming_reminders %}
+                        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition">
+                            <td class="py-4 font-bold text-slate-800 dark:text-slate-200">
+                                {% if r.days_remaining == 0 %}
+                                <span class="px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 text-[10px] font-bold">Bugün</span>
+                                {% else %}
+                                {{ r.days_remaining }} gün
+                                {% endif %}
+                            </td>
+                            <td class="text-slate-700 dark:text-slate-300 font-medium">
+                                <span class="mr-1">{{ r.category_emoji }}</span>{{ r.title }}
+                            </td>
+                            <td class="text-slate-500 dark:text-slate-400 text-[10px]">{{ r.frequency }}</td>
+                            <td class="text-right font-black text-indigo-600 dark:text-indigo-400">
+                                {% if r.amount %}{{ r.amount|format_money }} {{ base_currency_symbol }}{% else %}<span class="text-slate-400 font-normal">-</span>{% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="4" class="py-6 text-center text-slate-400 dark:text-slate-500 italic">Önümüzdeki 30 gün için hatırlatıcı yok.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -133,11 +170,18 @@
             </div>
         </div>
 
-        <div class="flex flex-wrap gap-4 mb-5 text-[9px] font-bold uppercase text-slate-600 dark:text-slate-400">
-            <span class="flex items-center gap-1.5"><span class="cal-dot cal-dot--income"></span> {{ _('type_income') }}</span>
-            <span class="flex items-center gap-1.5"><span class="cal-dot cal-dot--expense"></span> {{ _('type_expense') }}</span>
-            <span class="flex items-center gap-1.5"><span class="cal-dot cal-dot--inv"></span> {{ _('type_investment') }}</span>
-            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded border-2 border-indigo-400"></span> {{ _('calendar_btn_today') }}</span>
+        <div class="flex flex-wrap justify-between items-center gap-4 mb-5">
+            <div class="flex flex-wrap gap-4 text-[9px] font-bold uppercase text-slate-600 dark:text-slate-400 items-center">
+                <span class="flex items-center gap-1.5"><span class="cal-dot cal-dot--income"></span> {{ _('type_income') }}</span>
+                <span class="flex items-center gap-1.5"><span class="cal-dot cal-dot--expense"></span> {{ _('type_expense') }}</span>
+                <span class="flex items-center gap-1.5"><span class="cal-dot cal-dot--inv"></span> {{ _('type_investment') }}</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded border-2 border-indigo-400"></span> {{ _('calendar_btn_today') }}</span>
+                <span class="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400"><span class="text-xs">🔔</span> Hatırlatıcı / Özel Gün</span>
+            </div>
+            <button data-macro="button_secondary" type="button" id="btnToggleReminders" onclick="window.toggleCalendarReminders()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold transition">
+                <span id="toggleReminderIcon">👁️</span>
+                <span id="toggleReminderText">Hatırlatıcıları Gizle</span>
+            </button>
         </div>
 
         <div id="cal-loading" class="hidden text-center py-8 text-slate-400 text-xs font-bold uppercase">{{ _('loading') }}</div>

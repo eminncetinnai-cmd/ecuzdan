@@ -202,7 +202,8 @@ def register_plan_routes(bp):
     def payment_calendar():
 
         try:
-            return render_template('payment_calendar.html', **planning_app.payment_calendar_context())
+            tenant_id = get_tenant_id()
+            return render_template('payment_calendar.html', **planning_app.payment_calendar_context(tenant_id=tenant_id))
         except Exception as e:
             logger.exception(f"Payment calendar error: {e}")
             flash(i18n.gettext("ui_auto_32d6da6a1dd7"), 'error')
@@ -212,6 +213,7 @@ def register_plan_routes(bp):
                 today_cash=0,
                 week_p=[],
                 month_p=[],
+                upcoming_reminders=[],
                 cal_year=now.year,
                 cal_month=now.month,
             )
