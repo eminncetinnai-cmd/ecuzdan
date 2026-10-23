@@ -25,6 +25,7 @@ from models import (
     User,
     UserIban,
     UserPreference,
+    UserReminder,
 )
 
 from .base import BaseRepository
@@ -129,6 +130,7 @@ class UserRepository(BaseRepository):
         # 1. Transaction bağımlıları
         self.session.query(LogbookEntry).filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
         self.session.query(UserIban).filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
+        self.session.query(UserReminder).filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
         self.session.query(LedgerAuditEvent).filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
         self.session.query(LedgerAdjustment).filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
 
@@ -163,6 +165,7 @@ class UserRepository(BaseRepository):
         """
         self.session.query(LogbookEntry).delete(synchronize_session=False)
         self.session.query(UserIban).delete(synchronize_session=False)
+        self.session.query(UserReminder).delete(synchronize_session=False)
         self.session.query(LedgerAuditEvent).delete(synchronize_session=False)
         self.session.query(LedgerAdjustment).delete(synchronize_session=False)
         self.session.query(LedgerLine).delete(synchronize_session=False)

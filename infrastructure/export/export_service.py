@@ -120,6 +120,7 @@ class ExportService:
             Transaction,
             UserIban,
             UserPreference,
+            UserReminder,
         )
 
         def _rows(model, **filters):
@@ -154,6 +155,7 @@ class ExportService:
             "tags": _rows(Tag, tenant_id=tenant_id),
             "logbook_entries": _rows(LogbookEntry, tenant_id=tenant_id),
             "user_ibans": _rows(UserIban, tenant_id=tenant_id),
+            "user_reminders": _rows(UserReminder, tenant_id=tenant_id),
             "investor_profiles": _rows(InvestorProfile, user_id=user_id),
             "investor_profile_answers": _rows(InvestorProfileAnswer, user_id=user_id),
             "user_preferences": _rows(UserPreference, user_id=user_id),

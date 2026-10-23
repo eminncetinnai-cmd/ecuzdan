@@ -25,6 +25,12 @@ def _get_iban_service():
     return current_get_container().applications.iban()
 
 
+def _get_reminder_service():
+    from bootstrap import get_container as current_get_container
+    return current_get_container().applications.reminder()
+
+
+
 def register_logbook_routes(bp):
     logbook_service = _get_logbook_service()
 
@@ -40,6 +46,23 @@ def register_logbook_routes(bp):
                 category=iban_category,
                 search=iban_search,
             )
+
+            reminder_category = request.args.get('reminder_category')
+            reminder_search = request.args.get('reminder_search')
+            reminder_status = request.args.get('reminder_status', 'all')
+            is_completed = None
+            if reminder_status == 'active':
+                is_completed = False
+            elif reminder_status == 'completed':
+                is_completed = True
+
+            reminders = _get_reminder_service().list_reminders(
+                g.get('tenant_id'),
+                category=reminder_category,
+                search=reminder_search,
+                is_completed=is_completed,
+            )
+
             return render_template(
                 'logbook.html',
                 entries=logbook_service.list_entries(g.get('tenant_id'), filters),
@@ -50,11 +73,15 @@ def register_logbook_routes(bp):
                 active_tab=active_tab,
                 iban_category=iban_category,
                 iban_search=iban_search,
+                reminders=reminders,
+                reminder_category=reminder_category,
+                reminder_search=reminder_search,
+                reminder_status=reminder_status,
             )
         except Exception as e:
             logger.exception(f"Logbook index error: {e}")
             flash_error(i18n.gettext('logbook_load_error'))
-            return render_template('logbook.html', entries=[], ibans=[], view_type='timeline', active_tab='notes')
+            return render_template('logbook.html', entries=[], ibans=[], reminders=[], view_type='timeline', active_tab='notes')
 
     @bp.route('/timeline')
     def timeline():
@@ -405,6 +432,173 @@ def register_logbook_routes(bp):
             'is_valid': is_valid,
             'validation_error': error,
         })
+
+    # ── Reminder Management Routes ──────────────────────────────────────
+    @bp.route('/reminders/create', methods=['POST'])
+    def create_reminder():
+        is_ajax = is_ajax_request()
+        try:
+            title = request.form.get('title', '').strip()
+            if not title:
+                raise ValueError("Hatırlatıcı başlığı zorunludur.")
+            category = request.form.get('category', 'Genel')
+            frequency = request.form.get('frequency', 'Aylık')
+
+            due_day_raw = request.form.get('due_day')
+            due_day = int(due_day_raw) if due_day_raw and due_day_raw.isdigit() else None
+
+            due_month_raw = request.form.get('due_month')
+            due_month = int(due_month_raw) if due_month_raw and due_month_raw.isdigit() else None
+
+            due_date = request.form.get('due_date') or None
+            amount = request.form.get('amount') or None
+            note = request.form.get('note') or None
+
+            created = _get_reminder_service().create_reminder(
+                tenant_id=g.get('tenant_id'),
+                user_id=session.get('user_id'),
+                title=title,
+                category=category,
+                frequency=frequency,
+                due_day=due_day,
+                due_month=due_month,
+                due_date=due_date,
+                amount=amount,
+                note=note,
+            )
+            if is_ajax:
+                return jsonify({'success': True, 'message': 'Hatırlatıcı başarıyla kaydedildi.', 'reminder': created.to_dict()})
+            handle_ajax_or_flash(True, 'Hatırlatıcı başarıyla kaydedildi.', None)
+            return redirect(url_for('logbook.index', tab='reminders'))
+        except ValueError as e:
+            rollback_session()
+            if is_ajax:
+                return jsonify({'success': False, 'message': str(e)}), 400
+            handle_ajax_or_flash(False, None, str(e))
+            return redirect(url_for('logbook.index', tab='reminders'))
+        except Exception as e:
+            logger.exception(f"Create reminder error: {e}")
+            rollback_session()
+            if is_ajax:
+                return jsonify({'success': False, 'message': 'Hatırlatıcı kaydedilirken bir hata oluştu.'}), 500
+            handle_ajax_or_flash(False, None, 'Hatırlatıcı kaydedilirken bir hata oluştu.')
+            return redirect(url_for('logbook.index', tab='reminders'))
+
+    @bp.route('/reminders/<int:id>')
+    def detail_reminder(id):
+        is_ajax = is_ajax_request()
+        try:
+            record = _get_reminder_service().get_reminder(id, g.get('tenant_id'))
+            if not record:
+                if is_ajax:
+                    return jsonify({'success': False, 'message': 'Hatırlatıcı kaydı bulunamadı.'}), 404
+                flash_error('Hatırlatıcı kaydı bulunamadı.')
+                return redirect(url_for('logbook.index', tab='reminders'))
+            if is_ajax:
+                return jsonify({'success': True, 'reminder': record.to_dict()})
+            return redirect(url_for('logbook.index', tab='reminders', open_edit_reminder=id))
+        except Exception as e:
+            logger.exception(f"Detail reminder error: {e}")
+            if is_ajax:
+                return jsonify({'success': False, 'message': 'Hatırlatıcı bilgisi yüklenemedi.'}), 500
+            flash_error('Hatırlatıcı bilgisi yüklenemedi.')
+            return redirect(url_for('logbook.index', tab='reminders'))
+
+    @bp.route('/reminders/<int:id>/update', methods=['POST'])
+    def update_reminder(id):
+        is_ajax = is_ajax_request()
+        try:
+            title = request.form.get('title')
+            category = request.form.get('category')
+            frequency = request.form.get('frequency')
+
+            due_day_raw = request.form.get('due_day')
+            due_day = int(due_day_raw) if due_day_raw and due_day_raw.isdigit() else None
+
+            due_month_raw = request.form.get('due_month')
+            due_month = int(due_month_raw) if due_month_raw and due_month_raw.isdigit() else None
+
+            due_date = request.form.get('due_date') or None
+            amount = request.form.get('amount') or None
+            note = request.form.get('note') or None
+
+            updated = _get_reminder_service().update_reminder(
+                reminder_id=id,
+                tenant_id=g.get('tenant_id'),
+                title=title,
+                category=category,
+                frequency=frequency,
+                due_day=due_day,
+                due_month=due_month,
+                due_date=due_date,
+                amount=amount,
+                note=note,
+            )
+            if not updated:
+                raise ValueError("Hatırlatıcı kaydı bulunamadı.")
+            if is_ajax:
+                return jsonify({'success': True, 'message': 'Hatırlatıcı başarıyla güncellendi.', 'reminder': updated.to_dict()})
+            handle_ajax_or_flash(True, 'Hatırlatıcı başarıyla güncellendi.', None)
+            return redirect(url_for('logbook.index', tab='reminders'))
+        except ValueError as e:
+            rollback_session()
+            if is_ajax:
+                return jsonify({'success': False, 'message': str(e)}), 400
+            handle_ajax_or_flash(False, None, str(e))
+            return redirect(url_for('logbook.index', tab='reminders'))
+        except Exception as e:
+            logger.exception(f"Update reminder error: {e}")
+            rollback_session()
+            if is_ajax:
+                return jsonify({'success': False, 'message': 'Hatırlatıcı güncellenirken bir hata oluştu.'}), 500
+            handle_ajax_or_flash(False, None, 'Hatırlatıcı güncellenirken bir hata oluştu.')
+            return redirect(url_for('logbook.index', tab='reminders'))
+
+    @bp.route('/reminders/<int:id>/toggle-complete', methods=['POST'])
+    def toggle_complete_reminder(id):
+        is_ajax = is_ajax_request()
+        try:
+            updated = _get_reminder_service().toggle_complete(id, g.get('tenant_id'))
+            if not updated:
+                raise ValueError("Hatırlatıcı kaydı bulunamadı.")
+            status_text = 'tamamlandı olarak işaretlendi.' if updated.is_completed else 'tekrar aktif hale getirildi.'
+            msg = f"Hatırlatıcı {status_text}"
+            if is_ajax:
+                return jsonify({
+                    'success': True,
+                    'message': msg,
+                    'reminder': updated.to_dict(),
+                    'is_completed': updated.is_completed,
+                })
+            handle_ajax_or_flash(True, msg, None)
+            return redirect(url_for('logbook.index', tab='reminders'))
+        except Exception as e:
+            logger.exception(f"Toggle complete reminder error: {e}")
+            rollback_session()
+            if is_ajax:
+                return jsonify({'success': False, 'message': 'Durum güncellenirken bir hata oluştu.'}), 500
+            handle_ajax_or_flash(False, None, 'Durum güncellenirken bir hata oluştu.')
+            return redirect(url_for('logbook.index', tab='reminders'))
+
+    @bp.route('/reminders/<int:id>/delete', methods=['POST'])
+    def delete_reminder(id):
+        is_ajax = is_ajax_request()
+        try:
+            success = _get_reminder_service().delete_reminder(id, g.get('tenant_id'))
+            if not success:
+                raise ValueError("Hatırlatıcı kaydı bulunamadı veya silinemedi.")
+            if is_ajax:
+                return jsonify({'success': True, 'message': 'Hatırlatıcı başarıyla silindi.'})
+            handle_ajax_or_flash(True, 'Hatırlatıcı başarıyla silindi.', None)
+            return redirect(url_for('logbook.index', tab='reminders'))
+        except Exception as e:
+            logger.exception(f"Delete reminder error: {e}")
+            rollback_session()
+            if is_ajax:
+                return jsonify({'success': False, 'message': 'Hatırlatıcı silinirken bir hata oluştu.'}), 500
+            handle_ajax_or_flash(False, None, 'Hatırlatıcı silinirken bir hata oluştu.')
+            return redirect(url_for('logbook.index', tab='reminders'))
+
 
 
 def _filters_from_request():

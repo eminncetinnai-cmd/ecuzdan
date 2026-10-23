@@ -66,3 +66,8 @@ class RepositoryProvider:
     def iban(self):
         from repositories.iban_repository import IbanRepository
         return self._get_or_create('iban', IbanRepository)
+
+    def reminder(self):
+        from repositories.reminder_repository import ReminderRepository
+        return self._get_or_create('reminder', ReminderRepository)
+

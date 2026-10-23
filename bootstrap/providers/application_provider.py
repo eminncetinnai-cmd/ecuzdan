@@ -135,6 +135,15 @@ class ApplicationProvider:
             )
         return self._get_or_create('iban_app', _factory)
 
+    def reminder(self):
+        from application.analysis.reminder_application import ReminderApplicationService
+        def _factory():
+            return ReminderApplicationService(
+                reminder_domain_service=self.domains.reminder_svc(),
+            )
+        return self._get_or_create('reminder_app', _factory)
+
+
     def strategy(self):
         from application.analysis.strategy_application import StrategyApplicationService
         def _factory():

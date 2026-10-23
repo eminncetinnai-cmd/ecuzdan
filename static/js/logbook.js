@@ -44,7 +44,14 @@ document.addEventListener('DOMContentLoaded', function() {
         showEditIbanModal(parseInt(openEditIbanId));
         window.history.replaceState({}, document.title, window.location.pathname + '?tab=ibans');
     }
-    if (urlParams.get('tab') === 'ibans') {
+    const openEditReminderId = urlParams.get('open_edit_reminder');
+    if (openEditReminderId) {
+        showEditReminderModal(parseInt(openEditReminderId));
+        window.history.replaceState({}, document.title, window.location.pathname + '?tab=reminders');
+    }
+    if (urlParams.get('tab') === 'reminders') {
+        switchLogbookTab('reminders', false);
+    } else if (urlParams.get('tab') === 'ibans') {
         switchLogbookTab('ibans', false);
     }
     
@@ -298,22 +305,40 @@ const TR_BANK_CODES = {
 function switchLogbookTab(tabName, updateUrl = true) {
     const notesTabBtn = document.getElementById('tab-btn-notes');
     const ibansTabBtn = document.getElementById('tab-btn-ibans');
+    const remindersTabBtn = document.getElementById('tab-btn-reminders');
     const timelineView = document.getElementById('timeline-view');
     const ibanView = document.getElementById('iban-view');
+    const reminderView = document.getElementById('reminder-view');
     const filterNotes = document.getElementById('filter-panel-notes');
     const filterIbans = document.getElementById('filter-panel-ibans');
+    const filterReminders = document.getElementById('filter-panel-reminders');
     const btnCreateNote = document.getElementById('btn-create-note');
     const btnCreateIban = document.getElementById('btn-create-iban');
+    const btnCreateReminder = document.getElementById('btn-create-reminder');
+    const sectionTitle = document.getElementById('logbookSectionTitle');
 
-    if (tabName === 'ibans') {
-        if (notesTabBtn) notesTabBtn.classList.remove('active');
-        if (ibansTabBtn) ibansTabBtn.classList.add('active');
-        if (timelineView) timelineView.classList.add('hidden');
-        if (ibanView) ibanView.classList.remove('hidden');
-        if (filterNotes) filterNotes.classList.add('hidden');
-        if (filterIbans) filterIbans.classList.remove('hidden');
-        if (btnCreateNote) btnCreateNote.classList.add('hidden');
-        if (btnCreateIban) btnCreateIban.classList.remove('hidden');
+    // Deactivate all
+    [notesTabBtn, ibansTabBtn, remindersTabBtn].forEach(b => b?.classList.remove('active'));
+    [timelineView, ibanView, reminderView, filterNotes, filterIbans, filterReminders, btnCreateNote, btnCreateIban, btnCreateReminder].forEach(el => el?.classList.add('hidden'));
+
+    if (tabName === 'reminders') {
+        remindersTabBtn?.classList.add('active');
+        reminderView?.classList.remove('hidden');
+        filterReminders?.classList.remove('hidden');
+        btnCreateReminder?.classList.remove('hidden');
+        if (sectionTitle) sectionTitle.textContent = 'Hatırlatıcılar & Özel Günler';
+
+        if (updateUrl) {
+            const url = new URL(window.location);
+            url.searchParams.set('tab', 'reminders');
+            window.history.replaceState({}, '', url.toString());
+        }
+    } else if (tabName === 'ibans') {
+        ibansTabBtn?.classList.add('active');
+        ibanView?.classList.remove('hidden');
+        filterIbans?.classList.remove('hidden');
+        btnCreateIban?.classList.remove('hidden');
+        if (sectionTitle) sectionTitle.textContent = 'Kayıtlı IBAN Numaralarım';
 
         if (updateUrl) {
             const url = new URL(window.location);
@@ -321,14 +346,11 @@ function switchLogbookTab(tabName, updateUrl = true) {
             window.history.replaceState({}, '', url.toString());
         }
     } else {
-        if (ibansTabBtn) ibansTabBtn.classList.remove('active');
-        if (notesTabBtn) notesTabBtn.classList.add('active');
-        if (ibanView) ibanView.classList.add('hidden');
-        if (timelineView) timelineView.classList.remove('hidden');
-        if (filterIbans) filterIbans.classList.add('hidden');
-        if (filterNotes) filterNotes.classList.remove('hidden');
-        if (btnCreateIban) btnCreateIban.classList.add('hidden');
-        if (btnCreateNote) btnCreateNote.classList.remove('hidden');
+        notesTabBtn?.classList.add('active');
+        timelineView?.classList.remove('hidden');
+        filterNotes?.classList.remove('hidden');
+        btnCreateNote?.classList.remove('hidden');
+        if (sectionTitle) sectionTitle.textContent = logbookT('logbook_title') || 'Finansal Seyir Defteri';
 
         if (updateUrl) {
             const url = new URL(window.location);
@@ -826,3 +848,278 @@ function filterIbanCategory(cat) {
         }
     });
 }
+
+// ==========================================================================
+// Reminders & Special Days JS Controller
+// ==========================================================================
+
+function onReminderFrequencyChange(freq) {
+    const grpDay = document.getElementById('grpReminderDay');
+    const grpMonth = document.getElementById('grpReminderMonth');
+    const grpDate = document.getElementById('grpReminderDate');
+
+    if (freq === 'Aylık') {
+        grpDay?.classList.remove('hidden');
+        grpMonth?.classList.add('hidden');
+        grpDate?.classList.add('hidden');
+    } else if (freq === 'Yıllık') {
+        grpDay?.classList.remove('hidden');
+        grpMonth?.classList.remove('hidden');
+        grpDate?.classList.add('hidden');
+    } else if (freq === 'Tek Seferlik') {
+        grpDay?.classList.add('hidden');
+        grpMonth?.classList.add('hidden');
+        grpDate?.classList.remove('hidden');
+    }
+}
+
+function showCreateReminderModal() {
+    const modalTitle = document.getElementById('reminderModalTitle');
+    if (modalTitle) modalTitle.textContent = 'Yeni Hatırlatıcı Ekle';
+
+    const form = document.getElementById('reminderForm');
+    if (form) form.reset();
+
+    const idInput = document.getElementById('reminderId');
+    if (idInput) idInput.value = '';
+
+    const freqSelect = document.getElementById('reminderFrequency');
+    if (freqSelect) {
+        freqSelect.value = 'Aylık';
+        onReminderFrequencyChange('Aylık');
+    }
+
+    if (typeof window.openModal === 'function') {
+        window.openModal('reminderModal');
+    } else {
+        const m = document.getElementById('reminderModal');
+        if (m) m.classList.remove('hidden');
+    }
+
+    setTimeout(() => {
+        document.getElementById('reminderTitle')?.focus();
+    }, 60);
+}
+
+function hideReminderModal() {
+    if (typeof window.closeModal === 'function') {
+        window.closeModal('reminderModal');
+    } else {
+        const m = document.getElementById('reminderModal');
+        if (m) m.classList.add('hidden');
+    }
+}
+
+function showEditReminderModal(id) {
+    fetch(`/logbook/reminders/${id}`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => {
+        if (!r.ok) throw new Error('Hatırlatıcı bilgisi alınamadı.');
+        return r.json();
+    })
+    .then(data => {
+        if (!data.success || !data.reminder) {
+            throw new Error(data.message || 'Kayıt bulunamadı.');
+        }
+        const rem = data.reminder;
+
+        const modalTitle = document.getElementById('reminderModalTitle');
+        if (modalTitle) modalTitle.textContent = 'Hatırlatıcıyı Düzenle';
+
+        const idInput = document.getElementById('reminderId');
+        if (idInput) idInput.value = rem.id;
+
+        const titleInput = document.getElementById('reminderTitle');
+        if (titleInput) titleInput.value = rem.title || '';
+
+        const catSelect = document.getElementById('reminderCategory');
+        if (catSelect) catSelect.value = rem.category || 'Genel';
+
+        const freqSelect = document.getElementById('reminderFrequency');
+        if (freqSelect) {
+            freqSelect.value = rem.frequency || 'Aylık';
+            onReminderFrequencyChange(rem.frequency || 'Aylık');
+        }
+
+        const dayInput = document.getElementById('reminderDay');
+        if (dayInput && rem.due_day) dayInput.value = rem.due_day;
+
+        const monthSelect = document.getElementById('reminderMonth');
+        if (monthSelect && rem.due_month) monthSelect.value = rem.due_month;
+
+        const dateInput = document.getElementById('reminderDate');
+        if (dateInput && rem.due_date) dateInput.value = rem.due_date;
+
+        const amtInput = document.getElementById('reminderAmount');
+        if (amtInput) amtInput.value = rem.amount !== null && rem.amount !== undefined ? rem.amount : '';
+
+        const noteInput = document.getElementById('reminderNote');
+        if (noteInput) noteInput.value = rem.note || '';
+
+        if (typeof window.openModal === 'function') {
+            window.openModal('reminderModal');
+        } else {
+            const m = document.getElementById('reminderModal');
+            if (m) m.classList.remove('hidden');
+        }
+    })
+    .catch(err => {
+        showToast(err.message, 'error');
+    });
+}
+
+function saveReminder() {
+    const form = document.getElementById('reminderForm');
+    if (!form) return;
+
+    const title = (document.getElementById('reminderTitle')?.value || '').trim();
+    if (!title) {
+        showToast('Lütfen bir başlık girin.', 'warning');
+        document.getElementById('reminderTitle')?.focus();
+        return;
+    }
+
+    const reminderId = (document.getElementById('reminderId')?.value || '').trim();
+    const url = reminderId ? `/logbook/reminders/${reminderId}/update` : '/logbook/reminders/create';
+
+    const formData = new FormData(form);
+
+    fetch(url, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            if (window.ECuzdanHaptics) window.ECuzdanHaptics.success();
+            showToast(data.message || 'Hatırlatıcı kaydedildi.', 'success');
+            hideReminderModal();
+            const targetUrl = new URL(window.location);
+            targetUrl.searchParams.set('tab', 'reminders');
+            window.location = targetUrl.toString();
+        } else {
+            if (window.ECuzdanHaptics) window.ECuzdanHaptics.error();
+            showToast(data.message || 'Kaydetme işlemi başarısız.', 'error');
+        }
+    })
+    .catch(err => {
+        if (window.ECuzdanHaptics) window.ECuzdanHaptics.error();
+        showToast('Hata: ' + err.message, 'error');
+    });
+}
+
+function toggleCompleteReminder(id) {
+    fetch(`/logbook/reminders/${id}/toggle-complete`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            if (window.ECuzdanHaptics) window.ECuzdanHaptics.success();
+            showToast(data.message, 'success');
+            const targetUrl = new URL(window.location);
+            targetUrl.searchParams.set('tab', 'reminders');
+            window.location = targetUrl.toString();
+        } else {
+            showToast(data.message || 'Durum değiştirilemedi.', 'error');
+        }
+    })
+    .catch(err => {
+        showToast('Hata: ' + err.message, 'error');
+    });
+}
+
+function deleteReminder(id) {
+    const confirmMessage = 'Bu hatırlatıcıyı silmek istediğinize emin misiniz?';
+
+    function doDelete() {
+        fetch(`/logbook/reminders/${id}/delete`, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                if (window.ECuzdanHaptics) window.ECuzdanHaptics.heavy();
+                showToast(data.message || 'Hatırlatıcı silindi.', 'success');
+                const targetUrl = new URL(window.location);
+                targetUrl.searchParams.set('tab', 'reminders');
+                window.location = targetUrl.toString();
+            } else {
+                showToast(data.message || 'Silme işlemi başarısız.', 'error');
+            }
+        })
+        .catch(err => {
+            showToast('Silme hatası: ' + err.message, 'error');
+        });
+    }
+
+    if (typeof window.showGlobalConfirm === 'function') {
+        window.showGlobalConfirm('Hatırlatıcıyı Sil', confirmMessage, doDelete, true);
+    } else if (confirm(confirmMessage)) {
+        doDelete();
+    }
+}
+
+function searchReminderCards(query) {
+    const term = (query || '').trim().toLowerCase();
+    const cards = document.querySelectorAll('.reminder-card');
+    cards.forEach(card => {
+        const searchData = (card.getAttribute('data-search') || '').toLowerCase();
+        const matches = !term || searchData.includes(term);
+        card.style.display = matches ? '' : 'none';
+    });
+}
+
+function filterReminderCategory(cat) {
+    const cards = document.querySelectorAll('.reminder-card');
+    cards.forEach(card => {
+        const category = card.getAttribute('data-category') || '';
+        if (!cat || category === cat) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+function filterReminderStatus(status) {
+    const cards = document.querySelectorAll('.reminder-card');
+    cards.forEach(card => {
+        const itemStatus = card.getAttribute('data-status') || 'active';
+        if (!status || status === 'all' || itemStatus === status) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+function startTxFromReminder(title, amount, category) {
+    if (typeof window.openQuickTxModal === 'function') {
+        window.openQuickTxModal({
+            description: title,
+            amount: amount,
+            type: 'Gider',
+            category: category === 'Ödeme' || category === 'Fatura' ? 'Fatura' : 'Diğer'
+        });
+    } else {
+        const form = document.getElementById('globalQuickTxForm');
+        if (form) {
+            const descInput = document.getElementById('globalQuickTxDesc') || form.querySelector('input[name="description"]');
+            const amtInput = document.getElementById('globalQuickTxAmount');
+            if (descInput) descInput.value = title;
+            if (amtInput) amtInput.value = amount;
+            if (typeof window.openModal === 'function') {
+                window.openModal('quickTxModal');
+            }
+        }
+    }
+}
+

@@ -648,3 +648,110 @@ class UserIban(db.Model):
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
         }
 
+
+class UserReminder(db.Model):
+    """Kullanıcı bağımsız hatırlatıcıları ve özel gün kayıtları (Aylık, Yıllık, Tek Seferlik)."""
+    __tablename__ = 'user_reminder'
+    __table_args__ = (
+        db.Index('idx_user_reminder_tenant_freq', 'tenant_id', 'frequency'),
+        db.Index('idx_user_reminder_tenant_completed', 'tenant_id', 'is_completed'),
+        db.Index('idx_user_reminder_category', 'category'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.String(50), db.ForeignKey('tenant.id'), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True, index=True)
+
+    title = db.Column(db.String(150), nullable=False)
+    category = db.Column(db.String(50), nullable=False, default='Genel')  # 'Ödeme', 'Doğum Günü', 'Fatura', 'Sigorta / Vergi', 'Genel'
+    frequency = db.Column(db.String(30), nullable=False, default='Aylık')  # 'Aylık', 'Yıllık', 'Tek Seferlik'
+
+    # Tarih / Periyot bilgisi
+    due_day = db.Column(db.Integer, nullable=True)      # 1-31 (Aylık ve Yıllık için)
+    due_month = db.Column(db.Integer, nullable=True)    # 1-12 (Yıllık için)
+    due_date = db.Column(db.String(10), nullable=True)  # YYYY-MM-DD (Tek Seferlik için)
+
+    # İsteğe bağlı finansal tutar
+    amount = db.Column(Numeric(19, 4), nullable=True)
+
+    # Not / Açıklama
+    note = db.Column(db.String(255), nullable=True)
+
+    # Durum
+    is_completed = db.Column(db.Boolean, default=False, nullable=False)
+    last_completed_at = db.Column(db.DateTime, nullable=True)
+
+    # Zaman damgaları
+    created_at = db.Column(db.DateTime, default=utcnow_naive, nullable=False)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive, nullable=False)
+
+    # İlişkiler
+    tenant = db.relationship('Tenant', backref='user_reminders')
+    user = db.relationship('User', backref='user_reminders')
+
+    @property
+    def category_emoji(self) -> str:
+        """Kategoriye uygun emoji simgesi."""
+        emojis = {
+            'Doğum Günü': '🎂',
+            'Ödeme': '💳',
+            'Fatura': '📄',
+            'Sigorta / Vergi': '🛡️',
+            'Genel': '🔔',
+        }
+        return emojis.get(self.category, '🔔')
+
+    @property
+    def target_date_display(self) -> str:
+        """Kullanıcı dostu tarih özeti."""
+        months = [
+            '', 'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+            'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
+        ]
+        if self.frequency == 'Aylık':
+            day = self.due_day or 1
+            return f"Her ayın {day}'i"
+        elif self.frequency == 'Yıllık':
+            day = self.due_day or 1
+            m = self.due_month or 1
+            month_name = months[m] if 1 <= m <= 12 else ''
+            return f"Her yıl {day} {month_name}"
+        elif self.frequency == 'Tek Seferlik':
+            return self.due_date or 'Tarih belirtilmedi'
+        return ''
+
+    def to_dict(self) -> dict:
+        """JSON serileştirme sözlüğü."""
+        from domain.analysis.services.reminder_service import ReminderService
+        calc = ReminderService.calculate_due_status(
+            frequency=self.frequency,
+            due_day=self.due_day,
+            due_month=self.due_month,
+            due_date=self.due_date,
+            is_completed=self.is_completed,
+        )
+        return {
+            'id': self.id,
+            'tenant_id': self.tenant_id,
+            'user_id': self.user_id,
+            'title': self.title,
+            'category': self.category,
+            'category_emoji': self.category_emoji,
+            'frequency': self.frequency,
+            'due_day': self.due_day,
+            'due_month': self.due_month,
+            'due_date': self.due_date,
+            'target_date_display': self.target_date_display,
+            'amount': float(self.amount) if self.amount is not None else None,
+            'note': self.note or '',
+            'is_completed': bool(self.is_completed),
+            'last_completed_at': self.last_completed_at.isoformat() if self.last_completed_at else None,
+            'days_remaining': calc['days_remaining'],
+            'badge_text': calc['badge_text'],
+            'badge_color': calc['badge_color'],
+            'is_urgent': calc['is_urgent'],
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+

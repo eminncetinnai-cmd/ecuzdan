@@ -79,6 +79,11 @@ class RepositoryProvider:
         from repositories.iban_repository import IbanRepository
         return self._get_or_create('iban', IbanRepository)
 
+    def reminder(self):
+        from repositories.reminder_repository import ReminderRepository
+        return self._get_or_create('reminder', ReminderRepository)
+
+
     def strategy(self):
         from repositories.strategy_repository import StrategyRepository
         return self._get_or_create('strategy', StrategyRepository)
@@ -213,6 +218,11 @@ class DomainProvider:
     def iban_svc(self):
         from domain.analysis.services.iban_service import IbanService
         return self._get_or_create('iban_svc', IbanService)
+
+    def reminder_svc(self):
+        from domain.analysis.services.reminder_service import ReminderService
+        return self._get_or_create('reminder_svc', ReminderService)
+
 
     def strategy_svc(self):
         from domain.analysis.services.strategy_service import StrategyService
@@ -413,6 +423,15 @@ class ApplicationProvider:
                 iban_domain_service=self.domains.iban_svc(),
             )
         return self._get_or_create('iban_app', _factory)
+
+    def reminder(self):
+        from application.analysis.reminder_application import ReminderApplicationService
+        def _factory():
+            return ReminderApplicationService(
+                reminder_domain_service=self.domains.reminder_svc(),
+            )
+        return self._get_or_create('reminder_app', _factory)
+
 
     def analysis(self):
         from application.analysis.analysis_application import AnalysisApplicationService

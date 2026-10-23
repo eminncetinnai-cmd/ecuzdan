@@ -32,7 +32,7 @@
     <div class="logbook-card">
         <!-- Segmented Tab Navigation -->
         <div class="logbook-tabs-nav" role="tablist">
-            <button data-macro="button_secondary" role="tab" id="tab-btn-notes" class="logbook-tab-btn {% if active_tab != 'ibans' %}active{% endif %}" onclick="switchLogbookTab('notes')" aria-selected="{% if active_tab != 'ibans' %}true{% else %}false{% endif %}">
+            <button data-macro="button_secondary" role="tab" id="tab-btn-notes" class="logbook-tab-btn {% if active_tab != 'ibans' and active_tab != 'reminders' %}active{% endif %}" onclick="switchLogbookTab('notes')" aria-selected="{% if active_tab != 'ibans' and active_tab != 'reminders' %}true{% else %}false{% endif %}">
                 <span>📝</span> <span>{{ _('logbook_title') }}</span>
             </button>
             <button data-macro="button_secondary" role="tab" id="tab-btn-ibans" class="logbook-tab-btn {% if active_tab == 'ibans' %}active{% endif %}" onclick="switchLogbookTab('ibans')" aria-selected="{% if active_tab == 'ibans' %}true{% else %}false{% endif %}">
@@ -41,24 +41,33 @@
                 <span class="ml-1 text-xs px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-bold">{{ ibans|length }}</span>
                 {% endif %}
             </button>
+            <button data-macro="button_secondary" role="tab" id="tab-btn-reminders" class="logbook-tab-btn {% if active_tab == 'reminders' %}active{% endif %}" onclick="switchLogbookTab('reminders')" aria-selected="{% if active_tab == 'reminders' %}true{% else %}false{% endif %}">
+                <span>🔔</span> <span>Hatırlatıcılar & Özel Günler</span>
+                {% if reminders %}
+                <span class="ml-1 text-xs px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-bold">{{ reminders|length }}</span>
+                {% endif %}
+            </button>
         </div>
 
         <div class="logbook-card-header">
             <h2 class="modal-title" id="logbookSectionTitle">
-                {% if active_tab == 'ibans' %}Kayıtlı IBAN Numaralarım{% else %}{{ _('logbook_title') }}{% endif %}
+                {% if active_tab == 'ibans' %}Kayıtlı IBAN Numaralarım{% elif active_tab == 'reminders' %}Hatırlatıcılar & Özel Günler{% else %}{{ _('logbook_title') }}{% endif %}
             </h2>
             <div class="flex items-center gap-2">
-                <button data-macro="button_secondary" type="button" id="btn-create-note" class="create-entry-btn {% if active_tab == 'ibans' %}hidden{% endif %}" onclick="showCreateModal()">
+                <button data-macro="button_secondary" type="button" id="btn-create-note" class="create-entry-btn {% if active_tab == 'ibans' or active_tab == 'reminders' %}hidden{% endif %}" onclick="showCreateModal()">
                     + {{ _('logbook_new_entry') }}
                 </button>
                 <button data-macro="button_primary" type="button" id="btn-create-iban" class="create-entry-btn {% if active_tab != 'ibans' %}hidden{% endif %}" onclick="showCreateIbanModal()">
                     + Yeni IBAN Kaydet
                 </button>
+                <button data-macro="button_primary" type="button" id="btn-create-reminder" class="create-entry-btn {% if active_tab != 'reminders' %}hidden{% endif %}" onclick="showCreateReminderModal()">
+                    + Yeni Hatırlatıcı Ekle
+                </button>
             </div>
         </div>
         
         <!-- Filter Panel for Notes -->
-        <div class="filter-panel {% if active_tab == 'ibans' %}hidden{% endif %}" id="filter-panel-notes">
+        <div class="filter-panel {% if active_tab == 'ibans' or active_tab == 'reminders' %}hidden{% endif %}" id="filter-panel-notes">
             <div class="filter-row">
                 <div class="filter-group">
                     <label for="filter-search">Canlı Arama</label>
@@ -106,9 +115,38 @@
                 </div>
             </div>
         </div>
+
+        <!-- Filter Panel for Reminders -->
+        <div class="filter-panel {% if active_tab != 'reminders' %}hidden{% endif %}" id="filter-panel-reminders">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="filter-reminder-search">Hatırlatıcı / Özel Gün Arama</label>
+                    <input type="search" class="filter-select" id="filter-reminder-search" placeholder="Başlık veya not ara..." oninput="searchReminderCards(this.value)">
+                </div>
+                <div class="filter-group">
+                    <label for="filter-reminder-category">Kategori Filtresi</label>
+                    <select class="filter-select" id="filter-reminder-category" onchange="filterReminderCategory(this.value)">
+                        <option value="">Tüm Kategoriler</option>
+                        <option value="Ödeme" {% if reminder_category == 'Ödeme' %}selected{% endif %}>💳 Ödeme</option>
+                        <option value="Doğum Günü" {% if reminder_category == 'Doğum Günü' %}selected{% endif %}>🎂 Doğum Günü / Özel Gün</option>
+                        <option value="Fatura" {% if reminder_category == 'Fatura' %}selected{% endif %}>📄 Fatura</option>
+                        <option value="Sigorta / Vergi" {% if reminder_category == 'Sigorta / Vergi' %}selected{% endif %}>🛡️ Sigorta / Vergi</option>
+                        <option value="Genel" {% if reminder_category == 'Genel' %}selected{% endif %}>🔔 Genel</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-reminder-status">Durum Filtresi</label>
+                    <select class="filter-select" id="filter-reminder-status" onchange="filterReminderStatus(this.value)">
+                        <option value="all" {% if reminder_status == 'all' or not reminder_status %}selected{% endif %}>Tümü</option>
+                        <option value="active" {% if reminder_status == 'active' %}selected{% endif %}>Aktif / Bekleyenler</option>
+                        <option value="completed" {% if reminder_status == 'completed' %}selected{% endif %}>Tamamlananlar</option>
+                    </select>
+                </div>
+            </div>
+        </div>
         
         <!-- Timeline View (Notes) -->
-        <div id="timeline-view" class="{% if active_tab == 'ibans' %}hidden{% endif %}">
+        <div id="timeline-view" class="{% if active_tab == 'ibans' or active_tab == 'reminders' %}hidden{% endif %}">
             {% if entries %}
                 <div class="timeline">
                     {% for entry in entries %}
@@ -234,6 +272,80 @@
                     <p class="empty-state-text">Henüz kayıtlı bir IBAN numaranız bulunmuyor. Sık kullandığınız banka hesaplarınızı veya alıcıları kaydederek tek tıkla kopyalayabilirsiniz.</p>
                     <button data-macro="button_primary" type="button" class="create-entry-btn" onclick="showCreateIbanModal()">
                         + İlk IBAN'ını Kaydet
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Reminders View -->
+        <div id="reminder-view" class="{% if active_tab != 'reminders' %}hidden{% endif %}">
+            {% if reminders %}
+                <div class="reminder-grid">
+                    {% for item in reminders %}
+                    {% set r_dict = item.to_dict() %}
+                    <div class="reminder-card {% if item.is_completed %}completed{% endif %}" id="reminder-card-{{ item.id }}" data-category="{{ item.category }}" data-status="{% if item.is_completed %}completed{% else %}active{% endif %}" data-search="{{ item.title|lower }} {{ (item.note or '')|lower }}">
+                        <div class="reminder-card-top">
+                            <div class="reminder-badges">
+                                <span class="reminder-category-badge">
+                                    <span>{{ item.category_emoji }}</span>
+                                    <span>{{ item.category }}</span>
+                                </span>
+                                <span class="reminder-due-badge badge-{{ r_dict.badge_color }} {% if r_dict.is_urgent %}animate-pulse font-black{% endif %}">
+                                    {{ r_dict.badge_text }}
+                                </span>
+                            </div>
+                            <div class="reminder-card-actions">
+                                <button data-macro="button_secondary" type="button" class="iban-action-btn" onclick="showEditReminderModal({{ item.id }})" aria-label="Hatırlatıcıyı Düzenle" title="Hatırlatıcıyı Düzenle">
+                                    <span aria-hidden="true">✎</span>
+                                </button>
+                                <button data-macro="button_danger" type="button" class="iban-action-btn iban-action-delete" onclick="deleteReminder({{ item.id }})" aria-label="Hatırlatıcıyı Sil" title="Hatırlatıcıyı Sil">
+                                    <span aria-hidden="true">✕</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="reminder-card-body">
+                            <h3 class="reminder-title {% if item.is_completed %}line-through text-slate-400 dark:text-slate-500{% endif %}">
+                                {{ item.title }}
+                            </h3>
+                            <div class="reminder-schedule">
+                                <span class="reminder-schedule-pill">
+                                    {% if item.frequency == 'Aylık' %}🔄{% elif item.frequency == 'Yıllık' %}📅{% else %}🎯{% endif %}
+                                    {{ item.target_date_display }}
+                                </span>
+                                {% if item.amount %}
+                                <span class="reminder-amount">
+                                    {{ item.amount|format_money }} {{ base_currency_symbol }}
+                                </span>
+                                {% endif %}
+                            </div>
+
+                            {% if item.note %}
+                            <div class="reminder-note">
+                                <span>💡</span> <span>{{ item.note }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="reminder-card-footer">
+                            <button data-macro="button_secondary" type="button" class="reminder-footer-btn reminder-btn-complete {% if item.is_completed %}is-done{% endif %}" onclick="toggleCompleteReminder({{ item.id }})">
+                                <span>{% if item.is_completed %}↩️ Tekrar Aç{% else %}✓ Yapıldı Olarak İşaretle{% endif %}</span>
+                            </button>
+                            {% if item.amount %}
+                            <button data-macro="button_secondary" type="button" class="reminder-footer-btn reminder-btn-tx" onclick="startTxFromReminder('{{ item.title|e }}', '{{ item.amount }}', '{{ item.category }}')">
+                                <span>⚡ Hızlı İşlem</span>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">🔔</div>
+                    <p class="empty-state-text">Henüz kayıtlı bir hatırlatıcınız veya özel gününüz bulunmuyor. Aylık kira/aidat ödemeleri, yıllık sigorta veya doğum günlerini kaydederek kolayca takip edebilirsiniz.</p>
+                    <button data-macro="button_primary" type="button" class="create-entry-btn" onclick="showCreateReminderModal()">
+                        + İlk Hatırlatıcını Ekle
                     </button>
                 </div>
             {% endif %}
@@ -378,6 +490,99 @@
         <div class="modal-footer">
             <button data-macro="button_secondary" type="button" onclick="hideIbanModal()">{{ _('btn_cancel') }}</button>
             <button data-macro="button_primary" type="button" onclick="saveIban()">{{ _('logbook_save') }}</button>
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Reminder Modal -->
+<div class="modal-overlay hidden" id="reminderModal" role="dialog" aria-modal="true" aria-labelledby="reminderModalTitle">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title" id="reminderModalTitle">Yeni Hatırlatıcı Ekle</h3>
+            <button data-macro="button_secondary" type="button" onclick="hideReminderModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="reminderForm">
+                <input type="hidden" id="reminderId" name="reminder_id">
+                <input type="hidden" name="csrf_token" value="{{ session.get('csrf_token', '') }}">
+
+                <div class="form-group mb-3">
+                    <label class="form-label" for="reminderTitle">Hatırlatıcı / Özel Gün Başlığı *</label>
+                    <input type="text" class="form-input" id="reminderTitle" name="title" placeholder="Örn: Eşimin Doğum Günü, Ev Kirası, MTV 1. Taksit" required>
+                </div>
+
+                <div class="filter-row mb-3">
+                    <div class="form-group">
+                        <label class="form-label" for="reminderCategory">Kategori</label>
+                        <select class="form-select" id="reminderCategory" name="category">
+                            <option value="Ödeme">💳 Ödeme</option>
+                            <option value="Doğum Günü">🎂 Doğum Günü / Özel Gün</option>
+                            <option value="Fatura">📄 Fatura</option>
+                            <option value="Sigorta / Vergi">🛡️ Sigorta / Vergi</option>
+                            <option value="Genel" selected>🔔 Genel</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="reminderFrequency">Tekrar Sıklığı</label>
+                        <select class="form-select" id="reminderFrequency" name="frequency" onchange="onReminderFrequencyChange(this.value)">
+                            <option value="Aylık" selected>🔄 Aylık Tekrar</option>
+                            <option value="Yıllık">📅 Yıllık Tekrar (Doğum Günü / Yıllık)</option>
+                            <option value="Tek Seferlik">🎯 Tek Seferlik Tarih</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Tarih / Gün Seçim Alanları -->
+                <div class="filter-row mb-3" id="reminderScheduleFields">
+                    <!-- Aylık ve Yıllık için Gün -->
+                    <div class="form-group" id="grpReminderDay">
+                        <label class="form-label" for="reminderDay">Ayın Hangi Günü? (1 - 31) *</label>
+                        <input type="number" class="form-input" id="reminderDay" name="due_day" min="1" max="31" value="1" placeholder="1 - 31">
+                    </div>
+
+                    <!-- Yıllık için Ay -->
+                    <div class="form-group hidden" id="grpReminderMonth">
+                        <label class="form-label" for="reminderMonth">Hangi Ay? *</label>
+                        <select class="form-select" id="reminderMonth" name="due_month">
+                            <option value="1">Ocak</option>
+                            <option value="2">Şubat</option>
+                            <option value="3">Mart</option>
+                            <option value="4">Nisan</option>
+                            <option value="5">Mayıs</option>
+                            <option value="6">Haziran</option>
+                            <option value="7">Temmuz</option>
+                            <option value="8">Ağustos</option>
+                            <option value="9">Eylül</option>
+                            <option value="10">Ekim</option>
+                            <option value="11">Kasım</option>
+                            <option value="12">Aralık</option>
+                        </select>
+                    </div>
+
+                    <!-- Tek Seferlik için Tarih -->
+                    <div class="form-group hidden" id="grpReminderDate">
+                        <label class="form-label" for="reminderDate">Vade / Hatırlatma Tarihi *</label>
+                        <input type="date" class="form-input" id="reminderDate" name="due_date">
+                    </div>
+                </div>
+
+                <div class="filter-row mb-3">
+                    <div class="form-group">
+                        <label class="form-label" for="reminderAmount">Beklenen Tutar (İsteğe Bağlı, {{ base_currency_symbol }})</label>
+                        <input type="text" class="form-input" id="reminderAmount" name="amount" placeholder="Örn: 15.000,00">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="reminderNote">Not / Hatırlatma Detayı</label>
+                    <textarea class="form-textarea" id="reminderNote" name="note" rows="2" placeholder="Örn: Hediye almayı unutma, her ayın 1'inde Fast ile gönder"></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button data-macro="button_secondary" type="button" onclick="hideReminderModal()">{{ _('btn_cancel') }}</button>
+            <button data-macro="button_primary" type="button" onclick="saveReminder()">{{ _('logbook_save') }}</button>
         </div>
     </div>
 </div>

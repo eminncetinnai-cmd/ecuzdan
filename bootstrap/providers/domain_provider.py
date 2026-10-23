@@ -105,6 +105,11 @@ class DomainProvider:
         from domain.analysis.services.iban_service import IbanService
         return self._get_or_create('iban_svc', IbanService)
 
+    def reminder_svc(self):
+        from domain.analysis.services.reminder_service import ReminderService
+        return self._get_or_create('reminder_svc', ReminderService)
+
+
 
     def strategy_svc(self):
         from domain.analysis.services.strategy_service import StrategyService

@@ -45,6 +45,7 @@ from models import (
     UserIban,
     UserPreference,
     UserProgress,
+    UserReminder,
     db,
 )
 
@@ -234,6 +235,7 @@ def export_database_to_json(encrypt: bool = False, password: str = None):
         ("notifications", Notification),
         ("logbook_entries", LogbookEntry),
         ("user_ibans", UserIban),
+        ("user_reminders", UserReminder),
         ("tenant_invites", TenantInvite),
         ("audit_logs", AuditLog),
         ("monitoring_alert_configs", MonitoringAlertConfig),
@@ -365,6 +367,7 @@ def import_database_from_json(
             ("notifications", Notification),
             ("logbook_entries", LogbookEntry),
             ("user_ibans", UserIban),
+            ("user_reminders", UserReminder),
             ("tenant_invites", TenantInvite),
             ("audit_logs", AuditLog),
             ("monitoring_alert_configs", MonitoringAlertConfig),
