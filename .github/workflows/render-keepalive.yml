@@ -1,0 +1,20 @@
+name: Render 24/7 Keep-Alive Heartbeat
+
+on:
+  schedule:
+    # Render free tier goes to sleep after 15 minutes of inactivity.
+    # Pinging every 10 minutes keeps the application warm 24/7.
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  heartbeat:
+    name: Warm Render Container
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Warmup Heartbeat
+        env:
+          RENDER_APP_URL: ${{ secrets.RENDER_APP_URL || 'https://e-cuzdan.onrender.com' }}
+        run: |
+          echo "Sending keep-alive ping to ${RENDER_APP_URL}/api/keepalive..."
+          curl -sSf --max-time 35 "${RENDER_APP_URL}/api/keepalive" || curl -sSf --max-time 45 "${RENDER_APP_URL}/healthz" || echo "Keep-alive ping sent (ignoring transient cold start response)."

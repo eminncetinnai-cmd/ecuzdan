@@ -6,9 +6,9 @@ import logging
 import os
 import secrets
 import sys
-from datetime import timedelta
+from datetime import datetime, timedelta
 
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, jsonify, render_template, send_from_directory
 
 from config import Config
 from database import init_database
@@ -177,6 +177,51 @@ def favicon():
         'favicon.ico',
         mimetype='image/vnd.microsoft.icon',
     )
+
+
+@app.route('/manifest.json')
+def manifest():
+    return send_from_directory(
+        os.path.join(app.root_path, 'static'),
+        'manifest.json',
+        mimetype='application/manifest+json',
+    )
+
+
+@app.route('/sw.js')
+def service_worker():
+    response = send_from_directory(
+        os.path.join(app.root_path, 'static'),
+        'sw.js',
+        mimetype='application/javascript',
+    )
+    response.headers['Service-Worker-Allowed'] = '/'
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    return response
+
+
+@app.route('/apple-touch-icon.png')
+@app.route('/apple-touch-icon-precomposed.png')
+def apple_touch_icon():
+    return send_from_directory(
+        os.path.join(app.root_path, 'static'),
+        'apple-touch-icon.png',
+        mimetype='image/png',
+    )
+
+
+@app.route('/offline')
+def offline_page():
+    return render_template('offline.html')
+
+
+@app.route('/api/keepalive')
+def keepalive():
+    return jsonify({
+        'status': 'alive',
+        'timestamp': datetime.utcnow().isoformat(),
+        'app': 'e-cuzdan-pwa',
+    })
 
 try:
     init_database(app)

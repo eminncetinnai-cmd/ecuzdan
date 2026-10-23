@@ -2280,3 +2280,49 @@ html.dark #globalSearchModal .search-result-item.is-selected {
 }
 
 
+
+/* ==========================================================================
+   NATIVE iOS & PWA APP FEEL ENHANCEMENTS
+   Eliminates browser artifacts, tap delays, and long-press callouts.
+   ========================================================================== */
+
+/* 1. Touch Responsiveness & No Grey Tap Box */
+*, *::before, *::after {
+    -webkit-tap-highlight-color: transparent;
+}
+
+button, a, input, select, textarea, [role="button"], .cursor-pointer {
+    touch-action: manipulation;
+}
+
+/* 2. Disable Long-Press Callouts on UI Controls */
+button,
+a,
+nav,
+header,
+.mobile-bottom-nav,
+.header-bar,
+.app-sidebar,
+.stat-card,
+.modal-header,
+.modal-footer {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* 3. iOS Viewport Momentum Scrolling & Overscroll Containment */
+html, body {
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 4. Standalone PWA / iOS Safe Area Insets (Top Notch & Dynamic Island) */
+@media all and (display-mode: standalone) {
+    body {
+        padding-top: env(safe-area-inset-top, 0px);
+    }
+    .header-bar {
+        padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
+    }
+}

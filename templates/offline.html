@@ -1,0 +1,67 @@
+{% extends "layout.html" %}
+
+{% block document_title %}Çevrimdışı Çalışma Alanı | {{ brand }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-8 px-4 sm:px-6">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 sm:p-12 shadow-xl text-center relative overflow-hidden">
+        <div class="w-20 h-20 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner">
+            <svg class="w-10 h-10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 4.243a9 9 0 01-1.414-1.414m-1.414-1.414a9 9 0 010-12.728M3 3l18 18M9.879 9.879a3 3 0 004.242 4.242"/>
+            </svg>
+        </div>
+
+        <h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tight mb-3">
+            Çevrimdışı Çalışma Alanı
+        </h1>
+        <p class="text-slate-600 dark:text-slate-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed mb-8">
+            Şu anda internet bağlantınız bulunmuyor veya sunucuya erişilemiyor. Ancak E-Cüzdan yerel kasası aktif; işlemlerinizi kesintisiz kaydetmeye devam edebilirsiniz!
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto mb-8 text-left">
+            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Yerel Kasa Durumu</span>
+                </div>
+                <p class="text-sm font-semibold text-emerald-600 dark:text-emerald-400">Aktif & Güvenli</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">İşlemler yerel belleğe kaydedilir.</p>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60">
+                <div class="flex items-center gap-2 mb-1">
+                    <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Bekleyen Senkronizasyon</span>
+                </div>
+                <p class="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
+                    <span id="offlineWorkspaceQueueCount">0</span> Bekleyen İşlem
+                </p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Bağlantı gelince sunucuya aktarılır.</p>
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button data-macro="button_primary" type="button" onclick="if (typeof openGlobalQuickTxModal === 'function') openGlobalQuickTxModal();" class="w-full sm:w-auto px-6 py-3.5 rounded-xl font-bold text-sm bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/20 transition cursor-pointer">
+                Hızlı İşlem Ekle +
+            </button>
+            <button data-macro="button_secondary" type="button" onclick="window.location.reload();" class="w-full sm:w-auto px-6 py-3.5 rounded-xl font-bold text-sm bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition cursor-pointer">
+                Bağlantıyı Yeniden Dene ↻
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        function updateOfflineCount() {
+            var el = document.getElementById('offlineWorkspaceQueueCount');
+            if (el && window.ECuzdanOffline) {
+                var queue = window.ECuzdanOffline.getQueue();
+                el.textContent = queue.length.toString();
+            }
+        }
+        document.addEventListener('DOMContentLoaded', updateOfflineCount);
+        setInterval(updateOfflineCount, 2000);
+    })();
+</script>
+{% endblock %}

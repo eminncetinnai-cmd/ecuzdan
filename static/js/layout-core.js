@@ -747,10 +747,21 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             const formElem = this;
             const submitBtn = formElem.querySelector('button[type="submit"]');
+            const formData = new FormData(this);
+
+            // Çevrimdışı kontrolü: İnternet yoksa doğrudan yerel outbox kuyruğuna al
+            if (!navigator.onLine && window.ECuzdanOffline) {
+                window.ECuzdanOffline.enqueue(formData);
+                if (typeof closeGlobalQuickTxModal === 'function') {
+                    closeGlobalQuickTxModal();
+                }
+                formElem.reset();
+                return;
+            }
+
             if (window.ECuzdanForms) {
                 window.ECuzdanForms.showFormLoading(formElem, submitBtn);
             }
-            const formData = new FormData(this);
             fetch(ECuzdanEndpoints.transactions.create, {
                 method: 'POST',
                 headers: {
@@ -780,6 +791,15 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 if (window.ECuzdanForms) {
                     window.ECuzdanForms.hideFormLoading(formElem, submitBtn);
+                }
+                // Ağ kopması durumunda da çevrimdışı kuyruğa al
+                if ((!navigator.onLine || (error && error.name === 'TypeError')) && window.ECuzdanOffline) {
+                    window.ECuzdanOffline.enqueue(formData);
+                    if (typeof closeGlobalQuickTxModal === 'function') {
+                        closeGlobalQuickTxModal();
+                    }
+                    formElem.reset();
+                    return;
                 }
                 window.showToast('Sunucu bağlantı hatası oluştu', 'error');
             });

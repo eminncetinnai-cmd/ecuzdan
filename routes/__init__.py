@@ -322,6 +322,12 @@ def register_csrf_protection(app):
             "/register",
             "/register_with_invite",
             "/healthz",
+            "/api/keepalive",
+            "/manifest.json",
+            "/sw.js",
+            "/apple-touch-icon.png",
+            "/apple-touch-icon-precomposed.png",
+            "/offline",
             "/notifications",
             "/notifications/read_all",
             "/api/monitoring",
@@ -504,7 +510,7 @@ def register_session_check(app):
     @app.before_request
     def check_session():
         # Login, logout, register, OAuth, healthcheck ve genel live stream endpoint'leri hariç
-        if not request.endpoint or request.endpoint in ['auth.login', 'auth.logout', 'auth.register', 'auth.register_with_invite', 'auth.oauth_login', 'auth.oauth_callback', 'auth.oauth_signup', 'dashboard.live_quotes', 'dashboard.live_stream', 'static', 'healthz', 'favicon']:
+        if not request.endpoint or request.endpoint in ['auth.login', 'auth.logout', 'auth.register', 'auth.register_with_invite', 'auth.oauth_login', 'auth.oauth_callback', 'auth.oauth_signup', 'dashboard.live_quotes', 'dashboard.live_stream', 'static', 'healthz', 'favicon', 'manifest', 'service_worker', 'apple_touch_icon', 'offline_page', 'keepalive']:
             return
 
         from flask import redirect, url_for
