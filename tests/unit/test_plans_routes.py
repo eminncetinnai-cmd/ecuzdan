@@ -360,3 +360,24 @@ def test_plans_routes_cache_invalidation():
 
     source = inspect.getsource(plans_module)
     assert 'invalidate_financial_cache' in source
+
+
+@pytest.mark.unit
+def test_calendar_feed_route_registration():
+    """Verify that /calendar/feed.ics route is registered on bp."""
+    from routes.plans import register_plan_routes
+
+    registered_paths = []
+    mock_bp = Mock()
+
+    def fake_route(path, **kwargs):
+        registered_paths.append(path)
+        return lambda f: f
+
+    mock_bp.route = fake_route
+
+    with patch('routes.plans._get_planning_app'):
+        register_plan_routes(mock_bp)
+
+    assert '/calendar/feed.ics' in registered_paths
+

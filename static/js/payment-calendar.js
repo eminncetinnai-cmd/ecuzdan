@@ -104,6 +104,15 @@
 
         if (data) {
             html += '<div class="space-y-3 max-h-[320px] overflow-y-auto pr-1">';
+            if (data.has_cash_gap) {
+                html += '<div class="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 flex items-start gap-2 mb-2">' +
+                    '<span class="text-rose-600 dark:text-rose-400 text-sm">⚠️</span>' +
+                    '<div class="text-[10px] leading-tight">' +
+                    '<p class="font-black text-rose-700 dark:text-rose-300 uppercase tracking-tight">Nakit Boşluğu Riski</p>' +
+                    '<p class="text-rose-600 dark:text-rose-400 mt-0.5">Ödemeler sonrası tahmini kasa açığı: <strong>-' + formatMoney(data.cash_gap_amount) + '</strong></p>' +
+                    '</div>' +
+                    '</div>';
+            }
             html += '<div><h4 class="text-[9px] font-black uppercase text-emerald-600 mb-1 flex justify-between"><span>Gelirler</span><span>' + formatMoney(data.income_total) + '</span></h4><ul class="text-[11px]">' + renderTxList(data.income, 'text-emerald-600') + '</ul></div>';
             html += '<div><h4 class="text-[9px] font-black uppercase text-rose-600 mb-1 flex justify-between"><span>Giderler</span><span>' + formatMoney(data.expense_total) + '</span></h4><ul class="text-[11px]">' + renderTxList(data.expense, 'text-rose-600') + '</ul></div>';
             if (data.investment && data.investment.length) {
@@ -177,9 +186,11 @@
             const hasExpense = data && data.expense && data.expense.length > 0;
             const hasInv = data && data.investment && data.investment.length > 0;
             const hasReminders = data && data.reminders && data.reminders.length > 0;
+            const hasCashGap = data && data.has_cash_gap;
             let cls = 'cal-day';
             if (isToday) cls += ' cal-day--today';
             if (data && (hasIncome || hasExpense || hasInv || hasReminders)) cls += ' cal-day--has-data';
+            if (hasCashGap) cls += ' cal-day--cash-gap';
 
             let badges = '';
             if (hasIncome) badges += '<span class="cal-dot cal-dot--income" title="Gelir"></span>';
@@ -556,5 +567,41 @@
             });
         }
         if (window.ECuzdanHaptics) window.ECuzdanHaptics.light();
+    };
+
+    window.showCalendarSubscribeModal = function () {
+        const m = document.getElementById('calendarSubscribeModal');
+        if (m) m.classList.remove('hidden');
+        if (window.ECuzdanHaptics) window.ECuzdanHaptics.light();
+    };
+
+    window.hideCalendarSubscribeModal = function () {
+        const m = document.getElementById('calendarSubscribeModal');
+        if (m) m.classList.add('hidden');
+    };
+
+    window.copyCalendarSubscribeUrl = function () {
+        const inp = document.getElementById('calFeedUrlInput');
+        if (!inp) return;
+        const val = inp.value;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(val).then(function () {
+                if (typeof showToast === 'function') {
+                    showToast('Takvim bağlantısı panoya kopyalandı!', 'success');
+                } else {
+                    alert('Takvim bağlantısı kopyalandı.');
+                }
+                if (window.ECuzdanHaptics) window.ECuzdanHaptics.success();
+            }).catch(function () {
+                inp.select();
+                document.execCommand('copy');
+            });
+        } else {
+            inp.select();
+            document.execCommand('copy');
+            if (typeof showToast === 'function') {
+                showToast('Takvim bağlantısı panoya kopyalandı!', 'success');
+            }
+        }
     };
 })();

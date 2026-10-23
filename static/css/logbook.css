@@ -1238,4 +1238,43 @@ html.privacy .iban-easy-pill span:hover {
     color: white;
 }
 
+/* Quick Tax & Insurance Template Chips */
+.btn-template-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    border-radius: 0.75rem;
+    background-color: var(--color-slate-100, #f1f5f9);
+    color: var(--color-slate-700, #334155);
+    border: 1px solid var(--color-slate-200, #e2e8f0);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.btn-template-chip:hover {
+    background-color: var(--color-indigo-100, #e0e7ff);
+    color: var(--color-indigo-700, #4338ca);
+    border-color: var(--color-indigo-200, #c7d2fe);
+    transform: translateY(-1px);
+}
+
+.dark .btn-template-chip,
+[data-theme="dark"] .btn-template-chip {
+    background-color: #1e293b;
+    color: #cbd5e1;
+    border-color: #334155;
+}
+
+.dark .btn-template-chip:hover,
+[data-theme="dark"] .btn-template-chip:hover {
+    background-color: #312e81;
+    color: #e0e7ff;
+    border-color: #4338ca;
+}
+
+
 

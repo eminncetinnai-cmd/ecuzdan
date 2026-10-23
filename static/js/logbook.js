@@ -873,6 +873,110 @@ function onReminderFrequencyChange(freq) {
     }
 }
 
+const REMINDER_TEMPLATES = {
+    'mtv1': {
+        title: 'MTV (Motorlu Taşıtlar Vergisi) 1. Taksit',
+        category: 'Sigorta / Vergi',
+        frequency: 'Yıllık',
+        due_month: 1,
+        due_day: 31,
+        note: '1. Taksit son ödeme günü (Gelir İdaresi Başkanlığı)'
+    },
+    'mtv2': {
+        title: 'MTV (Motorlu Taşıtlar Vergisi) 2. Taksit',
+        category: 'Sigorta / Vergi',
+        frequency: 'Yıllık',
+        due_month: 7,
+        due_day: 31,
+        note: '2. Taksit son ödeme günü (Gelir İdaresi Başkanlığı)'
+    },
+    'emlak1': {
+        title: 'Emlak Vergisi 1. Taksit',
+        category: 'Sigorta / Vergi',
+        frequency: 'Yıllık',
+        due_month: 5,
+        due_day: 31,
+        note: 'Belediye emlak vergisi 1. taksit son ödeme günü'
+    },
+    'emlak2': {
+        title: 'Emlak Vergisi 2. Taksit',
+        category: 'Sigorta / Vergi',
+        frequency: 'Yıllık',
+        due_month: 11,
+        due_day: 30,
+        note: 'Belediye emlak vergisi 2. taksit son ödeme günü'
+    },
+    'trafik': {
+        title: 'Zorunlu Trafik Sigortası Yenileme',
+        category: 'Sigorta / Vergi',
+        frequency: 'Yıllık',
+        due_month: new Date().getMonth() + 1,
+        due_day: 15,
+        note: 'Araç zorunlu trafik sigortası poliçe yenileme'
+    },
+    'kasko': {
+        title: 'Kasko Poliçesi Yenileme',
+        category: 'Sigorta / Vergi',
+        frequency: 'Yıllık',
+        due_month: new Date().getMonth() + 1,
+        due_day: 15,
+        note: 'Araç kasko poliçesi bitiş ve yenileme tarihi'
+    },
+    'dask': {
+        title: 'DASK Zorunlu Deprem Sigortası',
+        category: 'Sigorta / Vergi',
+        frequency: 'Yıllık',
+        due_month: new Date().getMonth() + 1,
+        due_day: 15,
+        note: 'Konut DASK deprem sigortası poliçe yenileme tarihi'
+    },
+    'kira_beyan': {
+        title: 'Gelir Vergisi / Kira Beyannamesi',
+        category: 'Sigorta / Vergi',
+        frequency: 'Yıllık',
+        due_month: 3,
+        due_day: 31,
+        note: 'Yıllık gelir vergisi beyannamesi ve 1. taksit son günü'
+    }
+};
+
+function applyReminderTemplate(key) {
+    const tpl = REMINDER_TEMPLATES[key];
+    if (!tpl) return;
+
+    const titleInput = document.getElementById('reminderTitle');
+    if (titleInput) titleInput.value = tpl.title;
+
+    const catSelect = document.getElementById('reminderCategory');
+    if (catSelect) catSelect.value = tpl.category;
+
+    const freqSelect = document.getElementById('reminderFrequency');
+    if (freqSelect) {
+        freqSelect.value = tpl.frequency;
+        onReminderFrequencyChange(tpl.frequency);
+    }
+
+    const monthSelect = document.getElementById('reminderMonth');
+    if (monthSelect && tpl.due_month) {
+        monthSelect.value = tpl.due_month;
+    }
+
+    const dayInput = document.getElementById('reminderDay');
+    if (dayInput && tpl.due_day) {
+        dayInput.value = tpl.due_day;
+    }
+
+    const noteInput = document.getElementById('reminderNote');
+    if (noteInput && !noteInput.value) {
+        noteInput.value = tpl.note;
+    }
+
+    if (window.ECuzdanHaptics) window.ECuzdanHaptics.light();
+    if (typeof showToast === 'function') {
+        showToast(`"${tpl.title}" şablonu uygulandı.`, 'info');
+    }
+}
+
 function showCreateReminderModal() {
     const modalTitle = document.getElementById('reminderModalTitle');
     if (modalTitle) modalTitle.textContent = 'Yeni Hatırlatıcı Ekle';

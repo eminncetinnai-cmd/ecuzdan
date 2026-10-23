@@ -506,6 +506,26 @@
                 <input type="hidden" id="reminderId" name="reminder_id">
                 <input type="hidden" name="csrf_token" value="{{ session.get('csrf_token', '') }}">
 
+                <!-- Hazır Vergi & Poliçe Şablonları -->
+                <div class="mb-4 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                            <span>⚡</span> <span>Hızlı Vergi &amp; Poliçe Şablonları</span>
+                        </span>
+                        <span class="text-[9px] text-slate-400">Tek tıkla doldurur</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">
+                        <button data-macro="button_secondary" type="button" class="btn-template-chip" onclick="applyReminderTemplate('mtv1')">🚗 MTV 1 (Ocak)</button>
+                        <button data-macro="button_secondary" type="button" class="btn-template-chip" onclick="applyReminderTemplate('mtv2')">🚗 MTV 2 (Temmuz)</button>
+                        <button data-macro="button_secondary" type="button" class="btn-template-chip" onclick="applyReminderTemplate('emlak1')">🏠 Emlak 1 (Mayıs)</button>
+                        <button data-macro="button_secondary" type="button" class="btn-template-chip" onclick="applyReminderTemplate('emlak2')">🏠 Emlak 2 (Kasım)</button>
+                        <button data-macro="button_secondary" type="button" class="btn-template-chip" onclick="applyReminderTemplate('trafik')">🛡️ Trafik Sigortası</button>
+                        <button data-macro="button_secondary" type="button" class="btn-template-chip" onclick="applyReminderTemplate('kasko')">🚘 Kasko</button>
+                        <button data-macro="button_secondary" type="button" class="btn-template-chip" onclick="applyReminderTemplate('dask')">🏢 DASK (Deprem)</button>
+                        <button data-macro="button_secondary" type="button" class="btn-template-chip" onclick="applyReminderTemplate('kira_beyan')">📋 Gelir Vergisi (Mart)</button>
+                    </div>
+                </div>
+
                 <div class="form-group mb-3">
                     <label class="form-label" for="reminderTitle">Hatırlatıcı / Özel Gün Başlığı *</label>
                     <input type="text" class="form-input" id="reminderTitle" name="title" placeholder="Örn: Eşimin Doğum Günü, Ev Kirası, MTV 1. Taksit" required>

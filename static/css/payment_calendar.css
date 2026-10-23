@@ -157,6 +157,29 @@
     border-color: rgba(99, 102, 241, 0.45);
 }
 
+/* Cash Gap Risk Styling */
+.cal-day--cash-gap {
+    border-color: #f43f5e !important;
+    background: linear-gradient(145deg, rgba(244, 63, 94, 0.08), rgba(255, 255, 255, 0.8)) !important;
+    position: relative;
+}
+
+.cal-day--cash-gap::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background-color: #f43f5e;
+}
+
+[data-theme="dark"] .cal-day--cash-gap {
+    border-color: rgba(244, 63, 94, 0.65) !important;
+    background: linear-gradient(145deg, rgba(244, 63, 94, 0.22), rgba(15, 23, 42, 0.85)) !important;
+}
+
 /* Dark Mode Overrides */
 [data-theme="dark"] .cal-day {
     border-color: rgba(51, 65, 85, 0.6);

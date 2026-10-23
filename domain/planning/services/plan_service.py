@@ -405,6 +405,39 @@ class PlanService:
         except Exception as e:
             logger.warning(f"Could not load reminders for calendar: {e}")
 
+        # Forward cash projection and cash gap detection
+        try:
+            import calendar as cal_mod
+            from engines.financial_engine import get_live_data
+            live_data = get_live_data()
+            kasa_now = float(live_data.get('kasa', 0))
+
+            now_dt = datetime.now()
+            max_days = cal_mod.monthrange(year, month)[1]
+            month_str = f"{month:02d}"
+
+            is_current_month = (year == now_dt.year and month == now_dt.month)
+            is_future_month = (year > now_dt.year) or (year == now_dt.year and month > now_dt.month)
+
+            if is_current_month or is_future_month:
+                start_day = now_dt.day if is_current_month else 1
+                running_balance = kasa_now
+
+                for d_num in range(start_day, max_days + 1):
+                    d_iso = f"{year}-{month_str}-{d_num:02d}"
+                    d_data = days.get(d_iso)
+                    if d_data:
+                        day_net = d_data.get('net', 0)
+                        running_balance += day_net
+                        d_data['projected_cash'] = round(running_balance, 2)
+
+                        outflows = d_data.get('expense_total', 0) + d_data.get('investment_total', 0)
+                        if running_balance < 0 and outflows > 0:
+                            d_data['has_cash_gap'] = True
+                            d_data['cash_gap_amount'] = round(abs(running_balance), 2)
+        except Exception as e:
+            logger.warning(f"Could not calculate cash gap projections: {e}")
+
         result = {
             'year': year,
             'month': month,

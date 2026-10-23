@@ -3,7 +3,18 @@
 import logging
 from datetime import datetime
 
-from flask import flash, g, jsonify, redirect, render_template, request, url_for
+from flask import (
+    Response,
+    current_app,
+    flash,
+    g,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
 
 from domain.planning.models import PlanFilters, PlanFlow, PlanLifecycle, PlanStatus
 from domain.tenant.accessor import get_tenant as get_tenant_id
@@ -200,10 +211,25 @@ def register_plan_routes(bp):
     @bp.route('/payment_calendar')
     @login_required
     def payment_calendar():
-
         try:
             tenant_id = get_tenant_id()
-            return render_template('payment_calendar.html', **planning_app.payment_calendar_context(tenant_id=tenant_id))
+            user = getattr(g, 'current_user', None)
+            user_id = user.id if user else session.get('user_id', 1)
+            ctx = planning_app.payment_calendar_context(tenant_id=tenant_id)
+
+            from domain.planning.services.calendar_feed_service import generate_calendar_token
+            secret_key = current_app.config.get('SECRET_KEY', 'default-secret-key')
+            cal_token = generate_calendar_token(user_id, tenant_id, secret_key)
+            base_url = request.url_root.rstrip('/')
+            ctx['calendar_feed_url'] = f"{base_url}/calendar/feed.ics?token={cal_token}"
+            if base_url.startswith('https://'):
+                ctx['calendar_webcal_url'] = f"webcal://{base_url[8:]}/calendar/feed.ics?token={cal_token}"
+            elif base_url.startswith('http://'):
+                ctx['calendar_webcal_url'] = f"webcal://{base_url[7:]}/calendar/feed.ics?token={cal_token}"
+            else:
+                ctx['calendar_webcal_url'] = ctx['calendar_feed_url']
+            ctx['calendar_token'] = cal_token
+            return render_template('payment_calendar.html', **ctx)
         except Exception as e:
             logger.exception(f"Payment calendar error: {e}")
             flash(i18n.gettext("ui_auto_32d6da6a1dd7"), 'error')
@@ -216,7 +242,125 @@ def register_plan_routes(bp):
                 upcoming_reminders=[],
                 cal_year=now.year,
                 cal_month=now.month,
+                calendar_feed_url="",
+                calendar_webcal_url="",
+                calendar_token="",
             )
+
+    @bp.route('/calendar/feed.ics')
+    def calendar_feed():
+        """Serves live RFC 5545 iCalendar subscription feed for Apple Calendar, Google Calendar, and Outlook."""
+        token = request.args.get('token', '').strip()
+        secret_key = current_app.config.get('SECRET_KEY', 'default-secret-key')
+
+        from domain.planning.services.calendar_feed_service import (
+            CalendarFeedService,
+            verify_calendar_token,
+        )
+        from models import User
+
+        verified = verify_calendar_token(token, secret_key, lambda uid: User.query.get(uid))
+        if not verified:
+            return Response("Unauthorized: Gecersiz takvim tokeni", status=401, mimetype="text/plain")
+
+        user_id, tenant_id = verified
+        events = []
+        try:
+            now = datetime.now()
+            from models import UserReminder
+
+            rem_q = UserReminder.query.filter_by(tenant_id=tenant_id, is_completed=False)
+            for r in rem_q.all():
+                if r.frequency == 'Aylık':
+                    due_day = r.due_day or 1
+                    for offset in range(12):
+                        m = ((now.month - 1 + offset) % 12) + 1
+                        y = now.year + ((now.month - 1 + offset) // 12)
+                        import calendar as cal_mod
+
+                        max_d = cal_mod.monthrange(y, m)[1]
+                        target_d = min(due_day, max_d)
+                        date_str = f"{y:04d}-{m:02d}-{target_d:02d}"
+                        amt_info = f" ({r.amount:.2f} TL)" if r.amount is not None else ""
+                        events.append({
+                            'uid': f"rem-{r.id}-{y}{m:02d}@e-cuzdan",
+                            'summary': f"{r.category_emoji or '🔔'} {r.title}{amt_info}",
+                            'description': f"Kategori: {r.category}\nSıklık: Aylık\nNot: {r.note or ''}",
+                            'date': date_str,
+                            'category': r.category,
+                        })
+                elif r.frequency == 'Yıllık':
+                    due_m = r.due_month or now.month
+                    due_d = r.due_day or 1
+                    for y in [now.year, now.year + 1]:
+                        import calendar as cal_mod
+
+                        max_d = cal_mod.monthrange(y, due_m)[1]
+                        target_d = min(due_d, max_d)
+                        date_str = f"{y:04d}-{due_m:02d}-{target_d:02d}"
+                        amt_info = f" ({r.amount:.2f} TL)" if r.amount is not None else ""
+                        events.append({
+                            'uid': f"rem-{r.id}-{y}@e-cuzdan",
+                            'summary': f"{r.category_emoji or '🔔'} {r.title}{amt_info}",
+                            'description': f"Kategori: {r.category}\nSıklık: Yıllık\nNot: {r.note or ''}",
+                            'date': date_str,
+                            'category': r.category,
+                        })
+                elif r.frequency == 'Tek Seferlik' and r.due_date:
+                    amt_info = f" ({r.amount:.2f} TL)" if r.amount is not None else ""
+                    events.append({
+                        'uid': f"rem-{r.id}@e-cuzdan",
+                        'summary': f"{r.category_emoji or '🔔'} {r.title}{amt_info}",
+                        'description': f"Kategori: {r.category}\nNot: {r.note or ''}",
+                        'date': r.due_date,
+                        'category': r.category,
+                    })
+
+            from models import PlanOccurrence
+
+            occ_q = PlanOccurrence.query.filter_by(tenant_id=tenant_id, status='scheduled')
+            for occ in occ_q.all():
+                plan = occ.plan
+                plan_name = plan.name if plan else 'Düzenli Ödeme'
+                plan_cat = plan.category if plan else 'Plan'
+                amt_str = f"{occ.amount:.2f} TL" if occ.amount is not None else ""
+                summary_text = f"💳 {plan_name}" + (f" ({amt_str})" if amt_str else "")
+                events.append({
+                    'uid': f"occ-{occ.id}@e-cuzdan",
+                    'summary': summary_text,
+                    'description': f"Plan: {plan_name}\nKategori: {plan_cat}\nTutar: {amt_str}",
+                    'date': str(occ.scheduled_date),
+                    'category': plan_cat,
+                })
+
+            from models import Transaction
+
+            tx_q = Transaction.query.filter_by(tenant_id=tenant_id, is_deleted=False).filter(
+                Transaction.date >= now.strftime("%Y-%m-%d")
+            )
+            for t in tx_q.all():
+                if getattr(t, 'is_pending', False):
+                    prefix = '🟢' if t.type == 'Gelir' else ('🔵' if t.type == 'Yatırım' else '🔴')
+                    amt_str = f"{t.amount:.2f} TL" if t.amount is not None else ""
+                    events.append({
+                        'uid': f"tx-{t.id}@e-cuzdan",
+                        'summary': f"{prefix} {t.description or t.category} ({amt_str})",
+                        'description': f"Tür: {t.type}\nKategori: {t.category}\nNot: {t.note or ''}",
+                        'date': str(t.date),
+                        'category': t.category,
+                    })
+        except Exception as e:
+            logger.warning(f"Error compiling calendar feed events: {e}")
+
+        feed_content = CalendarFeedService.build_feed(events, cal_name="E-Cüzdan Takvimi")
+        return Response(
+            feed_content,
+            mimetype="text/calendar; charset=utf-8",
+            headers={
+                "Content-Disposition": 'inline; filename="e-cuzdan-calendar.ics"',
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+            },
+        )
 
     @bp.route('/payment_calendar/month_data')
     def payment_calendar_month_data():
