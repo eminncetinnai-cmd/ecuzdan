@@ -14,7 +14,7 @@ def test_logbook_index_with_iban_tab(authenticated_client):
         response = authenticated_client.get('/logbook/?tab=ibans')
         assert response.status_code == 200
         html = response.get_data(as_text=True)
-        assert "IBAN & Hesap Rehberi" in html
+        assert "IBAN &amp; Hesaplar" in html or "IBAN & Hesaplar" in html
         assert "Kayıtlı IBAN Numaralarım" in html
 
 

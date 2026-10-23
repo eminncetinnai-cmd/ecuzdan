@@ -19,7 +19,7 @@ def _fold_text(value):
 
 EXPECTED = {
     "tr": {
-        "logbook": "Finansal Seyir Defteri",
+        "logbook": "Cüzdan Defteri",
         "profile": "Yatırımcı Profili",
         "notifications": "Bildirimler",
         "settings": "Ayarlar",

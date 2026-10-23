@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% set skip_chart_vendor = true %}
 
-{% block title %}Finansal Seyir Defteri & IBAN Rehberi - E-Cüzdan{% endblock %}
+{% block title %}Cüzdan Defteri & Hatırlatıcılar - E-Cüzdan{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ static_asset_url('css/logbook.css') }}">
@@ -33,27 +33,27 @@
         <!-- Segmented Tab Navigation -->
         <div class="logbook-tabs-nav" role="tablist">
             <button data-macro="button_secondary" role="tab" id="tab-btn-notes" class="logbook-tab-btn {% if active_tab != 'ibans' and active_tab != 'reminders' %}active{% endif %}" onclick="switchLogbookTab('notes')" aria-selected="{% if active_tab != 'ibans' and active_tab != 'reminders' %}true{% else %}false{% endif %}">
-                <span>📝</span> <span>{{ _('logbook_title') }}</span>
+                <span>📝</span> <span>Finansal Notlar</span>
             </button>
             <button data-macro="button_secondary" role="tab" id="tab-btn-ibans" class="logbook-tab-btn {% if active_tab == 'ibans' %}active{% endif %}" onclick="switchLogbookTab('ibans')" aria-selected="{% if active_tab == 'ibans' %}true{% else %}false{% endif %}">
-                <span>💳</span> <span>IBAN & Hesap Rehberi</span>
+                <span>💳</span> <span>IBAN &amp; Hesaplar</span>
                 {% if ibans %}
-                <span class="ml-1 text-xs px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-bold">{{ ibans|length }}</span>
+                <span class="ml-1 text-xs px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold">{{ ibans|length }}</span>
                 {% endif %}
             </button>
             <button data-macro="button_secondary" role="tab" id="tab-btn-reminders" class="logbook-tab-btn {% if active_tab == 'reminders' %}active{% endif %}" onclick="switchLogbookTab('reminders')" aria-selected="{% if active_tab == 'reminders' %}true{% else %}false{% endif %}">
-                <span>🔔</span> <span>Hatırlatıcılar & Özel Günler</span>
+                <span>🚗</span> <span>Hatırlatıcılar &amp; Poliçeler</span>
                 {% if reminders %}
-                <span class="ml-1 text-xs px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-bold">{{ reminders|length }}</span>
+                <span class="ml-1 text-xs px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold">{{ reminders|length }}</span>
                 {% endif %}
             </button>
         </div>
 
         <div class="logbook-card-header">
             <h2 class="modal-title" id="logbookSectionTitle">
-                {% if active_tab == 'ibans' %}Kayıtlı IBAN Numaralarım{% elif active_tab == 'reminders' %}Hatırlatıcılar & Özel Günler{% else %}{{ _('logbook_title') }}{% endif %}
+                {% if active_tab == 'ibans' %}Kayıtlı IBAN Numaralarım{% elif active_tab == 'reminders' %}Hatırlatıcılar &amp; Poliçeler{% else %}Finansal Notlar &amp; Kararlar{% endif %}
             </h2>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 logbook-header-actions">
                 <button data-macro="button_secondary" type="button" id="btn-create-note" class="create-entry-btn {% if active_tab == 'ibans' or active_tab == 'reminders' %}hidden{% endif %}" onclick="showCreateModal()">
                     + {{ _('logbook_new_entry') }}
                 </button>

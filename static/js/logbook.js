@@ -341,7 +341,7 @@ function switchLogbookTab(tabName, updateUrl = true) {
         reminderView?.classList.remove('hidden');
         filterReminders?.classList.remove('hidden');
         btnCreateReminder?.classList.remove('hidden');
-        if (sectionTitle) sectionTitle.textContent = 'Hatırlatıcılar & Özel Günler';
+        if (sectionTitle) sectionTitle.textContent = 'Hatırlatıcılar & Poliçeler';
 
         if (updateUrl) {
             const url = new URL(window.location);
@@ -365,7 +365,7 @@ function switchLogbookTab(tabName, updateUrl = true) {
         timelineView?.classList.remove('hidden');
         filterNotes?.classList.remove('hidden');
         btnCreateNote?.classList.remove('hidden');
-        if (sectionTitle) sectionTitle.textContent = logbookT('logbook_title') || 'Finansal Seyir Defteri';
+        if (sectionTitle) sectionTitle.textContent = 'Finansal Notlar & Kararlar';
 
         if (updateUrl) {
             const url = new URL(window.location);

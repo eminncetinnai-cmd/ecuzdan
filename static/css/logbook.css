@@ -4,9 +4,11 @@
    ========================================================================== */
 
 .logbook-container {
-    padding: 2rem;
-    max-width: 900px;
+    padding: 1.5rem 1rem;
+    max-width: 960px;
     margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .logbook-header {
@@ -346,9 +348,17 @@
 .logbook-tabs-nav {
     display: flex;
     gap: 0.5rem;
-    padding: 0.75rem 1.5rem 0 1.5rem;
+    padding: 0.75rem 1.25rem 0 1.25rem;
     border-bottom: 1px solid var(--color-slate-200, #e2e8f0);
     background: var(--color-slate-50, #f8fafc);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    scrollbar-width: none;
+}
+
+.logbook-tabs-nav::-webkit-scrollbar {
+    display: none;
 }
 
 .logbook-tab-btn {
@@ -380,9 +390,9 @@
 
 .iban-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-    gap: 1.25rem;
-    padding: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+    padding: 1.25rem;
 }
 
 .iban-card {
@@ -1011,9 +1021,9 @@ html.privacy .iban-easy-pill span:hover {
 
 .reminder-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-    gap: 1.25rem;
-    padding: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+    padding: 1.25rem;
 }
 
 .reminder-card {
@@ -1337,3 +1347,248 @@ html.privacy .iban-easy-pill span:hover {
 
 
 
+
+
+/* ==========================================================================
+   Mobile Excellence & Responsive Styles
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .logbook-container {
+        padding: 0.75rem 0.5rem;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .logbook-header {
+        margin-bottom: 1rem;
+        padding: 0 0.25rem;
+    }
+
+    .logbook-title {
+        font-size: 1.35rem;
+        letter-spacing: -0.02em;
+    }
+
+    .logbook-subtitle {
+        font-size: 0.8rem;
+        line-height: 1.4;
+    }
+
+    .logbook-card {
+        border-radius: 14px;
+    }
+
+    /* Horizontal scrollable clean tabs */
+    .logbook-tabs-nav {
+        padding: 0.5rem 0.5rem 0 0.5rem;
+        display: flex;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+        scrollbar-width: none;
+        gap: 0.25rem;
+    }
+
+    .logbook-tabs-nav::-webkit-scrollbar {
+        display: none;
+    }
+
+    .logbook-tab-btn {
+        padding: 0.5rem 0.7rem;
+        font-size: 0.78rem;
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    /* Responsive card header and action buttons */
+    .logbook-card-header {
+        padding: 0.85rem;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.65rem;
+    }
+
+    .logbook-card-header h2.modal-title {
+        font-size: 1rem;
+    }
+
+    .logbook-header-actions {
+        width: 100%;
+    }
+
+    .logbook-header-actions .create-entry-btn {
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 0.65rem 1rem;
+        font-size: 0.82rem;
+        border-radius: 10px;
+    }
+
+    /* Filters responsive layout */
+    .filter-panel {
+        padding: 0.75rem 0.85rem;
+    }
+
+    .filter-row {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .filter-group label {
+        font-size: 0.7rem;
+        margin-bottom: 0.2rem;
+    }
+
+    .filter-select {
+        padding: 0.45rem 0.65rem;
+        font-size: 0.82rem;
+        border-radius: 8px;
+    }
+
+    /* Single-column card flow on mobile */
+    .iban-grid,
+    .reminder-grid,
+    .timeline {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 0.75rem 0.6rem;
+    }
+
+    .iban-card,
+    .reminder-card,
+    .timeline-content {
+        padding: 0.85rem;
+        border-radius: 12px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .iban-title,
+    .reminder-title,
+    .timeline-entry-title {
+        font-size: 0.95rem;
+        line-height: 1.3;
+        word-break: break-word;
+    }
+
+    /* IBAN touch box mobile-friendly */
+    .iban-touch-box {
+        padding: 0.55rem 0.65rem;
+        gap: 0.35rem;
+        margin-bottom: 0.5rem;
+        border-radius: 8px;
+    }
+
+    .iban-text {
+        font-size: 0.75rem;
+        letter-spacing: -0.01em;
+        line-height: 1.35;
+        word-break: break-all;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .iban-touch-badge {
+        font-size: 0.65rem;
+        padding: 0.2rem 0.45rem;
+        flex-shrink: 0;
+    }
+
+    /* Card footers - 2-column touch buttons */
+    .iban-card-footer,
+    .reminder-card-footer {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.4rem;
+        padding-top: 0.6rem;
+        margin-top: 0.4rem;
+    }
+
+    .iban-footer-btn,
+    .reminder-footer-btn {
+        width: 100%;
+        padding: 0.5rem 0.35rem;
+        font-size: 0.72rem;
+        min-width: 0;
+        justify-content: center;
+        text-align: center;
+        border-radius: 8px;
+    }
+
+    /* Modals bottom-sheet feel */
+    .modal-overlay {
+        padding: 0.5rem;
+        align-items: flex-end;
+    }
+
+    .modal-content {
+        width: 100%;
+        max-width: 100%;
+        border-radius: 20px 20px 0 0;
+        max-height: 92vh;
+    }
+
+    .modal-header {
+        padding: 0.85rem 1rem;
+    }
+
+    .modal-body {
+        padding: 0.85rem 1rem;
+        max-height: calc(90vh - 125px);
+    }
+
+    .modal-footer {
+        padding: 0.85rem 1rem;
+        display: flex;
+        flex-direction: column-reverse;
+        gap: 0.5rem;
+    }
+
+    .modal-footer .modal-btn,
+    .modal-footer .btn {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+    }
+
+    .modal-footer > div {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .modal-footer > div > button {
+        width: 100%;
+    }
+
+    .btn-template-chip {
+        font-size: 0.6875rem;
+        padding: 0.3rem 0.55rem;
+        min-height: 28px;
+    }
+}
+
+@media (max-width: 480px) {
+    .logbook-container {
+        padding: 0.5rem 0.35rem;
+    }
+
+    .iban-grid,
+    .reminder-grid,
+    .timeline {
+        padding: 0.5rem 0.35rem;
+    }
+
+    .iban-card-footer,
+    .reminder-card-footer {
+        grid-template-columns: 1fr;
+    }
+}

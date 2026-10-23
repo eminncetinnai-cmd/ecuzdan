@@ -43,6 +43,7 @@ CORE_ROUTES = [
     ('/settings', 'Sistem Ayarları'),
     ('/profile', 'Profil'),
     ('/categories', 'Katalog & Kategoriler'),
+    ('/logbook', 'Cüzdan Defteri'),
 ]
 
 # Standard mobile device viewports
