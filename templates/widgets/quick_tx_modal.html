@@ -53,8 +53,20 @@
                 </div>
 
                 <div>
-                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">{{ _('tx_description_label') }}</label>
-                    <input type="text" name="description" placeholder="{{ _('tx_description_placeholder') }}" class="edit-modal-input" required>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-[9px] font-bold text-slate-400 uppercase">{{ _('tx_description_label') }}</label>
+                        <div class="flex items-center gap-2.5">
+                            <button data-macro="button_secondary" type="button" onclick="pasteAndParseBankSMS()" class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer" title="Kopyalanan banka SMS'ini ayrıştır">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                                <span>SMS Yapıştır</span>
+                            </button>
+                            <button data-macro="button_secondary" type="button" id="btnVoiceTxMic" onclick="toggleVoiceTxInput()" class="text-[10px] font-bold text-rose-600 dark:text-rose-400 hover:underline flex items-center gap-1 cursor-pointer" title="Sesle söyleyerek harcama girin">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+                                <span id="voiceMicLabel">Sesle Söyle</span>
+                            </button>
+                        </div>
+                    </div>
+                    <input type="text" name="description" id="globalQuickTxDesc" placeholder="{{ _('tx_description_placeholder') }}" class="edit-modal-input" required>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">

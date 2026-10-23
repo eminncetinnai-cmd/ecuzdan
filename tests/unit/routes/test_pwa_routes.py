@@ -89,6 +89,9 @@ def test_pwa_icon_files_exist_on_disk():
         'js/biometrics.js',
         'js/web-push-manager.js',
         'js/offline-outbox.js',
+        'js/shake-privacy.js',
+        'js/swipe-actions.js',
+        'js/smart-quick-input.js',
     ]
     for filename in expected_files:
         filepath = os.path.join(static_dir, filename)
