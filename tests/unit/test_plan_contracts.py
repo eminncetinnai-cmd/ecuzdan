@@ -269,3 +269,32 @@ def test_plan_is_completed_false_for_indefinite_plans():
     assert indefinite_plan.months_remaining is None
     assert indefinite_plan.payment_countdown is not None
 
+
+@pytest.mark.unit
+def test_plan_progress_pct_and_estimated_end_date():
+    """Verify progress_pct returns correct percentage and estimated_end_date_display formats month & year."""
+    plan = CanonicalPlan.from_model(
+        make_plan(
+            id=30,
+            amount=Decimal('2000'),
+            installments=10,
+            paid_count=4,
+            status='Aktif',
+            end_date='2027-05-15',
+        )
+    )
+    assert plan.progress_pct == 40
+    assert plan.estimated_end_date_display == 'Mayıs 2027'
+
+    completed = CanonicalPlan.from_model(
+        make_plan(
+            id=31,
+            amount=Decimal('2000'),
+            installments=10,
+            paid_count=10,
+            status='Aktif',
+        )
+    )
+    assert completed.progress_pct == 100
+    assert completed.is_completed is True
+

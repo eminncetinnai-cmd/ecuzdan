@@ -700,6 +700,8 @@ class UserReminder(db.Model):
             'Ödeme': '💳',
             'Fatura': '📄',
             'Sigorta / Vergi': '🛡️',
+            'Araç & Bakım': '🚗',
+            'Taşıt': '🚗',
             'Genel': '🔔',
         }
         return emojis.get(self.category, '🔔')

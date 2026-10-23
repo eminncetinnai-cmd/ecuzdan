@@ -131,6 +131,7 @@
                         <option value="Doğum Günü" {% if reminder_category == 'Doğum Günü' %}selected{% endif %}>🎂 Doğum Günü / Özel Gün</option>
                         <option value="Fatura" {% if reminder_category == 'Fatura' %}selected{% endif %}>📄 Fatura</option>
                         <option value="Sigorta / Vergi" {% if reminder_category == 'Sigorta / Vergi' %}selected{% endif %}>🛡️ Sigorta / Vergi</option>
+                        <option value="Araç & Bakım" {% if reminder_category == 'Araç & Bakım' %}selected{% endif %}>🚗 Araç & Bakım</option>
                         <option value="Genel" {% if reminder_category == 'Genel' %}selected{% endif %}>🔔 Genel</option>
                     </select>
                 </div>
@@ -536,6 +537,11 @@
                         <button data-macro="button_secondary" type="button" class="btn-template-chip" onclick="applyReminderTemplate('kasko')">🚘 Kasko</button>
                         <button data-macro="button_secondary" type="button" class="btn-template-chip" onclick="applyReminderTemplate('dask')">🏢 DASK (Deprem)</button>
                         <button data-macro="button_secondary" type="button" class="btn-template-chip" onclick="applyReminderTemplate('kira_beyan')">📋 Gelir Vergisi (Mart)</button>
+                        <button data-macro="button_secondary" type="button" class="btn-template-chip" onclick="applyReminderTemplate('arac_bakim')">🚗 Periyodik Bakım</button>
+                        <button data-macro="button_secondary" type="button" class="btn-template-chip" onclick="applyReminderTemplate('tuvturk')">🔍 TÜVTÜRK Muayene</button>
+                        <button data-macro="button_secondary" type="button" class="btn-template-chip" onclick="applyReminderTemplate('lastik_kis')">❄️ Kışlık Lastik (Kasım)</button>
+                        <button data-macro="button_secondary" type="button" class="btn-template-chip" onclick="applyReminderTemplate('lastik_yaz')">☀️ Yazlık Lastik (Nisan)</button>
+                        <button data-macro="button_secondary" type="button" class="btn-template-chip" onclick="applyReminderTemplate('egzoz')">💨 Egzoz Emisyon</button>
                     </div>
                 </div>
 
@@ -552,6 +558,7 @@
                             <option value="Doğum Günü">🎂 Doğum Günü / Özel Gün</option>
                             <option value="Fatura">📄 Fatura</option>
                             <option value="Sigorta / Vergi">🛡️ Sigorta / Vergi</option>
+                            <option value="Araç & Bakım">🚗 Araç & Bakım</option>
                             <option value="Genel" selected>🔔 Genel</option>
                         </select>
                     </div>

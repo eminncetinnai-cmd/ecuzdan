@@ -118,8 +118,72 @@ class DashboardService:
         global_expense_cats = [c.name for c in all_cats if c.type == 'Gider']
         global_investment_cats = [c.name for c in all_cats if c.type == 'Yatırım']
 
+        # --- Borçsuzluk Günü & Taksit Takibi ---
+        debt_freedom = {'has_debt': False}
+        try:
+            if hasattr(self.financial_repository, 'list_recurring_plans'):
+                from domain.planning.models.plan_contracts import CanonicalPlan, PlanFlow, PlanStatus
+                model_plans = self.financial_repository.list_recurring_plans(tenant_id=tenant_id)
+                canonical_plans = [CanonicalPlan.from_model(p) for p in model_plans]
+                debt_plans = [
+                    p for p in canonical_plans
+                    if p.status is PlanStatus.ACTIVE
+                    and not p.is_completed
+                    and p.flow is PlanFlow.EXPENSE
+                    and (
+                        (p.occurrence_limit is not None and p.occurrence_limit > 0)
+                        or p.legacy_plan_type in ('Taksit', 'Kredi')
+                        or p.end_date is not None
+                    )
+                    and (p.months_remaining is not None and p.months_remaining > 0)
+                ]
+                if debt_plans:
+                    total_remaining_debt = sum(
+                        (p.remaining_total_amount or Decimal(0))
+                        for p in debt_plans
+                    )
+                    total_monthly_commitment = sum(
+                        (p.amount or Decimal(0))
+                        for p in debt_plans
+                    )
+                    debt_plans_by_nearest = sorted(debt_plans, key=lambda p: (p.months_remaining or 9999))
+                    nearest = debt_plans_by_nearest[0]
+                    max_months = max((p.months_remaining or 0) for p in debt_plans)
+                    m = now.month + max_months
+                    y = now.year + (m - 1) // 12
+                    m = (m - 1) % 12 + 1
+                    months_tr = [
+                        '', 'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+                        'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
+                    ]
+                    final_freedom_date_str = f"{months_tr[m]} {y}"
+                    debt_freedom = {
+                        'has_debt': True,
+                        'debt_plan_count': len(debt_plans),
+                        'total_remaining_debt': total_remaining_debt,
+                        'total_monthly_commitment': total_monthly_commitment,
+                        'final_freedom_months': max_months,
+                        'final_freedom_date_str': final_freedom_date_str,
+                        'nearest_name': nearest.name,
+                        'nearest_months': nearest.months_remaining,
+                        'nearest_amount': nearest.amount,
+                        'nearest_end_date': nearest.estimated_end_date_display,
+                    }
+        except Exception:
+            pass
+
         # --- FAZ 5: Smart Feed & Actionable Insights ---
         smart_insights = []
+
+        if debt_freedom.get('has_debt'):
+            smart_insights.append({
+                'type': 'success',
+                'title': f'🎯 Borçsuzluk Yolculuğu: {debt_freedom["final_freedom_months"]} Ay Kaldı',
+                'description': f'Tüm taksitleriniz {debt_freedom["final_freedom_date_str"]} tarihinde sıfırlanıyor! İlk rahatlama: {debt_freedom["nearest_name"]} ({debt_freedom["nearest_months"]} ay sonra, bütçenize +{debt_freedom["nearest_amount"]:,.2f} TL/ay kalacak).',
+                'action_label': 'Planları İncele',
+                'action_url': '/plans',
+                'icon': 'award',
+            })
 
         # 1. Yaklaşan Ödemeler (Önümüzdeki 7 gün içindeki bekleyen giderler)
         in_7_days = (now + timedelta(days=7)).strftime("%Y-%m-%d")
@@ -259,5 +323,6 @@ class DashboardService:
             ],
             'net_monthly_delta': net_monthly_delta,
             'smart_insights': smart_insights[:4],
+            'debt_freedom': debt_freedom,
         }
 

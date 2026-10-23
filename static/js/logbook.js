@@ -952,6 +952,42 @@ const REMINDER_TEMPLATES = {
         due_month: 3,
         due_day: 31,
         note: 'Yıllık gelir vergisi beyannamesi ve 1. taksit son günü'
+    },
+    'arac_bakim': {
+        title: 'Periyodik Araç Bakımı (10.000 KM)',
+        category: 'Araç & Bakım',
+        frequency: 'Yıllık',
+        due_month: 5,
+        due_day: 15,
+        note: 'Motor yağı, filtreler, fren balataları kontrolü ve periyodik servis'
+    },
+    'tuvturk': {
+        title: 'TÜVTÜRK Araç Muayenesi',
+        category: 'Araç & Bakım',
+        frequency: 'Tek Seferlik',
+        note: 'Araç periyodik muayene ve randevu son günü'
+    },
+    'lastik_kis': {
+        title: 'Kışlık Lastik Değişimi',
+        category: 'Araç & Bakım',
+        frequency: 'Yıllık',
+        due_month: 11,
+        due_day: 15,
+        note: 'Zorunlu kış lastiği takılması (1 Aralık öncesi)'
+    },
+    'lastik_yaz': {
+        title: 'Yazlık Lastik Değişimi',
+        category: 'Araç & Bakım',
+        frequency: 'Yıllık',
+        due_month: 4,
+        due_day: 15,
+        note: 'Kışlık lastiklerin çıkarılıp yazlık lastiklerin takılması'
+    },
+    'egzoz': {
+        title: 'Egzoz Gazı Emisyon Ölçümü',
+        category: 'Araç & Bakım',
+        frequency: 'Tek Seferlik',
+        note: 'TÜVTÜRK öncesi egzoz emisyon pulu yenileme'
     }
 };
 
@@ -979,6 +1015,11 @@ function applyReminderTemplate(key) {
     const dayInput = document.getElementById('reminderDay');
     if (dayInput && tpl.due_day) {
         dayInput.value = tpl.due_day;
+    }
+
+    const dateInput = document.getElementById('reminderDate');
+    if (dateInput && tpl.due_date) {
+        dateInput.value = tpl.due_date;
     }
 
     const noteInput = document.getElementById('reminderNote');

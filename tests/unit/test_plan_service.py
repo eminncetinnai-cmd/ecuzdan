@@ -1022,6 +1022,61 @@ def test_occurrence_calculator_until_date_horizon():
     assert len(dates) >= 7
     assert date(2026, 7, 15) in dates
 
+@pytest.mark.unit
+def test_plan_service_calculate_debt_freedom():
+    from decimal import Decimal
+    from domain.planning.services.plan_service import PlanService
+
+    mock_fin = Mock()
+    p1 = SimpleNamespace(
+        id=1,
+        tenant_id="default",
+        name="Telefon Taksiti",
+        category="Teknoloji",
+        flow_type="Gider",
+        amount=Decimal("1500"),
+        plan_type="Taksit",
+        frequency="Aylık",
+        installments=6,
+        payment_day=15,
+        start_date="2026-08-01",
+        end_date=None,
+        status="Aktif",
+        note=None,
+        target_asset_id=None,
+        paid_count=2,
+    )
+    p2 = SimpleNamespace(
+        id=2,
+        tenant_id="default",
+        name="Kredi Kartı Yapılandırma",
+        category="Kredi",
+        flow_type="Gider",
+        amount=Decimal("3000"),
+        plan_type="Taksit",
+        frequency="Aylık",
+        installments=12,
+        payment_day=20,
+        start_date="2026-08-01",
+        end_date=None,
+        status="Aktif",
+        note=None,
+        target_asset_id=None,
+        paid_count=2,
+    )
+    mock_fin.list_recurring_plans.return_value = [p1, p2]
+
+    svc = PlanService(financial_repository=mock_fin)
+    summary = svc.calculate_debt_freedom("default")
+
+    assert summary["has_debt"] is True
+    assert summary["debt_plan_count"] == 2
+    assert summary["nearest_name"] == "Telefon Taksiti"
+    assert summary["nearest_months"] == 4
+    assert summary["final_freedom_months"] == 10
+    assert summary["total_remaining_debt"] == Decimal("4") * Decimal("1500") + Decimal("10") * Decimal("3000")
+
+
 
 
 

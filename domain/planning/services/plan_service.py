@@ -169,10 +169,22 @@ class PlanService:
             upcoming_occurrences = []
             upcoming_occurrence_count = 0
 
-        active_plans = [p for p in canonical_plans if p.status is PlanStatus.ACTIVE]
+        # Auto-complete finished plans in DB if still marked Aktif
+        try:
+            for p in canonical_plans:
+                if p.is_completed:
+                    model = getattr(self.financial_repository, 'get_recurring_plan_for_tenant', lambda *a, **k: None)(p.id, tenant_id)
+                    if model and getattr(model, 'status', None) == 'Aktif':
+                        model.status = 'Tamamlandı'
+                        if hasattr(self.financial_repository, 'commit'):
+                            self.financial_repository.commit()
+        except Exception as e:
+            logger.debug(f"Auto-completing plan status sync error: {e}")
+
+        active_plans = [p for p in canonical_plans if p.status is PlanStatus.ACTIVE and not p.is_completed]
         completed_plans = [
             p for p in canonical_plans
-            if p.status in (PlanStatus.COMPLETED, PlanStatus.CANCELLED, PlanStatus.PAUSED)
+            if p.status in (PlanStatus.COMPLETED, PlanStatus.CANCELLED, PlanStatus.PAUSED) or p.is_completed
         ]
         income_total = sum(plan.amount for plan in active_plans if plan.flow is PlanFlow.INCOME)
         expense_total = sum(plan.amount for plan in active_plans if plan.flow is PlanFlow.EXPENSE)
@@ -234,6 +246,7 @@ class PlanService:
             'upcoming_occurrence_count': upcoming_occurrence_count,
             'upcoming_occurrences': upcoming_occurrences,
             'upcoming_window_days': upcoming_window_days,
+            'debt_freedom': self.calculate_debt_freedom(tenant_id),
         }
 
 
@@ -499,7 +512,7 @@ class PlanService:
 
         self._handle_dca_payment(plan, dto.amount, payment_date, tenant_id)
 
-        return self.financial_repository.create_payment(
+        payment = self.financial_repository.create_payment(
             dto.plan_id,
             dto.amount,
             payment_date,
@@ -507,3 +520,87 @@ class PlanService:
             notes=dto.notes,
             tenant_id=tenant_id,
         )
+
+        if plan.installments > 0 and plan.plan_type not in ('Abonelik', 'DCA'):
+            if dto.installment_number >= plan.installments:
+                plan.status = 'Tamamlandı'
+                if hasattr(self.financial_repository, 'commit'):
+                    self.financial_repository.commit()
+
+        return payment
+
+    def calculate_debt_freedom(self, tenant_id=None):
+        """Hesaplar: Toplam kalan taksit borcu, en yakın bitecek taksit ve tüm borçların sıfırlanacağı tarih."""
+        from decimal import Decimal
+        from datetime import date
+        from domain.planning.models import PlanFlow, PlanStatus
+
+        try:
+            model_plans = self.financial_repository.list_recurring_plans(tenant_id=tenant_id)
+        except Exception:
+            model_plans = []
+
+        canonical_plans = [CanonicalPlan.from_model(p) for p in model_plans]
+
+        debt_plans = [
+            p for p in canonical_plans
+            if p.status is PlanStatus.ACTIVE
+            and not p.is_completed
+            and p.flow is PlanFlow.EXPENSE
+            and (
+                (p.occurrence_limit is not None and p.occurrence_limit > 0)
+                or p.legacy_plan_type in ('Taksit', 'Kredi')
+                or p.end_date is not None
+            )
+            and (p.months_remaining is not None and p.months_remaining > 0)
+        ]
+
+        if not debt_plans:
+            return {
+                'has_debt': False,
+                'debt_plan_count': 0,
+                'total_remaining_debt': Decimal('0'),
+                'total_monthly_commitment': Decimal('0'),
+                'final_freedom_months': 0,
+                'final_freedom_date_str': None,
+                'nearest_name': None,
+                'nearest_months': 0,
+                'nearest_amount': Decimal('0'),
+                'nearest_end_date': None,
+            }
+
+        total_remaining_debt = sum(
+            (p.remaining_total_amount or Decimal(0))
+            for p in debt_plans
+        )
+        total_monthly_commitment = sum(
+            (p.amount or Decimal(0))
+            for p in debt_plans
+        )
+
+        debt_plans_by_nearest = sorted(debt_plans, key=lambda p: (p.months_remaining or 9999))
+        nearest = debt_plans_by_nearest[0]
+
+        max_months = max((p.months_remaining or 0) for p in debt_plans)
+        today = date.today()
+        m = today.month + max_months
+        y = today.year + (m - 1) // 12
+        m = (m - 1) % 12 + 1
+        months_tr = [
+            '', 'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+            'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
+        ]
+        final_freedom_date_str = f"{months_tr[m]} {y}"
+
+        return {
+            'has_debt': True,
+            'debt_plan_count': len(debt_plans),
+            'total_remaining_debt': total_remaining_debt,
+            'total_monthly_commitment': total_monthly_commitment,
+            'final_freedom_months': max_months,
+            'final_freedom_date_str': final_freedom_date_str,
+            'nearest_name': nearest.name,
+            'nearest_months': nearest.months_remaining,
+            'nearest_amount': nearest.amount,
+            'nearest_end_date': nearest.estimated_end_date_display,
+        }

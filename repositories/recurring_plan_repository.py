@@ -458,6 +458,15 @@ class RecurringPlanRepository(BaseRepository, BaseRepositoryContract):
             import logging
             logging.getLogger(__name__).warning("PlanOccurrence payment sync warning: %s", exc)
 
+        try:
+            if plan.installments > 0 and plan.plan_type not in ('Abonelik', 'DCA'):
+                paid_count = Payment.query.filter_by(plan_id=plan_id, tenant_id=tenant_id).count()
+                if paid_count >= plan.installments:
+                    plan.status = 'Tamamlandı'
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).warning("Plan auto-completion check warning: %s", exc)
+
         self.commit()
         invalidate_financial_cache(tenant_id)
         return payment

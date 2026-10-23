@@ -143,3 +143,16 @@ def test_reminder_application_service_orchestration():
     assert result.id == 1
     assert result.document_url == "/static/uploads/reminders/kira.pdf"
     mock_repo.create_reminder.assert_called_once()
+
+
+@pytest.mark.unit
+def test_reminder_vehicle_maintenance_category_emoji():
+    """Verify vehicle maintenance categories return car emoji."""
+    reminder = UserReminder(
+        tenant_id="tenant_1",
+        title="TÜVTÜRK Araç Muayenesi",
+        category="Araç & Bakım",
+        frequency="Tek Seferlik",
+        due_date="2027-04-15",
+    )
+    assert reminder.category_emoji == '🚗'

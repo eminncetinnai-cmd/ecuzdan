@@ -146,7 +146,40 @@ class CanonicalPlan:
         if self.occurrence_limit is not None and self.occurrence_limit > 0:
             if self.paid_occurrences_count is not None and self.paid_occurrences_count >= self.occurrence_limit:
                 return True
+        if self.end_date is not None:
+            if date.today() >= self.end_date:
+                if self.occurrence_limit is None or (self.paid_occurrences_count is not None and self.paid_occurrences_count >= self.occurrence_limit):
+                    return True
         return False
+
+    @property
+    def progress_pct(self) -> int:
+        """Taksitli veya vadeli planlar için tamamlanma yüzdesi (0-100)."""
+        if self.is_completed:
+            return 100
+        if not self.occurrence_limit or self.occurrence_limit <= 0:
+            return 0
+        paid = self.paid_occurrences_count or 0
+        return min(100, max(0, int((paid / self.occurrence_limit) * 100)))
+
+    @property
+    def estimated_end_date_display(self) -> str | None:
+        """Tahmini veya kesin bitiş ayı/yılı."""
+        months_tr = [
+            '', 'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+            'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
+        ]
+        if self.end_date:
+            m_name = months_tr[self.end_date.month] if 1 <= self.end_date.month <= 12 else ''
+            return f"{m_name} {self.end_date.year}"
+        if self.months_remaining is not None and self.months_remaining > 0:
+            today = date.today()
+            m = today.month + self.months_remaining
+            y = today.year + (m - 1) // 12
+            m = (m - 1) % 12 + 1
+            m_name = months_tr[m] if 1 <= m <= 12 else ''
+            return f"{m_name} {y}"
+        return None
 
     @property
     def payment_countdown(self) -> dict[str, Any] | None:
@@ -254,6 +287,12 @@ class CanonicalPlan:
             payments = getattr(model, "payments", None)
             if isinstance(payments, (list, tuple)):
                 paid_count = len(payments)
+        if paid_count is None or paid_count == 0:
+            occurrences = getattr(model, "occurrences", None)
+            if occurrences and isinstance(occurrences, (list, tuple)):
+                occ_paid = len([o for o in occurrences if getattr(o, "status", None) == "paid"])
+                if occ_paid > (paid_count or 0):
+                    paid_count = occ_paid
 
         return cls(
             id=_as_int(getattr(model, "id", 0), 0),
