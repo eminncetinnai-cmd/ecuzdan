@@ -46,8 +46,8 @@
     }
 
     function fetchPolling() {
-        if (document.visibilityState === 'hidden') return;
-        fetch('/api/live-quotes', {
+        if (document.visibilityState === 'hidden') return Promise.resolve();
+        return fetch('/api/live-quotes', {
             headers: { 'Accept': 'application/json' },
             cache: 'no-store'
         })
@@ -124,6 +124,11 @@
             stopLiveStream();
         }
     });
+
+    // Expose programmatic refresh hook for pull-to-refresh
+    window.refreshLiveQuotes = function() {
+        return fetchPolling();
+    };
 
     // Start on DOM ready
     if (document.readyState === 'loading') {

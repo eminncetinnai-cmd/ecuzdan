@@ -1,10 +1,10 @@
 /**
- * E-Cüzdan Service Worker (Armor PWA v1)
+ * E-Cüzdan Service Worker (Armor PWA v2)
  * Provides instant app-shell startup, offline navigation fallback,
- * and intelligent caching for high-speed iOS & mobile experience.
+ * background push notifications, and high-speed asset caching.
  */
 
-const CACHE_NAME = 'ecuzdan-pwa-v1';
+const CACHE_NAME = 'ecuzdan-pwa-v2';
 const OFFLINE_URL = '/offline';
 
 const PRECACHE_ASSETS = [
@@ -15,6 +15,11 @@ const PRECACHE_ASSETS = [
     '/static/css/layout.css',
     '/static/css/design-tokens.css',
     '/static/js/layout-core.js',
+    '/static/js/layout-shell.js',
+    '/static/js/haptics.js',
+    '/static/js/pull-to-refresh.js',
+    '/static/js/biometrics.js',
+    '/static/js/web-push-manager.js',
     '/static/js/offline-outbox.js',
     '/static/img/logo-icon.svg',
     '/static/apple-touch-icon.png',
@@ -28,7 +33,7 @@ self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
             return cache.addAll(PRECACHE_ASSETS).catch((err) => {
-                console.warn('[SW] Precache partial error (ignored during first boot):', err);
+                console.warn('[SW] Precache partial error (ignored during boot):', err);
             });
         }).then(() => self.skipWaiting())
     );
@@ -104,10 +109,56 @@ self.addEventListener('fetch', (event) => {
                     return networkResponse;
                 }).catch(() => null);
 
-                // Stale-While-Revalidate: Return cached immediately if available, else wait for network
+                // Stale-While-Revalidate
                 return cachedResponse || fetchPromise;
             })
         );
         return;
     }
+});
+
+// 4. Push Event: Handle background push messages
+self.addEventListener('push', function (event) {
+    let payload = {
+        title: 'E-Cüzdan Finansal Kasa',
+        body: 'Yeni bir finansal bildiriminiz var.',
+        url: '/'
+    };
+
+    if (event.data) {
+        try {
+            payload = event.data.json();
+        } catch (e) {
+            payload.body = event.data.text();
+        }
+    }
+
+    const options = {
+        body: payload.body,
+        icon: '/static/apple-touch-icon.png',
+        badge: '/static/favicon-32x32.png',
+        vibrate: [100, 50, 100],
+        data: { url: payload.url || '/' }
+    };
+
+    event.waitUntil(self.registration.showNotification(payload.title, options));
+});
+
+// 5. Notification Click Event: Focus existing window or open target
+self.addEventListener('notificationclick', function (event) {
+    event.notification.close();
+    const targetUrl = (event.notification.data && event.notification.data.url) ? event.notification.data.url : '/';
+
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (clientList) {
+            for (let client of clientList) {
+                if (client.url.includes(targetUrl) && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            if (clients.openWindow) {
+                return clients.openWindow(targetUrl);
+            }
+        })
+    );
 });

@@ -307,6 +307,17 @@ function saveThemePreference(theme) {
     }).then(response => response.json());
 }
 
+function updateStatusBarTheme(isDark) {
+    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+    const appleStatusMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+    if (themeColorMeta) {
+        themeColorMeta.setAttribute('content', isDark ? 'rgb(15, 23, 42)' : 'rgb(248, 250, 252)');
+    }
+    if (appleStatusMeta) {
+        appleStatusMeta.setAttribute('content', isDark ? 'black-translucent' : 'default');
+    }
+}
+
 function setTheme(theme, options = {}) {
     const normalized = String(theme || "light").toLowerCase();
     if (!["light", "dark"].includes(normalized)) return Promise.reject(new Error("Unsupported theme"));
@@ -323,6 +334,7 @@ function setTheme(theme, options = {}) {
     html.setAttribute("data-user-theme", normalized);
     html.setAttribute("data-theme", normalized);
     updateThemeIcon(isDark);
+    updateStatusBarTheme(isDark);
     window.dispatchEvent(new CustomEvent("ecuzdan:theme-changed", {
         detail: { theme: normalized }
     }));
@@ -362,7 +374,9 @@ window.ECuzdanUI = window.ECuzdanUI || {};
 window.ECuzdanUI.setTheme = setTheme;
 // Initialize theme, collapsible sections, and sidebar rail mode
 document.addEventListener("DOMContentLoaded", function() {
-    updateThemeIcon(document.documentElement.classList.contains("dark"));
+    const initialDark = document.documentElement.classList.contains("dark");
+    updateThemeIcon(initialDark);
+    updateStatusBarTheme(initialDark);
 
     // Initialize collapsible sections with localStorage persistence
     initCollapsibleSections();

@@ -84,6 +84,11 @@ def test_pwa_icon_files_exist_on_disk():
         'favicon-32x32.png',
         'manifest.json',
         'sw.js',
+        'js/haptics.js',
+        'js/pull-to-refresh.js',
+        'js/biometrics.js',
+        'js/web-push-manager.js',
+        'js/offline-outbox.js',
     ]
     for filename in expected_files:
         filepath = os.path.join(static_dir, filename)

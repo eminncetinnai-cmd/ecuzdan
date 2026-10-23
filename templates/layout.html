@@ -617,6 +617,7 @@
     {% include 'widgets/calculator_modal.html' %}
     {% include 'widgets/confirm_modal.html' %}
     {% include 'widgets/command_palette_modal.html' %}
+    {% include 'widgets/biometric_lock_modal.html' %}
 
     <!-- Core Global Functions (no module dependency) -->
     <script src="{{ static_asset_url('js/layout-core.js') }}"></script>
@@ -626,6 +627,10 @@
 
 <script src="{{ static_asset_url('js/layout-shell.js') }}"></script>
 <script src="{{ static_asset_url('js/live-ticker.js') }}" defer></script>
+<script src="{{ static_asset_url('js/haptics.js') }}"></script>
+<script src="{{ static_asset_url('js/biometrics.js') }}"></script>
+<script src="{{ static_asset_url('js/web-push-manager.js') }}" defer></script>
+<script src="{{ static_asset_url('js/pull-to-refresh.js') }}" defer></script>
 <script src="{{ static_asset_url('js/offline-outbox.js') }}"></script>
 <script>
     if ('serviceWorker' in navigator) {

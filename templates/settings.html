@@ -360,6 +360,69 @@
                 </button>
             </form>
         </div>
+
+        <!-- Biyometrik Kilit (Face ID / Touch ID) -->
+        <div class="settings-section premium-card p-5 bg-white/80 dark:bg-slate-900/80 border-l-4 border-indigo-500 shadow-lg">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-3">
+                    <div class="bg-indigo-100 dark:bg-indigo-950 p-2 rounded-lg">
+                        <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 004 11m0 0a8 8 0 001.328 4.414"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight">Biyometrik Kilit (Face ID / Touch ID)</h3>
+                        <span id="biometricStatusBadge" class="text-xs font-bold text-slate-400">Kontrol ediliyor...</span>
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-xs text-slate-600 dark:text-slate-400 font-medium mb-4 leading-relaxed">
+                Uygulama arka plana geçtiğinde veya yeniden açıldığında hassas finansal portföy verilerinizi iPhone Face ID veya Touch ID donanımıyla kilitleyin.
+            </p>
+
+            <div class="flex flex-wrap gap-2">
+                <button data-macro="button_primary" id="btnEnableBiometrics" type="button" onclick="if(window.ECuzdanBiometrics) window.ECuzdanBiometrics.enable();" class="px-4 py-2 rounded-lg font-bold text-xs bg-indigo-600 hover:bg-indigo-700 text-white transition shadow cursor-pointer">
+                    Face ID ile Korumayı Aç
+                </button>
+                <button data-macro="button_secondary" id="btnDisableBiometrics" type="button" onclick="if(window.ECuzdanBiometrics) window.ECuzdanBiometrics.disable();" class="hidden px-4 py-2 rounded-lg font-bold text-xs bg-rose-100 hover:bg-rose-200 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 transition cursor-pointer">
+                    Kilidi Kapat
+                </button>
+                <button data-macro="button_secondary" type="button" onclick="if(window.ECuzdanBiometrics) window.ECuzdanBiometrics.lockNow();" class="px-3 py-2 rounded-lg font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 text-slate-700 transition cursor-pointer">
+                    Şimdi Kilitle & Test Et
+                </button>
+            </div>
+        </div>
+
+        <!-- Kilit Ekranı Bildirimleri (Apple Web Push / PWA) -->
+        <div class="settings-section premium-card p-5 bg-white/80 dark:bg-slate-900/80 border-l-4 border-sky-500 shadow-lg">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-3">
+                    <div class="bg-sky-100 dark:bg-sky-950 p-2 rounded-lg">
+                        <svg class="w-5 h-5 text-sky-600 dark:text-sky-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight">Kilit Ekranı Bildirimleri (iOS / PWA)</h3>
+                        <span id="pushPermissionBadge" class="text-xs font-bold text-slate-400">Kontrol ediliyor...</span>
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-xs text-slate-600 dark:text-slate-400 font-medium mb-4 leading-relaxed">
+                Yaklaşan fatura ödemeleri, bütçe aşım alarmları ve kritik piyasa hareketleri için iPhone kilit ekranınıza anlık bildirim alın.
+            </p>
+
+            <div class="flex flex-wrap gap-2">
+                <button data-macro="button_primary" id="btnRequestPushPermission" type="button" onclick="if(window.ECuzdanWebPush) window.ECuzdanWebPush.requestPermission();" class="px-4 py-2 rounded-lg font-bold text-xs bg-sky-600 hover:bg-sky-700 text-white transition shadow cursor-pointer">
+                    Bildirimleri Etkinleştir
+                </button>
+                <button data-macro="button_secondary" id="btnTestPushNotification" type="button" onclick="if(window.ECuzdanWebPush) window.ECuzdanWebPush.sendTestNotification();" class="px-3 py-2 rounded-lg font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 text-slate-700 transition cursor-pointer">
+                    Test Bildirimi Gönder 🔔
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- ============ SEKME 2: FİNANSAL TERCİHLER ============ -->
