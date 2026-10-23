@@ -264,6 +264,8 @@ def register_plan_routes(bp):
             return Response("Unauthorized: Gecersiz takvim tokeni", status=401, mimetype="text/plain")
 
         user_id, tenant_id = verified
+        user = User.query.get(user_id)
+        curr_sym = get_currency_symbol(getattr(user, 'base_currency', 'TRY')) if user else '₺'
         events = []
         try:
             now = datetime.now()
@@ -281,7 +283,7 @@ def register_plan_routes(bp):
                         max_d = cal_mod.monthrange(y, m)[1]
                         target_d = min(due_day, max_d)
                         date_str = f"{y:04d}-{m:02d}-{target_d:02d}"
-                        amt_info = f" ({r.amount:.2f} TL)" if r.amount is not None else ""
+                        amt_info = f" ({r.amount:.2f} {curr_sym})" if r.amount is not None else ""
                         events.append({
                             'uid': f"rem-{r.id}-{y}{m:02d}@e-cuzdan",
                             'summary': f"{r.category_emoji or '🔔'} {r.title}{amt_info}",
@@ -298,7 +300,7 @@ def register_plan_routes(bp):
                         max_d = cal_mod.monthrange(y, due_m)[1]
                         target_d = min(due_d, max_d)
                         date_str = f"{y:04d}-{due_m:02d}-{target_d:02d}"
-                        amt_info = f" ({r.amount:.2f} TL)" if r.amount is not None else ""
+                        amt_info = f" ({r.amount:.2f} {curr_sym})" if r.amount is not None else ""
                         events.append({
                             'uid': f"rem-{r.id}-{y}@e-cuzdan",
                             'summary': f"{r.category_emoji or '🔔'} {r.title}{amt_info}",
@@ -307,7 +309,7 @@ def register_plan_routes(bp):
                             'category': r.category,
                         })
                 elif r.frequency == 'Tek Seferlik' and r.due_date:
-                    amt_info = f" ({r.amount:.2f} TL)" if r.amount is not None else ""
+                    amt_info = f" ({r.amount:.2f} {curr_sym})" if r.amount is not None else ""
                     events.append({
                         'uid': f"rem-{r.id}@e-cuzdan",
                         'summary': f"{r.category_emoji or '🔔'} {r.title}{amt_info}",
@@ -323,7 +325,7 @@ def register_plan_routes(bp):
                 plan = occ.plan
                 plan_name = plan.name if plan else 'Düzenli Ödeme'
                 plan_cat = plan.category if plan else 'Plan'
-                amt_str = f"{occ.amount:.2f} TL" if occ.amount is not None else ""
+                amt_str = f"{occ.amount:.2f} {curr_sym}" if occ.amount is not None else ""
                 summary_text = f"💳 {plan_name}" + (f" ({amt_str})" if amt_str else "")
                 events.append({
                     'uid': f"occ-{occ.id}@e-cuzdan",
@@ -341,7 +343,7 @@ def register_plan_routes(bp):
             for t in tx_q.all():
                 if getattr(t, 'is_pending', False):
                     prefix = '🟢' if t.type == 'Gelir' else ('🔵' if t.type == 'Yatırım' else '🔴')
-                    amt_str = f"{t.amount:.2f} TL" if t.amount is not None else ""
+                    amt_str = f"{t.amount:.2f} {curr_sym}" if t.amount is not None else ""
                     events.append({
                         'uid': f"tx-{t.id}@e-cuzdan",
                         'summary': f"{prefix} {t.description or t.category} ({amt_str})",

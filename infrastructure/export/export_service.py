@@ -106,6 +106,7 @@ class ExportService:
         from models import (
             Account,
             AssetSector,
+            BankAccount,
             AssetTransaction,
             AssetType,
             AssetUpdate,
@@ -143,6 +144,7 @@ class ExportService:
             "exported_at": datetime.now().isoformat(),
             "categories": _rows(Category, tenant_id=tenant_id),
             "accounts": _rows(Account, tenant_id=tenant_id),
+            "bank_accounts": _rows(BankAccount, tenant_id=tenant_id),
             "assets": _rows(Asset, tenant_id=tenant_id),
             "asset_types": _rows(AssetType, tenant_id=tenant_id),
             "asset_sectors": _rows(AssetSector, tenant_id=tenant_id),

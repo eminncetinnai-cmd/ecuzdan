@@ -707,7 +707,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Backdrop click closes modal
     document.addEventListener('click', function(e) {
-        if (e.target.matches('.edit-modal-backdrop, .delete-modal-backdrop')) {
+        if (e.target.matches('.edit-modal-backdrop, .delete-modal-backdrop, .modal-overlay, .modal')) {
             window.closeModal();
         }
     });
