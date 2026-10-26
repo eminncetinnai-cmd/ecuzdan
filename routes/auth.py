@@ -30,6 +30,18 @@ def register_auth_routes(bp):
     def login():
         try:
             daily_insight = get_daily_insight()
+
+            # Oturumu zaten açık olan kullanıcıyı doğrudan dashboard veya next sayfasına yönlendir
+            if request.method == 'GET' and 'user_id' in session:
+                user_id = session.get('user_id')
+                session_id = session.get('session_id')
+                user, _ = get_container().applications.session().validate_user_session(user_id, session_id)
+                if user:
+                    next_page = request.args.get('next')
+                    if next_page and next_page.startswith('/') and not next_page.startswith('//'):
+                        return redirect(next_page)
+                    return redirect(url_for('dashboard.index'))
+
             if request.method == 'POST':
                 username = request.form.get('username', '').strip()
                 password = request.form.get('password', '')
@@ -58,6 +70,9 @@ def register_auth_routes(bp):
                     if user.password_changed_at is None:
                         flash('Güvenliğiniz için lütfen varsayılan şifrenizi değiştirin.', 'warning')
                     logger.info(f"User {username} logged in successfully")
+                    next_page = request.args.get('next') or request.form.get('next')
+                    if next_page and next_page.startswith('/') and not next_page.startswith('//'):
+                        return redirect(next_page)
                     return redirect(url_for('dashboard.index'))
 
                 audit_log(ACTION_LOGIN_FAILED, username=username,

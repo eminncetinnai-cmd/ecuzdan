@@ -130,7 +130,7 @@ class Config:
 
     # Session Configuration
     SESSION_TIMEOUT_HOURS = int(os.getenv('SESSION_TIMEOUT_HOURS', '24'))
-    REMEMBER_COOKIE_DAYS = int(os.getenv('REMEMBER_COOKIE_DAYS', '30'))
+    REMEMBER_COOKIE_DAYS = int(os.getenv('REMEMBER_COOKIE_DAYS', '60'))
     SESSION_COOKIE_HTTPONLY = True
     _default_https_class = 'true' if (FLASK_ENV == 'production' or os.getenv('RENDER') == 'true') else 'false'
     # Use Lax by default for rock-solid cross-browser and mobile support

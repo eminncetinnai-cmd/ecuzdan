@@ -533,6 +533,9 @@ def register_session_check(app):
 
         # Session timeout kontrolü
         is_remembered = bool(session.get('remember_me', False))
+        if is_remembered:
+            session.permanent = True
+
         if 'session_created_at' in session:
             from datetime import datetime
             try:
@@ -543,7 +546,7 @@ def register_session_check(app):
                 flash('Oturum bilgisi bozulmuş. Güvenliğiniz için lütfen tekrar giriş yapın.', 'warning')
                 return redirect(url_for('auth.login'))
             session_age = datetime.now() - session_created_at
-            timeout_seconds = (getattr(Config, 'REMEMBER_COOKIE_DAYS', 30) * 86400) if is_remembered else (Config.SESSION_TIMEOUT_HOURS * 3600)
+            timeout_seconds = (getattr(Config, 'REMEMBER_COOKIE_DAYS', 60) * 86400) if is_remembered else (Config.SESSION_TIMEOUT_HOURS * 3600)
             if session_age.total_seconds() > timeout_seconds:
                 session.clear()
                 if _should_return_json():
@@ -554,6 +557,9 @@ def register_session_check(app):
                     }), 401
                 flash('Oturumunuz zaman aşımına uğradı. Lütfen tekrar giriş yapın.', 'warning')
                 return redirect(url_for('auth.login'))
+            elif is_remembered and session_age.total_seconds() > 86400:
+                # Aktif kullanılan "Beni Hatırla" oturumu: periyodik kayan pencere ile tazele
+                session['session_created_at'] = datetime.now().isoformat()
 
         # Program yeniden açıldığında eski geçici tarayıcı session'larını geçersiz say.
         # "Beni Hatırla" seçilmiş oturumlar için boot ID kontrolü atlanır.
@@ -571,6 +577,17 @@ def register_session_check(app):
         # Session ID kontrolü
         user, session_error = _get_session_service().validate_user_session(session['user_id'], session.get('session_id'))
         if user:
+            # Şifre değiştirilmişse eski tarihli oturumları sonlandır
+            if user.password_changed_at and 'session_created_at' in session:
+                try:
+                    session_created_at_val = datetime.fromisoformat(session['session_created_at'])
+                    if session_created_at_val < user.password_changed_at:
+                        session.clear()
+                        flash('Şifreniz değiştirildiği için lütfen tekrar giriş yapın.', 'info')
+                        return redirect(url_for('auth.login'))
+                except Exception:
+                    pass
+
             if user.last_session_id and session.get('session_id') != user.last_session_id:
                 session.clear()
                 if _should_return_json():

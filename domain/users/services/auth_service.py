@@ -94,7 +94,15 @@ class AuthService:
         return user, True # True means newly created
 
     def record_session(self, user, session_id):
-        user.last_session_id = session_id
+        """Kullanıcı başarılı giriş yaptığında oturum kaydını günceller.
+
+        Kullanıcının hem bilgisayarından hem de cep telefonundan eşzamanlı
+        olarak 'Beni Hatırla' ile açık kalabilmesi için tek-cihaz kilidi
+        (last_session_id) sıfırlanır.
+        last_session_id yalnızca kullanıcı Ayarlar'dan 'Diğer Cihazlardan Çıkış Yap'
+        dediğinde pin_session() tarafından o anki oturuma kilitlenir.
+        """
+        user.last_session_id = None
         self.repository.commit()
 
     def clear_session(self, user_id):
