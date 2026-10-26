@@ -185,6 +185,18 @@ def invalidate_financial_cache(tenant_id: str | None = None) -> None:
     except Exception:
         pass
 
+    try:
+        from domain.planning.services.plan_service import clear_calendar_cache
+        clear_calendar_cache(tenant_id)
+    except Exception:
+        pass
+
+    try:
+        from repositories.reporting_repository import clear_sync_targets
+        clear_sync_targets(tenant_id)
+    except Exception:
+        pass
+
 
 def get_live_data() -> dict:
     """Canlı verileri (hava durumu, döviz, altın) arka plan servisinden getirir.

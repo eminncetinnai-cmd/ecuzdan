@@ -18,6 +18,7 @@
     const popover = document.getElementById('cal-popover');
     const gridEl = document.getElementById('cal-grid');
     const titleEl = document.getElementById('cal-month-title');
+    const monthCache = new Map();
     let hideTimer = null;
 
     function formatMoney(n) {
@@ -248,6 +249,18 @@
     }
 
     function loadMonth(year, month) {
+        const cacheKey = year + '-' + month;
+        if (monthCache.has(cacheKey)) {
+            const data = monthCache.get(cacheKey);
+            state.year = data.year;
+            state.month = data.month;
+            state.today = data.today || state.today;
+            state.days = data.days || {};
+            updateTitle();
+            buildGrid();
+            return Promise.resolve(data);
+        }
+
         const loading = document.getElementById('cal-loading');
         if (loading) loading.classList.remove('hidden');
         return fetch(ECuzdanEndpoints.plans.paymentCalendarMonthData + '?year=' + year + '&month=' + month)
@@ -259,18 +272,18 @@
                 return r.json(); 
             })
             .then(function (data) {
-                console.log('Calendar data received:', data);
                 if (data.error) throw new Error(data.error);
+                monthCache.set(cacheKey, data);
                 state.year = data.year;
                 state.month = data.month;
-                state.today = data.today;
+                state.today = data.today || state.today;
                 state.days = data.days || {};
                 updateTitle();
                 buildGrid();
+                return data;
             })
             .catch(function (error) {
                 console.error('Error loading calendar data:', error);
-                if (loading) loading.classList.add('hidden');
             })
             .finally(function () {
                 if (loading) loading.classList.add('hidden');
@@ -512,6 +525,27 @@
         const root = document.getElementById('cal-root');
         if (!root) return;
 
+        // Pre-seed calendar from SSR initial data if available for zero-wait rendering
+        const initScript = document.getElementById('cal-initial-data');
+        if (initScript && initScript.textContent.trim()) {
+            try {
+                const initData = JSON.parse(initScript.textContent);
+                if (initData && initData.year && initData.month && initData.days) {
+                    const cacheKey = initData.year + '-' + initData.month;
+                    monthCache.set(cacheKey, initData);
+                    state.year = initData.year;
+                    state.month = initData.month;
+                    state.today = initData.today || state.today;
+                    state.days = initData.days;
+                    updateTitle();
+                    buildGrid();
+                    if (gridEl) gridEl.dataset.loaded = '1';
+                }
+            } catch (err) {
+                console.warn('Could not parse pre-seeded calendar initial data:', err);
+            }
+        }
+
         initTabs();
 
         document.getElementById('cal-prev')?.addEventListener('click', function () { shiftMonth(-1); });
@@ -715,6 +749,13 @@
                 const newMonth = Math.max(0, curMonth - paidAmount);
                 monthTotalEl.setAttribute('data-raw-val', newMonth.toFixed(2));
                 monthTotalEl.textContent = formatMoney(newMonth) + ' ' + sym;
+            }
+
+            // Invalidate calendar client cache and reload if calendar tab is currently open
+            monthCache.clear();
+            if (gridEl) gridEl.dataset.loaded = '';
+            if (document.querySelector('.pay-tab-panel.active')?.id === 'pay-tab-calendar') {
+                loadMonth(state.year, state.month);
             }
 
             if (window.ECuzdanHaptics) window.ECuzdanHaptics.success();

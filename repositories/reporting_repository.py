@@ -1,11 +1,23 @@
 """Repository for reporting and analytics queries."""
 
+import time
 from sqlalchemy import case, func, text
 
 from models import Asset, PlanOccurrence, RecurringPlan, Transaction, db
 
 from .base import BaseRepository
 from .contracts import ReportingRepositoryContract
+
+_synced_targets: dict[tuple, float] = {}
+
+
+def clear_sync_targets(tenant_id=None):
+    global _synced_targets
+    if tenant_id is None:
+        _synced_targets.clear()
+    else:
+        for k in [k for k in _synced_targets if k[0] == tenant_id]:
+            _synced_targets.pop(k, None)
 
 
 class ReportingRepository(BaseRepository, ReportingRepositoryContract):
@@ -83,6 +95,7 @@ class ReportingRepository(BaseRepository, ReportingRepositoryContract):
     def _serialize_calendar_tx(self, t):
         from utils.format_utils import format_money
 
+        amt = float(t.amount) if t.amount is not None else 0.0
         return {
             'id': t.id,
             'category': t.category,
@@ -90,7 +103,7 @@ class ReportingRepository(BaseRepository, ReportingRepositoryContract):
             'note': t.note or '',
             'type': t.type,
             'status': t.status,
-            'amount': t.amount,
+            'amount': amt,
             'amount_fmt': format_money(t.amount),
             'origin': t.origin,
         }
@@ -148,13 +161,17 @@ class ReportingRepository(BaseRepository, ReportingRepositoryContract):
         from datetime import date
         target_month_end = date(year, month, cal_mod.monthrange(year, month)[1])
         if target_month_end >= date.today():
-            from domain.planning.services.occurrence_service import OccurrenceLifecycleService
-            lifecycle = OccurrenceLifecycleService()
-            active_plans_query = RecurringPlan.query.filter_by(status='Aktif')
-            if tenant_id:
-                active_plans_query = active_plans_query.filter_by(tenant_id=tenant_id)
-            for p in active_plans_query.all():
-                lifecycle.sync_plan(p, tenant_id=tenant_id, until_date=target_month_end)
+            now_ts = time.time()
+            sync_key = (tenant_id, target_month_end)
+            if sync_key not in _synced_targets or (now_ts - _synced_targets[sync_key] >= 300):
+                from domain.planning.services.occurrence_service import OccurrenceLifecycleService
+                lifecycle = OccurrenceLifecycleService()
+                active_plans_query = RecurringPlan.query.filter_by(status='Aktif')
+                if tenant_id:
+                    active_plans_query = active_plans_query.filter_by(tenant_id=tenant_id)
+                for p in active_plans_query.all():
+                    lifecycle.sync_plan(p, tenant_id=tenant_id, until_date=target_month_end)
+                _synced_targets[sync_key] = now_ts
 
         occ_query = PlanOccurrence.query.filter(
             PlanOccurrence.scheduled_date >= start,

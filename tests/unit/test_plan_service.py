@@ -1077,6 +1077,47 @@ def test_plan_service_calculate_debt_freedom():
     assert summary["total_remaining_debt"] == Decimal("4") * Decimal("1500") + Decimal("10") * Decimal("3000")
 
 
+def test_payment_calendar_preseeds_initial_data(app):
+    """Test payment_calendar_context pre-seeds initial month data for instant rendering."""
+    from domain.planning.services.plan_service import PlanService
+
+    with app.app_context():
+        financial_repository = Mock()
+        financial_repository.list_transactions.return_value = []
+        financial_repository.pending_transactions_between.return_value = []
+        service = PlanService(financial_repository=financial_repository)
+        now = datetime(2026, 10, 15, 12, 0, 0)
+        ctx = service.payment_calendar_context(now=now, tenant_id="tenant-test")
+
+        assert "cal_initial_data" in ctx
+        assert ctx["cal_initial_data"] is not None
+        assert ctx["cal_initial_data"]["year"] == 2026
+        assert ctx["cal_initial_data"]["month"] == 10
+        assert "days" in ctx["cal_initial_data"]
+
+
+def test_calendar_month_data_caching_and_invalidation(app):
+    """Test month_data caching and explicit cache clearing."""
+    from domain.planning.services.plan_service import PlanService, clear_calendar_cache, _month_data_cache
+
+    with app.app_context():
+        clear_calendar_cache()
+        service = PlanService()
+        tenant_id = "test-cal-cache-tenant"
+
+        d1 = service.month_data(2026, 10, tenant_id=tenant_id)
+        assert (2026, 10, tenant_id) in _month_data_cache
+
+        d2 = service.month_data(2026, 10, tenant_id=tenant_id)
+        assert d1["year"] == d2["year"]
+        assert d1["month"] == d2["month"]
+
+        # Clear specific tenant cache
+        clear_calendar_cache(tenant_id=tenant_id)
+        assert (2026, 10, tenant_id) not in _month_data_cache
+
+
+
 
 
 

@@ -18,6 +18,17 @@ from shared.constants import MONTH_NAMES_TR
 if TYPE_CHECKING:
     pass
 
+_month_data_cache: dict[tuple, tuple[float, dict]] = {}
+
+
+def clear_calendar_cache(tenant_id=None):
+    global _month_data_cache
+    if tenant_id is None:
+        _month_data_cache.clear()
+    else:
+        for k in [k for k in _month_data_cache if k[2] == tenant_id]:
+            _month_data_cache.pop(k, None)
+
 
 class PlanService:
     def __init__(self, financial_repository=None, catalog_repository=None, occurrence_service=None):
@@ -49,6 +60,7 @@ class PlanService:
                 status=getattr(dto, 'status', None),
             )
             self.occurrence_service.sync_plan(updated_plan, tenant_id)
+            clear_calendar_cache(tenant_id)
             return 'Plan başarıyla güncellendi.'
 
 
@@ -68,6 +80,7 @@ class PlanService:
             status='Aktif',
         )
         self.occurrence_service.sync_plan(created_plan, tenant_id)
+        clear_calendar_cache(tenant_id)
         return 'Yeni plan başarıyla eklendi.'
 
     def plans_context(self, tenant_id=None, filters=None):
@@ -324,12 +337,12 @@ class PlanService:
         )
         if not hasattr(self.financial_repository, '_mock_name'):
             horizon_end = max(next_week, month_end)
-            all_pending = self.financial_repository.pending_transactions_between(today, horizon_end)
+            all_pending = self.financial_repository.pending_transactions_between(today, horizon_end, tenant_id=tenant_id)
             week_p = [t for t in all_pending if str(getattr(t, 'date', '')) <= next_week]
             month_p = [t for t in all_pending if str(getattr(t, 'date', '')) <= month_end]
         else:
-            week_p = self.financial_repository.pending_transactions_between(today, next_week)
-            month_p = self.financial_repository.pending_transactions_between(today, month_end)
+            week_p = self.financial_repository.pending_transactions_between(today, next_week, tenant_id=tenant_id)
+            month_p = self.financial_repository.pending_transactions_between(today, month_end, tenant_id=tenant_id)
         week_total = sum((t.amount for t in week_p), Decimal('0.00'))
         month_total = sum((t.amount for t in month_p), Decimal('0.00'))
 
@@ -350,6 +363,13 @@ class PlanService:
             import logging
             logging.getLogger(__name__).warning(f"Could not load upcoming reminders for calendar: {e}")
 
+        cal_initial_data = None
+        try:
+            cal_initial_data = self.month_data(now.year, now.month, tenant_id=tenant_id)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(f"Could not preload initial calendar month data: {e}")
+
         return {
             'today_cash': today_cash,
             'week_p': week_p,
@@ -361,12 +381,29 @@ class PlanService:
             'cal_month': now.month,
             'cal_month_name': MONTH_NAMES_TR[now.month - 1],
             'today_iso': today,
+            'cal_initial_data': cal_initial_data,
         }
 
     def month_data(self, year, month, tenant_id=None):
+        import copy
         import logging
+        import time
 
         logger = logging.getLogger(__name__)
+
+        now_ts = time.time()
+        cache_key = (year, month, tenant_id)
+        try:
+            from engines.financial_engine import _get_invalidation_timestamp
+            inv_ts = _get_invalidation_timestamp(tenant_id)
+        except Exception:
+            inv_ts = 0.0
+
+        if cache_key in _month_data_cache:
+            cached_ts, cached_data = _month_data_cache[cache_key]
+            if (now_ts - cached_ts < 60) and (cached_ts >= inv_ts):
+                return copy.deepcopy(cached_data)
+
         logger.info(f"month_data called with year={year}, month={month}, tenant_id={tenant_id}")
         days = get_calendar_month_data(year, month, tenant_id)
 
@@ -482,6 +519,7 @@ class PlanService:
             'today': datetime.now().strftime("%Y-%m-%d"),
             'days': days,
         }
+        _month_data_cache[cache_key] = (now_ts, copy.deepcopy(result))
         logger.info(f"month_data returning {len(result.get('days', {}))} days")
         return result
 
@@ -527,6 +565,7 @@ class PlanService:
                 if hasattr(self.financial_repository, 'commit'):
                     self.financial_repository.commit()
 
+        clear_calendar_cache(tenant_id)
         return payment
 
     def calculate_debt_freedom(self, tenant_id=None):

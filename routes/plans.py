@@ -245,6 +245,7 @@ def register_plan_routes(bp):
                 calendar_feed_url="",
                 calendar_webcal_url="",
                 calendar_token="",
+                cal_initial_data=None,
             )
 
     @bp.route('/calendar/feed.ics')
