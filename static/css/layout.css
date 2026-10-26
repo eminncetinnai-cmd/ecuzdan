@@ -934,9 +934,21 @@ footer {
         padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px)) !important;
     }
 
-    /* Hide mobile bottom nav when drawer menu is open to prevent bleeding through backdrop */
+    /* Hide mobile bottom nav when drawer menu OR ANY MODAL is open to prevent bleeding through backdrop and covering buttons */
     html.mobile-menu-open .mobile-bottom-nav,
-    body:has(#mobile-sidebar:not(.hidden)) .mobile-bottom-nav {
+    html.modal-open .mobile-bottom-nav,
+    body.modal-open .mobile-bottom-nav,
+    body:has(#mobile-sidebar:not(.hidden)) .mobile-bottom-nav,
+    body:has(.edit-modal:not(.hidden)) .mobile-bottom-nav,
+    body:has(.edit-modal.active) .mobile-bottom-nav,
+    body:has(#immutableActionModal:not(.hidden)) .mobile-bottom-nav,
+    body:has(#paymentModal:not(.hidden)) .mobile-bottom-nav,
+    body:has(#unifiedPlanModal:not(.hidden)) .mobile-bottom-nav,
+    body:has(#editModal:not(.hidden)) .mobile-bottom-nav,
+    body:has(.modal-overlay:not(.hidden)) .mobile-bottom-nav,
+    body:has(.modal-overlay.active) .mobile-bottom-nav,
+    body:has([role="dialog"]:not(.hidden):not(#mobile-sidebar)) .mobile-bottom-nav {
+        display: none !important;
         opacity: 0 !important;
         pointer-events: none !important;
         visibility: hidden !important;

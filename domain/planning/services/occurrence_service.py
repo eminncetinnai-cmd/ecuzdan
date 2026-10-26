@@ -53,10 +53,11 @@ class OccurrenceCalculator:
             horizon = None
 
         index = 0
+        is_finite = plan.occurrence_limit is not None and plan.occurrence_limit > 0 and not is_indefinite
         while index < target_count:
             if is_indefinite and index >= 3 and current > horizon:
                 break
-            if plan.end_date and current > plan.end_date:
+            if plan.end_date and current > plan.end_date and not is_finite:
                 break
             occurrences.append(
                 PlanOccurrence(

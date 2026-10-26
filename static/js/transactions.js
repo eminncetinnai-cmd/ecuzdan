@@ -1165,6 +1165,8 @@
             actionModal.classList.remove('hidden');
             actionModal.classList.add('flex');
             actionModal.setAttribute('aria-hidden', 'false');
+            document.documentElement.classList.add('modal-open');
+            document.body.style.overflow = 'hidden';
             setTimeout(() => (kind === 'adjustment' ? deltaInput : reasonTextInput)?.focus(), 50);
         };
 
@@ -1174,6 +1176,8 @@
                 actionModal.classList.remove('flex');
                 actionModal.setAttribute('aria-hidden', 'true');
             }
+            document.documentElement.classList.remove('modal-open');
+            document.body.style.overflow = '';
             immutableTransactionId = null;
         };
 

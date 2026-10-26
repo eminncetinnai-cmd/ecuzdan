@@ -137,7 +137,7 @@ class OccurrenceRepository(TenantScopedRepository):
                     occurrence_number=occurrence_number,
                     scheduled_date=scheduled_date,
                     status="paid" if is_tx_paid else "scheduled",
-                    amount=plan.amount,
+                    amount=matching_tx.amount if is_tx_paid and matching_tx else plan.amount,
                     tenant_id=tenant_id,
                     transaction_id=matching_tx.id if matching_tx else None,
                     paid_at=datetime.fromisoformat(str(matching_tx.date)) if is_tx_paid and matching_tx.date else None,
@@ -161,18 +161,22 @@ class OccurrenceRepository(TenantScopedRepository):
                     )
                 existing_rows[occurrence_number] = row
             elif row.status == "scheduled":
-                if row.scheduled_date != scheduled_date or row.amount != plan.amount or is_tx_paid:
-                    changed = True
-                row.scheduled_date = scheduled_date
-                row.amount = plan.amount
                 if is_tx_paid:
                     row.status = "paid"
-                    row.transaction_id = matching_tx.id
-                    if not row.paid_at and matching_tx.date:
-                        try:
-                            row.paid_at = datetime.fromisoformat(str(matching_tx.date))
-                        except (ValueError, TypeError):
-                            row.paid_at = utcnow_naive()
+                    if matching_tx:
+                        row.amount = matching_tx.amount
+                        row.transaction_id = matching_tx.id
+                        if not row.paid_at and matching_tx.date:
+                            try:
+                                row.paid_at = datetime.fromisoformat(str(matching_tx.date))
+                            except (ValueError, TypeError):
+                                row.paid_at = utcnow_naive()
+                    changed = True
+                else:
+                    if row.scheduled_date != scheduled_date or row.amount != plan.amount:
+                        changed = True
+                    row.scheduled_date = scheduled_date
+                    row.amount = plan.amount
             elif row.status == "paid" and not row.transaction_id and matching_tx:
                 row.transaction_id = matching_tx.id
                 changed = True

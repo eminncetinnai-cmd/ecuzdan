@@ -45,16 +45,20 @@
     }
 }
 
+.app-modal-layer {
+    z-index: 1000 !important;
+}
+
 /* Edit Modal */
 .edit-modal {
     position: fixed;
     inset: 0;
-    z-index: 50;
+    z-index: 1000;
     display: none;
 }
 
 .edit-modal.active {
-    display: block;
+    display: flex;
 }
 
 .edit-modal-backdrop {
@@ -72,7 +76,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1.5rem;
+    padding: 1rem;
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom, 16px));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .edit-modal-card {
@@ -84,13 +91,15 @@
         inset 0 -1px 0 rgba(226, 232, 240, 0.4);
     width: 100%;
     max-width: 32rem;
-    max-height: 90vh;
+    max-height: calc(100vh - 2.5rem);
+    max-height: calc(100dvh - 2.5rem);
     display: flex;
     flex-direction: column;
     transform: scale(0.92) translateY(20px);
     opacity: 0;
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     border: 1px solid rgba(226, 232, 240, 0.8);
+    overflow: hidden;
 }
 
 .edit-modal.active .edit-modal-card {

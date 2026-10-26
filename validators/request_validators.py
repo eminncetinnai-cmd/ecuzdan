@@ -49,15 +49,30 @@ def _calc_installments(start_date: date, end_date: date, frequency: str = "Aylı
     return max(1, months)
 
 
-def _calc_end_date(start_date: date, installments: int, frequency: str = "Aylık") -> date:
+def _calc_first_occurrence_date(start_date: date, payment_day: int | None, frequency: str = "Aylık") -> date:
+    if frequency == "Haftalık" or not payment_day:
+        return start_date
+    requested_day = max(1, min(int(payment_day), 31))
+    max_d = calendar.monthrange(start_date.year, start_date.month)[1]
+    candidate = start_date.replace(day=min(requested_day, max_d))
+    if candidate < start_date:
+        interval_months = 3 if frequency == "3-Aylık" else (12 if frequency == "Yıllık" else 1)
+        candidate = start_date + relativedelta(months=interval_months)
+        max_d2 = calendar.monthrange(candidate.year, candidate.month)[1]
+        candidate = candidate.replace(day=min(requested_day, max_d2))
+    return candidate
+
+
+def _calc_end_date(start_date: date, installments: int, frequency: str = "Aylık", payment_day: int | None = None) -> date:
     inst = max(1, int(installments or 1))
+    first_date = _calc_first_occurrence_date(start_date, payment_day, frequency)
     if frequency == "Haftalık":
-        return start_date + timedelta(days=(inst - 1) * 7)
+        return first_date + timedelta(days=(inst - 1) * 7)
     if frequency == "3-Aylık":
-        return start_date + relativedelta(months=(inst - 1) * 3)
+        return first_date + relativedelta(months=(inst - 1) * 3)
     if frequency == "Yıllık":
-        return start_date + relativedelta(years=(inst - 1))
-    return start_date + relativedelta(months=(inst - 1))
+        return first_date + relativedelta(years=(inst - 1))
+    return first_date + relativedelta(months=(inst - 1))
 
 
 def plan_form_from_request(form):
@@ -138,7 +153,7 @@ def plan_form_from_request(form):
                 end_date_val = end_value.strftime('%Y-%m-%d')
         elif installments_val > 0 and not end_value:
             # User specified installments only; auto-calculate end_date
-            computed_end = _calc_end_date(start_value.date(), installments_val, frequency_val)
+            computed_end = _calc_end_date(start_value.date(), installments_val, frequency_val, payment_day_val)
             end_value = datetime.combine(computed_end, datetime.min.time())
             end_date_val = computed_end.strftime('%Y-%m-%d')
         elif end_value and installments_val > 0:
@@ -146,7 +161,7 @@ def plan_form_from_request(form):
                 if action_val in ['update_plan', 'edit_plan']:
                     # User changed start month past end date during edit:
                     # preserve installment count from the new start date by shifting end_date forward
-                    computed_end = _calc_end_date(start_value.date(), installments_val, frequency_val)
+                    computed_end = _calc_end_date(start_value.date(), installments_val, frequency_val, payment_day_val)
                     end_value = datetime.combine(computed_end, datetime.min.time())
                     end_date_val = computed_end.strftime('%Y-%m-%d')
                 else:

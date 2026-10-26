@@ -35,8 +35,10 @@ def _get_planning_app():
     return get_container().domain.plan()
 
 
-def _plan_request_payload():
+def _plan_request_payload(plan_id_override=None):
     payload = request.form.copy()
+    if plan_id_override is not None:
+        payload.setdefault("plan_id", str(plan_id_override))
     if_match = (request.headers.get("If-Match") or "").strip().strip(chr(34))
     if if_match.isdigit():
         payload["version"] = if_match
@@ -108,12 +110,13 @@ def register_plan_routes(bp):
     planning_app = _get_planning_app()
 
     @bp.route('/plans', methods=['GET', 'POST'])
+    @bp.route('/plans/<int:id>/edit', methods=['POST'])
     @login_required
-    def plans():
+    def plans(id=None):
         if request.method == 'POST':
             is_ajax = is_ajax_request()
             try:
-                message = planning_app.save_plan(plan_form_from_request(_plan_request_payload()))
+                message = planning_app.save_plan(plan_form_from_request(_plan_request_payload(id)))
                 invalidate_financial_cache(g.get('tenant_id'))
                 if is_ajax:
                     return jsonify({'success': True, 'message': message})
