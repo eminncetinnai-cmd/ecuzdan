@@ -620,13 +620,13 @@ def register_security_headers(app):
 
         # Statik Varlık Önbellekleme (Cache-busted varlıklar için 1 yıl immutable cache, diğerleri için 7 gün)
         if request.path.startswith('/static/'):
-            if not app.config.get('TESTING') and not app.config.get('TEMPLATES_AUTO_RELOAD'):
+            if not app.config.get('TESTING'):
                 if 'v' in request.args:
-                    response.headers.setdefault('Cache-Control', 'public, max-age=31536000, immutable')
+                    response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
                 else:
                     response.headers.setdefault('Cache-Control', 'public, max-age=604800')
 
-        # GZIP Yanıt Sıkıştırma (HTML, JSON, JS, CSS yanıtlarında %85-%95 bant genişliği tasarrufu)
+        # GZIP Yanıt Sıkıştırma (HTML, JSON, JS, CSS, SVG yanıtlarında %85-%95 bant genişliği tasarrufu)
         accept_encoding = request.headers.get('Accept-Encoding', '')
         if (
             'gzip' in accept_encoding
@@ -634,7 +634,7 @@ def register_security_headers(app):
             and not response.direct_passthrough
             and not getattr(response, 'is_streamed', False)
             and 'Content-Encoding' not in response.headers
-            and any(t in (response.content_type or '') for t in ('text/', 'application/json', 'application/javascript'))
+            and any(t in (response.content_type or '') for t in ('text/', 'application/json', 'application/javascript', 'image/svg+xml', 'application/xml'))
         ):
             try:
                 data = response.get_data()

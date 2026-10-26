@@ -293,7 +293,7 @@ class DashboardService:
             key=lambda t: (str(getattr(t, 'date', '') or ''), int(getattr(t, 'id', 0) or 0)),
             reverse=True,
         )
-        dashboard_last_t = pending_txs + paid_txs
+        dashboard_last_t = (pending_txs + paid_txs)[:50]
 
         return {
             'today_cash': actual_cash,

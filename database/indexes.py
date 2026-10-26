@@ -59,13 +59,16 @@ def _create_indexes_if_not_exist():
             ('idx_plan_occurrence_plan_status', 'plan_occurrence', 'plan_id, status'),
             ('idx_payment_plan', 'payment', 'plan_id, installment_number'),
             ('idx_user_iban_category', 'user_iban', 'category'),
+            # Hatırlatıcı ve Kategori İndeksleri
+            ('idx_user_reminder_tenant_completed', 'user_reminder', 'tenant_id, is_completed'),
+            ('idx_transaction_tenant_del_type_date', '"transaction"', 'tenant_id, is_deleted, type, date'),
         ]
 
         target_tables = [
             'transaction', 'recurring_plan', 'asset', 'user', 'asset_update',
             'account', 'ledger_line', 'journal_entry',
             'ledger_adjustment', 'ledger_audit_event', 'plan_occurrence', 'payment',
-            'notification', 'quiz_attempt', 'user_iban'
+            'notification', 'quiz_attempt', 'user_iban', 'user_reminder'
         ]
 
         inspector = inspect(db.engine)

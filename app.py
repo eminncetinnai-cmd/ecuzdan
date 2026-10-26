@@ -69,7 +69,19 @@ else:
     app.config['APP_BOOT_ID'] = secrets.token_hex(32)
 app.config['GOOGLE_CLIENT_ID'] = config.GOOGLE_CLIENT_ID
 app.config['GOOGLE_CLIENT_SECRET'] = config.GOOGLE_CLIENT_SECRET
-app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.config['TEMPLATES_AUTO_RELOAD'] = config.FLASK_ENV == 'development' or os.getenv('TEMPLATES_AUTO_RELOAD', '').lower() == 'true'
+
+engine_options = {
+    'pool_pre_ping': True,
+    'pool_recycle': 280,
+}
+if 'sqlite' not in config.DATABASE_URL:
+    engine_options.update({
+        'pool_size': 10,
+        'max_overflow': 20,
+        'pool_timeout': 30,
+    })
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options
 
 app.config['BACKGROUND_SERVICE_ENABLED'] = config.BACKGROUND_SERVICE_ENABLED
 app.config['BACKGROUND_WORKER_OWNER'] = config.BACKGROUND_WORKER_OWNER

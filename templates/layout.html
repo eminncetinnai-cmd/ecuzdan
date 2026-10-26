@@ -63,9 +63,11 @@
     <link rel="alternate icon" href="{{ static_asset_url('favicon.ico') }}">
     <title>{% block document_title %}{{ brand }} | {{ _('sidebar_premium_wealth') }}{% endblock %}</title>
 
-    <!-- Outfit Google Font -->
+    <!-- Outfit Google Font & Resource Hints -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <!-- CSS Files -->
     <link rel="stylesheet" href="{{ static_asset_url('css/main.css') }}">
@@ -83,7 +85,7 @@
     <script src="{{ static_asset_url('js/chart.min.js') }}" defer></script>
     {% endif %}
 
-          <script src="{{ static_asset_url('js/api-client.js') }}"></script>
+    <script src="{{ static_asset_url('js/api-client.js') }}" defer></script>
     {% block vendor_head %}{% endblock %}
     {% block extra_head %}{% endblock %}
     {% block extra_css %}{% endblock %}

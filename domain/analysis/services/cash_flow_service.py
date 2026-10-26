@@ -17,22 +17,38 @@ def calculate_cash_trend(now, all_transactions, days_count):
     Günlük olarak işlemleri filtreleyerek dinamik trend oluşturur.
     Sadece o yıla ait işlemleri dahil eder.
     Transfer'leri nakit akışından hariç tutar (Phase 2).
+    O(N + D) prefix-sum yaklaşımıyla optimize edilmiştir.
     """
-    data = []
+    if days_count <= 0:
+        return []
 
-    # Transfer'leri hariç tut
+    from collections import defaultdict
+    from decimal import Decimal
+
     cash_flow_transactions = [t for t in all_transactions if not CashFlowAnalyzer.is_transfer(t)]
+    start_date = now.strftime("%Y-%m-%d")
+    end_date = (now + timedelta(days=days_count - 1)).strftime("%Y-%m-%d")
 
-    # Her gün için nakit bakiyesini hesapla
+    daily_delta = defaultdict(lambda: Decimal('0'))
+    base_cash = Decimal('0')
+
+    for t in cash_flow_transactions:
+        status = getattr(t, 'status', None)
+        if status not in ('Ödendi', 'Bekliyor'):
+            continue
+        amt = Decimal(str(t.amount or 0)) if t.type == 'Gelir' else -Decimal(str(t.amount or 0))
+        t_date = str(t.date)
+        if t_date < start_date:
+            base_cash += amt
+        elif start_date <= t_date <= end_date:
+            daily_delta[t_date] += amt
+
+    data = []
+    current_cash = base_cash
     for i in range(days_count):
         current_date = (now + timedelta(days=i)).strftime("%Y-%m-%d")
-
-        day_cash = sum(
-            t.amount if t.type == 'Gelir' else -t.amount
-            for t in cash_flow_transactions
-            if t.date <= current_date and t.status in ('Ödendi', 'Bekliyor')
-        )
-        data.append(day_cash)
+        current_cash += daily_delta[current_date]
+        data.append(current_cash)
 
     return data
 
@@ -42,28 +58,42 @@ def calculate_monthly_daily_balance(year, month, all_transactions):
 
     Eğer içinde bulunduğumuz ay ise, sadece bugünden sonraki günleri gösterir.
     Gelecek aylar için tüm ayı gösterir.
+    O(N + D) prefix-sum yaklaşımıyla optimize edilmiştir.
     """
     now = datetime.now()
     is_current_month = (year == now.year and month == now.month)
 
     days_in_month = calendar.monthrange(year, month)[1]
-    data = []
-    labels = []
-
-    # Başlangıç gününü belirle
     start_day = now.day if is_current_month else 1
 
-    # Her gün için nakit bakiyesini hesapla
+    start_date = f"{year}-{month:02d}-{start_day:02d}"
+    end_date = f"{year}-{month:02d}-{days_in_month:02d}"
+
+    from collections import defaultdict
+    from decimal import Decimal
+
+    daily_delta = defaultdict(lambda: Decimal('0'))
+    base_cash = Decimal('0')
+
+    for t in all_transactions:
+        status = getattr(t, 'status', None)
+        if status not in ('Ödendi', 'Bekliyor'):
+            continue
+        amt = Decimal(str(t.amount or 0)) if t.type == 'Gelir' else -Decimal(str(t.amount or 0))
+        t_date = str(t.date)
+        if t_date < start_date:
+            base_cash += amt
+        elif start_date <= t_date <= end_date:
+            daily_delta[t_date] += amt
+
+    labels = []
+    data = []
+    current_cash = base_cash
     for day in range(start_day, days_in_month + 1):
         current_date = f"{year}-{month:02d}-{day:02d}"
         labels.append(current_date)
-
-        day_cash = sum(
-            t.amount if t.type == 'Gelir' else -t.amount
-            for t in all_transactions
-            if t.date <= current_date and t.status in ('Ödendi', 'Bekliyor')
-        )
-        data.append(day_cash)
+        current_cash += daily_delta[current_date]
+        data.append(current_cash)
 
     return labels, data
 
@@ -72,6 +102,7 @@ def calculate_monthly_dashboard_data(year, tenant_id=None):
     """Yıllık aylık dashboard verilerini hesaplar.
 
     Her ay için gelir, gider, yatırım ve net değer döner.
+    12 ayrı sorgu yerine tek konsolide yıllık SQL sorgusuyla optimize edilmiştir.
     """
     tr = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"]
     m_data = []
@@ -85,15 +116,27 @@ def calculate_monthly_dashboard_data(year, tenant_id=None):
     for update in valuation_updates:
         valuation_by_month[update.updated_at.month] += (update.new_value or 0) - (update.old_value or 0)
 
+    # 12 ayrı döngü sorgusu yerine tüm yılı tek seferde sorgula ve bellekte grupla
+    start_year = f"{year}-01-01"
+    end_year = f"{year}-12-31"
+    query = Transaction.query.filter(
+        Transaction.date >= start_year,
+        Transaction.date <= end_year,
+        Transaction.is_deleted.is_(False),
+    )
+    all_year_txs = _apply_tenant(query, Transaction, tenant_id).all()
+
+    txs_by_month = {m: [] for m in range(1, 13)}
+    for t in all_year_txs:
+        try:
+            m = int(str(t.date).split('-')[1])
+            if 1 <= m <= 12:
+                txs_by_month[m].append(t)
+        except (IndexError, ValueError):
+            continue
+
     for i in range(1, 13):
-        start = f"{year}-{i:02d}-01"
-        end = f"{year}-{i:02d}-{calendar.monthrange(year, i)[1]:02d}"
-        query = Transaction.query.filter(
-            Transaction.date >= start,
-            Transaction.date <= end,
-            Transaction.is_deleted.is_(False),
-        )
-        all_m = _apply_tenant(query, Transaction, tenant_id).all()
+        all_m = txs_by_month[i]
 
         inc = sum(t.amount for t in all_m if t.type == 'Gelir')
         exp = sum(t.amount for t in all_m if t.type == 'Gider')

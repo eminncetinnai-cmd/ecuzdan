@@ -33,6 +33,11 @@ class TestFinancialEngineRegression:
             db.create_all()
 
             # Clear dependent rows before their parent rows to honor SQLite FKs.
+            from models import JournalEntry, LedgerAdjustment, LedgerAuditEvent, LedgerLine
+            LedgerAuditEvent.query.delete()
+            LedgerAdjustment.query.delete()
+            LedgerLine.query.delete()
+            JournalEntry.query.delete()
             PlanOccurrence.query.delete()
             Payment.query.delete()
             Transaction.query.delete()
