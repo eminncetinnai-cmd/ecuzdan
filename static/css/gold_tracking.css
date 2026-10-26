@@ -80,10 +80,10 @@
 .gold-cat-chip {
     display: inline-flex;
     align-items: center;
-    gap: 0.375rem;
-    padding: 0.45rem 0.85rem;
+    gap: 0.3rem;
+    padding: 0.35rem 0.65rem;
     border-radius: 9999px;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 800;
     border: 1px solid rgba(226, 232, 240, 0.9);
     background: #ffffff;
@@ -126,11 +126,7 @@
 
 #goldDesktopTable th,
 #goldDesktopTable td {
-    padding: 0.55rem 0.4rem;
-}
-
-#goldDesktopTable td:first-child {
-    max-width: 185px;
+    padding: 0.6rem 0.5rem !important;
 }
 
 .gold-mobile-cards-wrap {

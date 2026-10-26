@@ -11,141 +11,68 @@
 <div id="gold-tracking-page" class="gold-tracking-page space-y-6 mb-10">
 
     <!-- ── 1. Başlık ve Canlı Harem Altın Durum Çubuğu ──────────────────────── -->
-    <header class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-slate-200/80 dark:border-slate-800">
+    <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200/80 dark:border-slate-800">
         <div class="min-w-0">
-            <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/50 border border-amber-200/80 dark:border-amber-800/60 text-amber-800 dark:text-amber-300 text-[10px] font-black uppercase tracking-wider mb-2">
-                <span class="gold-live-dot" aria-hidden="true"></span>
-                <span id="goldSourceBadge">{{ data.source_label }}</span>
-            </div>
-            <h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight uppercase leading-none">
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase leading-none">
                 Altın Takip
             </h1>
-            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1.5">
-                Harem Altın referanslı Bursa Kuyumcular Çarşısı canlı sarrafiye alış, satış ve makas terminali
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
+                Harem Altın canlı alış ve satış fiyatları
             </p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2 shrink-0">
-            <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/70 dark:border-emerald-800/60 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/70 dark:border-emerald-800/60 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
                 <span class="gold-live-dot" aria-hidden="true"></span>
-                <span id="goldAutoRefreshStatus">Otomatik Canlı Akış (30 sn)</span>
+                <span id="goldAutoRefreshStatus">Canlı (30 sn)</span>
             </div>
-            <div class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700 text-[11px] font-bold text-slate-600 dark:text-slate-300">
-                <span>Son Güncelleme:</span>
-                <strong id="goldObservedAt" class="text-slate-900 dark:text-white ml-1">{{ data.observed_at_display }}</strong>
+            <div class="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700 text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                <strong id="goldObservedAt" class="text-slate-900 dark:text-white">{{ data.observed_at_display }}</strong>
             </div>
         </div>
     </header>
 
-    <!-- ── 2. Segmented Navigation Hub (Strateji & Piyasa Merkezi) ──────────── -->
-    <nav class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 border-b border-slate-200/80 dark:border-slate-800" aria-label="Piyasa ve Analiz Modülleri">
-        <a href="{{ url_for('analysis.analysis_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold whitespace-nowrap shrink-0 transition bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-            <span>Finansal Sağlık & Karne</span>
-        </a>
-        <a href="{{ url_for('dashboard.financial_freedom') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold whitespace-nowrap shrink-0 transition bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-            <span>Finansal Özgürlük (FIRE)</span>
-        </a>
-        <a href="{{ url_for('strategy.strategy') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold whitespace-nowrap shrink-0 transition bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-            <span>Portföy Stratejisi</span>
-        </a>
-        <a href="{{ url_for('dashboard.financial_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold whitespace-nowrap shrink-0 transition bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-            <span>Piyasa & Kantitatif Analiz</span>
-        </a>
-        <a href="{{ url_for('gold_tracking.gold_tracking_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold whitespace-nowrap shrink-0 transition bg-amber-500 text-white shadow-sm" aria-current="page">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <span>Altın Takip (Harem & Bursa)</span>
-        </a>
-        <a href="{{ url_for('global_ratios.global_ratios_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold whitespace-nowrap shrink-0 transition bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <span>Küresel Rasyolar (Makro)</span>
-        </a>
-        <a href="{{ url_for('central_bank_reserves.central_bank_reserves_dashboard') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold whitespace-nowrap shrink-0 transition bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-            <span>TCMB Rezervleri & Altın</span>
-        </a>
-    </nav>
-
-    <!-- ── 3. Vitrin Özet Kartları (4 Ana Gösterge) ────────────────────────── -->
-    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" aria-label="Ana Altın Göstergeleri">
-        {% for key in ['gram_altin', 'ceyrek_yeni', 'yarim_yeni', 'bilezik_22'] %}
-        {% set item = data.spotlight.get(key) %}
-        {% if item %}
-        <article class="premium-card p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-sm"
-                 data-spotlight-card="{{ item.code }}"
-                 data-base-buy="{{ item.base_buy_price }}"
-                 data-base-sell="{{ item.base_sell_price }}">
-            <div class="flex items-start justify-between gap-1.5 mb-2.5">
-                <div class="min-w-0">
-                    <span class="text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 block truncate">{{ item.purity_label }}</span>
-                    <h2 class="text-sm font-black text-slate-900 dark:text-white truncate">{{ item.short_name }}</h2>
-                </div>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-black shrink-0 {% if item.change_pct > 0 %}bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300{% elif item.change_pct < 0 %}bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300{% else %}bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300{% endif %}">
-                    {% if item.change_pct > 0 %}+{% endif %}{{ "%.2f"|format(item.change_pct) }}%
-                </span>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <div class="min-w-0">
-                    <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">Kuyumcu Alış</span>
-                    <div class="whitespace-nowrap">
-                        <strong class="spot-buy text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400">{{ item.buy_price|format_money }}</strong>
-                        <span class="text-[10px] font-bold text-slate-400">{{ base_currency_symbol }}</span>
-                    </div>
-                </div>
-                <div class="text-right min-w-0">
-                    <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">Kuyumcu Satış</span>
-                    <div class="whitespace-nowrap">
-                        <strong class="spot-sell text-sm sm:text-base font-black text-amber-600 dark:text-amber-400">{{ item.sell_price|format_money }}</strong>
-                        <span class="text-[10px] font-bold text-slate-400">{{ base_currency_symbol }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                <span>Alış-Satış Makası:</span>
-                <span class="spot-spread text-slate-700 dark:text-slate-200">{{ item.spread_amount|format_money }} {{ base_currency_symbol }} (%{{ "%.2f"|format(item.spread_pct) }})</span>
-            </div>
-        </article>
-        {% endif %}
-        {% endfor %}
-    </section>
-
-    <!-- ── 5. Ana İçerik: Sol Canlı Kuyumcu Panosu (2/3) + Sağ Hesaplayıcı (1/3) ── -->
+    <!-- ── 2. Ana İçerik: Sol Canlı Fiyat Listesi + Sağ Hesaplayıcı ────────── -->
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
 
-        <!-- SOL SÜTUN: Canlı Harem Altın & Bursa Sarrafiye Fiyat Tablosu -->
-        <section class="xl:col-span-2 premium-card p-4 sm:p-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-sm">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-slate-100 dark:border-slate-800">
-                <div>
-                    <h2 class="text-base sm:text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                        Canlı Sarrafiye & Altın Türevleri Panosu
-                    </h2>
-                    <p class="text-[11px] font-semibold text-slate-400 mt-0.5">
-                        Yeni/Eski Çeyrek, Yarım, Tam, Ata, Gremse ve Bilezik fiyatları — Hesaplayıcıya eklemek için <strong>+ Sepet</strong> butonuna dokunun
-                    </p>
-                </div>
-                <div class="w-full sm:w-48 shrink-0">
-                    <input type="text" id="goldSearchInput" oninput="filterGoldBoard()"
-                           placeholder="Altın türü ara (Çeyrek, Ata...)"
-                           class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-100 outline-none focus:border-amber-500">
-                </div>
-            </div>
+        <!-- SOL SÜTUN: Sadeleştirilmiş Canlı Harem Altın Fiyat Listesi -->
+        <section class="xl:col-span-2 premium-card p-4 sm:p-5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-sm">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
+                <h2 class="text-sm sm:text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                    Canlı Altın Fiyatları
+                </h2>
 
-            <!-- Kategori Filtre Çipleri -->
-            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 mb-4" role="tablist" aria-label="Altın Kategorileri">
-                {% for cat in data.categories %}
-                <button data-macro="button_secondary" type="button"
-                        class="gold-cat-chip {% if loop.first %}active{% endif %}"
-                        data-cat-key="{{ cat.key }}"
-                        onclick="selectGoldCategory('{{ cat.key }}', this)">
-                    <span>{{ cat.label }}</span>
-                    <span class="px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200 text-[10px]">{{ cat.count }}</span>
-                </button>
-                {% endfor %}
+                <!-- Sade Kategori Filtresi -->
+                <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:pb-0" role="tablist" aria-label="Altın Kategorileri">
+                    <button data-macro="button_secondary" type="button"
+                            class="gold-cat-chip active"
+                            data-cat="all"
+                            data-cat-key="all"
+                            onclick="selectGoldCategory('all', this)">
+                        <span>Tümü</span>
+                    </button>
+                    <button data-macro="button_secondary" type="button"
+                            class="gold-cat-chip"
+                            data-cat="sarrafiye_yeni"
+                            data-cat-key="sarrafiye_yeni"
+                            onclick="selectGoldCategory('sarrafiye_yeni', this)">
+                        <span>Yeni Ziynet</span>
+                    </button>
+                    <button data-macro="button_secondary" type="button"
+                            class="gold-cat-chip"
+                            data-cat="sarrafiye_eski"
+                            data-cat-key="sarrafiye_eski"
+                            onclick="selectGoldCategory('sarrafiye_eski', this)">
+                        <span>Eski Ziynet</span>
+                    </button>
+                    <button data-macro="button_secondary" type="button"
+                            class="gold-cat-chip"
+                            data-cat="gram_bilezik"
+                            data-cat-key="gram_bilezik"
+                            onclick="selectGoldCategory('gram_bilezik', this)">
+                        <span>Gram & Bilezik</span>
+                    </button>
+                </div>
             </div>
 
             <!-- MASAÜSTÜ TABLO GÖRÜNÜMÜ (md ve üzeri) -->
@@ -153,60 +80,54 @@
                 <table class="w-full text-left text-xs" id="goldDesktopTable">
                     <thead class="bg-slate-50/90 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-black border-b border-slate-100 dark:border-slate-800">
                         <tr>
-                            <th class="py-3 px-2.5">Altın / Türev Türü</th>
-                            <th class="py-3 px-2 text-right">Kuyumcu Alış</th>
-                            <th class="py-3 px-2 text-right">Kuyumcu Satış</th>
-                            <th class="py-3 px-2 text-right">Makas</th>
-                            <th class="py-3 px-1.5 text-center">Değişim</th>
-                            <th class="py-3 px-2 text-right">Hesapla</th>
+                            <th class="py-2.5 px-3">Altın Türü</th>
+                            <th class="py-2.5 px-3 text-right">Alış</th>
+                            <th class="py-2.5 px-3 text-right">Satış</th>
+                            <th class="py-2.5 px-2 text-center">Değişim</th>
+                            <th class="py-2.5 px-3 text-right">Sepet</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-semibold">
-                        {% for q in data.quotes %}
+                        {% for q in data.quotes if q.code not in ['usd_kg', 'eur_kg'] %}
                         {% set sym = base_currency_symbol if q.unit == 'TRY' else ('$' if q.unit == 'USD' else '€') %}
                         <tr class="gold-item-row hover:bg-amber-50/40 dark:hover:bg-slate-800/50 transition"
                             data-code="{{ q.code }}"
                             data-category="{{ q.category }}"
-                            data-search="{{ q.name|lower }} {{ q.short_name|lower }} {{ q.purity_label|lower }}"
                             data-base-buy="{{ q.base_buy_price }}"
                             data-base-sell="{{ q.base_sell_price }}"
                             data-is-tl="{{ '1' if q.is_calculable_tl else '0' }}"
                             data-sym="{{ sym }}">
-                            <td class="py-2.5 px-2.5">
-                                <div class="flex items-center gap-2">
+                            <td class="py-2.5 px-3">
+                                <div class="flex items-center gap-2.5">
                                     <span class="gold-coin-badge">{{ '24K' if q.code == 'gram_altin' else ('22K' if '22' in q.purity_label else ('14K' if '14' in q.purity_label else ('AG' if q.code == 'gumus_gram' else 'ONS'))) }}</span>
                                     <div class="min-w-0">
-                                        <div class="font-black text-slate-900 dark:text-white">{{ q.name }}</div>
-                                        <div class="text-[10px] text-slate-400 font-bold">{{ q.purity_label }} · {{ q.category_label }}</div>
+                                        <span class="font-black text-slate-900 dark:text-white text-xs sm:text-sm block truncate">{{ q.short_name }}</span>
+                                        <span class="text-[10px] text-slate-400 font-bold block truncate">{{ q.purity_label }}</span>
                                     </div>
                                 </div>
                             </td>
-                            <td class="py-2.5 px-2 text-right whitespace-nowrap">
-                                <span class="row-buy font-black text-emerald-600 dark:text-emerald-400 text-xs sm:text-sm">{{ q.buy_price|format_money }}</span>
+                            <td class="py-2.5 px-3 text-right whitespace-nowrap">
+                                <span class="row-buy font-black text-emerald-600 dark:text-emerald-400 text-sm">{{ q.buy_price|format_money }}</span>
                                 <span class="text-[10px] text-slate-400 ml-0.5">{{ sym }}</span>
                             </td>
-                            <td class="py-2.5 px-2 text-right whitespace-nowrap">
-                                <span class="row-sell font-black text-amber-600 dark:text-amber-400 text-xs sm:text-sm">{{ q.sell_price|format_money }}</span>
+                            <td class="py-2.5 px-3 text-right whitespace-nowrap">
+                                <span class="row-sell font-black text-amber-600 dark:text-amber-400 text-sm">{{ q.sell_price|format_money }}</span>
                                 <span class="text-[10px] text-slate-400 ml-0.5">{{ sym }}</span>
                             </td>
-                            <td class="py-2.5 px-2 text-right whitespace-nowrap">
-                                <span class="row-spread-amt block text-xs font-bold text-slate-700 dark:text-slate-300">{{ q.spread_amount|format_money }} {{ sym }}</span>
-                                <span class="row-spread-pct text-[10px] font-bold text-slate-400">%{{ "%.2f"|format(q.spread_pct) }}</span>
-                            </td>
-                            <td class="py-2.5 px-1.5 text-center whitespace-nowrap">
+                            <td class="py-2.5 px-2 text-center whitespace-nowrap">
                                 <span class="px-2 py-0.5 rounded-full text-[10px] font-black {% if q.change_pct > 0 %}bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300{% elif q.change_pct < 0 %}bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300{% else %}bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300{% endif %}">
                                     {% if q.change_pct > 0 %}+{% endif %}{{ "%.2f"|format(q.change_pct) }}%
                                 </span>
                             </td>
-                            <td class="py-2.5 px-2 text-right whitespace-nowrap">
+                            <td class="py-2.5 px-3 text-right whitespace-nowrap">
                                 {% if q.is_calculable_tl %}
                                 <button data-macro="button_secondary" type="button"
                                         onclick="addToGoldBasket('{{ q.code }}', 1)"
-                                        class="px-2 py-1 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/50 dark:hover:bg-amber-900/60 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 text-[11px] font-black transition cursor-pointer">
-                                    + Sepet
+                                        class="px-2.5 py-1 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/50 dark:hover:bg-amber-900/60 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 text-[11px] font-black transition cursor-pointer">
+                                    + Ekle
                                 </button>
                                 {% else %}
-                                <span class="text-[10px] text-slate-400 font-bold">Referans</span>
+                                <span class="text-[10px] text-slate-400 font-bold">—</span>
                                 {% endif %}
                             </td>
                         </tr>
@@ -215,56 +136,37 @@
                 </table>
             </div>
 
-            <!-- MOBİL KART GÖRÜNÜMÜ (768px altı — 320px sıfır taşma garantili) -->
-            <div class="gold-mobile-cards-wrap space-y-3" id="goldMobileCards">
-                {% for q in data.quotes %}
+            <!-- MOBİL KOMPAKT SATIR GÖRÜNÜMÜ (768px altı — Tek Bakışta Sade Liste) -->
+            <div class="gold-mobile-cards-wrap divide-y divide-slate-100 dark:divide-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800" id="goldMobileCards">
+                {% for q in data.quotes if q.code not in ['usd_kg', 'eur_kg'] %}
                 {% set sym = base_currency_symbol if q.unit == 'TRY' else ('$' if q.unit == 'USD' else '€') %}
-                <article class="gold-item-card rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 p-3.5 shadow-sm"
+                <article class="gold-item-card flex items-center justify-between gap-2 p-2.5 bg-white dark:bg-slate-900"
                          data-code="{{ q.code }}"
                          data-category="{{ q.category }}"
-                         data-search="{{ q.name|lower }} {{ q.short_name|lower }} {{ q.purity_label|lower }}"
                          data-base-buy="{{ q.base_buy_price }}"
                          data-base-sell="{{ q.base_sell_price }}"
                          data-is-tl="{{ '1' if q.is_calculable_tl else '0' }}"
                          data-sym="{{ sym }}">
-                    <div class="flex items-start justify-between gap-2">
-                        <div class="flex items-center gap-2 min-w-0">
-                            <span class="gold-coin-badge">{{ '24K' if q.code == 'gram_altin' else ('22K' if '22' in q.purity_label else ('14K' if '14' in q.purity_label else ('AG' if q.code == 'gumus_gram' else 'ONS'))) }}</span>
-                            <div class="min-w-0">
-                                <h3 class="text-xs font-black text-slate-900 dark:text-white break-words">{{ q.name }}</h3>
-                                <p class="text-[10px] font-bold text-slate-400">{{ q.purity_label }} · {{ q.updated_time }}</p>
-                            </div>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-xs font-black text-slate-900 dark:text-white truncate">{{ q.short_name }}</span>
+                            <span class="px-1.5 py-0.2 rounded text-[9px] font-black shrink-0 {% if q.change_pct > 0 %}bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300{% elif q.change_pct < 0 %}bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300{% else %}bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400{% endif %}">
+                                {% if q.change_pct > 0 %}+{% endif %}{{ "%.2f"|format(q.change_pct) }}%
+                            </span>
                         </div>
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black shrink-0 {% if q.change_pct > 0 %}bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300{% elif q.change_pct < 0 %}bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300{% else %}bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300{% endif %}">
-                            {% if q.change_pct > 0 %}+{% endif %}{{ "%.2f"|format(q.change_pct) }}%
-                        </span>
-                    </div>
-
-                    <div class="mt-3 grid grid-cols-2 gap-2 rounded-xl bg-white dark:bg-slate-900 p-2.5 border border-slate-100 dark:border-slate-800">
-                        <div>
-                            <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">Kuyumcu Alış</span>
-                            <strong class="card-buy text-sm font-black text-emerald-600 dark:text-emerald-400">{{ q.buy_price|format_money }}</strong>
-                            <span class="text-[10px] font-bold text-slate-400">{{ sym }}</span>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">Kuyumcu Satış</span>
-                            <strong class="card-sell text-sm font-black text-amber-600 dark:text-amber-400">{{ q.sell_price|format_money }}</strong>
-                            <span class="text-[10px] font-bold text-slate-400">{{ sym }}</span>
+                        <div class="flex items-center gap-3 mt-1 text-[11px]">
+                            <span class="text-slate-400 font-bold">Alış: <strong class="card-buy text-emerald-600 dark:text-emerald-400 font-black">{{ q.buy_price|format_money }}</strong> {{ sym }}</span>
+                            <span class="text-slate-400 font-bold">Satış: <strong class="card-sell text-amber-600 dark:text-amber-400 font-black">{{ q.sell_price|format_money }}</strong> {{ sym }}</span>
                         </div>
                     </div>
-
-                    <div class="mt-2.5 flex flex-wrap items-center justify-between gap-2 text-[10px]">
-                        <span class="font-bold text-slate-500 dark:text-slate-400">
-                            Makas: <strong class="card-spread text-slate-700 dark:text-slate-200">{{ q.spread_amount|format_money }} {{ sym }} (%{{ "%.2f"|format(q.spread_pct) }})</strong>
-                        </span>
-                        {% if q.is_calculable_tl %}
-                        <button data-macro="button_secondary" type="button"
-                                onclick="addToGoldBasket('{{ q.code }}', 1)"
-                                class="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-black text-[10px] uppercase tracking-wider transition cursor-pointer shrink-0">
-                            + Sepete Ekle
-                        </button>
-                        {% endif %}
-                    </div>
+                    {% if q.is_calculable_tl %}
+                    <button data-macro="button_secondary" type="button"
+                            onclick="addToGoldBasket('{{ q.code }}', 1)"
+                            aria-label="{{ q.short_name }} sepete ekle"
+                            class="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 font-black text-[11px] shrink-0 cursor-pointer">
+                        + Ekle
+                    </button>
+                    {% endif %}
                 </article>
                 {% endfor %}
             </div>
