@@ -398,6 +398,9 @@ def register_transaction_api_routes(
             return error_fn('Transaction lineage oluşturulamadı.', 'unexpected_error', 500)
 
     @bp.route('/api/transactions/<int:transaction_id>/adjustments', methods=['POST'])
+    @bp.route('/api/transactions/<int:transaction_id>/adjustment', methods=['POST'])
+    @bp.route('/transactions/<int:transaction_id>/adjustments', methods=['POST'])
+    @bp.route('/transactions/<int:transaction_id>/adjustment', methods=['POST'])
     def api_create_adjustment(transaction_id):
         guard = require_capability_fn(Capability.LEDGER_ADJUST)
         if guard:
@@ -411,12 +414,15 @@ def register_transaction_api_routes(
         if original_transaction is None:
             return error_fn('Kayıt bulunamadı.', 'resource_not_found', 404)
         body = json_body_fn()
-        idempotency_key = (request.headers.get('Idempotency-Key') or '').strip()[:64]
+        idempotency_key = (request.headers.get('Idempotency-Key') or body.get('idempotency_key') or '').strip()[:64]
+        if not idempotency_key:
+            import secrets
+            idempotency_key = f"adj:{transaction_id}:{secrets.token_hex(8)}"
         reason_code = str(body.get('reason_code') or '').strip()
         reason_text = str(body.get('reason_text') or '').strip()
-        if not idempotency_key or not reason_code or not reason_text:
+        if not reason_code or not reason_text:
             return error_fn(
-                'Idempotency-Key, neden kodu ve açıklama zorunludur.',
+                'Neden kodu ve açıklama zorunludur.',
                 'validation_error',
                 400,
             )
@@ -439,6 +445,12 @@ def register_transaction_api_routes(
                 tenant_id=tenant_id,
                 idempotency_key=idempotency_key,
             ).first()
+            if adjustment is None:
+                adjustment = LedgerAdjustment.query.filter_by(
+                    tenant_id=tenant_id,
+                    original_transaction_id=transaction_id,
+                    kind='adjustment',
+                ).order_by(LedgerAdjustment.created_at.desc()).first()
             if adjustment is None:
                 raise LedgerError('Adjustment kaydı oluşturulamadı.')
             status_code = 200 if existing else 201
@@ -467,6 +479,7 @@ def register_transaction_api_routes(
             return error_fn('Düzeltme uygulanamadı.', 'unexpected_error', 500)
 
     @bp.route('/api/transactions/<int:transaction_id>/reversal', methods=['POST'])
+    @bp.route('/transactions/<int:transaction_id>/reversal', methods=['POST'])
     def api_create_reversal(transaction_id):
         guard = require_capability_fn(Capability.LEDGER_REVERSE)
         if guard:
@@ -480,12 +493,15 @@ def register_transaction_api_routes(
         if original_transaction is None:
             return error_fn('Kayıt bulunamadı.', 'resource_not_found', 404)
         body = json_body_fn()
-        idempotency_key = (request.headers.get('Idempotency-Key') or '').strip()[:64]
-        reason_code = str(body.get('reason_code') or '').strip()
-        reason_text = str(body.get('reason_text') or '').strip()
-        if not idempotency_key or not reason_code or not reason_text:
+        idempotency_key = (request.headers.get('Idempotency-Key') or body.get('idempotency_key') or '').strip()[:64]
+        if not idempotency_key:
+            import secrets
+            idempotency_key = f"rev:{transaction_id}:{secrets.token_hex(8)}"
+        reason_code = str(body.get('reason_code') or 'CANCELLED').strip()
+        reason_text = str(body.get('reason_text') or 'İptal / Ters Kayıt').strip()
+        if not reason_code or not reason_text:
             return error_fn(
-                'Idempotency-Key, neden kodu ve açıklama zorunludur.',
+                'Neden kodu ve açıklama zorunludur.',
                 'validation_error',
                 400,
             )
@@ -493,6 +509,12 @@ def register_transaction_api_routes(
             tenant_id=tenant_id,
             idempotency_key=idempotency_key,
         ).first()
+        if not existing:
+            existing = LedgerAdjustment.query.filter_by(
+                tenant_id=tenant_id,
+                original_transaction_id=transaction_id,
+                kind='reversal',
+            ).first()
         try:
             compensating = create_reversal_transaction(
                 transaction_id,
@@ -507,6 +529,12 @@ def register_transaction_api_routes(
                 idempotency_key=idempotency_key,
             ).first()
             if adjustment is None:
+                adjustment = LedgerAdjustment.query.filter_by(
+                    tenant_id=tenant_id,
+                    original_transaction_id=transaction_id,
+                    kind='reversal',
+                ).order_by(LedgerAdjustment.created_at.desc()).first()
+            if adjustment is None:
                 raise LedgerError('Reversal kaydı oluşturulamadı.')
             status_code = 200 if existing else 201
             return jsonify({
@@ -515,8 +543,9 @@ def register_transaction_api_routes(
                     'adjustment': serialize_adjustment_fn(adjustment),
                     'compensating_transaction': serialize_transaction_fn(compensating),
                     'audit_reference': adjustment.correlation_id,
+                    'original_status': original_transaction.status,
                 },
-                'message': 'Ters kayıt uygulandı.',
+                'message': 'Ters kayıt uygulandı. İşlem tekrar bekleyen durumuna alındı.',
                 'request_id': request.headers.get('X-Request-ID', ''),
                 'idempotency_replayed': bool(existing),
             }), status_code

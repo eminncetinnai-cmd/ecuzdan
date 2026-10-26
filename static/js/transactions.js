@@ -1259,17 +1259,32 @@
             }
 
             const targetUrl = immutableKind === 'adjustment'
-                ? (window.ECuzdanEndpoints?.transactions?.adjust ? window.ECuzdanEndpoints.transactions.adjust(immutableTransactionId) : `/transactions/${immutableTransactionId}/adjustment`)
-                : (window.ECuzdanEndpoints?.transactions?.reverse ? window.ECuzdanEndpoints.transactions.reverse(immutableTransactionId) : `/transactions/${immutableTransactionId}/reversal`);
+                ? (window.ECuzdanEndpoints?.transactions?.adjustments
+                    ? window.ECuzdanEndpoints.transactions.adjustments(immutableTransactionId)
+                    : (window.ECuzdanEndpoints?.transactions?.adjust
+                        ? window.ECuzdanEndpoints.transactions.adjust(immutableTransactionId)
+                        : `/api/transactions/${immutableTransactionId}/adjustments`))
+                : (window.ECuzdanEndpoints?.transactions?.reversal
+                    ? window.ECuzdanEndpoints.transactions.reversal(immutableTransactionId)
+                    : (window.ECuzdanEndpoints?.transactions?.reverse
+                        ? window.ECuzdanEndpoints.transactions.reverse(immutableTransactionId)
+                        : `/api/transactions/${immutableTransactionId}/reversal`));
 
-            const csrfToken = document.querySelector('input[name="csrf_token"]')?.value || '';
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                || document.querySelector('input[name="csrf_token"]')?.value
+                || '';
+
+            const idempotencyKey = window.crypto?.randomUUID
+                ? window.crypto.randomUUID()
+                : (immutableKind + '-' + immutableTransactionId + '-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9));
 
             fetch(targetUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Idempotency-Key': idempotencyKey
                 },
                 body: JSON.stringify(payload)
             })

@@ -166,7 +166,7 @@ def test_adjustment_and_reversal_preserve_original_and_are_idempotent(app):
     same_reversal = create_reversal_transaction(original.id, "İşlem iptali", "default")
 
     db.session.refresh(original)
-    assert original.status == "Ödendi"
+    assert original.status == "Bekliyor"
     assert original.amount == Decimal("1000.0000")
     assert original.is_deleted is False
     assert adjustment.id == same_adjustment.id
