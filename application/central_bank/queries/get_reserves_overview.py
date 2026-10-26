@@ -9,11 +9,24 @@ from domain.central_bank.services.reserve_service import CentralBankReserveServi
 class GetReservesOverviewQuery:
     """Orchestrates central bank reserve analytics, KPI extraction, and chart payload formatting."""
 
+    _default_service: CentralBankReserveService | None = None
+    _result_cache: Dict[str, Dict[str, Any]] = {}
+
     def __init__(self, service: CentralBankReserveService | None = None) -> None:
-        self._service = service or CentralBankReserveService()
+        self._custom_service = service is not None
+        if service is not None:
+            self._service = service
+        else:
+            if GetReservesOverviewQuery._default_service is None:
+                GetReservesOverviewQuery._default_service = CentralBankReserveService()
+            self._service = GetReservesOverviewQuery._default_service
 
     def execute(self, range_key: str = "all") -> Dict[str, Any]:
         """Execute the query and return a structured payload for templates and JSON APIs."""
+        clean_key = (range_key or "all").strip().lower()
+        if not self._custom_service and clean_key in GetReservesOverviewQuery._result_cache:
+            return GetReservesOverviewQuery._result_cache[clean_key]
+
         overview: ReservesOverviewDTO = self._service.build_overview(range_key)
 
         # Prepare TCMB historical Chart.js payload
@@ -53,7 +66,7 @@ class GetReservesOverviewQuery:
                     "note": b.note,
                 }
 
-        return {
+        result = {
             "kpis": {
                 "latest_date_display": overview.kpis.latest_date_display,
                 "latest_gross_total": float(overview.kpis.latest_gross_total),
@@ -137,3 +150,6 @@ class GetReservesOverviewQuery:
             "selected_range": overview.selected_range,
             "total_months_available": overview.total_months_available,
         }
+        if not self._custom_service:
+            GetReservesOverviewQuery._result_cache[clean_key] = result
+        return result

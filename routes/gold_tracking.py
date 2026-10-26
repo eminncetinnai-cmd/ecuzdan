@@ -22,7 +22,7 @@ def register_gold_tracking_routes(bp: Blueprint) -> None:
         try:
             preset_key = request.args.get("preset", "bursa_harem").strip().lower()
             query = GetGoldTrackingOverviewQuery()
-            data = query.execute(preset_key=preset_key, force_refresh=False)
+            data = query.execute(preset_key=preset_key, force_refresh=False, allow_network=False)
             return render_template(
                 "gold_tracking.html",
                 data=data,

@@ -115,6 +115,7 @@ class BackgroundService:
             "quality_status": "not_fetched",
         }
         self._market_data = {}
+        self._market_df_cache = {}
         self._stop_event = threading.Event()
         self._thread = None
 
@@ -276,6 +277,11 @@ class BackgroundService:
         try:
             logger.debug("Piyasa ve canlı veriler güncelleniyor...")
             self._update_live_data()
+            try:
+                from domain.analysis.services.gold_tracking_service import GoldTrackingService
+                GoldTrackingService().get_snapshot(force_refresh=True)
+            except Exception as gold_exc:
+                logger.debug("Arka plan Harem Altın önbellek ısıtması atlandı: %s", gold_exc)
             if not self._market_cache_is_fresh():
                 self._update_market_data()
             try:
@@ -536,14 +542,19 @@ class BackgroundService:
                 return None
 
             serialized = asset['data']
-            # Tekrar DataFrame'e dönüştür
+            cached = self._market_df_cache.get(ticker)
+            if cached is not None and cached[0] == id(serialized):
+                return cached[1].copy()
+
+            # Tekrar DataFrame'e dönüştür ve önbelleğe al
             pd = _pd()
             df = pd.DataFrame(
                 serialized['prices'],
                 index=pd.to_datetime(serialized['index']),
                 columns=['price']
             )
-            return df
+            self._market_df_cache[ticker] = (id(serialized), df)
+            return df.copy()
 
     def get_all_market_data(self):
         """Tüm piyasa verilerini DataFrame formatında döner"""
@@ -552,11 +563,17 @@ class BackgroundService:
             pd = _pd() if self._market_data else None
             for ticker, info in self._market_data.items():
                 serialized = info['data']
-                df = pd.DataFrame(
-                    serialized['prices'],
-                    index=pd.to_datetime(serialized['index']),
-                    columns=['price']
-                )
+                cached = self._market_df_cache.get(ticker)
+                if cached is not None and cached[0] == id(serialized):
+                    df = cached[1].copy()
+                else:
+                    df = pd.DataFrame(
+                        serialized['prices'],
+                        index=pd.to_datetime(serialized['index']),
+                        columns=['price']
+                    )
+                    self._market_df_cache[ticker] = (id(serialized), df)
+                    df = df.copy()
                 result[ticker] = {
                     'data': df,
                     'name': info['name'],

@@ -22,10 +22,12 @@ class GetGoldTrackingOverviewQuery:
         self,
         preset_key: str = "bursa_harem",
         force_refresh: bool = False,
+        allow_network: bool = True,
     ) -> dict[str, Any]:
         snapshot: GoldTrackingSnapshot = self._service.get_snapshot(
             preset_key=preset_key,
             force_refresh=force_refresh,
+            allow_network=allow_network,
         )
 
         serialized_quotes: list[dict[str, Any]] = [
@@ -84,6 +86,8 @@ class GetGoldTrackingOverviewQuery:
             "source_label": snapshot.source_label,
             "fallback_used": snapshot.fallback_used,
             "observed_at_display": snapshot.observed_at_display,
+            "is_cache_fresh": snapshot.is_cache_fresh,
+            "cache_age_seconds": snapshot.cache_age_seconds,
             "preset_key": snapshot.preset_key,
             "preset_info": {
                 "key": snapshot.preset_info["key"],

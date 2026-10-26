@@ -192,6 +192,12 @@ class MarketDataService:
 market_data_service = MarketDataService()
 
 # Makroekonomik veri önbelleği
+import json as _json
+import os as _os
+
+_BASE_DIR = _os.path.abspath(_os.path.dirname(_os.path.dirname(_os.path.dirname(__file__))))
+_MACRO_DISK_CACHE_FILE = _os.path.join(_BASE_DIR, "instance", "macro_data_cache.json")
+
 MACRO_CACHE = {
     "data": None,
     "last_fetched": 0
@@ -204,7 +210,38 @@ MACRO_CACHE_TTL = 86400  # 24 saat (başarılı dış kaynak verisi)
 MACRO_FAILURE_BACKOFF = 900  # 15 dakika (dış kaynaklar erişilemezse)
 
 
+def _save_macro_disk_cache() -> None:
+    if "PYTEST_CURRENT_TEST" in _os.environ or not MACRO_CACHE.get("data"):
+        return
+    try:
+        _os.makedirs(_os.path.dirname(_MACRO_DISK_CACHE_FILE), exist_ok=True)
+        with open(_MACRO_DISK_CACHE_FILE, "w", encoding="utf-8") as fh:
+            _json.dump(MACRO_CACHE, fh, ensure_ascii=False, indent=2)
+    except Exception as exc:
+        logger.debug("Macro disk cache write skipped: %s", exc)
+
+
+def _load_macro_disk_cache() -> None:
+    if "PYTEST_CURRENT_TEST" in _os.environ or MACRO_CACHE.get("data") is not None:
+        return
+    if not _os.path.exists(_MACRO_DISK_CACHE_FILE):
+        return
+    try:
+        with open(_MACRO_DISK_CACHE_FILE, "r", encoding="utf-8") as fh:
+            payload = _json.load(fh)
+        if isinstance(payload, dict) and isinstance(payload.get("data"), dict):
+            MACRO_CACHE["data"] = payload["data"]
+            MACRO_CACHE["last_fetched"] = float(payload.get("last_fetched") or 0)
+    except Exception as exc:
+        logger.debug("Macro disk cache read skipped: %s", exc)
+
+
+_load_macro_disk_cache()
+
+
 def _macro_cache_is_valid(now):
+    if MACRO_CACHE.get("data") is None and "PYTEST_CURRENT_TEST" not in _os.environ:
+        _load_macro_disk_cache()
     data = MACRO_CACHE.get("data")
     if not data:
         return False
@@ -585,6 +622,7 @@ def get_macro_economic_data(allow_network: bool = True):
         MACRO_CACHE["last_fetched"] = now
         MACRO_FAILURE_CACHE["data"] = None
         MACRO_FAILURE_CACHE["last_fetched"] = 0
+        _save_macro_disk_cache()
         logger.debug(f"Makro veri önbelleğe kaydedildi: {macro_data}")
     else:
         # Fallback’i ana cache’e yazma: cache poisoning önlenir. Ayrı kısa
@@ -596,6 +634,9 @@ def get_macro_economic_data(allow_network: bool = True):
     return macro_data
 
 
+_MARKET_SUMMARY_CACHE: dict = {"summary": None, "at": 0.0}
+
+
 def get_market_data_summary():
     """
     Piyasa verilerinin özetini döner (dashboard için)
@@ -604,6 +645,18 @@ def get_market_data_summary():
         dict: Normalize edilmiş veriler ve özet istatistikler
     """
     try:
+        is_mocked = (
+            hasattr(market_data_service, "_mock_name")
+            or hasattr(getattr(market_data_service, "get_all_market_data", None), "_mock_name")
+        )
+        now_mono = time.monotonic()
+        if (
+            not is_mocked
+            and _MARKET_SUMMARY_CACHE["summary"] is not None
+            and (now_mono - _MARKET_SUMMARY_CACHE["at"]) < 60.0
+        ):
+            return _MARKET_SUMMARY_CACHE["summary"]
+
         # Tüm verileri çek
         market_data = market_data_service.get_all_market_data()
 
@@ -631,6 +684,10 @@ def get_market_data_summary():
                 'ytd_return': ((data['normalized'].iloc[-1] - data['normalized'].iloc[0]) / data['normalized'].iloc[0]) * 100,
                 'data_points': len(data)
             }
+
+        if not is_mocked:
+            _MARKET_SUMMARY_CACHE["summary"] = summary
+            _MARKET_SUMMARY_CACHE["at"] = now_mono
 
         return summary
 

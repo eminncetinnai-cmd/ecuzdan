@@ -7,7 +7,9 @@ from application.analysis.queries.get_gold_tracking_overview import GetGoldTrack
 from domain.analysis.services.gold_tracking_service import (
     DERIVATIVE_SPECS,
     GoldTrackingService,
+    _load_disk_cache,
     _parse_change_pct,
+    _save_disk_cache,
     fetch_harem_doviz_table,
     fetch_truncgil_fallback,
 )
@@ -162,3 +164,47 @@ def test_gold_tracking_routes_authenticated(authenticated_client):
     json_data = api_res.get_json()
     assert json_data["success"] is True
     assert len(json_data["data"]["quotes"]) == 17
+
+
+def test_gold_tracking_disk_cache_and_zero_network_cold_start(tmp_path):
+    """Test persistent disk cache round-trip and instant allow_network=False cold start."""
+    cache_file = str(tmp_path / "gold_tracking_cache.json")
+    sample_bundle = {
+        "quotes": {
+            "gram_altin": {
+                "buy": Decimal("7010.50"),
+                "sell": Decimal("7060.25"),
+                "change_pct": Decimal("0.42"),
+                "time": "10:30",
+            }
+        },
+        "source": "harem_altin_live",
+        "source_label": "Harem Altın Canlı (Bursa Referans)",
+        "fallback_used": False,
+        "observed_at_display": "26.10.2026 10:30",
+    }
+    _save_disk_cache(sample_bundle, cache_path=cache_file)
+    loaded_bundle, age_sec = _load_disk_cache(cache_path=cache_file)
+
+    assert loaded_bundle is not None
+    assert age_sec < 10.0
+    assert loaded_bundle["source"] == "harem_altin_live"
+    assert loaded_bundle["quotes"]["gram_altin"]["buy"] == Decimal("7010.50")
+    assert len(loaded_bundle["quotes"]) == len(DERIVATIVE_SPECS)
+
+    # Verify allow_network=False never calls external HTTP providers
+    service = GoldTrackingService()
+    with (
+        patch("domain.analysis.services.gold_tracking_service._CACHED_RAW_QUOTES", None),
+        patch("domain.analysis.services.gold_tracking_service.GOLD_TRACKING_CACHE_FILE", cache_file),
+        patch("domain.analysis.services.gold_tracking_service.fetch_harem_doviz_table") as mock_harem,
+        patch("domain.analysis.services.gold_tracking_service.fetch_truncgil_fallback") as mock_trunc,
+    ):
+        snap = service.get_snapshot(preset_key="bursa_harem", force_refresh=False, allow_network=False)
+
+    assert mock_harem.call_count == 0
+    assert mock_trunc.call_count == 0
+    assert snap.source == "harem_altin_live"
+    assert snap.is_cache_fresh is True
+    gram_q = next(q for q in snap.quotes if q.code == "gram_altin")
+    assert gram_q.buy_price == Decimal("7010.50")

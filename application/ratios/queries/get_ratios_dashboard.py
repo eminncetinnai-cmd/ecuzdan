@@ -16,10 +16,12 @@ class GetRatiosDashboardQuery:
     def __init__(self, service: Optional[MacroRatioService] = None, live_provider=None) -> None:
         if service is not None:
             self._service = service
-        elif GetRatiosDashboardQuery._cached_definitions is not None:
-            self._service = MacroRatioService(definitions=GetRatiosDashboardQuery._cached_definitions)
         else:
-            self._service = MacroRatioService()
+            if GetRatiosDashboardQuery._cached_definitions is None:
+                from domain.ratios.data.historical_ratios_data import get_all_ratio_definitions
+
+                GetRatiosDashboardQuery._cached_definitions = get_all_ratio_definitions()
+            self._service = MacroRatioService(definitions=GetRatiosDashboardQuery._cached_definitions)
         self._live_provider = live_provider
 
     def sync_live_market_data(self) -> Dict[str, Any]:

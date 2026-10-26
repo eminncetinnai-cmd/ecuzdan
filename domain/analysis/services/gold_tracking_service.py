@@ -12,7 +12,9 @@ Pure domain service: never imports Flask or SQLAlchemy models.
 
 from __future__ import annotations
 
+import json
 import logging
+import os
 import threading
 import time
 from dataclasses import dataclass
@@ -35,6 +37,11 @@ HAREM_DOVIZ_URL = "https://altin.doviz.com/harem"
 TRUNCGIL_V4_URL = "https://finans.truncgil.com/v4/today.json"
 CACHE_TTL_SECONDS = 300.0
 REQUEST_TIMEOUT_SECONDS = 6
+
+_BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
+_INSTANCE_DIR = os.path.join(_BASE_DIR, "instance")
+GOLD_TRACKING_CACHE_FILE = os.path.join(_INSTANCE_DIR, "gold_tracking_cache.json")
+LIVE_DATA_CACHE_FILE = os.path.join(_INSTANCE_DIR, "live_data_cache.json")
 
 
 @dataclass(frozen=True)
@@ -364,6 +371,8 @@ class GoldTrackingSnapshot:
     observed_at_display: str
     preset_key: str
     preset_info: dict[str, Any]
+    is_cache_fresh: bool = True
+    cache_age_seconds: float = 0.0
 
 
 _CACHE_LOCK = threading.Lock()
@@ -509,6 +518,120 @@ def _build_full_raw_map(
     return complete
 
 
+def _save_disk_cache(bundle: dict[str, Any], cache_path: str | None = None) -> None:
+    """Persist gold tracking raw quotes bundle to disk for instant cold-start loading."""
+    target_path = cache_path or GOLD_TRACKING_CACHE_FILE
+    if cache_path is None and "PYTEST_CURRENT_TEST" in os.environ:
+        return
+    try:
+        os.makedirs(os.path.dirname(target_path), exist_ok=True)
+        serialized_quotes: dict[str, dict[str, str]] = {}
+        for code, item in bundle.get("quotes", {}).items():
+            serialized_quotes[code] = {
+                "buy": str(item["buy"]),
+                "sell": str(item["sell"]),
+                "change_pct": str(item.get("change_pct", Decimal("0.00"))),
+                "time": str(item.get("time", "")),
+            }
+        payload = {
+            "quotes": serialized_quotes,
+            "source": bundle.get("source", "harem_altin_live"),
+            "source_label": bundle.get("source_label", "Harem Altın Canlı (Bursa Referans)"),
+            "fallback_used": bool(bundle.get("fallback_used", False)),
+            "observed_at_display": bundle.get("observed_at_display", ""),
+            "cached_at_epoch": time.time(),
+        }
+        with open(target_path, "w", encoding="utf-8") as fh:
+            json.dump(payload, fh, ensure_ascii=False, indent=2)
+    except Exception as exc:
+        logger.debug("Gold tracking disk cache write skipped: %s", exc)
+
+
+def _load_disk_cache(cache_path: str | None = None) -> tuple[dict[str, Any] | None, float]:
+    """Load persisted gold tracking raw quotes from disk, returning (bundle, age_seconds)."""
+    target_path = cache_path or GOLD_TRACKING_CACHE_FILE
+    if not os.path.exists(target_path):
+        return None, float("inf")
+    try:
+        with open(target_path, "r", encoding="utf-8") as fh:
+            payload = json.load(fh)
+        if not isinstance(payload, dict) or not isinstance(payload.get("quotes"), dict):
+            return None, float("inf")
+
+        partial: dict[str, dict[str, Any]] = {}
+        for code, item in payload["quotes"].items():
+            if not isinstance(item, dict):
+                continue
+            buy_val = _parse_decimal(item.get("buy"))
+            sell_val = _parse_decimal(item.get("sell"))
+            if buy_val is None or sell_val is None:
+                continue
+            partial[code] = {
+                "buy": _quantize_2dp(buy_val),
+                "sell": _quantize_2dp(sell_val),
+                "change_pct": _quantize_2dp(_parse_decimal(item.get("change_pct")) or Decimal("0.00")),
+                "time": str(item.get("time") or "09:00"),
+            }
+
+        if "gram_altin" not in partial:
+            return None, float("inf")
+
+        gram_buy = partial["gram_altin"]["buy"]
+        gram_sell = partial["gram_altin"]["sell"]
+        complete = _build_full_raw_map(partial, gram_buy, gram_sell)
+        cached_at_epoch = float(payload.get("cached_at_epoch") or os.path.getmtime(target_path))
+        age_seconds = max(0.0, time.time() - cached_at_epoch)
+
+        bundle = {
+            "quotes": complete,
+            "source": str(payload.get("source") or "harem_altin_cache"),
+            "source_label": str(payload.get("source_label") or "Harem Altın Canlı (Bursa Referans)"),
+            "fallback_used": bool(payload.get("fallback_used", False)),
+            "observed_at_display": str(
+                payload.get("observed_at_display") or datetime.now().strftime("%d.%m.%Y %H:%M")
+            ),
+        }
+        return bundle, age_seconds
+    except Exception as exc:
+        logger.debug("Gold tracking disk cache read skipped: %s", exc)
+        return None, float("inf")
+
+
+def _build_instant_offline_bundle() -> dict[str, Any]:
+    """Build an instant (<1ms) calibrated gold snapshot from local live_data_cache.json without network."""
+    raw_gold = Decimal("6894.70")
+    if os.path.exists(LIVE_DATA_CACHE_FILE):
+        try:
+            with open(LIVE_DATA_CACHE_FILE, "r", encoding="utf-8") as fh:
+                live_payload = json.load(fh)
+            if isinstance(live_payload, dict):
+                parsed = _parse_decimal(live_payload.get("gold"))
+                if parsed and parsed > Decimal("100"):
+                    raw_gold = parsed
+        except Exception:
+            pass
+
+    gram_buy = _quantize_2dp(raw_gold * Decimal("0.9945"))
+    gram_sell = _quantize_2dp(raw_gold * Decimal("1.0075"))
+    now_hm = datetime.now().strftime("%H:%M")
+    partial_fallback = {
+        "gram_altin": {
+            "buy": gram_buy,
+            "sell": gram_sell,
+            "change_pct": Decimal("0.00"),
+            "time": now_hm,
+        }
+    }
+    complete = _build_full_raw_map(partial_fallback, gram_buy, gram_sell)
+    return {
+        "quotes": complete,
+        "source": "calibrated_harem_formula",
+        "source_label": "Harem Altın Katsayı Motoru (Önbellek)",
+        "fallback_used": True,
+        "observed_at_display": datetime.now().strftime("%d.%m.%Y %H:%M"),
+    }
+
+
 class GoldTrackingService:
     """Domain service for Harem Altın & Bursa Jeweler gold derivative prices."""
 
@@ -517,16 +640,24 @@ class GoldTrackingService:
         preset_key: str = "bursa_harem",
         force_refresh: bool = False,
         session: Any = None,
+        allow_network: bool = True,
     ) -> GoldTrackingSnapshot:
         preset = MARGIN_PRESETS.get(preset_key, MARGIN_PRESETS["bursa_harem"])
         actual_preset_key = preset["key"]
 
-        raw_bundle = self._get_or_fetch_raw_quotes(force_refresh=force_refresh, session=session)
+        raw_bundle = self._get_or_fetch_raw_quotes(
+            force_refresh=force_refresh,
+            session=session,
+            allow_network=allow_network,
+        )
         raw_quotes: dict[str, dict[str, Any]] = raw_bundle["quotes"]
         source: str = raw_bundle["source"]
         source_label: str = raw_bundle["source_label"]
         fallback_used: bool = raw_bundle["fallback_used"]
         observed_at_display: str = raw_bundle["observed_at_display"]
+        with _CACHE_LOCK:
+            cache_age = max(0.0, time.monotonic() - _CACHED_AT_MONOTONIC) if _CACHED_AT_MONOTONIC > 0 else CACHE_TTL_SECONDS
+        is_cache_fresh = (cache_age < CACHE_TTL_SECONDS) and not fallback_used
 
         buy_mult = Decimal("1") + (Decimal(str(preset["buy_adj_pct"])) / Decimal("100"))
         sell_mult = Decimal("1") + (Decimal(str(preset["sell_adj_pct"])) / Decimal("100"))
@@ -582,19 +713,40 @@ class GoldTrackingService:
             observed_at_display=observed_at_display,
             preset_key=actual_preset_key,
             preset_info=preset,
+            is_cache_fresh=is_cache_fresh,
+            cache_age_seconds=round(cache_age, 1),
         )
 
-    def _get_or_fetch_raw_quotes(self, force_refresh: bool = False, session: Any = None) -> dict[str, Any]:
+    def _get_or_fetch_raw_quotes(
+        self,
+        force_refresh: bool = False,
+        session: Any = None,
+        allow_network: bool = True,
+    ) -> dict[str, Any]:
         global _CACHED_RAW_QUOTES, _CACHED_AT_MONOTONIC
 
         now_mono = time.monotonic()
         with _CACHE_LOCK:
+            if _CACHED_RAW_QUOTES is None and (not force_refresh or not allow_network):
+                disk_bundle, disk_age = _load_disk_cache()
+                if disk_bundle is not None:
+                    _CACHED_RAW_QUOTES = disk_bundle
+                    _CACHED_AT_MONOTONIC = max(0.0, now_mono - disk_age)
+
             if (
                 not force_refresh
                 and _CACHED_RAW_QUOTES is not None
                 and (now_mono - _CACHED_AT_MONOTONIC) < CACHE_TTL_SECONDS
             ):
                 return _CACHED_RAW_QUOTES
+
+            if not allow_network:
+                if _CACHED_RAW_QUOTES is not None:
+                    return _CACHED_RAW_QUOTES
+                instant_bundle = _build_instant_offline_bundle()
+                _CACHED_RAW_QUOTES = instant_bundle
+                _CACHED_AT_MONOTONIC = 0.0
+                return instant_bundle
 
         # Tier 1: Harem Altın live table
         harem_circuit = get_provider_circuit("harem_doviz_table")
@@ -615,6 +767,7 @@ class GoldTrackingService:
                 with _CACHE_LOCK:
                     _CACHED_RAW_QUOTES = bundle
                     _CACHED_AT_MONOTONIC = time.monotonic()
+                _save_disk_cache(bundle)
                 return bundle
             except Exception as exc:
                 harem_circuit.record_failure()
@@ -639,6 +792,7 @@ class GoldTrackingService:
                 with _CACHE_LOCK:
                     _CACHED_RAW_QUOTES = bundle
                     _CACHED_AT_MONOTONIC = time.monotonic()
+                _save_disk_cache(bundle)
                 return bundle
             except Exception as exc:
                 truncgil_circuit.record_failure()

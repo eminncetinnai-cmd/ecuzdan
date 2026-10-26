@@ -516,8 +516,10 @@
 
     renderAllPrices();
 
-    // 1) Sayfaya ilk girildiğinde güncel veriyi çek
-    window.refreshGoldQuotes();
+    // 1) Sayfa önbellekten anında (<5ms) açılır; eğer önbellek 5 dakikadan eskiyse veya yedek moddaysa arka planda canlı veriyi çek
+    if (!state.is_cache_fresh || state.fallback_used) {
+        window.refreshGoldQuotes();
+    }
 
     // 2) Aynı sayfada kalındığı sürece her 5 dakikada bir yenile
     setInterval(window.refreshGoldQuotes, AUTO_REFRESH_INTERVAL_MS);
