@@ -27,10 +27,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    function selectTab(tab, updateUrl = true) {
+    function selectTab(tabOrName, updateUrl = true) {
+        let tab = tabOrName;
+        if (typeof tabOrName === 'string') {
+            tab = document.querySelector(`.cat-tab[data-tab="${tabOrName}"]`);
+        }
         if (!tab) return;
         const target = tab.dataset.tab;
-        tabs.forEach(t => t.setAttribute('aria-selected', 'false'));
+        const allTabs = Array.from(document.querySelectorAll('.cat-tab'));
+        allTabs.forEach(t => t.setAttribute('aria-selected', 'false'));
         document.querySelectorAll('.cat-panel').forEach(p => p.classList.remove('active'));
         tab.setAttribute('aria-selected', 'true');
         const targetPanel = document.querySelector(`[data-panel="${target}"]`);
@@ -41,6 +46,7 @@ document.addEventListener('DOMContentLoaded', function () {
             } catch (e) {}
         }
     }
+    window.selectTab = selectTab;
 
     // Escape tuşuna basıldığında aktif modalları veya düzenleme modunu kapat
     document.addEventListener('keydown', function(e) {
@@ -212,6 +218,10 @@ function searchCats(q) {
 let activeFilter = 'all';
 function filterCats(type) {
     activeFilter = type;
+    // Eğer kategoriler sekmesinde değilsek önce kategoriler sekmesine geç
+    if (typeof window.selectTab === 'function') {
+        window.selectTab('categories');
+    }
     const searchVal = (document.getElementById('cat_search')?.value || '').toLowerCase();
     const rows = document.querySelectorAll('#cats_tbody .cat-row');
     let visibleCount = 0;
@@ -248,12 +258,14 @@ function filterCats(type) {
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
         const active = btn.dataset.filter === type;
+        btn.classList.toggle('active', active);
         btn.classList.toggle('bg-slate-900', active);
         btn.classList.toggle('text-white', active);
         btn.classList.toggle('bg-slate-100', !active);
         btn.classList.toggle('text-slate-600', !active);
     });
 }
+window.filterCats = filterCats;
 
 // ── Kategori Tablo Sıralaması ─────────────────────────────────────────────
 let currentCatSort = { col: null, asc: true };
@@ -555,16 +567,6 @@ function cancelCatEdit() {
 
     const advDetails = document.getElementById('cat_advanced_fields');
     if (advDetails) advDetails.open = false;
-
-    selectColor('');
-
-    const iconSelect = document.getElementById('cat_icon');
-    if (iconSelect) {
-        iconSelect.value = '';
-        iconSelect.disabled = false;
-    }
-
-    updateTypeVisual();
 }
 
 // ── Kategori Birleştirme Modal & İşlemi ──────────────────────────────────

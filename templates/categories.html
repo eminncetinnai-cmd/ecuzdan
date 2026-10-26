@@ -37,34 +37,34 @@
             {% endif %}
         {% endfor %}
         <div class="flex flex-wrap items-center gap-2">
-            <div class="flex items-center gap-2 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-lg">
+            <button data-macro="button_secondary" type="button" onclick="selectTab('categories'); filterCats('all');" class="flex items-center gap-2 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition cursor-pointer" title="Tüm Kategorileri Listele">
                 <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>
                 <span class="text-[10px] font-black text-indigo-700 uppercase">{{ cats|length }} Kategori</span>
-            </div>
-            <div class="flex items-center gap-2 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-lg">
+            </button>
+            <button data-macro="button_secondary" type="button" onclick="selectTab('asset-types');" class="flex items-center gap-2 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition cursor-pointer" title="Varlık Sınıflarına Geç">
                 <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
                 <span class="text-[10px] font-black text-emerald-700 uppercase">{{ asset_types|length }} Varlık Sınıfı</span>
-            </div>
-            <div class="flex items-center gap-2 bg-amber-50 border border-amber-100 px-3 py-1.5 rounded-lg">
+            </button>
+            <button data-macro="button_secondary" type="button" onclick="selectTab('sectors');" class="flex items-center gap-2 bg-amber-50 border border-amber-100 px-3 py-1.5 rounded-lg hover:bg-amber-100 transition cursor-pointer" title="Sektörlere Geç">
                 <span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
                 <span class="text-[10px] font-black text-amber-700 uppercase">{{ asset_sectors|length }} Sektör</span>
-            </div>
+            </button>
             {% if total_cat_budget.val > 0 %}
-            <div class="flex items-center gap-2 bg-purple-50 border border-purple-100 px-3 py-1.5 rounded-lg" title="Aylık Bütçe ve Cari Harcama">
+            <button data-macro="button_secondary" type="button" onclick="selectTab('categories'); filterCats('budgeted');" class="flex items-center gap-2 bg-purple-50 border border-purple-100 px-3 py-1.5 rounded-lg hover:bg-purple-100 transition cursor-pointer" title="Bütçeli Kategorileri Filtrele">
                 <span class="w-1.5 h-1.5 bg-purple-500 rounded-full"></span>
                 <span class="text-[10px] font-black text-purple-700 uppercase">{{ "{:,.0f}".format(total_cat_spent.val) }} / {{ "{:,.0f}".format(total_cat_budget.val) }} {{ base_currency_symbol }}</span>
-            </div>
+            </button>
             {% endif %}
             {% if over_budget_count.val > 0 %}
-            <div class="flex items-center gap-2 bg-rose-50 border border-rose-200 px-3 py-1.5 rounded-lg" title="Aylık bütçe limitini aşan kategori sayısı">
+            <button data-macro="button_secondary" type="button" onclick="selectTab('categories'); filterCats('overbudget');" class="flex items-center gap-2 bg-rose-50 border border-rose-200 px-3 py-1.5 rounded-lg hover:bg-rose-100 transition cursor-pointer" title="Bütçe Aşımı Olan Kategorileri Filtrele">
                 <span class="w-1.5 h-1.5 bg-rose-500 rounded-full"></span>
                 <span class="text-[10px] font-black text-rose-700 uppercase">{{ over_budget_count.val }} Bütçe Aşımı</span>
-            </div>
+            </button>
             {% elif total_cat_budget.val > 0 %}
-            <div class="flex items-center gap-2 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-lg" title="Tüm kategoriler bütçe limitleri dahilinde">
+            <button data-macro="button_secondary" type="button" onclick="selectTab('categories'); filterCats('budgeted');" class="flex items-center gap-2 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition cursor-pointer" title="Bütçeli Kategorileri Filtrele">
                 <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
                 <span class="text-[10px] font-black text-emerald-700 uppercase">Bütçeler Dengede</span>
-            </div>
+            </button>
             {% endif %}
         </div>
     </div>
@@ -96,24 +96,24 @@
 <!-- ═══════════════════════════════════════════════════════════ -->
 <div class="premium-card bg-white/80 p-1.5 shadow-lg overflow-x-auto no-scrollbar">
     <div class="flex items-center gap-1 min-w-max" role="tablist" aria-label="{{ _('ui_auto_5f6042c8edf0') }}">
-        <button data-macro="button_secondary" type="button" role="tab" data-tab="categories" aria-selected="true"
-                class="cat-tab shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2.5 rounded-lg font-black text-[10px] uppercase tracking-wider text-slate-500">
+        <button data-macro="button_secondary" type="button" role="tab" data-tab="categories" aria-selected="true" onclick="selectTab('categories')"
+                class="cat-tab shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2.5 rounded-lg font-black text-[10px] uppercase tracking-wider text-slate-500 cursor-pointer">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
             {{ _('ui_auto_f908954df828') }}
         </button>
-        <button data-macro="button_secondary" type="button" role="tab" data-tab="asset-types" aria-selected="false"
-                class="cat-tab shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2.5 rounded-lg font-black text-[10px] uppercase tracking-wider text-slate-500">
+        <button data-macro="button_secondary" type="button" role="tab" data-tab="asset-types" aria-selected="false" onclick="selectTab('asset-types')"
+                class="cat-tab shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2.5 rounded-lg font-black text-[10px] uppercase tracking-wider text-slate-500 cursor-pointer">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
             {{ _('ui_auto_08c963ef0127') }}
         </button>
-        <button data-macro="button_secondary" type="button" role="tab" data-tab="sectors" aria-selected="false"
-                class="cat-tab shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2.5 rounded-lg font-black text-[10px] uppercase tracking-wider text-slate-500">
+        <button data-macro="button_secondary" type="button" role="tab" data-tab="sectors" aria-selected="false" onclick="selectTab('sectors')"
+                class="cat-tab shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2.5 rounded-lg font-black text-[10px] uppercase tracking-wider text-slate-500 cursor-pointer">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
             {{ _('ui_auto_bc9bbd5c8c58') }}
         </button>
         <!-- GL Kodu Referans Sekmesi -->
-        <button data-macro="button_secondary" type="button" role="tab" data-tab="gl-reference" aria-selected="false"
-                class="cat-tab shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2.5 rounded-lg font-black text-[10px] uppercase tracking-wider text-slate-500">
+        <button data-macro="button_secondary" type="button" role="tab" data-tab="gl-reference" aria-selected="false" onclick="selectTab('gl-reference')"
+                class="cat-tab shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2.5 rounded-lg font-black text-[10px] uppercase tracking-wider text-slate-500 cursor-pointer">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             {{ _('ui_auto_4759fb065991') }}
         </button>
