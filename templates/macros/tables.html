@@ -24,46 +24,50 @@
 {% endmacro %}
 
 {% macro simple_table(headers, rows, extra_classes='') %}
-<table class="w-full text-left text-xs {{ extra_classes }}">
-    <thead class="text-slate-400 uppercase text-[10px] font-bold border-b border-slate-200">
-        <tr>
-            {% for header in headers %}
-            <th class="py-3 px-2">{{ header }}</th>
-            {% endfor %}
-        </tr>
-    </thead>
-    <tbody class="font-semibold text-slate-700">
-        {% for row in rows %}
-        <tr class="border-b border-slate-100 hover:bg-slate-50/40 transition">
-            {% for cell in row %}
-            <td class="py-3 px-2">{{ cell|safe }}</td>
-            {% endfor %}
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% endmacro %}
-
-{% macro stat_table(title, data, color='emerald') %}
-<div class="premium-card p-6 bg-white/80 border-l-4 border-{{ color }}-500 shadow-lg">
-    <h3 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-4">{{ title }}</h3>
-    <table class="w-full text-xs">
-        <thead>
-            <tr class="text-slate-400 uppercase text-[10px] font-bold border-b border-slate-200">
-                {% for key in data[0].keys() %}
-                <th class="py-2 px-2 text-left">{{ key }}</th>
+<div class="overflow-x-auto">
+    <table class="w-full text-left text-xs {{ extra_classes }}">
+        <thead class="text-slate-400 uppercase text-[10px] font-bold border-b border-slate-200">
+            <tr>
+                {% for header in headers %}
+                <th class="py-3 px-2">{{ header }}</th>
                 {% endfor %}
             </tr>
         </thead>
-        <tbody class="text-slate-700">
-            {% for row in data %}
-            <tr class="border-b border-slate-100">
-                {% for value in row.values() %}
-                <td class="py-2 px-2">{{ value }}</td>
+        <tbody class="font-semibold text-slate-700">
+            {% for row in rows %}
+            <tr class="border-b border-slate-100 hover:bg-slate-50/40 transition">
+                {% for cell in row %}
+                <td class="py-3 px-2">{{ cell|safe }}</td>
                 {% endfor %}
             </tr>
             {% endfor %}
         </tbody>
     </table>
+</div>
+{% endmacro %}
+
+{% macro stat_table(title, data, color='emerald') %}
+<div class="premium-card p-6 bg-white/80 border-l-4 border-{{ color }}-500 shadow-lg">
+    <h3 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-4">{{ title }}</h3>
+    <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+            <thead>
+                <tr class="text-slate-400 uppercase text-[10px] font-bold border-b border-slate-200">
+                    {% for key in data[0].keys() %}
+                    <th class="py-2 px-2 text-left">{{ key }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody class="text-slate-700">
+                {% for row in data %}
+                <tr class="border-b border-slate-100">
+                    {% for value in row.values() %}
+                    <td class="py-2 px-2">{{ value }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endmacro %}
