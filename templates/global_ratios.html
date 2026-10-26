@@ -472,11 +472,11 @@
     <div id="executiveBriefingModal" class="fin-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="briefingModalTitle">
         <div class="fin-modal-card briefing-modal-card">
             <div class="briefing-modal-header no-print">
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2">
                     <span class="briefing-badge">BLOOMBERG-GRADE MACRO SNAPSHOT</span>
                     <span class="briefing-date">{{ briefing.period|default(latest_period) }} Raporu</span>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2">
                     <button data-macro="button_secondary" type="button" id="btnPrintBriefing" class="modal-btn-action" title="Yazdır veya PDF Kaydet">
                         🖨️ PDF / Yazdır
                     </button>

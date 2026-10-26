@@ -307,15 +307,15 @@
         </div>
 
         <!-- Filter Chips Bar -->
-        <div class="flex items-center gap-2 overflow-x-auto pb-1 pt-1">
-            <button data-macro="button_secondary" type="button" class="asset-chip active" data-type-filter="">
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 pt-1">
+            <button data-macro="button_secondary" type="button" class="asset-chip active shrink-0 whitespace-nowrap" data-type-filter="">
                 <span>Tümü</span>
                 <span class="asset-chip-count">{{ assets|length }}</span>
             </button>
             {% for t in asset_types %}
             {% set type_count = assets|selectattr('type', 'equalto', t.name)|list|length %}
             {% if type_count > 0 %}
-            <button data-macro="button_secondary" type="button" class="asset-chip" data-type-filter="{{ t.name }}">
+            <button data-macro="button_secondary" type="button" class="asset-chip shrink-0 whitespace-nowrap" data-type-filter="{{ t.name }}">
                 <span>{{ t.name }}</span>
                 <span class="asset-chip-count">{{ type_count }}</span>
             </button>

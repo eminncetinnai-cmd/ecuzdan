@@ -347,8 +347,8 @@
 .storage-health-kpi-primary::before {
     content: '';
     position: absolute;
-    top: -1rem;
-    right: -1rem;
+    top: 0;
+    right: 0;
     width: 5rem;
     height: 5rem;
     border-radius: 50%;
@@ -1009,11 +1009,26 @@
     .storage-health-page { padding: 1.25rem 1rem 2.5rem; }
     .storage-health-hero {
         display: grid;
+        grid-template-columns: minmax(0, 1fr);
         align-items: start;
         gap: 1.25rem;
-        padding: 1.5rem;
+        padding: 1.25rem;
     }
-    .storage-health-actions { justify-content: space-between; }
+    .storage-health-actions {
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        width: 100%;
+    }
+    .sh-tuneup-cta-btn,
+    .storage-health-refresh {
+        flex: 1 1 auto;
+        justify-content: center;
+        white-space: normal;
+        text-align: center;
+        font-size: 0.75rem;
+        padding: 0.5rem 0.75rem;
+    }
     .storage-health-kpis { grid-template-columns: 1fr; }
     .storage-health-panel { padding: 1.1rem; }
     .storage-health-candidates-heading { align-items: stretch; display: grid; }
@@ -1021,6 +1036,10 @@
     .storage-health-candidate-tools { min-width: 0; }
     .storage-health-status { flex-wrap: wrap; padding: .75rem .9rem; }
     .storage-health-footnote { display: grid; }
+    .storage-health-delete-btn {
+        width: 100%;
+        justify-content: center;
+    }
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -1093,9 +1112,10 @@
    ══════════════════════════════════════════════════════════ */
 .storage-health-delete-bar {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
+    gap: .75rem;
     margin-top: .85rem;
     padding: .75rem 1.1rem;
     border: 1px solid var(--sh-red-border);
@@ -1128,6 +1148,8 @@
 .storage-health-delete-btn {
     display: inline-flex;
     align-items: center;
+    flex-shrink: 0;
+    white-space: nowrap;
     gap: .4rem;
     min-height: 2.2rem;
     padding: 0 1rem;

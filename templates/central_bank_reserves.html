@@ -363,7 +363,7 @@
                 </h2>
                 <p class="table-surface-subtitle">Resmi brüt döviz, altın ve net rezerv dökümü</p>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                 <div class="category-chips-row" role="group" aria-label="Yıl Filtreleri">
                     <button data-macro="button_secondary" type="button" class="filter-chip-btn active" data-year-filter="all">Tüm Yıllar</button>
                     <button data-macro="button_secondary" type="button" class="filter-chip-btn" data-year-filter="2026">2026</button>
@@ -371,7 +371,7 @@
                     <button data-macro="button_secondary" type="button" class="filter-chip-btn" data-year-filter="2024">2024</button>
                     <button data-macro="button_secondary" type="button" class="filter-chip-btn" data-year-filter="2023">2023</button>
                 </div>
-                <button data-macro="button_secondary" type="button" id="btnToggleHistoricalTcmb" class="btn btn-secondary text-xs" aria-expanded="true">
+                <button data-macro="button_secondary" type="button" id="btnToggleHistoricalTcmb" class="btn btn-secondary text-xs shrink-0 whitespace-nowrap" aria-expanded="true">
                     Gizle / Göster
                 </button>
             </div>
@@ -445,11 +445,11 @@
     <div id="reserveBriefingModal" class="fin-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="reserveBriefingTitle">
         <div class="fin-modal-card briefing-modal-card">
             <div class="briefing-modal-header no-print">
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2">
                     <span class="briefing-badge">CENTRAL BANK OFFICIAL RESERVE REPORT</span>
                     <span class="briefing-date">{{ date_display }} Raporu</span>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2">
                     <button data-macro="button_secondary" type="button" id="btnPrintReserveBriefing" class="modal-btn-action" title="Yazdır veya PDF Kaydet">
                         🖨️ PDF / Yazdır
                     </button>
