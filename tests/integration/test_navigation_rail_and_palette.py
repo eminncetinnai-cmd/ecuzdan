@@ -89,37 +89,24 @@ def test_clean_sidebar_navigation_uncluttered_structure(authenticated_client):
 
 @pytest.mark.integration
 def test_all_22_navigation_links_parity_and_datalabels(authenticated_client):
-    """Verify core pages are present in the navigation macro and have data-label attributes."""
+    """Verify streamlined core hub pages are present in the navigation macro and have data-label attributes."""
     response = authenticated_client.get("/")
     assert response.status_code == 200
     body = response.get_data(as_text=True)
 
     canonical_core_routes = [
-        # Overview (Genel Bakis)
+        # Overview (Genel Bakis — Daily Core Priorities)
         ("/", "Nakit Akisi"),
         ("/transactions", "Islemler"),
-        ("/plans", "Duzenli Islemler"),
-        ("/monthly_dashboard", "Aylik Ozet"),
         ("/payment_calendar", "Odeme Takvimi"),
-        # Assets & Analysis
+        ("/logbook", "Cuzdan Defteri"),
+        # Assets & Analysis Hubs
         ("/assets", "Varliklar"),
-        ("/investment_performance", "Yatirim Performansi"),
+        ("/gold-tracking", "Altin Takip"),
         ("/analysis", "Finansal Saglik"),
-        # Strategy
-        ("/financial_freedom", "FIRE"),
-        ("/strategy", "Strateji"),
-        ("/financial_dashboard", "Piyasa Analizi"),
-        ("/logbook", "Yatirim Gunlugu"),
-        ("/central-bank-reserves", "TCMB Rezervleri"),
-        ("/global-ratios", "Kuresel Rasyolar"),
-        # Settings & User
-        ("/profile", "Yatirimci Profili"),
-        ("/notifications", "Bildirimler"),
-        ("/categories", "Kategoriler"),
-        ("/settings", "Ayarlar"),
-        # Resources
-        ("/user_guide", "Kullanim Kilavuzu"),
+        # Settings & Education Hubs
         ("/financial_education", "Finansal Egitim"),
+        ("/settings", "Ayarlar"),
     ]
 
     for route, _label in canonical_core_routes:
@@ -127,7 +114,7 @@ def test_all_22_navigation_links_parity_and_datalabels(authenticated_client):
 
     # Verify that nav links render data-label attribute for accessibility / tooltip parity
     nav_links = re.findall(r'<a\s+[^>]*class="[^"]*nav-link[^"]*"[^>]*>', body)
-    assert len(nav_links) >= 21, f"Expected at least 21 nav-links, found {len(nav_links)}"
+    assert len(nav_links) >= 18, f"Expected at least 18 nav-links (9 desktop + 9 mobile), found {len(nav_links)}"
     for link in nav_links:
         assert 'data-label="' in link, f"Nav link missing data-label: {link}"
         assert 'title="' in link, f"Nav link missing title: {link}"

@@ -82,14 +82,14 @@ def test_sidebar_rail_and_navigation_parity(authenticated_client):
     assert "Ctrl+B" in body
 
     # 3. Single-source navigation parity across desktop and mobile
-    assert body.count('href="/plans"') >= 2
+    assert body.count('href="/payment_calendar"') >= 2
     assert body.count('href="/transactions"') >= 2
+    assert body.count('href="/logbook"') >= 2
     assert "nav-link-label" in body
 
-    # 4. Correct link order: /transactions before /plans before /monthly_dashboard
+    # 4. Correct priority order: /transactions before /payment_calendar before /logbook
     overview_start = body.index('id="overview-section"')
     assert overview_start != -1
     overview_chunk = body[overview_start:overview_start + 4000]
-    assert overview_chunk.index('href="/transactions"') < overview_chunk.index('href="/plans"')
-    assert overview_chunk.index('href="/plans"') < overview_chunk.index('href="/monthly_dashboard"')
-
+    assert overview_chunk.index('href="/transactions"') < overview_chunk.index('href="/payment_calendar"')
+    assert overview_chunk.index('href="/payment_calendar"') < overview_chunk.index('href="/logbook"')
