@@ -4,11 +4,10 @@
  * background push notifications, and high-speed asset caching.
  */
 
-const CACHE_NAME = 'ecuzdan-pwa-v2';
+const CACHE_NAME = 'ecuzdan-pwa-v3';
 const OFFLINE_URL = '/offline';
 
 const PRECACHE_ASSETS = [
-    '/',
     OFFLINE_URL,
     '/static/css/main.css',
     '/static/css/components.css',
