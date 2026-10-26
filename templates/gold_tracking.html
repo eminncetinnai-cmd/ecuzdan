@@ -26,17 +26,14 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2 shrink-0">
+            <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/70 dark:border-emerald-800/60 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+                <span class="gold-live-dot" aria-hidden="true"></span>
+                <span id="goldAutoRefreshStatus">Otomatik Canlı Akış (30 sn)</span>
+            </div>
             <div class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700 text-[11px] font-bold text-slate-600 dark:text-slate-300">
                 <span>Son Güncelleme:</span>
                 <strong id="goldObservedAt" class="text-slate-900 dark:text-white ml-1">{{ data.observed_at_display }}</strong>
             </div>
-            <button data-macro="button_secondary" type="button" id="btnRefreshGoldQuotes" onclick="refreshGoldQuotes()"
-                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black uppercase tracking-wider shadow-sm transition cursor-pointer shrink-0 whitespace-nowrap">
-                <svg id="goldRefreshIcon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                </svg>
-                <span id="goldRefreshBtnText">Canlı Yenile</span>
-            </button>
         </div>
     </header>
 
@@ -72,38 +69,7 @@
         </a>
     </nav>
 
-    <!-- ── 3. Bursa Kuyumcu & Harem Altın Kalibrasyon Barı ─────────────────── -->
-    <section class="premium-card p-4 sm:p-5 bg-gradient-to-r from-amber-50/90 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 border border-amber-200/80 dark:border-amber-800/40 rounded-2xl shadow-sm">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div class="min-w-0">
-                <div class="flex flex-wrap items-center gap-2">
-                    <span class="text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">🏛️ Fiyatlama Modu:</span>
-                    <span id="activePresetLabel" class="text-xs font-bold text-slate-700 dark:text-slate-200">{{ data.preset_info.label }}</span>
-                </div>
-                <p id="activePresetDesc" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-1">
-                    {{ data.preset_info.description }}
-                </p>
-            </div>
-
-            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0 shrink-0" role="group" aria-label="Kuyumcu Marj Seçimi">
-                {% for preset in data.presets %}
-                <button data-macro="button_secondary" type="button"
-                        id="presetBtn_{{ preset.key }}"
-                        class="gold-preset-btn {% if preset.key == data.preset_key %}active{% endif %}"
-                        data-preset-key="{{ preset.key }}"
-                        data-buy-adj="{{ preset.buy_adj_pct }}"
-                        data-sell-adj="{{ preset.sell_adj_pct }}"
-                        data-label="{{ preset.label }}"
-                        data-desc="{{ preset.description }}"
-                        onclick="selectGoldPreset(this)">
-                    <span>{{ preset.short_label }}</span>
-                </button>
-                {% endfor %}
-            </div>
-        </div>
-    </section>
-
-    <!-- ── 4. Vitrin Özet Kartları (4 Ana Gösterge) ────────────────────────── -->
+    <!-- ── 3. Vitrin Özet Kartları (4 Ana Gösterge) ────────────────────────── -->
     <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" aria-label="Ana Altın Göstergeleri">
         {% for key in ['gram_altin', 'ceyrek_yeni', 'yarim_yeni', 'bilezik_22'] %}
         {% set item = data.spotlight.get(key) %}
@@ -408,37 +374,21 @@
     let state = initialEl ? JSON.parse(initialEl.textContent) : { quotes: [] };
     let calcMode = 'sell_to_jeweler'; // 'sell_to_jeweler' (uses buy_price) or 'buy_from_jeweler' (uses sell_price)
     let activeCategory = 'all';
-    let currentBuyAdjPct = (state.preset_info && state.preset_info.buy_adj_pct) || 0;
-    let currentSellAdjPct = (state.preset_info && state.preset_info.sell_adj_pct) || 0;
     const baseSym = window.BASE_CURRENCY_SYMBOL || '₺';
+    const AUTO_REFRESH_INTERVAL_MS = 30000;
 
     function formatTR(num) {
         const val = Number(num) || 0;
         return val.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
-    function computeAdjustedQuote(q) {
-        const baseBuy = Number(q.base_buy_price) || 0;
-        const baseSell = Number(q.base_sell_price) || 0;
-        let buy = baseBuy;
-        let sell = baseSell;
-        if (q.is_calculable_tl) {
-            buy = Math.round(baseBuy * (1 + currentBuyAdjPct / 100) * 100) / 100;
-            sell = Math.round(baseSell * (1 + currentSellAdjPct / 100) * 100) / 100;
-        }
-        const spread = Math.max(0, sell - buy);
-        const spreadPct = buy > 0 ? (spread / buy) * 100 : 0;
-        return { buy, sell, spread, spreadPct };
-    }
-
     function renderAllPrices() {
         const quotesByCode = {};
         (state.quotes || []).forEach(q => {
-            const adj = computeAdjustedQuote(q);
-            q.buy_price = adj.buy;
-            q.sell_price = adj.sell;
-            q.spread_amount = adj.spread;
-            q.spread_pct = adj.spreadPct;
+            q.buy_price = Number(q.base_buy_price ?? q.buy_price) || 0;
+            q.sell_price = Number(q.base_sell_price ?? q.sell_price) || 0;
+            q.spread_amount = Math.max(0, q.sell_price - q.buy_price);
+            q.spread_pct = q.buy_price > 0 ? (q.spread_amount / q.buy_price) * 100 : 0;
             quotesByCode[q.code] = q;
         });
 
@@ -488,18 +438,6 @@
         updateBasketTotals();
         updateBudgetConversion();
     }
-
-    window.selectGoldPreset = function(btn) {
-        document.querySelectorAll('.gold-preset-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentBuyAdjPct = parseFloat(btn.getAttribute('data-buy-adj') || '0');
-        currentSellAdjPct = parseFloat(btn.getAttribute('data-sell-adj') || '0');
-        const lbl = document.getElementById('activePresetLabel');
-        const desc = document.getElementById('activePresetDesc');
-        if (lbl) lbl.textContent = btn.getAttribute('data-label') || '';
-        if (desc) desc.textContent = btn.getAttribute('data-desc') || '';
-        renderAllPrices();
-    };
 
     window.selectGoldCategory = function(catKey, btn) {
         activeCategory = catKey;
@@ -651,10 +589,9 @@
     };
 
     window.refreshGoldQuotes = async function() {
-        const btn = document.getElementById('btnRefreshGoldQuotes');
-        const txt = document.getElementById('goldRefreshBtnText');
-        if (btn) btn.disabled = true;
-        if (txt) txt.textContent = 'Yenileniyor...';
+        if (document.hidden) return;
+        const statusEl = document.getElementById('goldAutoRefreshStatus');
+        if (statusEl) statusEl.textContent = 'Canlı Güncelleniyor...';
         try {
             const resp = await fetch('/gold-tracking/api/quotes?refresh=1');
             const json = await resp.json();
@@ -667,14 +604,21 @@
                 renderAllPrices();
             }
         } catch (err) {
-            console.error('Gold refresh error:', err);
+            console.error('Gold auto-refresh error:', err);
         } finally {
-            if (btn) btn.disabled = false;
-            if (txt) txt.textContent = 'Canlı Yenile';
+            if (statusEl) statusEl.textContent = 'Otomatik Canlı Akış (30 sn)';
         }
     };
 
     renderAllPrices();
+
+    // Otomatik canlı güncelleme (30 saniyede bir + sekme aktif olduğunda)
+    setInterval(window.refreshGoldQuotes, AUTO_REFRESH_INTERVAL_MS);
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            window.refreshGoldQuotes();
+        }
+    });
 })();
 </script>
 {% endblock %}
