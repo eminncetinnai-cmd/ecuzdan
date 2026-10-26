@@ -51,6 +51,7 @@ notifications_bp = Blueprint('notifications', __name__, url_prefix='/notificatio
 analysis_bp = Blueprint('analysis', __name__, url_prefix='/analysis')
 central_bank_reserves_bp = Blueprint('central_bank_reserves', __name__, url_prefix='/')
 global_ratios_bp = Blueprint('global_ratios', __name__, url_prefix='/')
+gold_tracking_bp = Blueprint('gold_tracking', __name__, url_prefix='/')
 from .storage_health import storage_health_bp
 
 
@@ -71,6 +72,7 @@ def register_blueprints(app):
     from .export import register_export_routes
     from .financial_education import register_financial_education_routes
     from .global_ratios import register_global_ratios_routes
+    from .gold_tracking import register_gold_tracking_routes
     from .logbook import register_logbook_routes
     from .monitoring import register_monitoring_routes
     from .notifications import register_notification_routes
@@ -101,6 +103,7 @@ def register_blueprints(app):
     register_analysis_routes(analysis_bp)
     register_central_bank_reserves_routes(central_bank_reserves_bp)
     register_global_ratios_routes(global_ratios_bp)
+    register_gold_tracking_routes(gold_tracking_bp)
     register_storage_health_routes(storage_health_bp)
 
     app.register_blueprint(auth_bp)
@@ -122,6 +125,7 @@ def register_blueprints(app):
     app.register_blueprint(analysis_bp)
     app.register_blueprint(central_bank_reserves_bp)
     app.register_blueprint(global_ratios_bp)
+    app.register_blueprint(gold_tracking_bp)
     app.register_blueprint(storage_health_bp)
 
 # --- Template Filters ---

@@ -47,6 +47,7 @@ CORE_ROUTES = [
     ('/financial_dashboard', 'Piyasa Analizi'),
     ('/global-ratios', 'Küresel Rasyolar'),
     ('/central-bank-reserves', 'TCMB Rezervleri'),
+    ('/gold-tracking', 'Altın Takip'),
     ('/settings', 'Sistem Ayarları'),
     ('/profile', 'Profil'),
     ('/categories', 'Katalog & Kategoriler'),

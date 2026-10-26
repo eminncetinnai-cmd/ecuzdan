@@ -133,6 +133,7 @@ def run_preflight_check() -> int:
             ('/financial_dashboard', 'Finans & Piyasa Özeti'),
             ('/global-ratios', 'Küresel Rasyolar Dashboard'),
             ('/central-bank-reserves', 'Merkez Bankası Rezervleri'),
+            ('/gold-tracking', 'Altın Takip (Harem & Bursa Kuyumcu)'),
             ('/logbook/', 'Yatırım Günlüğü & Notlar'),
             ('/categories', 'Kategori Yönetimi'),
             ('/notifications', 'Bildirim Merkezi'),
