@@ -187,3 +187,48 @@ def test_dashboard_currency_context_prioritizes_user_then_tenant_then_try(app):
         fallback_context = _dashboard_currency_context()
         assert fallback_context["dashboard_currency_code"] == "TRY"
         assert fallback_context["dashboard_currency_symbol"] == get_currency_symbol("TRY")
+
+
+@pytest.mark.unit
+@pytest.mark.financial
+def test_dashboard_context_orders_pending_transactions_oldest_first():
+    """Verify that last_t orders pending transactions from oldest to newest first, then paid descending."""
+    now = datetime(2026, 10, 26)
+    transactions = [
+        make_transaction("2026-10-10", "Gider", 500, status="Ödendi", category="Market"),
+        make_transaction("2026-10-25", "Gider", 300, status="Bekliyor", category="Fatura"),
+        make_transaction("2026-10-05", "Gider", 150, status="Bekliyor", category="Aidat"),
+        make_transaction("2026-10-20", "Gelir", 5000, status="Ödendi", category="Maaş"),
+        make_transaction("2026-11-01", "Gider", 200, status="Bekliyor", category="İnternet"),
+    ]
+    repository = FakeFinancialRepository(
+        transactions_by_tenant={"tenant-a": transactions},
+        assets_by_tenant={"tenant-a": []},
+    )
+    service = DashboardService(repository, FakeCatalogRepository({"tenant-a": []}))
+    context = service.index_context("tenant-a", now=now)
+
+    last_t = context["last_t"]
+    assert len(last_t) == 5
+
+    # 1. Bekleyen işlemler: en eski tarihten başlayarak sıralı (2026-10-05, 2026-10-25, 2026-11-01)
+    assert last_t[0].status == "Bekliyor"
+    assert last_t[0].date == "2026-10-05"
+    assert last_t[0].category == "Aidat"
+
+    assert last_t[1].status == "Bekliyor"
+    assert last_t[1].date == "2026-10-25"
+    assert last_t[1].category == "Fatura"
+
+    assert last_t[2].status == "Bekliyor"
+    assert last_t[2].date == "2026-11-01"
+    assert last_t[2].category == "İnternet"
+
+    # 2. Ödenmiş işlemler: en yeni tarihten başlayarak azalan sırada (2026-10-20, 2026-10-10)
+    assert last_t[3].status == "Ödendi"
+    assert last_t[3].date == "2026-10-20"
+    assert last_t[3].category == "Maaş"
+
+    assert last_t[4].status == "Ödendi"
+    assert last_t[4].date == "2026-10-10"
+    assert last_t[4].category == "Market"

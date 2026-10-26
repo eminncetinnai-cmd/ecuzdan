@@ -280,6 +280,21 @@ class DashboardService:
                     })
                     break
 
+        # Dashboard Islemlerim listesi siralamasi:
+        # Kullanici kurali: "bekliyordaki en eski islemlerden baslamis sekilde sirali gelsin"
+        # 1. Bekleyen islemler: en eski tarihten en yeni tarihe (date ASC, id ASC)
+        # 2. Odenmis islemler: en yeni tarihten en eskiye (date DESC, id DESC)
+        pending_txs = sorted(
+            [t for t in transactions if getattr(t, 'status', None) == 'Bekliyor'],
+            key=lambda t: (str(getattr(t, 'date', '') or ''), int(getattr(t, 'id', 0) or 0)),
+        )
+        paid_txs = sorted(
+            [t for t in transactions if getattr(t, 'status', None) != 'Bekliyor'],
+            key=lambda t: (str(getattr(t, 'date', '') or ''), int(getattr(t, 'id', 0) or 0)),
+            reverse=True,
+        )
+        dashboard_last_t = pending_txs + paid_txs
+
         return {
             'today_cash': actual_cash,
             'year_paid_cash': year_paid_cash,
@@ -290,7 +305,7 @@ class DashboardService:
             'paid_investment_transfers': paid_investment_transfers,
             'pending_investment_transfers': pending_investment_transfers,
             'investment_ratio': round((paid_investment_transfers / year_gross_income * 100), 2) if year_gross_income else 0,
-            'last_t': transactions,
+            'last_t': dashboard_last_t,
             'cats': all_cats,
             'global_income_cats': global_income_cats,
             'global_expense_cats': global_expense_cats,
