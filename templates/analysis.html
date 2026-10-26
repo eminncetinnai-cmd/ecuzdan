@@ -149,7 +149,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <!-- 1. LİKİDİTE -->
-                <div class="health-card p-6 border-t-4 {% if liq_status == 'success' %}border-emerald-500{% elif liq_status == 'warning' %}border-amber-400{% else %}border-rose-500{% endif %}">
+                <div class="health-card p-4 sm:p-6 border-t-4 {% if liq_status == 'success' %}border-emerald-500{% elif liq_status == 'warning' %}border-amber-400{% else %}border-rose-500{% endif %}">
                     <div class="flex justify-between items-start mb-3">
                         <div>
                             <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5">Likidite Gücü</p>
@@ -171,7 +171,7 @@
                 </div>
 
                 <!-- 2. BORÇ ORANI -->
-                <div class="health-card p-6 border-t-4 {% if dr_status == 'success' %}border-emerald-500{% elif dr_status == 'warning' %}border-amber-400{% else %}border-rose-500{% endif %}">
+                <div class="health-card p-4 sm:p-6 border-t-4 {% if dr_status == 'success' %}border-emerald-500{% elif dr_status == 'warning' %}border-amber-400{% else %}border-rose-500{% endif %}">
                     <div class="flex justify-between items-start mb-3">
                         <div>
                             <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5">{{ _('ui_auto_5d822007e071') }}</p>
@@ -193,7 +193,7 @@
                 </div>
 
                 <!-- 3. TASARRUF ORANI -->
-                <div class="health-card p-6 border-t-4 {% if sr_status == 'success' %}border-emerald-500{% elif sr_status == 'warning' %}border-amber-400{% else %}border-rose-500{% endif %}">
+                <div class="health-card p-4 sm:p-6 border-t-4 {% if sr_status == 'success' %}border-emerald-500{% elif sr_status == 'warning' %}border-amber-400{% else %}border-rose-500{% endif %}">
                     <div class="flex justify-between items-start mb-3">
                         <div>
                             <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5">{{ _('ui_auto_2f5469e00d6b') }}</p>
@@ -216,7 +216,7 @@
                 </div>
 
                 <!-- 4. DAYANIKLILIK -->
-                <div class="health-card p-6 border-t-4 {% if sus_status == 'success' %}border-emerald-500{% elif sus_status == 'warning' %}border-amber-400{% else %}border-rose-500{% endif %}">
+                <div class="health-card p-4 sm:p-6 border-t-4 {% if sus_status == 'success' %}border-emerald-500{% elif sus_status == 'warning' %}border-amber-400{% else %}border-rose-500{% endif %}">
                     <div class="flex justify-between items-start mb-3">
                         <div>
                             <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5">{{ _('ui_auto_19f7f6fd25c6') }}</p>
@@ -244,7 +244,7 @@
         {% if flags or recs %}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Risk Uyarıları -->
-            <div class="health-card p-6 border-l-4 border-rose-500">
+            <div class="health-card p-4 sm:p-6 border-l-4 border-rose-500">
                 <h3 class="font-black text-xs text-rose-700 dark:text-rose-400 uppercase mb-4 tracking-wider flex items-center justify-between">
                     <span class="flex items-center gap-2">
                         <span>⚠</span> Finansal Risk Uyarıları
@@ -268,7 +268,7 @@
             </div>
 
             <!-- Eylem Önerileri -->
-            <div class="health-card p-6 border-l-4 border-indigo-500">
+            <div class="health-card p-4 sm:p-6 border-l-4 border-indigo-500">
                 <h3 class="font-black text-xs text-indigo-700 dark:text-indigo-400 uppercase mb-4 tracking-wider flex items-center justify-between">
                     <span class="flex items-center gap-2">
                         <span>💡</span> Eylem Önerileri
@@ -296,7 +296,7 @@
 
     <!-- TAB 2: Reel Getiri & Enflasyon Analitiği -->
     <div id="inflation-content" class="analysis-tab-content space-y-6">
-        <div class="health-card p-6 md:p-8">
+        <div class="health-card p-4 sm:p-6 md:p-8">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
                     <h3 class="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">
@@ -338,7 +338,7 @@
     <!-- TAB 3: Strateji & Metodoloji Şeffaflığı -->
     <div id="strategy-content" class="analysis-tab-content space-y-8">
         <!-- Uzman Strateji Paneli -->
-        <div class="health-card p-6 md:p-8 border-l-4 border-amber-500 bg-gradient-to-br from-white via-amber-50/20 to-white dark:from-slate-900 dark:via-slate-900 dark:to-slate-900">
+        <div class="health-card p-4 sm:p-6 md:p-8 border-l-4 border-amber-500 bg-gradient-to-br from-white via-amber-50/20 to-white dark:from-slate-900 dark:via-slate-900 dark:to-slate-900">
             <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
                 <div>
                     <h3 class="text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest flex items-center gap-2">
@@ -362,7 +362,7 @@
         </div>
 
         <!-- Dinamik Skor Metodolojisi Tablosu -->
-        <div class="health-card p-6 md:p-8">
+        <div class="health-card p-4 sm:p-6 md:p-8">
             <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
                 <div>
                     <h4 class="font-black text-sm text-slate-900 dark:text-white uppercase tracking-tight mb-1">{{ _('ui_auto_ec0d17760fef') }}</h4>
@@ -482,7 +482,7 @@
         </div>
 
         <!-- Metodoloji Şeffaflığı & Formüller -->
-        <details class="health-card p-6 md:p-8 bg-slate-50 dark:bg-slate-900/60 group">
+        <details class="health-card p-4 sm:p-6 md:p-8 bg-slate-50 dark:bg-slate-900/60 group">
             <summary class="flex items-center justify-between cursor-pointer list-none select-none mb-4">
                 <h4 class="font-black text-xs text-slate-700 dark:text-slate-300 uppercase tracking-tight flex items-center gap-2">
                     <span>📘</span> {{ _('ui_auto_63c9ed7f6bad') }}

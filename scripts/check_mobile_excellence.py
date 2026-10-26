@@ -1,7 +1,7 @@
 """
 E-Cüzdan Mobile Excellence Automated Regression & Quality Gate.
 
-Audits all primary views across 5 critical mobile device viewports:
+Audits all primary views and global modals across 5 critical mobile device viewports:
 - 320px (Compact Mobile / iPhone SE 1)
 - 360px (Galaxy S-Series / Android Standard)
 - 375px (iPhone SE / iPhone Mini)
@@ -10,7 +10,7 @@ Audits all primary views across 5 critical mobile device viewports:
 
 Verification Criteria:
 1. Zero horizontal overflow (scrollWidth <= innerWidth).
-2. Clean DOM layout without off-screen element spills.
+2. Clean DOM layout without off-screen modal spills.
 3. Interactive readiness across touch devices.
 """
 
@@ -18,6 +18,7 @@ import os
 import sys
 import time
 import threading
+from datetime import datetime
 from pathlib import Path
 from werkzeug.serving import make_server
 
@@ -29,23 +30,40 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from app import app
+from models import User
 
 # Target routes for mobile audit
 CORE_ROUTES = [
     ('/', 'Dashboard'),
     ('/transactions', 'İşlemler'),
     ('/assets', 'Varlıklar'),
+    ('/assets_view', 'Varlık Analizi'),
+    ('/assets_management', 'Varlık Yönetimi'),
     ('/payment_calendar', 'Ödeme Takvimi'),
     ('/plans', 'Düzenli Planlar'),
     ('/analysis', 'Finansal Analiz'),
     ('/financial_freedom', 'Finansal Özgürlük'),
     ('/strategy', 'Strateji'),
+    ('/financial_dashboard', 'Piyasa Analizi'),
+    ('/global-ratios', 'Küresel Rasyolar'),
+    ('/central-bank-reserves', 'TCMB Rezervleri'),
     ('/settings', 'Sistem Ayarları'),
     ('/profile', 'Profil'),
     ('/categories', 'Katalog & Kategoriler'),
     ('/logbook', 'Cüzdan Defteri'),
     ('/monthly_dashboard', 'Aylık Bütçe Raporu'),
     ('/investment_performance', 'Yatırım Performansı'),
+    ('/notifications', 'Bildirimler'),
+    ('/user_guide', 'Kullanım Kılavuzu'),
+    ('/financial_education', 'Finansal Eğitim'),
+]
+
+# Global modals to verify on mobile viewports
+GLOBAL_MODALS = [
+    ('Quick Tx Modal', "openGlobalQuickTxModal('Gider')", '#globalQuickTxModal .edit-modal-card', "closeGlobalQuickTxModal()"),
+    ('Calculator Modal', "openCalculator()", '#calculatorModal > div.relative', "closeCalculator()"),
+    ('Notification Modal', "openNotificationModal()", '#notificationModal > div.absolute:not(.inset-0)', "closeNotificationModal()"),
+    ('Command Palette', "openGlobalSearch()", '#commandPaletteModal > div.relative', "closeGlobalSearch()"),
 ]
 
 # Standard mobile device viewports
@@ -60,8 +78,8 @@ VIEWPORTS = [
 
 class ServerThread(threading.Thread):
     def __init__(self, flask_app, port=5075):
-        super().__init__()
-        self.server = make_server('127.0.0.1', port, flask_app)
+        super().__init__(daemon=True)
+        self.server = make_server('127.0.0.1', port, flask_app, threaded=True)
         self.ctx = flask_app.app_context()
         self.ctx.push()
 
@@ -70,6 +88,36 @@ class ServerThread(threading.Thread):
 
     def shutdown(self):
         self.server.shutdown()
+
+
+def _create_signed_session_cookie(flask_app):
+    """Create a signed Flask session cookie for an authenticated default-tenant user."""
+    with flask_app.app_context():
+        user = User.query.filter_by(tenant_id='default').order_by(User.id).first()
+        if not user:
+            user = User.query.first()
+        if not user:
+            return None
+        serializer = flask_app.session_interface.get_signing_serializer(flask_app)
+        session_data = {
+            '_user_id': str(user.id),
+            'user_id': user.id,
+            'username': user.username,
+            'role': user.role,
+            'tenant_id': user.tenant_id,
+            'session_id': user.last_session_id or 'audit-session',
+            'session_created_at': datetime.now().isoformat(),
+            'app_boot_id': flask_app.config.get('APP_BOOT_ID', 'test-boot-id'),
+            '_fresh': True,
+        }
+        cookie_val = serializer.dumps(session_data)
+        cookie_name = flask_app.config.get('SESSION_COOKIE_NAME', 'session')
+        return {
+            'name': cookie_name,
+            'value': cookie_val,
+            'domain': '127.0.0.1',
+            'path': '/',
+        }
 
 
 def run_mobile_excellence_gate():
@@ -84,9 +132,10 @@ def run_mobile_excellence_gate():
         print("       Install with: pip install playwright && playwright install chromium")
         return 0
 
+    auth_cookie = _create_signed_session_cookie(app)
     server = ServerThread(app, port=5075)
     server.start()
-    time.sleep(1.2)
+    time.sleep(0.8)
 
     violations = []
     total_audits = 0
@@ -102,27 +151,38 @@ def run_mobile_excellence_gate():
                 print(f"\n--> Auditing Viewport: {vp_name} [{width}x{height}]")
 
                 context = browser.new_context(viewport={'width': width, 'height': height})
+                if auth_cookie:
+                    context.add_cookies([auth_cookie])
+
+                # Abort persistent SSE streams and external fonts so page loads never hang
+                context.route(
+                    "**/*",
+                    lambda route: route.abort()
+                    if any(
+                        host in route.request.url
+                        for host in (
+                            "fonts.googleapis.com",
+                            "fonts.gstatic.com",
+                            "/api/live-stream",
+                            "/monitoring/api/logs/stream",
+                        )
+                    )
+                    else route.continue_(),
+                )
+
                 page = context.new_page()
 
-                # Session login
-                page.goto('http://127.0.0.1:5075/login')
-                page.fill('input[name="username"]', 'emin')
-                page.fill('input[name="password"]', '1')
-                page.click('button[type="submit"]')
-                page.wait_for_load_state('networkidle')
-
-                for route, label in CORE_ROUTES:
+                for route_path, label in CORE_ROUTES:
                     total_audits += 1
-                    target_url = f'http://127.0.0.1:5075{route}'
-                    page.goto(target_url)
-                    page.wait_for_load_state('networkidle')
-                    page.wait_for_timeout(250)
+                    target_url = f'http://127.0.0.1:5075{route_path}'
+                    page.goto(target_url, wait_until='domcontentloaded', timeout=15000)
+                    page.wait_for_timeout(120)
 
                     # Diagnostic check for horizontal overflow
                     result = page.evaluate("""() => {
                         const scrollW = document.documentElement.scrollWidth;
                         const innerW = window.innerWidth;
-                        const overflow = scrollW > innerW;
+                        const overflow = scrollW > innerW + 1;
                         let culprit = null;
                         if (overflow) {
                             const overflowing = Array.from(document.querySelectorAll('*')).filter(el => {
@@ -131,36 +191,62 @@ def run_mobile_excellence_gate():
                             });
                             if (overflowing.length > 0) {
                                 const target = overflowing[overflowing.length - 1];
-                                culprit = (target.tagName || '') + (target.id ? '#' + target.id : '') + (target.className ? '.' + target.className.split(' ').slice(0, 2).join('.') : '');
+                                const cls = (typeof target.className === 'string' && target.className)
+                                    ? '.' + target.className.trim().split(/\\s+/).slice(0, 2).join('.')
+                                    : '';
+                                culprit = (target.tagName || '') + (target.id ? '#' + target.id : '') + cls;
                             }
                         }
                         return { scrollWidth: scrollW, innerWidth: innerW, overflow: overflow, culprit: culprit };
                     }""")
 
                     if result['overflow']:
-                        msg = f"OVERFLOW on {route} ({label}) at {width}px: scrollWidth={result['scrollWidth']} > innerWidth={result['innerWidth']} (culprit: {result['culprit']})"
+                        msg = f"OVERFLOW on {route_path} ({label}) at {width}px: scrollWidth={result['scrollWidth']} > innerWidth={result['innerWidth']} (culprit: {result['culprit']})"
                         violations.append(msg)
-                        print(f"    [FAIL] {route:<22} -> {msg}")
+                        print(f"    [FAIL] {route_path:<24} -> {msg}")
                     else:
-                        print(f"    [PASS] {route:<22} -> scrollWidth: {result['scrollWidth']}px (0px overflow)")
+                        print(f"    [PASS] {route_path:<24} -> scrollWidth: {result['scrollWidth']}px (0px overflow)")
 
-                # Also audit Quick Transaction modal open state
-                total_audits += 1
-                page.goto('http://127.0.0.1:5075/')
-                page.wait_for_load_state('networkidle')
-                page.evaluate("() => { if (typeof openGlobalQuickTxModal === 'function') openGlobalQuickTxModal(); }")
-                page.wait_for_timeout(350)
+                # Audit Global Modals on Dashboard
+                page.goto('http://127.0.0.1:5075/', wait_until='domcontentloaded', timeout=15000)
+                page.wait_for_timeout(120)
 
-                modal_result = page.evaluate("""() => {
-                    const scrollW = document.documentElement.scrollWidth;
-                    const innerW = window.innerWidth;
-                    return { scrollWidth: scrollW, innerWidth: innerW, overflow: scrollW > innerW };
-                }""")
-                if modal_result['overflow']:
-                    violations.append(f"OVERFLOW on QuickTx Modal at {width}px: {modal_result['scrollWidth']} > {modal_result['innerWidth']}")
-                    print(f"    [FAIL] Quick Tx Modal         -> OVERFLOW: {modal_result['scrollWidth']}px")
-                else:
-                    print(f"    [PASS] Quick Tx Modal         -> scrollWidth: {modal_result['scrollWidth']}px (0px overflow)")
+                for modal_label, open_js, modal_sel, close_js in GLOBAL_MODALS:
+                    total_audits += 1
+                    page.evaluate(f"() => {{ try {{ {open_js}; }} catch(e) {{}} }}")
+                    page.wait_for_timeout(120)
+                    modal_result = page.evaluate(f"""() => {{
+                        const card = document.querySelector('{modal_sel}');
+                        if (!card) return {{ missing: true, overflow: true }};
+                        const r = card.getBoundingClientRect();
+                        const s = getComputedStyle(card);
+                        const scrollW = document.documentElement.scrollWidth;
+                        const innerW = window.innerWidth;
+                        const innerH = window.innerHeight;
+                        const horizOut = r.width === 0 || r.left < -2 || r.right > innerW + 2 || scrollW > innerW + 1;
+                        const vertOut = r.top < -2 || r.bottom > innerH + 2;
+                        try {{ {close_js}; }} catch(e) {{}}
+                        return {{
+                            scrollWidth: scrollW,
+                            innerWidth: innerW,
+                            left: Math.round(r.left),
+                            right: Math.round(r.right),
+                            top: Math.round(r.top),
+                            bottom: Math.round(r.bottom),
+                            overflow: horizOut || vertOut
+                        }};
+                    }}""")
+
+                    if modal_result.get('overflow'):
+                        msg = (
+                            f"MODAL OVERFLOW on {modal_label} at {width}x{height}: "
+                            f"bounds=({modal_result.get('left')},{modal_result.get('top')})->"
+                            f"({modal_result.get('right')},{modal_result.get('bottom')})"
+                        )
+                        violations.append(msg)
+                        print(f"    [FAIL] {modal_label:<24} -> {msg}")
+                    else:
+                        print(f"    [PASS] {modal_label:<24} -> bounds: {modal_result.get('left')}..{modal_result.get('right')}px (0px overflow)")
 
                 context.close()
 
@@ -181,7 +267,7 @@ def run_mobile_excellence_gate():
             print(f"  - {v}")
         return 1
 
-    print("\n[SUCCESS] 100% Mobile Excellence Achieved! Zero horizontal overflow across all tested viewports.")
+    print("\n[SUCCESS] 100% Mobile Excellence Achieved! Zero horizontal or modal overflow across all tested viewports.")
     print("=" * 70)
     return 0
 

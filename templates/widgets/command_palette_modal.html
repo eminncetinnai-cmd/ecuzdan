@@ -1,5 +1,5 @@
 <!-- Command Palette & Global Search Modal Widget -->
-<div id="commandPaletteModal" class="modal-overlay hidden fixed inset-0 z-[9999] flex items-start justify-center pt-16 sm:pt-24 px-4" role="dialog" aria-modal="true" aria-label="Komut Paleti">
+<div id="commandPaletteModal" class="modal-overlay hidden fixed inset-0 z-[9999] flex items-start justify-center pt-12 sm:pt-24 px-3 sm:px-4" role="dialog" aria-modal="true" aria-label="Komut Paleti">
     <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeGlobalSearch()"></div>
     
     <div class="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-xl w-full border border-slate-200 dark:border-slate-800 overflow-hidden transform transition-all z-10">
@@ -11,14 +11,14 @@
             <input type="text" id="commandPaletteInput" 
                    placeholder="Sayfa ara veya işlem seç... (örn: İşlemler, Planlar, Tema, Yeni)" 
                    autocomplete="off"
-                   class="w-full bg-transparent px-3 py-4 text-sm font-semibold text-slate-800 dark:text-white placeholder-slate-400 outline-none">
+                   class="w-full bg-transparent px-3 py-3.5 sm:py-4 text-sm font-semibold text-slate-800 dark:text-white placeholder-slate-400 outline-none">
             <button data-macro="button_icon" type="button" onclick="closeGlobalSearch()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition" aria-label="Kapat">
                 <kbd class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 uppercase border border-slate-200 dark:border-slate-700">ESC</kbd>
             </button>
         </div>
 
         <!-- Results / Items Container -->
-        <div id="commandPaletteResults" class="max-h-80 overflow-y-auto p-2 space-y-1">
+        <div id="commandPaletteResults" class="max-h-[60vh] sm:max-h-80 overflow-y-auto p-2 space-y-1">
             <!-- Group: Hızlı Eylemler -->
             <div class="palette-group" data-group="actions">
                 <div class="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400">Hızlı Eylemler</div>

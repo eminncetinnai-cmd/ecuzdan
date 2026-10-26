@@ -124,9 +124,9 @@
                                     <div class="flex items-center gap-1.5">
                                         <span>{{ user.username }}</span>
                                         {% if user.auth_provider == 'GOOGLE' %}
-                                        <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200 dark:border-sky-900/50">Google</span>
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200 dark:border-sky-900/50">Google</span>
                                         {% else %}
-                                        <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">Yerel</span>
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">Yerel</span>
                                         {% endif %}
                                     </div>
                                     {% if user.email and user.email != user.username %}

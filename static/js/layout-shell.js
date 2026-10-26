@@ -588,6 +588,21 @@ function updateSearchItemHighlight() {
 }
 
 function openGlobalSearch() {
+    const paletteModal = document.getElementById('commandPaletteModal');
+    if (paletteModal) {
+        paletteModal.classList.remove('hidden');
+        paletteModal.classList.add('active');
+        paletteModal.style.display = 'flex';
+        paletteModal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        const paletteInput = document.getElementById('commandPaletteInput');
+        if (paletteInput) {
+            paletteInput.value = '';
+            paletteInput.dispatchEvent(new Event('input'));
+            setTimeout(() => paletteInput.focus(), 50);
+        }
+        return;
+    }
     searchSelectedIndex = -1;
     const existingModal = document.getElementById('globalSearchModal');
     if (existingModal) {
@@ -881,6 +896,14 @@ function handleSearchInput(query) {
 }
 
 function closeGlobalSearch() {
+    const paletteModal = document.getElementById('commandPaletteModal');
+    if (paletteModal) {
+        paletteModal.classList.remove('active');
+        paletteModal.classList.add('hidden');
+        paletteModal.style.display = '';
+        paletteModal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+    }
     searchSelectedIndex = -1;
     const modal = document.getElementById('globalSearchModal');
     if (modal) {

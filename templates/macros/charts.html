@@ -1,7 +1,7 @@
 {# Chart Component Macros #}
 
 {% macro chart_container(chart_id, height=300) %}
-<div class="chart-container" class="h-[{{ height }}px]">
+<div class="chart-container">
     <canvas id="{{ chart_id }}"></canvas>
 </div>
 {% endmacro %}
@@ -11,7 +11,7 @@
     {% if title %}
     <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-6">{{ title }}</h4>
     {% endif %}
-    <div class="chart-container" class="h-[{{ height }}px]">
+    <div class="chart-container">
         <canvas id="{{ chart_id }}"></canvas>
     </div>
 </div>
@@ -24,7 +24,7 @@
         {% if config.title %}
         <h4 class="font-black text-sm uppercase text-slate-800 tracking-tight mb-6">{{ config.title }}</h4>
         {% endif %}
-        <div class="chart-container" class="h-[{{ config.height or 300 }}px]">
+        <div class="chart-container">
             <canvas id="{{ config.id }}"></canvas>
         </div>
     </div>

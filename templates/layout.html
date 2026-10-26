@@ -413,7 +413,7 @@
                     <div id="breadcrumbs" class="hidden xl:flex items-center flex-shrink-0"></div>
 
                     <!-- Live Market Ticker (Tablet and Desktop) -->
-                    <div class="market-ticker-bar hidden md:flex items-center gap-2 ticker-bar overflow-x-auto no-scrollbar flex-shrink-1 min-w-0">
+                    <div class="market-ticker-bar hidden md:flex items-center gap-2 ticker-bar overflow-x-auto no-scrollbar shrink min-w-0">
                         <div class="ticker-item ticker-usd ticker-item-emerald flex-shrink-0">
                             <span class="ticker-label">USD</span>
                             <span class="ticker-value" id="ticker-usd-val">{{ live.usd|format_ticker_price if live and live.usd else '--' }} ₺</span>

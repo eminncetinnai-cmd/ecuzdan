@@ -210,10 +210,11 @@
         border-radius: 1.25rem;
     }
     .scenario-btn {
-        flex: 1 1 30%;
+        flex: 1 1 auto;
+        white-space: nowrap;
         text-align: center;
-        padding: 0.5rem 0.75rem;
-        font-size: 0.75rem;
+        padding: 0.5rem 0.65rem;
+        font-size: 0.72rem;
     }
 }
 

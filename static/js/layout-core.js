@@ -489,6 +489,8 @@ window.closeGlobalConfirm = function() {
 // ---- COMMAND PALETTE & GLOBAL SEARCH (⌘K) ----
 window.openGlobalSearch = function() {
     var modal = document.getElementById('commandPaletteModal');
+    if (modal) modal.style.display = 'flex';
+    var modal = document.getElementById('commandPaletteModal');
     if (!modal) return;
     modal.classList.remove('hidden');
     modal.classList.add('active');
@@ -505,6 +507,8 @@ window.openGlobalSearch = function() {
 };
 
 window.closeGlobalSearch = function() {
+    var modal = document.getElementById('commandPaletteModal');
+    if (modal) modal.style.display = '';
     var modal = document.getElementById('commandPaletteModal');
     if (!modal) return;
     modal.classList.remove('active');
