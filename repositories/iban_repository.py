@@ -66,6 +66,14 @@ class IbanRepository(TenantScopedRepository):
         easy_address: str | None = None,
     ) -> UserIban:
         """Create and persist a new IBAN record."""
+        t_id_check = self.require_tenant_id(tenant_id)
+        existing = (
+            self.query(UserIban)
+            .filter(UserIban.tenant_id == t_id_check, UserIban.iban == iban.strip())
+            .first()
+        )
+        if existing:
+            return existing
         t_id = self.require_tenant_id(tenant_id)
         record = UserIban(
             tenant_id=t_id,

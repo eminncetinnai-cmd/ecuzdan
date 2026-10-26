@@ -409,7 +409,7 @@
         </div>
         <div class="modal-footer">
             <button data-macro="button_secondary" type="button" onclick="hideModal()">{{ _('btn_cancel') }}</button>
-            <button data-macro="button_secondary" type="button" onclick="saveEntry()">{{ _('logbook_save') }}</button>
+            <button data-macro="button_secondary" type="button" id="btnSaveEntry" onclick="saveEntry(this)">{{ _('logbook_save') }}</button>
         </div>
     </div>
 </div>
@@ -503,7 +503,7 @@
         </div>
         <div class="modal-footer">
             <button data-macro="button_secondary" type="button" onclick="hideIbanModal()">{{ _('btn_cancel') }}</button>
-            <button data-macro="button_primary" type="button" onclick="saveIban()">{{ _('logbook_save') }}</button>
+            <button data-macro="button_primary" type="button" id="btnSaveIban" onclick="saveIban(this)">{{ _('logbook_save') }}</button>
         </div>
     </div>
 </div>
@@ -640,7 +640,7 @@
         </div>
         <div class="modal-footer">
             <button data-macro="button_secondary" type="button" onclick="hideReminderModal()">{{ _('btn_cancel') }}</button>
-            <button data-macro="button_primary" type="button" onclick="saveReminder()">{{ _('logbook_save') }}</button>
+            <button data-macro="button_primary" type="button" id="btnSaveReminder" onclick="saveReminder(this)">{{ _('logbook_save') }}</button>
         </div>
     </div>
 </div>

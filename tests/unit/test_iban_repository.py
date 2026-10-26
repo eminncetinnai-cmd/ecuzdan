@@ -58,6 +58,10 @@ def test_iban_repository_create_iban():
     mock_db = Mock()
     mock_session = Mock()
     mock_db.session = mock_session
+    mock_query = Mock()
+    mock_session.query.return_value = mock_query
+    mock_query.filter.return_value = mock_query
+    mock_query.first.return_value = None
 
     repo = IbanRepository(database=mock_db)
     item = repo.create_iban(
@@ -72,6 +76,30 @@ def test_iban_repository_create_iban():
     assert item.iban == "TR330006200511123456789012"
     assert mock_session.add.called
     assert mock_session.commit.called
+
+
+@pytest.mark.unit
+def test_iban_repository_create_iban_duplicate():
+    mock_db = Mock()
+    mock_session = Mock()
+    mock_db.session = mock_session
+    mock_query = Mock()
+    mock_session.query.return_value = mock_query
+    mock_query.filter.return_value = mock_query
+    existing_record = Mock(title="Maaş Hesabı", iban="TR330006200511123456789012")
+    mock_query.first.return_value = existing_record
+
+    repo = IbanRepository(database=mock_db)
+    item = repo.create_iban(
+        tenant_id="default",
+        user_id=1,
+        title="Maaş Hesabı",
+        iban="TR330006200511123456789012",
+        bank_name="Garanti BBVA",
+        category="kendi_hesabim",
+    )
+    assert item == existing_record
+    assert not mock_session.add.called
 
 
 @pytest.mark.unit

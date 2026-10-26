@@ -80,6 +80,22 @@ class ReminderRepository(TenantScopedRepository):
         document_url: str | None = None,
     ) -> UserReminder:
         """Create and persist a new user reminder."""
+        t_id_check = self.require_tenant_id(tenant_id)
+        from datetime import timedelta
+        cutoff = _utcnow() - timedelta(seconds=5)
+        existing = (
+            self.query(UserReminder)
+            .filter(
+                UserReminder.tenant_id == t_id_check,
+                UserReminder.user_id == user_id,
+                UserReminder.title == title.strip(),
+                UserReminder.created_at >= cutoff,
+            )
+            .order_by(UserReminder.id.desc())
+            .first()
+        )
+        if existing:
+            return existing
         t_id = self.require_tenant_id(tenant_id)
         record = UserReminder(
             tenant_id=t_id,

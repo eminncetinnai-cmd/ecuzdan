@@ -292,9 +292,13 @@ export function showFormLoading(formOrId, submitButtonOrId) {
         submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
     }
 
+    if (form) {
+        form.dataset.submitting = 'true';
+    }
+
     if (submitButton && !submitButton.classList.contains('btn-loading')) {
         submitButton.disabled = true;
-        submitButton.classList.add('btn-loading', 'opacity-75');
+        submitButton.classList.add('btn-loading', 'opacity-75', 'pointer-events-none');
         if (!submitButton.getAttribute('data-original-html')) {
             submitButton.setAttribute('data-original-html', submitButton.innerHTML);
         }
@@ -325,9 +329,14 @@ export function hideFormLoading(formOrId, submitButtonOrId, originalText = null)
         submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
     }
 
+    if (form) {
+        form.dataset.submitting = 'false';
+        delete form.dataset.submitting;
+    }
+
     if (submitButton) {
         submitButton.disabled = false;
-        submitButton.classList.remove('btn-loading', 'opacity-75');
+        submitButton.classList.remove('btn-loading', 'opacity-75', 'pointer-events-none');
         const origHtml = submitButton.getAttribute('data-original-html');
         if (originalText) {
             submitButton.textContent = originalText;
@@ -454,6 +463,13 @@ export function initGlobalFormValidation() {
 
         // Skip forms marked with data-no-validate
         if (form.getAttribute('data-no-validate') === 'true') return;
+
+        // Prevent double form submission if form is already in-flight
+        if (form.dataset.submitting === 'true') {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
 
         // Only validate POST forms or forms marked with data-validate or modal forms
         const isPost = (form.method || '').toUpperCase() === 'POST';

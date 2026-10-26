@@ -15,6 +15,17 @@ class LogbookService:
         return self.repository.list_entries(tenant_id, filters)
 
     def create_entry(self, dto, tenant_id, user_id):
+        # Prevent rapid duplicate submissions (e.g. repeated user clicks while waiting)
+        if hasattr(self.repository, 'find_recent_duplicate'):
+            existing = self.repository.find_recent_duplicate(
+                tenant_id=tenant_id,
+                user_id=user_id,
+                title=dto.title,
+                content=dto.content,
+                seconds=5,
+            )
+            if existing:
+                return existing
         asset_id, transaction_id = self._validated_relation_ids(dto, tenant_id)
         entry = self.repository.add_entry(
             tenant_id=tenant_id,

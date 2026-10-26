@@ -31,6 +31,18 @@ class LogbookRepository(BaseRepository):
     def get_entry(self, entry_id, tenant_id):
         return LogbookEntry.query.filter_by(id=entry_id, tenant_id=tenant_id).first()
 
+    def find_recent_duplicate(self, tenant_id, user_id, title, content, seconds=5):
+        """Find an existing entry created within the last N seconds to prevent double-submit."""
+        from datetime import datetime, timezone, timedelta
+        cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(seconds=seconds)
+        return (
+            LogbookEntry.query.filter_by(tenant_id=tenant_id, user_id=user_id, title=title)
+            .filter(LogbookEntry.content == content)
+            .filter(LogbookEntry.created_at >= cutoff)
+            .order_by(LogbookEntry.id.desc())
+            .first()
+        )
+
     def add_entry(self, **fields):
         return self.add(LogbookEntry(**fields))
 
