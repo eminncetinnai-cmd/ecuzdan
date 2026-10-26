@@ -24,7 +24,7 @@
         <div class="flex flex-wrap items-center gap-2 shrink-0">
             <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/70 dark:border-emerald-800/60 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
                 <span class="gold-live-dot" aria-hidden="true"></span>
-                <span id="goldAutoRefreshStatus">Canlı (30 sn)</span>
+                <span id="goldAutoRefreshStatus">Canlı (5 dk)</span>
             </div>
             <div class="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700 text-[11px] font-bold text-slate-600 dark:text-slate-300">
                 <strong id="goldObservedAt" class="text-slate-900 dark:text-white">{{ data.observed_at_display }}</strong>
@@ -277,7 +277,8 @@
     let calcMode = 'sell_to_jeweler'; // 'sell_to_jeweler' (uses buy_price) or 'buy_from_jeweler' (uses sell_price)
     let activeCategory = 'all';
     const baseSym = window.BASE_CURRENCY_SYMBOL || '₺';
-    const AUTO_REFRESH_INTERVAL_MS = 30000;
+    const AUTO_REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 dakika (300.000 ms)
+    let lastRefreshAt = Date.now();
 
     function formatTR(num) {
         const val = Number(num) || 0;
@@ -493,12 +494,13 @@
     window.refreshGoldQuotes = async function() {
         if (document.hidden) return;
         const statusEl = document.getElementById('goldAutoRefreshStatus');
-        if (statusEl) statusEl.textContent = 'Canlı Güncelleniyor...';
+        if (statusEl) statusEl.textContent = 'Güncelleniyor...';
         try {
             const resp = await fetch('/gold-tracking/api/quotes?refresh=1');
             const json = await resp.json();
             if (json && json.success && json.data) {
                 state = json.data;
+                lastRefreshAt = Date.now();
                 const badge = document.getElementById('goldSourceBadge');
                 const obs = document.getElementById('goldObservedAt');
                 if (badge) badge.textContent = state.source_label;
@@ -508,16 +510,21 @@
         } catch (err) {
             console.error('Gold auto-refresh error:', err);
         } finally {
-            if (statusEl) statusEl.textContent = 'Otomatik Canlı Akış (30 sn)';
+            if (statusEl) statusEl.textContent = 'Canlı (5 dk)';
         }
     };
 
     renderAllPrices();
 
-    // Otomatik canlı güncelleme (30 saniyede bir + sekme aktif olduğunda)
+    // 1) Sayfaya ilk girildiğinde güncel veriyi çek
+    window.refreshGoldQuotes();
+
+    // 2) Aynı sayfada kalındığı sürece her 5 dakikada bir yenile
     setInterval(window.refreshGoldQuotes, AUTO_REFRESH_INTERVAL_MS);
+
+    // 3) Sekmeye geri dönüldüğünde son yenilemeden 5 dk geçtiyse yenile
     document.addEventListener('visibilitychange', function() {
-        if (!document.hidden) {
+        if (!document.hidden && (Date.now() - lastRefreshAt >= AUTO_REFRESH_INTERVAL_MS)) {
             window.refreshGoldQuotes();
         }
     });

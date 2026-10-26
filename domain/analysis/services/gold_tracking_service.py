@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 HAREM_DOVIZ_URL = "https://altin.doviz.com/harem"
 TRUNCGIL_V4_URL = "https://finans.truncgil.com/v4/today.json"
-CACHE_TTL_SECONDS = 45.0
+CACHE_TTL_SECONDS = 300.0
 REQUEST_TIMEOUT_SECONDS = 6
 
 
