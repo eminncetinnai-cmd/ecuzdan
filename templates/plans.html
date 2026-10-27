@@ -446,9 +446,14 @@
                 <div id="planEditPaidNotice" class="hidden rounded-xl border border-indigo-100 bg-indigo-50/70 p-3 text-xs text-indigo-900 transition-all dark:border-indigo-900/40 dark:bg-indigo-950/40 dark:text-indigo-200">
                     <div class="flex items-start gap-2.5">
                         <svg class="h-4 w-4 shrink-0 mt-0.5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <div class="space-y-0.5">
-                            <p class="font-bold text-[11px] text-indigo-950 dark:text-indigo-100" id="planEditNoticeTitle">Ödenmiş Taksitli Plan Düzenleniyor</p>
-                            <p class="text-[10px] leading-relaxed text-indigo-800 dark:text-indigo-300" id="planEditNoticeBody">Bu planda ödenmiş taksitler bulunmaktadır. Yapacağınız değişiklikler yalnızca bekleyen taksitlere uygulanır; geçmiş ödeme kayıtları korunur.</p>
+                        <div class="space-y-1 w-full">
+                            <div class="flex items-center justify-between gap-2">
+                                <p class="font-bold text-[11px] text-indigo-950 dark:text-indigo-100" id="planEditNoticeTitle">Ödenmiş Taksitli Plan Düzenleniyor</p>
+                                <span id="planPaidBadge" class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                                    🟢 Ödenen: <span id="planPaidCountBadge" class="ml-1 font-black">0</span> Taksit
+                                </span>
+                            </div>
+                            <p class="text-[10px] leading-relaxed text-indigo-800 dark:text-indigo-300" id="planEditNoticeBody">Bu planda daha önce ödenmiş taksitler korunur ve geçmiş finansal kayıtlara dokunulmaz. Yapacağınız değişiklikler yalnızca bekleyen taksitlere uygulanır.</p>
                         </div>
                     </div>
                 </div>
@@ -538,6 +543,24 @@
 
                 <!-- Taksitli / Süreli Mod Alanları (Sadece Belirli Süreli seçilince görünür) -->
                 <div id="installment_fields_group" class="hidden space-y-3">
+                    <input type="hidden" name="paid_count" id="plan_paid_count_input" value="0">
+                    <div id="paid_installments_info_row" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 text-center">
+                        <div class="flex flex-col items-center justify-center p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40">
+                            <span class="text-[9px] font-bold uppercase text-emerald-700 dark:text-emerald-300">Ödenen Taksit</span>
+                            <span id="plan_paid_count_display" class="text-sm font-black text-emerald-800 dark:text-emerald-200">0</span>
+                            <span class="text-[8px] text-emerald-600 dark:text-emerald-400 font-semibold">Değiştirilemez</span>
+                        </div>
+                        <div class="flex flex-col justify-center p-2 rounded-lg bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-800/40">
+                            <label for="plan_remaining_installments" class="text-[9px] font-bold uppercase text-indigo-700 dark:text-indigo-300">Kalan Taksit</label>
+                            <input type="number" min="0" max="360" name="remaining_installments" id="plan_remaining_installments" class="text-center font-black text-sm bg-transparent border-0 focus:ring-0 p-0 text-slate-800 dark:text-slate-100" oninput="onRemainingInstallmentsInput()">
+                            <span class="text-[8px] text-slate-400 font-semibold">Düzenlenebilir</span>
+                        </div>
+                        <div class="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+                            <span class="text-[9px] font-bold uppercase text-slate-600 dark:text-slate-300">Toplam Plan</span>
+                            <span id="plan_total_count_display" class="text-sm font-black text-slate-800 dark:text-slate-100">0</span>
+                            <span class="text-[8px] text-slate-400 font-semibold">Ödenen + Kalan</span>
+                        </div>
+                    </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                             <label class="text-[9px] font-bold text-slate-400 uppercase block mb-2">Taksit / Dönem Sayısı</label>

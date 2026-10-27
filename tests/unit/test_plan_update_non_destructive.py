@@ -294,3 +294,110 @@ def test_update_plan_reduce_to_exact_paid_count_marks_completed(app, plan_setup)
     # Check plan auto-completion
     plan_after = RecurringPlan.query.get(plan.id)
     assert plan_after.status == "Tamamlandı"
+
+
+def test_update_plan_shift_dates_when_paid_installments_exist(app, plan_setup):
+    """When user updates start_date after paid transactions, remaining installments roll forward cleanly."""
+    tenant = plan_setup
+    repo = RecurringPlanRepository()
+    service = PlanService(financial_repository=repo)
+
+    create_dto = PlanFormDTO(
+        plan_id=None,
+        name="Unit Test Plan Roll Forward",
+        category="Kredi Kartı",
+        amount=1000.0,
+        installments=5,
+        payment_day=10,
+        plan_type="Taksit",
+        frequency="Aylık",
+        start_date="2026-01-10",
+        end_date=None,
+        action="add",
+        version=1,
+    )
+    service.save_plan(create_dto)
+
+    plan = RecurringPlan.query.filter_by(name="Unit Test Plan Roll Forward", tenant_id=tenant.id).first()
+    txs = Transaction.query.filter_by(source_id=plan.id, is_deleted=False).order_by(Transaction.installment_number).all()
+    assert len(txs) == 5
+
+    # Mark 2 installments as paid (Jan and Feb)
+    txs[0].status = "Ödendi"
+    txs[0].date = "2026-01-10"
+    txs[1].status = "Ödendi"
+    txs[1].date = "2026-02-10"
+    db.session.commit()
+
+    # User re-schedules remaining installments to start from November 2026
+    update_dto = PlanFormDTO(
+        plan_id=plan.id,
+        name="Unit Test Plan Roll Forward",
+        category="Kredi Kartı",
+        amount=1200.0,
+        installments=5,
+        payment_day=15,
+        plan_type="Taksit",
+        frequency="Aylık",
+        start_date="2026-11-15",
+        end_date=None,
+        action="edit",
+        version=plan.version,
+    )
+    service.save_plan(update_dto)
+
+    txs_after = Transaction.query.filter_by(source_id=plan.id, is_deleted=False).order_by(Transaction.installment_number).all()
+    assert len(txs_after) == 5
+
+    # Paid installments preserved exactly
+    assert txs_after[0].installment_number == 1 and txs_after[0].status == "Ödendi" and txs_after[0].date == "2026-01-10"
+    assert txs_after[1].installment_number == 2 and txs_after[1].status == "Ödendi" and txs_after[1].date == "2026-02-10"
+
+    # Remaining 3 installments start cleanly from November 15
+    assert txs_after[2].installment_number == 3 and txs_after[2].status == "Bekliyor" and txs_after[2].date == "2026-11-15"
+    assert Decimal(str(txs_after[2].amount)) == Decimal("1200.0000")
+
+    assert txs_after[3].installment_number == 4 and txs_after[3].status == "Bekliyor" and txs_after[3].date == "2026-12-15"
+    assert Decimal(str(txs_after[3].amount)) == Decimal("1200.0000")
+
+    assert txs_after[4].installment_number == 5 and txs_after[4].status == "Bekliyor" and txs_after[4].date == "2027-01-15"
+    assert Decimal(str(txs_after[4].amount)) == Decimal("1200.0000")
+
+
+def test_plan_form_from_request_with_remaining_installments_auto_sums_total(app):
+    """When user provides remaining_installments and paid_count, total installments are reconciled."""
+    from validators.request_validators import plan_form_from_request
+
+    # Case A: Explicit remaining_installments
+    form_data = {
+        'action': 'update_plan',
+        'plan_id': '42',
+        'name': 'Kredi Borcu',
+        'category': 'Kredi Kartı',
+        'amount': '500',
+        'paid_count': '3',
+        'remaining_installments': '2',
+        'payment_day': '15',
+        'start_date': '2026-11-01',
+    }
+    dto = plan_form_from_request(form_data)
+    assert dto.installments == 5
+    assert dto.remaining_installments == 2
+    assert dto.paid_count == 3
+
+    # Case B: User typed 2 in installments field (meaning 2 remaining) while 3 are already paid
+    form_data_b = {
+        'action': 'update_plan',
+        'plan_id': '42',
+        'name': 'Kredi Borcu',
+        'category': 'Kredi Kartı',
+        'amount': '500',
+        'paid_count': '3',
+        'installments': '2',
+        'payment_day': '15',
+        'start_date': '2026-11-01',
+    }
+    dto_b = plan_form_from_request(form_data_b)
+    assert dto_b.installments == 5
+    assert dto_b.remaining_installments == 2
+    assert dto_b.paid_count == 3

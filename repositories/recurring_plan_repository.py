@@ -549,103 +549,109 @@ class RecurringPlanRepository(BaseRepository, BaseRepositoryContract):
         total_count = self._plan_transaction_count(plan)
         plan_note = plan.note
 
+        # Clean Roll-Forward Pattern:
+        # 1. Eski bekleyen ('Bekliyor') plan islemlerini tamamen temizle (hard delete).
+        #    Boylece benzersizlik (uq_transaction_dedup) ve indeks cakismalari onlenir.
+        pending_txs = [t for t in existing_txs if t.status == 'Bekliyor']
+        pending_ids = [t.id for t in pending_txs]
+
+        if pending_ids:
+            occ_model = _unwrap(PlanOccurrence)
+            self.session.query(occ_model).filter(
+                occ_model.transaction_id.in_(pending_ids),
+                occ_model.tenant_id == tenant_id,
+            ).update({'transaction_id': None}, synchronize_session='fetch')
+
+        for t in pending_txs:
+            self.session.delete(t)
+        self.session.flush()
+
         if plan.status in ('İptal', 'Tamamlandı'):
-            for t in existing_txs:
-                if t.status == 'Bekliyor':
-                    t.is_deleted = True
-                    t.deleted_at = datetime.now()
+            # Plan iptal veya tamamlandiysa yeni bekleyen islem uretilmez
+            pass
         elif plan.status == 'Aktif':
             if is_rolling_plan:
-                pending_txs = [t for t in existing_txs if t.status == 'Bekliyor']
-                for idx, t in enumerate(pending_txs):
-                    t.amount = plan.amount
-                    t.category = plan.category
-                    t.type = plan.flow_type
-                    t.note = plan_note
-                    t.description = self._plan_description(plan, idx)
-                    t.version = (t.version or 1) + 1
                 today = datetime.now().date()
                 start_date_val = self._parse_plan_date(plan.start_date) or today
                 anchor_date = max(start_date_val, today)
-                pending_dates = {self._parse_plan_date(t.date) for t in pending_txs if t.date}
-                if len(pending_txs) < 3:
-                    for payment_date in self._plan_occurrences(plan, 3, forward_only=True):
-                        if payment_date not in pending_dates:
-                            self.session.add(Transaction(
-                                date=payment_date.strftime('%Y-%m-%d'),
-                                category=plan.category,
-                                description=self._plan_description(plan, len(pending_txs)),
-                                note=plan_note,
-                                type=plan.flow_type,
-                                amount=plan.amount,
-                                status='Bekliyor',
-                                source_id=plan.id,
-                                source_type='plan',
-                                tenant_id=plan.tenant_id,
-                            ))
-                            pending_dates.add(payment_date)
-                            if len(pending_dates) >= 3:
-                                break
-            else:
-                # Belirli süreli / taksitli plan: ödenmişlere dokunma, bekleyenleri yerinde güncelle
-                all_dates = list(self._plan_occurrences(plan, total_count, skip=0))
-
-                for t in paid_txs:
-                    inst_idx = (t.installment_number or 1) - 1
-                    t.description = self._plan_description(plan, inst_idx)
-
-                pending_txs = [t for t in existing_txs if t.status == 'Bekliyor']
-                pending_by_inst = {t.installment_number: t for t in pending_txs if t.installment_number is not None}
-                unnumbered_pending = [t for t in pending_txs if t.installment_number is None]
-
-                for inst_num in range(1, total_count + 1):
-                    if any(t.installment_number == inst_num for t in paid_txs):
-                        continue
-
-                    date_idx = inst_num - 1
-                    if date_idx < len(all_dates):
-                        tx_date = all_dates[date_idx].strftime('%Y-%m-%d')
-                    else:
-                        tx_date = plan.start_date
-
-                    if inst_num in pending_by_inst:
-                        t = pending_by_inst[inst_num]
-                        t.amount = plan.amount
-                        t.category = plan.category
-                        t.type = plan.flow_type
-                        t.note = plan_note
-                        t.description = self._plan_description(plan, inst_num - 1)
-                        t.date = tx_date
-                        t.version = (t.version or 1) + 1
-                    elif unnumbered_pending:
-                        t = unnumbered_pending.pop(0)
-                        t.installment_number = inst_num
-                        t.amount = plan.amount
-                        t.category = plan.category
-                        t.type = plan.flow_type
-                        t.note = plan_note
-                        t.description = self._plan_description(plan, inst_num - 1)
-                        t.date = tx_date
-                        t.version = (t.version or 1) + 1
-                    else:
+                for payment_date in self._plan_occurrences(plan, 3, forward_only=True):
+                    tx_date = payment_date.strftime('%Y-%m-%d')
+                    tx_desc = self._plan_description(plan, 0)
+                    dup = Transaction.query.filter_by(
+                        tenant_id=plan.tenant_id,
+                        date=tx_date,
+                        category=plan.category,
+                        description=tx_desc,
+                        amount=plan.amount,
+                    ).first()
+                    if dup and dup.is_deleted:
+                        self.session.delete(dup)
+                        self.session.flush()
+                        dup = None
+                    if not dup:
                         self.session.add(Transaction(
                             date=tx_date,
                             category=plan.category,
-                            description=self._plan_description(plan, inst_num - 1),
+                            description=tx_desc,
                             note=plan_note,
                             type=plan.flow_type,
                             amount=plan.amount,
                             status='Bekliyor',
-                            installment_number=inst_num,
                             source_id=plan.id,
                             source_type='plan',
                             tenant_id=plan.tenant_id,
                         ))
+            else:
+                # Belirli sureli / taksitli plan:
+                # Odenmis taksitler (paid_txs) KORUNUR ve ASLA DEGISTIRILMEZ.
+                # Kalan taksitler icin sifirdan temiz ve ardil islemler uretilir.
+                remaining_count = max(total_count - paid_count, 0)
+                if remaining_count > 0:
+                    new_start_date = self._parse_plan_date(plan.start_date)
+                    if paid_count > 0:
+                        last_paid_tx = max(paid_txs, key=lambda t: t.date)
+                        last_paid_date = self._parse_plan_date(last_paid_tx.date)
+                        if new_start_date and last_paid_date and new_start_date > last_paid_date:
+                            import copy
+                            rem_plan = copy.copy(plan)
+                            rem_plan.start_date = new_start_date.strftime('%Y-%m-%d')
+                            rem_dates = list(self._plan_occurrences(rem_plan, remaining_count, skip=0))
+                        else:
+                            all_dates = list(self._plan_occurrences(plan, total_count, skip=0))
+                            rem_dates = all_dates[paid_count:total_count]
+                    else:
+                        all_dates = list(self._plan_occurrences(plan, total_count, skip=0))
+                        rem_dates = all_dates
 
-                for t in pending_txs:
-                    if t.installment_number and t.installment_number > total_count:
-                        t.is_deleted = True
-                        t.deleted_at = datetime.now()
+                    for idx, p_date in enumerate(rem_dates):
+                        inst_num = paid_count + idx + 1
+                        tx_date = p_date.strftime('%Y-%m-%d')
+                        tx_desc = self._plan_description(plan, inst_num - 1)
+                        dup = Transaction.query.filter_by(
+                            tenant_id=plan.tenant_id,
+                            date=tx_date,
+                            category=plan.category,
+                            description=tx_desc,
+                            amount=plan.amount,
+                        ).first()
+                        if dup and dup.is_deleted:
+                            self.session.delete(dup)
+                            self.session.flush()
+                            dup = None
+                        if not dup:
+                            self.session.add(Transaction(
+                                date=tx_date,
+                                category=plan.category,
+                                description=tx_desc,
+                                note=plan_note,
+                                type=plan.flow_type,
+                                amount=plan.amount,
+                                status='Bekliyor',
+                                installment_number=inst_num,
+                                source_id=plan.id,
+                                source_type='plan',
+                                tenant_id=plan.tenant_id,
+                            ))
 
         self.commit()
         invalidate_financial_cache(tenant_id)

@@ -288,6 +288,7 @@ class PlanService:
         return {
             'plan': {
                 'id': plan.id,
+                'version': getattr(plan_model, 'version', 1),
                 'tenant_id': plan.tenant_id,
                 'name': plan.name,
                 'category': plan.category,

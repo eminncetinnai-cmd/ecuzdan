@@ -89,10 +89,32 @@ def plan_form_from_request(form):
         installments_val = int(installments_raw) if installments_raw is not None and str(installments_raw).strip() != '' else 0
     except (TypeError, ValueError):
         installments_val = 0
+
+    paid_count_raw = form.get('paid_count')
+    try:
+        paid_count_val = int(paid_count_raw) if paid_count_raw is not None and str(paid_count_raw).strip() != '' else None
+    except (TypeError, ValueError):
+        paid_count_val = None
+
+    remaining_installments_raw = form.get('remaining_installments')
+    try:
+        remaining_installments_val = int(remaining_installments_raw) if remaining_installments_raw is not None and str(remaining_installments_raw).strip() != '' else None
+    except (TypeError, ValueError):
+        remaining_installments_val = None
+
     payment_day_val = int(form.get('payment_day', 0) or 0)
     note_val = form.get('note', '').strip() or None
     plan_id_val = form.get('plan_id') or None
     is_update_action = bool(plan_id_val or action_val in ['update_plan', 'edit_plan'])
+
+    # Akıllı kalan/toplam taksit uzlaştırması:
+    # 1. Kalan taksit sayısı doğrudan formdan geldiyse: toplam = ödenen + kalan
+    if remaining_installments_val is not None and remaining_installments_val >= 0 and paid_count_val is not None:
+        installments_val = paid_count_val + remaining_installments_val
+    # 2. Düzenleme sırasında kullanıcı tek taksit alanına kalan taksit adedini girdiyse (0 < girilen < ödenen):
+    elif is_update_action and paid_count_val is not None and paid_count_val > 0 and 0 < installments_val < paid_count_val:
+        remaining_installments_val = installments_val
+        installments_val = paid_count_val + remaining_installments_val
     start_date_val = (form.get('start_date') or '').strip() or None
     end_date_val = (form.get('end_date') or '').strip() or None
     plan_type_val = form.get('plan_type', 'Taksit')
@@ -192,6 +214,8 @@ def plan_form_from_request(form):
         target_asset_id=target_asset_id_val,
         version=version_val,
         status=status_val,
+        remaining_installments=remaining_installments_val,
+        paid_count=paid_count_val,
     )
     if dto.amount <= 0 or dto.installments < 0 or dto.payment_day < 1 or dto.payment_day > 31:
         raise ValueError("Tutar ve gün değerleri geçerli olmalıdır. Süresiz için taksit sayısı 0 veya 9999 olmalıdır.")

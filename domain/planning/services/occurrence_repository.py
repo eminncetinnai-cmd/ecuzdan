@@ -173,10 +173,15 @@ class OccurrenceRepository(TenantScopedRepository):
                                 row.paid_at = utcnow_naive()
                     changed = True
                 else:
-                    if row.scheduled_date != scheduled_date or row.amount != plan.amount:
+                    actual_date = str(matching_tx.date) if matching_tx and matching_tx.date else scheduled_date
+                    if row.scheduled_date != actual_date or row.amount != plan.amount:
                         changed = True
-                    row.scheduled_date = scheduled_date
+                    row.scheduled_date = actual_date
                     row.amount = plan.amount
+                    matching_tx_id = matching_tx.id if matching_tx else None
+                    if row.transaction_id != matching_tx_id:
+                        row.transaction_id = matching_tx_id
+                        changed = True
             elif row.status == "paid" and not row.transaction_id and matching_tx:
                 row.transaction_id = matching_tx.id
                 changed = True

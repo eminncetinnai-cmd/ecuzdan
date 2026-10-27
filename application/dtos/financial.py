@@ -35,6 +35,8 @@ class PlanFormDTO:
     target_asset_id: Optional[int] = None
     version: Optional[int] = None
     status: Optional[str] = 'Aktif'
+    remaining_installments: Optional[int] = None
+    paid_count: Optional[int] = None
 
 
 @dataclass(frozen=True)
