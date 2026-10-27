@@ -45,6 +45,19 @@ instrument_flask_app(app)
 config = Config.from_env()
 app.config['TESTING'] = os.getenv('FLASK_ENV', '').lower() == 'testing' or os.getenv('TESTING', 'false').lower() == 'true'
 
+# Trusted reverse proxy support (Render / Load Balancer)
+_trust_hops = getattr(config, 'TRUST_PROXY_HOPS', 0)
+if _trust_hops > 0:
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(
+        app.wsgi_app,
+        x_for=_trust_hops,
+        x_proto=_trust_hops,
+        x_host=_trust_hops,
+        x_port=_trust_hops,
+        x_prefix=_trust_hops,
+    )
+
 # Apply configuration
 # Production'da SECRET_KEY mutlaka .env ile set edilmeli.
 # Geliştirmede (dev) her restart'ta aynı kalması için sabit fallback kullan.

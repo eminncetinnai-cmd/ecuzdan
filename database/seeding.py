@@ -4,6 +4,7 @@ Varsayılan veri oluşturma ve migration
 """
 
 import logging
+import os
 
 from sqlalchemy import inspect, text
 from werkzeug.security import generate_password_hash
@@ -51,7 +52,7 @@ def _initialize_default_data():
         logger.info(f"Süper admin ({owner_username}) oluşturuluyor...")
         emin = User(
             username=owner_username,
-            password=generate_password_hash('1'),
+            password=generate_password_hash(os.getenv('INITIAL_ADMIN_PASSWORD', '1')),
             password_changed_at=None,
             role='sistem_yoneticisi',
             tenant_id=default_tenant.id

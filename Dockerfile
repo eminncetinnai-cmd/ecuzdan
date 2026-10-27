@@ -40,6 +40,6 @@ USER ecuzdan
 EXPOSE 5000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-    CMD curl -f http://localhost:5000/monitoring/api/health || exit 1
+    CMD curl -f http://localhost:5000/healthz || exit 1
 
 CMD ["sh", "-c", "exec gunicorn -b 0.0.0.0:5000 -w ${GUNICORN_WORKERS:-1} --threads ${GUNICORN_THREADS:-4} --worker-class gthread --timeout 120 --access-logfile - --error-logfile - wsgi:app"]

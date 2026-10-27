@@ -115,6 +115,14 @@ class Config:
                 raise ValueError(
                     "CRITICAL CONFIGURATION ERROR: DATABASE_URL must be explicitly set in production."
                 )
+            allow_sqlite_prod = os.getenv('ALLOW_SQLITE_IN_PRODUCTION', 'false').lower() == 'true'
+            if 'sqlite' in self.DATABASE_URL.lower() and not allow_sqlite_prod:
+                raise ValueError(
+                    "CRITICAL PRODUCTION DATA SAFETY ERROR: SQLite on an ephemeral container filesystem "
+                    "risks silent data loss on restart or redeploy. A persistent managed database (PostgreSQL) "
+                    "must be configured via DATABASE_URL in production. "
+                    "To explicitly bypass this check for testing, set ALLOW_SQLITE_IN_PRODUCTION=true."
+                )
             allow_single_instance = (
                 os.getenv('ALLOW_SINGLE_INSTANCE_RATELIMIT', 'false').lower() == 'true'
                 or is_render
