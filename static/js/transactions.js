@@ -43,7 +43,7 @@
             lengthMenu: [[25, 50, 100, -1], [25, 50, 100, uiCopy.tableAll]],
             dom: '<"flex flex-wrap justify-between items-center gap-3 mb-3"l>rt<"flex flex-wrap justify-between items-center gap-3 mt-4"ip>',
             columnDefs: [
-                { orderable: false, targets: [7] }
+                { orderable: false, targets: [6] }
             ],
             drawCallback: function() {
                 if (typeof updateLiveKpis === 'function') {

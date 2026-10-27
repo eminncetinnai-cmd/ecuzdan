@@ -93,6 +93,7 @@ VIEWPORTS = [
     {'name': 'iPhone SE (375px)', 'width': 375, 'height': 667},
     {'name': 'iPhone 12/13/14 (390px)', 'width': 390, 'height': 844},
     {'name': 'Google Pixel 7 (412px)', 'width': 412, 'height': 915},
+    {'name': 'iPhone 16 Pro Max (430px)', 'width': 430, 'height': 932},
 ]
 
 
