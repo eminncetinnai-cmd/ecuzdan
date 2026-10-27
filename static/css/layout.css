@@ -963,8 +963,11 @@ footer {
     html.modal-open .mobile-bottom-nav,
     body.modal-open .mobile-bottom-nav,
     body:has(.edit-modal.active) .mobile-bottom-nav,
+    body:has(.asset-modal.active) .mobile-bottom-nav,
     body:has(.modal-overlay.active) .mobile-bottom-nav,
     body:has(.modal.active) .mobile-bottom-nav,
+    body:has(.notification-modal:not(.hidden)) .mobile-bottom-nav,
+    body:has(.app-modal-layer:not(.hidden)) .mobile-bottom-nav,
     body:has(#mobile-sidebar:not(.hidden)) .mobile-bottom-nav,
     body:has([role="dialog"]:not(.hidden)) .mobile-bottom-nav {
         z-index: var(--z-bottom-nav, 10050) !important;
@@ -978,15 +981,21 @@ footer {
     [data-theme="dark"] html.modal-open .mobile-bottom-nav,
     [data-theme="dark"] body.modal-open .mobile-bottom-nav,
     [data-theme="dark"] body:has(.edit-modal.active) .mobile-bottom-nav,
+    [data-theme="dark"] body:has(.asset-modal.active) .mobile-bottom-nav,
     [data-theme="dark"] body:has(.modal-overlay.active) .mobile-bottom-nav,
     [data-theme="dark"] body:has(.modal.active) .mobile-bottom-nav,
+    [data-theme="dark"] body:has(.notification-modal:not(.hidden)) .mobile-bottom-nav,
+    [data-theme="dark"] body:has(.app-modal-layer:not(.hidden)) .mobile-bottom-nav,
     [data-theme="dark"] body:has(#mobile-sidebar:not(.hidden)) .mobile-bottom-nav,
     [data-theme="dark"] body:has([role="dialog"]:not(.hidden)) .mobile-bottom-nav,
     html.dark html.modal-open .mobile-bottom-nav,
     html.dark body.modal-open .mobile-bottom-nav,
     html.dark body:has(.edit-modal.active) .mobile-bottom-nav,
+    html.dark body:has(.asset-modal.active) .mobile-bottom-nav,
     html.dark body:has(.modal-overlay.active) .mobile-bottom-nav,
     html.dark body:has(.modal.active) .mobile-bottom-nav,
+    html.dark body:has(.notification-modal:not(.hidden)) .mobile-bottom-nav,
+    html.dark body:has(.app-modal-layer:not(.hidden)) .mobile-bottom-nav,
     html.dark body:has(#mobile-sidebar:not(.hidden)) .mobile-bottom-nav,
     html.dark body:has([role="dialog"]:not(.hidden)) .mobile-bottom-nav {
         background: rgba(15, 23, 42, 0.98) !important;
@@ -1005,23 +1014,37 @@ footer {
 
     /* Modal clearance on mobile viewports so modal content & action buttons are never obscured by bottom nav */
     .edit-modal-content,
+    .asset-modal-content,
+    .asset-modal,
     .modal-overlay,
     .modal,
-    .delete-modal {
+    .delete-modal,
+    .notification-modal,
+    .app-modal-layer {
         padding-bottom: calc(5rem + env(safe-area-inset-bottom, 16px)) !important;
         box-sizing: border-box;
     }
 
     .edit-modal-card,
+    .asset-modal-card,
     .modal-content,
-    .delete-modal-panel {
-        max-height: calc(100dvh - 5.5rem - env(safe-area-inset-bottom, 0px)) !important;
+    .delete-modal-panel,
+    .app-modal-layer > div:not(.absolute):not(.fixed) {
         max-height: calc(100vh - 5.5rem - env(safe-area-inset-bottom, 0px)) !important;
+        max-height: calc(100dvh - 5.5rem - env(safe-area-inset-bottom, 0px)) !important;
         margin-bottom: auto;
     }
 
+    /* Side drawers & detail sheets clearance on mobile viewports */
     #mobile-sidebar .mobile-drawer-footer {
         padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    .side-drawer .drawer-content,
+    #planDetailContent,
+    #lineageDrawerContent,
+    #log-inspector-drawer .overflow-y-auto {
+        padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px)) !important;
     }
 
     /* Prevent iOS Safari auto-zoom on input focus (< 16px font-size) */

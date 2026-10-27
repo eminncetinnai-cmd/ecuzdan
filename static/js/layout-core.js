@@ -89,9 +89,9 @@ window.closeModal = function(modalId) {
         var m = document.getElementById(modalId);
         if (m) closeOne(m);
     } else {
-        document.querySelectorAll('.modal.active, .edit-modal.active, .delete-modal.active, .modal-overlay.active, .notification-modal.active, [role="dialog"].active').forEach(closeOne);
+        document.querySelectorAll('.modal.active, .edit-modal.active, .delete-modal.active, .modal-overlay.active, .notification-modal.active, .asset-modal.active, [role="dialog"].active').forEach(closeOne);
     }
-    var stillOpen = document.querySelector('.modal.active, .edit-modal.active, .delete-modal.active, .modal-overlay.active, .notification-modal.active, [role="dialog"].active');
+    var stillOpen = document.querySelector('.modal.active, .edit-modal.active, .delete-modal.active, .modal-overlay.active, .notification-modal.active, .asset-modal.active, [role="dialog"].active');
     if (!stillOpen) {
         document.body.style.overflow = '';
         document.documentElement.classList.remove('modal-open');
@@ -114,6 +114,7 @@ window.openCalculator = function() {
     modal.classList.add('active');
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
+    document.documentElement.classList.add('modal-open');
     calculatorClear();
 };
 
@@ -123,7 +124,11 @@ window.closeCalculator = function() {
     modal.classList.remove('active');
     modal.classList.add('hidden');
     modal.style.display = '';
-    document.body.style.overflow = '';
+    var stillOpen = document.querySelector('.modal.active, .edit-modal.active, .delete-modal.active, .modal-overlay.active, .notification-modal.active, .asset-modal.active, [role="dialog"].active');
+    if (!stillOpen) {
+        document.body.style.overflow = '';
+        document.documentElement.classList.remove('modal-open');
+    }
 };
 
 window.updateCalculatorDisplay = function() {
