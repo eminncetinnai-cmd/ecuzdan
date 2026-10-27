@@ -331,6 +331,14 @@
                         </svg>
                     </button>
 
+                    <!-- Mobile Brand Logo Shortcut (< 1024px) -->
+                    <a href="/" class="mobile-header-brand flex items-center gap-2 lg:hidden flex-shrink-0 min-w-0 hover:opacity-90 active:scale-95 transition" title="{{ brand }} - Ana Sayfa" aria-label="{{ brand }} Ana Sayfa">
+                        <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <img src="{{ static_asset_url('img/logo-icon.svg') }}" alt="{{ brand }}" width="32" height="32" class="w-full h-full object-contain">
+                        </div>
+                        <span class="text-sm font-black text-slate-800 dark:text-slate-100 tracking-tight hidden sm:inline">{{ brand }}</span>
+                    </a>
+
                     <!-- Time & Date Display (Desktop view only; phones have OS clocks) -->
                     <div class="time-display cursor-pointer flex-shrink-0" onclick="window.location.href='/payment_calendar'" title="{{ _('nav_calendar') }}">
                         <div class="time-icon">
