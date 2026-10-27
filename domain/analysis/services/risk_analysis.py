@@ -265,7 +265,7 @@ class RiskAnalyzer:
             Dict with all risk metrics
         """
         # Get historical price updates
-        updates = AssetUpdate.query.filter_by(asset_id=asset.id).order_by(AssetUpdate.date.desc()).limit(period_days).all()
+        updates = AssetUpdate.query.filter_by(asset_id=asset.id).order_by(AssetUpdate.updated_at.desc()).limit(period_days).all()
 
         if len(updates) < 10:
             return {
@@ -276,11 +276,23 @@ class RiskAnalyzer:
             }
 
         # Extract prices and calculate returns
-        prices = [float(u.price) for u in reversed(updates)]
-        returns = []
+        prices = [
+            float(u.new_unit_price if u.new_unit_price is not None else (u.new_value or 0))
+            for u in reversed(updates)
+            if (u.new_unit_price is not None or u.new_value is not None)
+        ]
+        if len(prices) < 10:
+            return {
+                'asset_id': asset.id,
+                'asset_name': asset.name,
+                'error': 'Insufficient data for risk analysis',
+                'data_points': len(prices)
+            }
 
+        returns = []
         for i in range(1, len(prices)):
-            daily_return = (prices[i] - prices[i-1]) / prices[i-1]
+            prev = prices[i-1]
+            daily_return = ((prices[i] - prev) / prev) if prev > 0 else 0.0
             returns.append(daily_return)
 
         # Calculate risk metrics

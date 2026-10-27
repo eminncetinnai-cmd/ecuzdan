@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import os
 import shutil
-import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -205,7 +204,7 @@ def run_cleanup(
 
     final_size = get_dir_size(REPO_ROOT)
     print("\n============================================================")
-    print(f"Temizlik Tamamlandı!")
+    print("Temizlik Tamamlandı!")
     print(f"  Kurtarılan Alan: {format_size(total_freed)}")
     print(f"  Yeni Proje Boyutu: {format_size(final_size)} (Önceki: {format_size(initial_size)})")
     saved_pct = (total_freed / initial_size * 100) if initial_size else 0

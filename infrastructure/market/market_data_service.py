@@ -522,7 +522,6 @@ def get_macro_economic_data(allow_network: bool = True):
             'source': kaynak etiketi
         }
     """
-    global MACRO_CACHE
     now = time.time()
 
     # Önbellek geçerliyse doğrudan dön

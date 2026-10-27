@@ -57,6 +57,8 @@ class InflationAnalyzer:
         Returns:
             Real return as percentage
         """
+        nominal_return = float(nominal_return or 0.0)
+        inflation_rate = float(inflation_rate or 0.0)
         nominal_decimal = nominal_return / 100
         inflation_decimal = inflation_rate / 100
 
@@ -110,8 +112,10 @@ class InflationAnalyzer:
         Returns:
             Dict with inflation-adjusted return analysis
         """
-        if not current_year:
-            current_year = datetime.now().year
+        asset_value = float(asset_value or 0.0)
+        cost_basis = float(cost_basis or 0.0)
+        current_year = int(current_year or datetime.now().year)
+        purchase_year = int(purchase_year or current_year)
 
         # Calculate nominal return
         nominal_return = ((asset_value - cost_basis) / cost_basis * 100) if cost_basis > 0 else 0
@@ -213,26 +217,28 @@ class InflationAnalyzer:
                 'asset_analysis': []
             }
 
-        total_value = sum(a.value for a in assets)
-        total_cost = sum(a.purchase_cost for a in assets)
+        total_value = float(sum(float(a.value or 0) for a in assets))
+        total_cost = float(sum(float(a.purchase_cost or 0) for a in assets))
 
         # Calculate weighted average real return
         asset_analysis = []
-        weighted_real_return = 0
+        weighted_real_return = 0.0
         current_year = datetime.now().year
 
         for asset in assets:
             purchase_year = int(asset.purchase_date[:4]) if asset.purchase_date else current_year
+            val = float(asset.value or 0)
+            cost = float(asset.purchase_cost or 0)
 
             real_analysis = InflationAnalyzer.get_inflation_adjusted_return(
-                asset.value,
-                asset.purchase_cost,
+                val,
+                cost,
                 purchase_year,
                 current_year,
                 country
             )
 
-            weight = (asset.value / total_value) if total_value > 0 else 0
+            weight = (val / total_value) if total_value > 0 else 0.0
             weighted_real_return += real_analysis['real_return'] * weight
 
             asset_analysis.append({

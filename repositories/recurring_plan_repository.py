@@ -571,9 +571,6 @@ class RecurringPlanRepository(BaseRepository, BaseRepositoryContract):
             pass
         elif plan.status == 'Aktif':
             if is_rolling_plan:
-                today = datetime.now().date()
-                start_date_val = self._parse_plan_date(plan.start_date) or today
-                anchor_date = max(start_date_val, today)
                 for payment_date in self._plan_occurrences(plan, 3, forward_only=True):
                     tx_date = payment_date.strftime('%Y-%m-%d')
                     tx_desc = self._plan_description(plan, 0)

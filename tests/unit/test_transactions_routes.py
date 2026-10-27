@@ -495,6 +495,7 @@ def test_new_transaction_idempotency_key(authenticated_client, app):
         assert resp1.get_json()['success'] is True
 
         resp2 = authenticated_client.post('/new_transaction', headers={'X-Requested-With': 'XMLHttpRequest'}, data=payload)
+        assert resp2.status_code == 200
         count = Transaction.query.filter_by(idempotency_key=idem_key).count()
         assert count == 1
 

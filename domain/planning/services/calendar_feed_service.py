@@ -4,7 +4,7 @@ Pure business logic service for generating standard iCalendar (.ics) feeds
 and secure HMAC subscription tokens for Apple Calendar, Google Calendar, and Outlook.
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 import hashlib
 import hmac
 from typing import Any, Dict, List, Optional, Tuple
@@ -79,7 +79,7 @@ class CalendarFeedService:
     @staticmethod
     def build_feed(events: List[Dict[str, Any]], cal_name: str = "E-Cüzdan Ödeme & Hatırlatıcı Takvimi") -> str:
         """Constructs an RFC 5545 compliant VCALENDAR document."""
-        now_stamp = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+        now_stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         lines = [
             "BEGIN:VCALENDAR",
             "VERSION:2.0",

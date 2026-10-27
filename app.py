@@ -6,7 +6,7 @@ import logging
 import os
 import secrets
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from flask import Flask, jsonify, render_template, send_from_directory
 
@@ -71,7 +71,6 @@ else:
         "Üretimde .env içinde güçlü bir SECRET_KEY tanımlanmalıdır."
     )
     app.secret_key = 'dev-only-fixed-fallback-key-do-not-use-in-production'
-import hashlib
 app.config['SQLALCHEMY_DATABASE_URI'] = config.DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = config.SQLALCHEMY_TRACK_MODIFICATIONS
 if config.APP_BOOT_ID:
@@ -244,7 +243,7 @@ def offline_page():
 def keepalive():
     return jsonify({
         'status': 'alive',
-        'timestamp': datetime.utcnow().isoformat(),
+        'timestamp': datetime.now(timezone.utc).isoformat(),
         'app': 'e-cuzdan-pwa',
     })
 

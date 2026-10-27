@@ -60,8 +60,8 @@ def register_analysis_routes(bp):
     def inflation_adjusted_return():
         """Get inflation-adjusted return for an asset."""
         try:
-            asset_value = request.args.get('asset_value', type=float)
-            cost_basis = request.args.get('cost_basis', type=float)
+            asset_value = request.args.get('asset_value', 0.0, type=float)
+            cost_basis = request.args.get('cost_basis', 0.0, type=float)
             purchase_year = request.args.get('purchase_year', type=int)
             current_year = request.args.get('current_year', type=int)
             country = request.args.get('country', 'TR')
@@ -80,7 +80,7 @@ def register_analysis_routes(bp):
     def inflation_benchmarks():
         """Compare investment return with inflation benchmarks."""
         try:
-            nominal_return = request.args.get('nominal_return', type=float)
+            nominal_return = request.args.get('nominal_return', 0.0, type=float)
             country = request.args.get('country', 'TR')
 
             result = analysis_service.compare_with_inflation_benchmarks(nominal_return, country)

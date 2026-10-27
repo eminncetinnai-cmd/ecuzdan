@@ -3,7 +3,6 @@
 from sqlalchemy.orm import joinedload
 
 from models import Asset, AssetSector, AssetType, Category, Transaction, db
-from utils.ref_cache import get_cached
 
 from .base import BaseRepository
 from .contracts import BaseRepositoryContract, CatalogRepositoryContract

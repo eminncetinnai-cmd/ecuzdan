@@ -518,9 +518,6 @@ def register_auth_routes(bp):
                     profile_image_path = download_profile_image(oauth_info['avatar_url'])
 
                 # Create tenant
-                import secrets
-                from datetime import datetime
-
                 from werkzeug.security import generate_password_hash
 
                 from models import Tenant

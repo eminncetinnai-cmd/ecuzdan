@@ -7,7 +7,6 @@ Transaction Repository — repositories/transaction_repository.py
 """
 
 import logging
-from decimal import Decimal
 from typing import List, Optional
 
 from sqlalchemy.orm import joinedload

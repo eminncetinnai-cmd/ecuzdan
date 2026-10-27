@@ -129,6 +129,13 @@ def _create_signed_session_cookie(flask_app):
             'session_created_at': datetime.now().isoformat(),
             'app_boot_id': flask_app.config.get('APP_BOOT_ID', 'test-boot-id'),
             '_fresh': True,
+            'oauth_signup_info': {
+                'email': 'mobile_audit_oauth_user@example.com',
+                'name': 'Audit OAuth User',
+                'provider': 'GOOGLE',
+                'provider_id': 'audit_oauth_123',
+                'created_at': datetime.now().isoformat(),
+            },
         }
         cookie_val = serializer.dumps(session_data)
         cookie_name = flask_app.config.get('SESSION_COOKIE_NAME', 'session')

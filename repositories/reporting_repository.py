@@ -12,7 +12,6 @@ _synced_targets: dict[tuple, float] = {}
 
 
 def clear_sync_targets(tenant_id=None):
-    global _synced_targets
     if tenant_id is None:
         _synced_targets.clear()
     else:

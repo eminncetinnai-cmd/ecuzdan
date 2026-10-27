@@ -691,7 +691,7 @@ def test_occurrence_repository_cancels_orphaned_occurrences_on_installment_reduc
 
         # Now simulate reducing installments to 2
         plan.installments = 2
-        updated_occurrences = repo.get_or_create_occurrences(plan, tenant.id)
+        repo.get_or_create_occurrences(plan, tenant.id)
 
         all_rows = db.session.query(PlanOccurrence).filter_by(plan_id=plan.id).order_by(PlanOccurrence.occurrence_number).all()
         assert len(all_rows) == 4

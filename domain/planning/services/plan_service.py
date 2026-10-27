@@ -1,7 +1,10 @@
 
 import calendar
+import logging
 from datetime import date, datetime, timedelta
 from typing import TYPE_CHECKING
+
+logger = logging.getLogger(__name__)
 
 from database import get_calendar_month_data
 from domain.planning.models import (
@@ -22,7 +25,6 @@ _month_data_cache: dict[tuple, tuple[float, dict]] = {}
 
 
 def clear_calendar_cache(tenant_id=None):
-    global _month_data_cache
     if tenant_id is None:
         _month_data_cache.clear()
     else:

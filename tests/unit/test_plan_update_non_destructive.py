@@ -292,7 +292,7 @@ def test_update_plan_reduce_to_exact_paid_count_marks_completed(app, plan_setup)
     assert len(txs_after) == 2
     assert all(t.status == "Ödendi" for t in txs_after)
     # Check plan auto-completion
-    plan_after = RecurringPlan.query.get(plan.id)
+    plan_after = db.session.get(RecurringPlan, plan.id)
     assert plan_after.status == "Tamamlandı"
 
 

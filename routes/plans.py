@@ -263,14 +263,14 @@ def register_plan_routes(bp):
             CalendarFeedService,
             verify_calendar_token,
         )
-        from models import User
+        from models import db, User
 
-        verified = verify_calendar_token(token, secret_key, lambda uid: User.query.get(uid))
+        verified = verify_calendar_token(token, secret_key, lambda uid: db.session.get(User, uid))
         if not verified:
             return Response("Unauthorized: Gecersiz takvim tokeni", status=401, mimetype="text/plain")
 
         user_id, tenant_id = verified
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         curr_sym = get_currency_symbol(getattr(user, 'base_currency', 'TRY')) if user else '₺'
         events = []
         try:
