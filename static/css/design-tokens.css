@@ -172,6 +172,7 @@
   --z-modal:        60;
   --z-delete-modal: 70;
   --z-top:          90;
+  --z-bottom-nav:   10050;
 
   /* ─── Tipografi ─────────────────────────────────── */
   --font-size-xs:   12px;

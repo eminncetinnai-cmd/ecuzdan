@@ -89,9 +89,9 @@ window.closeModal = function(modalId) {
         var m = document.getElementById(modalId);
         if (m) closeOne(m);
     } else {
-        document.querySelectorAll('.modal.active, .edit-modal.active, .delete-modal.active, .modal-overlay.active').forEach(closeOne);
+        document.querySelectorAll('.modal.active, .edit-modal.active, .delete-modal.active, .modal-overlay.active, .notification-modal.active, [role="dialog"].active').forEach(closeOne);
     }
-    var stillOpen = document.querySelector('.modal.active, .edit-modal.active, .delete-modal.active, .modal-overlay.active');
+    var stillOpen = document.querySelector('.modal.active, .edit-modal.active, .delete-modal.active, .modal-overlay.active, .notification-modal.active, [role="dialog"].active');
     if (!stillOpen) {
         document.body.style.overflow = '';
         document.documentElement.classList.remove('modal-open');
@@ -299,6 +299,11 @@ document.addEventListener('keydown', function(e) {
 // ---- GLOBAL QUICK TX MODAL ----
 window.openGlobalQuickTxModal = function() {
     try {
+        var modal = document.getElementById('globalQuickTxModal');
+        if (modal && (modal.classList.contains('active') || !modal.classList.contains('hidden'))) {
+            window.closeGlobalQuickTxModal();
+            return;
+        }
 
         var form = document.getElementById('globalQuickTxForm');
 
@@ -812,4 +817,24 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+
+    // Mobil alt menü gezinme bağlantılarına tıklandığında açık modal veya menü varsa kapat
+    var mobileNavLinks = document.querySelectorAll('.mobile-bottom-nav a');
+    mobileNavLinks.forEach(function(link) {
+        link.addEventListener('click', function() {
+            if (document.documentElement.classList.contains('modal-open') || 
+                document.body.classList.contains('modal-open') || 
+                document.querySelector('.modal.active, .edit-modal.active, .delete-modal.active, .modal-overlay.active, .notification-modal.active')) {
+                if (typeof window.closeModal === 'function') {
+                    window.closeModal();
+                }
+            }
+            var mobileSidebar = document.getElementById('mobile-sidebar');
+            if (mobileSidebar && !mobileSidebar.classList.contains('hidden')) {
+                if (typeof window.toggleMobileMenu === 'function') {
+                    window.toggleMobileMenu();
+                }
+            }
+        });
+    });
 });

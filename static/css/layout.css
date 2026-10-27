@@ -919,9 +919,14 @@ footer {
 
     /* Mobile Bottom Navigation Bar Touch Ergonomics */
     .mobile-bottom-nav {
+        z-index: var(--z-bottom-nav, 10050) !important;
         padding-bottom: calc(0.35rem + env(safe-area-inset-bottom, 0px)) !important;
         min-height: calc(3.85rem + env(safe-area-inset-bottom, 0px));
-        transition: opacity 0.2s ease, visibility 0.2s ease;
+        transition: box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+        display: flex !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        visibility: visible !important;
     }
     .mobile-bottom-nav a,
     .mobile-bottom-nav button {
@@ -934,24 +939,72 @@ footer {
         padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px)) !important;
     }
 
-    /* Hide mobile bottom nav when drawer menu OR ANY MODAL is open to prevent bleeding through backdrop and covering buttons */
-    html.mobile-menu-open .mobile-bottom-nav,
+    /* 
+     * Persistent Elevated Mobile Bottom Navigation during Modals / Dialogs
+     * Keeps primary menu accessible at all times while preventing UI clipping
+     */
     html.modal-open .mobile-bottom-nav,
     body.modal-open .mobile-bottom-nav,
-    body:has(#mobile-sidebar:not(.hidden)) .mobile-bottom-nav,
-    body:has(.edit-modal:not(.hidden)) .mobile-bottom-nav,
     body:has(.edit-modal.active) .mobile-bottom-nav,
-    body:has(#immutableActionModal:not(.hidden)) .mobile-bottom-nav,
-    body:has(#paymentModal:not(.hidden)) .mobile-bottom-nav,
-    body:has(#unifiedPlanModal:not(.hidden)) .mobile-bottom-nav,
-    body:has(#editModal:not(.hidden)) .mobile-bottom-nav,
-    body:has(.modal-overlay:not(.hidden)) .mobile-bottom-nav,
     body:has(.modal-overlay.active) .mobile-bottom-nav,
-    body:has([role="dialog"]:not(.hidden):not(#mobile-sidebar)) .mobile-bottom-nav {
-        display: none !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-        visibility: hidden !important;
+    body:has(.modal.active) .mobile-bottom-nav,
+    body:has(#mobile-sidebar:not(.hidden)) .mobile-bottom-nav,
+    body:has([role="dialog"]:not(.hidden)) .mobile-bottom-nav {
+        z-index: var(--z-bottom-nav, 10050) !important;
+        background: rgba(255, 255, 255, 0.98) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border-top: 1px solid rgba(226, 232, 240, 0.9) !important;
+        box-shadow: 0 -10px 30px -5px rgba(15, 23, 42, 0.16), 0 -2px 6px -1px rgba(15, 23, 42, 0.08) !important;
+    }
+
+    [data-theme="dark"] html.modal-open .mobile-bottom-nav,
+    [data-theme="dark"] body.modal-open .mobile-bottom-nav,
+    [data-theme="dark"] body:has(.edit-modal.active) .mobile-bottom-nav,
+    [data-theme="dark"] body:has(.modal-overlay.active) .mobile-bottom-nav,
+    [data-theme="dark"] body:has(.modal.active) .mobile-bottom-nav,
+    [data-theme="dark"] body:has(#mobile-sidebar:not(.hidden)) .mobile-bottom-nav,
+    [data-theme="dark"] body:has([role="dialog"]:not(.hidden)) .mobile-bottom-nav,
+    html.dark html.modal-open .mobile-bottom-nav,
+    html.dark body.modal-open .mobile-bottom-nav,
+    html.dark body:has(.edit-modal.active) .mobile-bottom-nav,
+    html.dark body:has(.modal-overlay.active) .mobile-bottom-nav,
+    html.dark body:has(.modal.active) .mobile-bottom-nav,
+    html.dark body:has(#mobile-sidebar:not(.hidden)) .mobile-bottom-nav,
+    html.dark body:has([role="dialog"]:not(.hidden)) .mobile-bottom-nav {
+        background: rgba(15, 23, 42, 0.98) !important;
+        border-top: 1px solid rgba(51, 65, 85, 0.8) !important;
+        box-shadow: 0 -10px 30px -5px rgba(0, 0, 0, 0.5), 0 -2px 6px -1px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    /* Interactive FAB (+) icon rotation when Quick Tx modal is active */
+    body:has(#globalQuickTxModal.active) .mobile-bottom-nav button[onclick*="openGlobalQuickTxModal"] svg,
+    body:has(#globalQuickTxModal:not(.hidden)) .mobile-bottom-nav button[onclick*="openGlobalQuickTxModal"] svg {
+        transform: rotate(45deg);
+    }
+    .mobile-bottom-nav button[onclick*="openGlobalQuickTxModal"] svg {
+        transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* Modal clearance on mobile viewports so modal content & action buttons are never obscured by bottom nav */
+    .edit-modal-content,
+    .modal-overlay,
+    .modal,
+    .delete-modal {
+        padding-bottom: calc(5rem + env(safe-area-inset-bottom, 16px)) !important;
+        box-sizing: border-box;
+    }
+
+    .edit-modal-card,
+    .modal-content,
+    .delete-modal-panel {
+        max-height: calc(100dvh - 5.5rem - env(safe-area-inset-bottom, 0px)) !important;
+        max-height: calc(100vh - 5.5rem - env(safe-area-inset-bottom, 0px)) !important;
+        margin-bottom: auto;
+    }
+
+    #mobile-sidebar .mobile-drawer-footer {
+        padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px)) !important;
     }
 
     /* Prevent iOS Safari auto-zoom on input focus (< 16px font-size) */
