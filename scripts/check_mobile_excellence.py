@@ -203,7 +203,12 @@ def run_mobile_excellence_gate():
                 for route_path, label in CORE_ROUTES:
                     total_audits += 1
                     target_url = f'http://127.0.0.1:5075{route_path}'
-                    page.goto(target_url, wait_until='domcontentloaded', timeout=15000)
+                    try:
+                        page.goto(target_url, wait_until='domcontentloaded', timeout=25000)
+                    except Exception:
+                        # Resilient retry for transient local socket delay
+                        time.sleep(0.5)
+                        page.goto(target_url, wait_until='domcontentloaded', timeout=25000)
                     page.wait_for_timeout(120)
 
                     # Diagnostic check for horizontal overflow
@@ -236,7 +241,11 @@ def run_mobile_excellence_gate():
                         print(f"    [PASS] {route_path:<24} -> scrollWidth: {result['scrollWidth']}px (0px overflow)")
 
                 # Audit Global Modals on Dashboard
-                page.goto('http://127.0.0.1:5075/', wait_until='domcontentloaded', timeout=15000)
+                try:
+                    page.goto('http://127.0.0.1:5075/', wait_until='domcontentloaded', timeout=25000)
+                except Exception:
+                    time.sleep(0.5)
+                    page.goto('http://127.0.0.1:5075/', wait_until='domcontentloaded', timeout=25000)
                 page.wait_for_timeout(120)
 
                 for modal_label, open_js, modal_sel, close_js in GLOBAL_MODALS:

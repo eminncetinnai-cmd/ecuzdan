@@ -1291,15 +1291,38 @@ footer {
         padding: 0.75rem 0.75rem calc(5.5rem + env(safe-area-inset-bottom, 0px)) 0.75rem !important;
     }
     
-    /* Table responsive container */
-    .table-container {
+    /* Table responsive container & momentum scrolling */
+    .table-container,
+    .overflow-x-auto,
+    .dataTables_wrapper,
+    .fin-matrix-container {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
     }
     
-    /* Form inputs touch accessibility */
-    input[type="text"], input[type="number"], input[type="date"], select, textarea {
-        font-size: 16px; /* Prevents auto-zoom in iOS Safari */
+    /* Form inputs touch accessibility & iOS auto-zoom prevention (>= 16px required by iOS) */
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]):not([type="color"]):not([type="file"]),
+    select,
+    textarea,
+    .form-input,
+    .edit-modal-input,
+    .asset-modal-input,
+    .search-input,
+    .search-input-field,
+    .filter-input {
+        font-size: 16px !important;
+    }
+
+    /* Touch targets & manipulation for mobile buttons */
+    button,
+    a.btn,
+    .btn,
+    .header-control,
+    .tx-table-action,
+    .mobile-bottom-nav a {
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
     }
     
     /* Card responsive */
