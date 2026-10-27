@@ -882,6 +882,18 @@ footer {
     
     .header-bar {
         padding: 0.75rem 1rem;
+        background: rgba(255, 255, 255, 0.98) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
+    }
+    
+    html.dark .header-bar,
+    [data-theme="dark"] .header-bar {
+        background: rgba(15, 23, 42, 0.98) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
     }
 
     .mobile-header-brand {
@@ -1548,8 +1560,10 @@ html.dark #headerBar {
         display: none !important;
     }
     .header-bar {
-        min-height: 56px;
-        padding: max(0.45rem, env(safe-area-inset-top, 0px)) .6rem .45rem .6rem;
+        min-height: calc(env(safe-area-inset-top, 0px) + 3.5rem);
+        padding-top: calc(env(safe-area-inset-top, 0px) + 0.65rem);
+        padding-bottom: 0.65rem;
+        padding-inline: .6rem;
         gap: .35rem;
     }
     .header-left {
@@ -2429,7 +2443,8 @@ html, body {
         padding-top: 0 !important;
     }
     .header-bar {
-        padding-top: max(0.45rem, env(safe-area-inset-top, 0px));
-        padding-bottom: 0.45rem;
+        min-height: calc(env(safe-area-inset-top, 0px) + 3.5rem);
+        padding-top: calc(env(safe-area-inset-top, 0px) + 0.65rem);
+        padding-bottom: 0.65rem;
     }
 }
