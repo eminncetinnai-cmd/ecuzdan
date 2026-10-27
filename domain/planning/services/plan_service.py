@@ -302,6 +302,8 @@ class PlanService:
                 'status': plan.status.value,
                 'note': plan.note,
                 'target_asset_id': plan.target_asset_id,
+                'paid_count': counts.get('paid', 0),
+                'paid_occurrences_count': counts.get('paid', 0),
                 'months_remaining': plan.months_remaining,
                 'remaining_total_amount': str(plan.remaining_total_amount) if plan.remaining_total_amount is not None else None,
                 'payment_countdown': plan.payment_countdown,

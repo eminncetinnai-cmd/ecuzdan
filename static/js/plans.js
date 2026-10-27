@@ -455,8 +455,9 @@ function syncInstallmentsFromEndDate() {
     if (endParts.length !== 3) return;
     const endDate = new Date(parseInt(endParts[0], 10), parseInt(endParts[1], 10) - 1, parseInt(endParts[2], 10));
 
+    const minAllowed = parseInt(instInput.min, 10) || 1;
     if (endDate < startDate) {
-        instInput.value = 1;
+        instInput.value = minAllowed;
         return;
     }
 
@@ -485,7 +486,8 @@ function syncInstallmentsFromEndDate() {
         count = Math.max(1, diffMonths);
     }
 
-    instInput.value = count;
+    const finalMin = parseInt(instInput.min, 10) || 1;
+    instInput.value = Math.max(finalMin, count);
 }
 window.syncInstallmentsFromEndDate = syncInstallmentsFromEndDate;
 
@@ -693,9 +695,11 @@ function updateCategoriesAndAction(selectedCat = null) {
         if (!flowSelector || !catSelect || !actionInput) return;
 
         const flow = flowSelector.value;
-        if (flow === 'Gelir') actionInput.value = 'add_income_plan';
-        else if (flow === 'Gider') actionInput.value = 'add_expense_plan';
-        else actionInput.value = 'add_investment_plan';
+        if (actionInput.value !== 'update_plan' && actionInput.value !== 'edit_plan') {
+            if (flow === 'Gelir') actionInput.value = 'add_income_plan';
+            else if (flow === 'Gider') actionInput.value = 'add_expense_plan';
+            else actionInput.value = 'add_investment_plan';
+        }
 
         // Target asset visibility & requirement
         const targetAssetWrapper = document.getElementById('target_asset_wrapper') || document.getElementById('target_asset_group');
@@ -762,6 +766,21 @@ function openPlanModal() {
     const titleEl = document.getElementById('planModalTitle');
     if (titleEl) titleEl.textContent = getPlanCopy().createTitle || 'Yeni Plan Oluştur';
 
+    const actionInput = document.getElementById('planAction');
+    if (actionInput) actionInput.value = 'add_expense_plan';
+
+    const paidNotice = document.getElementById('planEditPaidNotice');
+    if (paidNotice) paidNotice.classList.add('hidden');
+
+    const instInput = document.getElementById('plan_installments');
+    if (instInput) instInput.min = 1;
+
+    const instHelper = document.getElementById('plan_installments_helper');
+    if (instHelper) {
+        instHelper.textContent = 'Örn. 6, 12, 24 taksit';
+        instHelper.classList.remove('text-indigo-600', 'font-bold');
+    }
+
     // Set today as default start date if empty using local timezone
     const now = new Date();
     const localY = now.getFullYear();
@@ -808,6 +827,43 @@ function editPlan(btn) {
     if (flowSelector) flowSelector.value = flow;
     updateCategoriesAndAction(btn.dataset.category);
 
+    // Lock action to update_plan
+    document.getElementById('planAction').value = 'update_plan';
+
+    const paidCount = parseInt(btn.dataset.paidCount || '0', 10);
+    const pendingCount = parseInt(btn.dataset.pendingCount || '0', 10);
+    const paidNotice = document.getElementById('planEditPaidNotice');
+    const instInput = document.getElementById('plan_installments');
+    const instHelper = document.getElementById('plan_installments_helper');
+
+    if (paidNotice) {
+        if (paidCount > 0) {
+            paidNotice.classList.remove('hidden');
+            const noticeTitle = document.getElementById('planEditNoticeTitle');
+            const noticeBody = document.getElementById('planEditNoticeBody');
+            if (noticeTitle) noticeTitle.textContent = 'Ödenmiş Taksitli Plan Düzenleniyor';
+            if (noticeBody) {
+                noticeBody.textContent = `Bu planda ödenmiş ${paidCount} taksit bulunmaktadır. Yapacağınız değişiklikler yalnızca bekleyen ${pendingCount} taksite uygulanır; geçmiş ödeme kayıtları güvenle korunur.`;
+            }
+        } else {
+            paidNotice.classList.add('hidden');
+        }
+    }
+
+    if (instInput) {
+        instInput.min = paidCount > 0 ? paidCount : 1;
+    }
+
+    if (instHelper) {
+        if (paidCount > 0) {
+            instHelper.textContent = `Ödenen: ${paidCount} | Bekleyen: ${pendingCount} (Toplam en az ${paidCount} taksit olmalıdır)`;
+            instHelper.classList.add('text-indigo-600', 'font-bold');
+        } else {
+            instHelper.textContent = 'Örn. 6, 12, 24 taksit';
+            instHelper.classList.remove('text-indigo-600', 'font-bold');
+        }
+    }
+
     document.getElementById('plan_amount').value = btn.dataset.amount;
     document.getElementById('plan_payment_day').value = btn.dataset.paymentDay;
     document.getElementById('plan_note').value = btn.dataset.note || '';
@@ -845,6 +901,15 @@ function editPlan(btn) {
 
 function closePlanModal() {
     window.closeModal('unifiedPlanModal');
+    const paidNotice = document.getElementById('planEditPaidNotice');
+    if (paidNotice) paidNotice.classList.add('hidden');
+    const instInput = document.getElementById('plan_installments');
+    if (instInput) instInput.min = 1;
+    const instHelper = document.getElementById('plan_installments_helper');
+    if (instHelper) {
+        instHelper.textContent = 'Örn. 6, 12, 24 taksit';
+        instHelper.classList.remove('text-indigo-600', 'font-bold');
+    }
 }
 
 function checkPlanBeforeDelete(planId, flowType) {
@@ -1023,6 +1088,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const copy = getPlanCopy();
         const formData = new FormData(this);
+
+        const planIdVal = document.getElementById('plan_id')?.value;
+        if (planIdVal) {
+            formData.set('action', 'update_plan');
+            formData.set('plan_id', planIdVal);
+        }
         const flowVal = document.getElementById('flow_type_selector')?.value || 'Gider';
 
         if (currentDurationMode === 'indefinite') {

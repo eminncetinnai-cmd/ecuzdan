@@ -92,6 +92,7 @@ def plan_form_from_request(form):
     payment_day_val = int(form.get('payment_day', 0) or 0)
     note_val = form.get('note', '').strip() or None
     plan_id_val = form.get('plan_id') or None
+    is_update_action = bool(plan_id_val or action_val in ['update_plan', 'edit_plan'])
     start_date_val = (form.get('start_date') or '').strip() or None
     end_date_val = (form.get('end_date') or '').strip() or None
     plan_type_val = form.get('plan_type', 'Taksit')
@@ -146,7 +147,7 @@ def plan_form_from_request(form):
             # User specified end_date only; auto-calculate installments
             if end_value >= start_value:
                 installments_val = _calc_installments(start_value.date(), end_value.date(), frequency_val)
-            elif action_val in ['update_plan', 'edit_plan']:
+            elif is_update_action:
                 # User changed start month past old end date during edit; extend end date to preserve 1 period
                 installments_val = 1
                 end_value = start_value
@@ -158,7 +159,7 @@ def plan_form_from_request(form):
             end_date_val = computed_end.strftime('%Y-%m-%d')
         elif end_value and installments_val > 0:
             if end_value < start_value:
-                if action_val in ['update_plan', 'edit_plan']:
+                if is_update_action:
                     # User changed start month past end date during edit:
                     # preserve installment count from the new start date by shifting end_date forward
                     computed_end = _calc_end_date(start_value.date(), installments_val, frequency_val, payment_day_val)
@@ -169,7 +170,11 @@ def plan_form_from_request(form):
 
     # Reject end_date before start_date if still invalid
     if start_value and end_value and end_value < start_value:
-        raise ValueError("Bitiş tarihi başlangıç tarihinden önce olamaz.")
+        if is_update_action:
+            end_value = start_value
+            end_date_val = end_value.strftime('%Y-%m-%d')
+        else:
+            raise ValueError("Bitiş tarihi başlangıç tarihinden önce olamaz.")
 
     dto = PlanFormDTO(
         action=action_val,

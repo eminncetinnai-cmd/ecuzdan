@@ -538,6 +538,9 @@ class RecurringPlanRepository(BaseRepository, BaseRepositoryContract):
         if installments > 0 and installments < paid_count:
             raise ValueError(f"Taksit sayısı ödenmiş olan {paid_count} taksitten daha az olamaz.")
 
+        if installments > 0 and paid_count >= installments:
+            plan.status = "Tamamlandı"
+
         cur_version = getattr(plan, 'version', 1)
         if isinstance(cur_version, int):
             plan.version = cur_version + 1
@@ -546,7 +549,7 @@ class RecurringPlanRepository(BaseRepository, BaseRepositoryContract):
         total_count = self._plan_transaction_count(plan)
         plan_note = plan.note
 
-        if plan.status == 'İptal':
+        if plan.status in ('İptal', 'Tamamlandı'):
             for t in existing_txs:
                 if t.status == 'Bekliyor':
                     t.is_deleted = True
@@ -697,11 +700,22 @@ class RecurringPlanRepository(BaseRepository, BaseRepositoryContract):
         rp_model = _unwrap(RecurringPlan)
         if not hasattr(query, '_mock_return_value') and hasattr(rp_model, 'payments'):
             from sqlalchemy.orm import selectinload
-            query = query.options(selectinload(rp_model.payments))
+            loads = [selectinload(rp_model.payments)]
+            if hasattr(rp_model, 'occurrences'):
+                loads.append(selectinload(rp_model.occurrences))
+            query = query.options(*loads)
         return query.order_by(RecurringPlan.name).all()
 
     def get_recurring_plan_for_tenant(self, plan_id, tenant_id) -> Optional[RecurringPlan]:
-        return RecurringPlan.query.filter_by(id=plan_id, tenant_id=tenant_id).first()
+        query = RecurringPlan.query.filter_by(id=plan_id, tenant_id=tenant_id)
+        rp_model = _unwrap(RecurringPlan)
+        if not hasattr(query, '_mock_return_value') and hasattr(rp_model, 'payments'):
+            from sqlalchemy.orm import selectinload
+            loads = [selectinload(rp_model.payments)]
+            if hasattr(rp_model, 'occurrences'):
+                loads.append(selectinload(rp_model.occurrences))
+            query = query.options(*loads)
+        return query.first()
 
     def get_plan_names_by_ids(self, plan_ids, tenant_id: Optional[str] = None) -> dict:
         """Fetch {plan_id: plan_name} mapping for a set of plan IDs within a tenant."""

@@ -115,6 +115,8 @@ def register_plan_routes(bp):
     def plans(id=None):
         if request.method == 'POST':
             is_ajax = is_ajax_request()
+            is_update = bool(id or request.form.get('plan_id'))
+            op_label = "Plan güncellenirken" if is_update else "Plan eklenirken"
             try:
                 message = planning_app.save_plan(plan_form_from_request(_plan_request_payload(id)))
                 invalidate_financial_cache(g.get('tenant_id'))
@@ -124,14 +126,14 @@ def register_plan_routes(bp):
             except (ValueError, LedgerError) as e:
                 rollback_session()
                 if is_ajax:
-                    return jsonify({'success': False, 'message': f'Plan eklenirken hata: {str(e)}'})
-                flash(i18n.gettext("ui_auto_610949cf8c74", **{"str(e)": str(e)}), 'error')
+                    return jsonify({'success': False, 'message': f'{op_label} hata: {str(e)}'})
+                flash(f"{op_label} hata: {str(e)}", 'error')
             except Exception as e:
-                logger.exception(f"Add plan error: {e}")
+                logger.exception(f"Save plan error: {e}")
                 rollback_session()
                 if is_ajax:
-                    return jsonify({'success': False, 'message': 'Plan eklenirken beklenmeyen bir hata oluştu.'})
-                flash(i18n.gettext("ui_auto_c7319ad0996e"), 'error')
+                    return jsonify({'success': False, 'message': f'{op_label} beklenmeyen bir hata oluştu.'})
+                flash(f"{op_label} beklenmeyen bir hata oluştu.", 'error')
 
             if is_ajax:
                 return jsonify({'success': False, 'message': 'Bilinmeyen bir hata oluştu.'})

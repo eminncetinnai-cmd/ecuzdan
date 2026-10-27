@@ -218,3 +218,79 @@ def test_update_plan_increase_installments_creates_new_pending_txs(app, plan_set
     assert txs_after[1].installment_number == 2 and txs_after[1].status == "Bekliyor" and Decimal(str(txs_after[1].amount)) == Decimal("850.0000")
     assert txs_after[2].installment_number == 3 and txs_after[2].status == "Bekliyor" and Decimal(str(txs_after[2].amount)) == Decimal("850.0000")
     assert txs_after[3].installment_number == 4 and txs_after[3].status == "Bekliyor" and Decimal(str(txs_after[3].amount)) == Decimal("850.0000")
+
+
+def test_plan_form_from_request_with_plan_id_forces_update_action_and_revises_dates(app):
+    """plan_form_from_request must normalize action to update_plan when plan_id is provided and shift dates gracefully."""
+    from validators.request_validators import plan_form_from_request
+    form_data = {
+        'action': 'add_expense_plan',  # client-side action overwrite simulation
+        'plan_id': '10',
+        'name': 'Netflix',
+        'category': 'Eğlence',
+        'amount': '250',
+        'installments': '3',
+        'payment_day': '5',
+        'start_date': '2026-11-01',
+        'end_date': '2026-10-01',  # shifted in edit mode
+        'frequency': 'Aylık',
+    }
+    dto = plan_form_from_request(form_data)
+    assert dto.plan_id == '10'
+    assert dto.end_date >= dto.start_date
+
+
+def test_update_plan_reduce_to_exact_paid_count_marks_completed(app, plan_setup):
+    """Reducing installment count to exact paid count must remove remaining pending txs and complete plan."""
+    tenant = plan_setup
+    repo = RecurringPlanRepository()
+    service = PlanService(financial_repository=repo)
+
+    create_dto = PlanFormDTO(
+        plan_id=None,
+        name="Unit Test Plan Tamamlama",
+        category="Kredi Kartı",
+        amount=600.0,
+        installments=3,
+        payment_day=5,
+        plan_type="Taksit",
+        frequency="Aylık",
+        start_date="2026-10-01",
+        end_date=None,
+        action="add",
+        version=1,
+    )
+    service.save_plan(create_dto)
+
+    plan = RecurringPlan.query.filter_by(name="Unit Test Plan Tamamlama", tenant_id=tenant.id).first()
+    txs = Transaction.query.filter_by(source_id=plan.id, is_deleted=False).order_by(Transaction.installment_number).all()
+    assert len(txs) == 3
+
+    # Mark 2 installments as paid
+    txs[0].status = "Ödendi"
+    txs[1].status = "Ödendi"
+    db.session.commit()
+
+    # Reduce installments to 2 (exact paid count)
+    finish_dto = PlanFormDTO(
+        plan_id=plan.id,
+        name="Unit Test Plan Tamamlama",
+        category="Kredi Kartı",
+        amount=600.0,
+        installments=2,
+        payment_day=5,
+        plan_type="Taksit",
+        frequency="Aylık",
+        start_date="2026-10-01",
+        end_date=None,
+        action="edit",
+        version=plan.version,
+    )
+    service.save_plan(finish_dto)
+
+    txs_after = Transaction.query.filter_by(source_id=plan.id, is_deleted=False).order_by(Transaction.installment_number).all()
+    assert len(txs_after) == 2
+    assert all(t.status == "Ödendi" for t in txs_after)
+    # Check plan auto-completion
+    plan_after = RecurringPlan.query.get(plan.id)
+    assert plan_after.status == "Tamamlandı"
