@@ -875,7 +875,9 @@ footer {
     }
     
     .sidebar-spacer {
-        width: 0;
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
     }
     
     .header-bar {
@@ -1546,9 +1548,8 @@ html.dark #headerBar {
         display: none !important;
     }
     .header-bar {
-
         min-height: 56px;
-        padding: .45rem .6rem;
+        padding: max(0.45rem, env(safe-area-inset-top, 0px)) .6rem .45rem .6rem;
         gap: .35rem;
     }
     .header-left {
@@ -2425,9 +2426,10 @@ html, body {
 /* 4. Standalone PWA / iOS Safe Area Insets (Top Notch & Dynamic Island) */
 @media all and (display-mode: standalone) {
     body {
-        padding-top: env(safe-area-inset-top, 0px);
+        padding-top: 0 !important;
     }
     .header-bar {
-        padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
+        padding-top: max(0.45rem, env(safe-area-inset-top, 0px));
+        padding-bottom: 0.45rem;
     }
 }
