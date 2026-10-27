@@ -934,9 +934,9 @@ footer {
         min-height: 44px;
     }
 
-    /* Prevent footer overlap behind fixed mobile bottom nav */
+    /* Hide desktop footer on mobile viewports: mobile bottom space belongs purely to .mobile-bottom-nav */
     footer {
-        padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px)) !important;
+        display: none !important;
     }
 
     /* 
