@@ -298,7 +298,6 @@
 
         <!-- İşlem Tablosu İkon Sprite Tanımları (DOM Tekrarını Önler) -->
         <svg class="hidden" aria-hidden="true">
-            <symbol id="tx-ico-bank" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M3 10h18M5 10v11m4-11v11m6-11v11m4-11v11M4 10l8-6 8 6"/></symbol>
             <symbol id="tx-ico-plan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></symbol>
             <symbol id="tx-ico-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></symbol>
             <symbol id="tx-ico-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></symbol>
@@ -321,7 +320,6 @@
                             </div>
                         </th>
                         <th class="w-24 px-2">{{ _('table_category') }}</th>
-                        <th class="w-24 px-2">{{ _('tx_account_column') }}</th>
                         <th class="min-w-[6.5rem] px-2">{{ _('table_description') }}</th>
                         <th class="w-20 px-2">{{ _('table_note') }}</th>
                         <th class="w-24 px-2 text-right">{{ _('table_amount') }}</th>
@@ -337,7 +335,6 @@
 {% set lbl_reversal = _('tx_reversal') %}
 {% set lbl_edit = _('table_edit') %}
 {% set lbl_delete = _('table_delete') %}
-{% set lbl_unassigned = _('tx_account_unassigned') %}
 {% set lbl_no_val = _('tx_explorer_no_value') %}
 {% set lbl_asset_hint = _('table_asset_linked_hint') %}
 {% set lbl_go_asset = _('table_go_to_asset') %}
@@ -346,10 +343,9 @@
 <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition tx-row" data-category="{{ t.category }}" data-type="{{ t.type }}" data-status="{{ t.status }}" data-amount="{{ t.amount }}" data-source-type="{{ t.source_type }}" data-search="{{ ((t.description or '') ~ ' ' ~ (t.note or '') ~ ' ' ~ (t.category or ''))|lower }}">
 <td class="py-2 px-2 text-slate-600 dark:text-slate-400 text-[11px] whitespace-nowrap" data-order="{{ t.date }}"><div class="flex items-center gap-1.5"><input type="checkbox" class="tx-row-select rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 cursor-pointer w-3.5 h-3.5" onclick="event.stopPropagation(); onTxRowSelectChange();" data-id="{{ t.id }}" data-status="{{ t.status }}" data-desc="{{ t.description|e }}" data-amount="{{ t.amount }}"><span>{{ t.date|format_date }}</span></div></td>
 <td class="py-2 px-2 whitespace-nowrap"><span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9.5px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700 max-w-[85px] truncate" title="{{ t.category }}">{{ t.category }}</span></td>
-<td class="py-2 px-2 text-[10px]">{% if t.bank_account_id and bank_account_names.get(t.bank_account_id) %}<span class="inline-flex items-center gap-1 text-slate-700 dark:text-slate-300 font-semibold text-[10.5px] max-w-[90px] truncate" title="{{ bank_account_names.get(t.bank_account_id) }}"><svg class="w-3 h-3 text-slate-400 shrink-0" aria-hidden="true"><use href="#tx-ico-bank"/></svg><span class="truncate">{{ bank_account_names.get(t.bank_account_id) }}</span></span>{% else %}<span class="text-slate-300 dark:text-slate-600 font-normal select-none" title="{{ lbl_unassigned }}">—</span>{% endif %}</td>
 <td class="py-2 px-2 text-[11px]"><div class="flex items-center gap-1.5 flex-wrap"><span class="font-bold text-slate-800 dark:text-white truncate max-w-[130px] md:max-w-[160px] lg:max-w-[200px] block" title="{{ t.description }}">{{ t.description }}</span>{% if t.source_type == 'plan' %}<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900 shrink-0" title="Planlı Ödeme Kaydı: {{ plan_names.get(t.source_id, 'Planlı') }}"><svg class="w-2.5 h-2.5 text-indigo-600 shrink-0" aria-hidden="true"><use href="#tx-ico-plan"/></svg><span class="max-w-[75px] truncate">{{ plan_names.get(t.source_id, 'Planlı') }}{% if t.installment_number %} ({{ t.installment_number }}){% endif %}</span></span>{% endif %}</div></td>
 <td class="py-2 px-2 text-[10.5px] text-slate-500 dark:text-slate-400">{% if t.note %}<span class="italic truncate max-w-[95px] block" title="{{ t.note }}">{{ t.note }}</span>{% else %}<span class="text-slate-300 dark:text-slate-600 font-normal select-none" title="{{ lbl_no_val }}">—</span>{% endif %}</td>
-<td class="py-2 px-2 font-black text-xs text-right whitespace-nowrap {% if t.type == type_values.income %}text-emerald-600 dark:text-emerald-400{% elif t.type == type_values.investment %}text-sky-600 dark:text-sky-400{% elif t.type == type_values.transfer %}text-violet-600 dark:text-violet-400{% else %}text-rose-600 dark:text-rose-400{% endif %}" data-order="{{ t.amount }}"><span class="inline-flex items-center justify-end gap-0.5">{% if t.type == type_values.income %}+{% elif t.type == type_values.investment %}◆{% elif t.type == type_values.transfer %}⇄{% else %}−{% endif %}{{ t.amount|format_money }}<span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 ml-0.5">{{ bank_account_currencies.get(t.bank_account_id) or base_currency_symbol }}</span></span></td>
+<td class="py-2 px-2 font-black text-xs text-right whitespace-nowrap {% if t.type == type_values.income %}text-emerald-600 dark:text-emerald-400{% elif t.type == type_values.investment %}text-sky-600 dark:text-sky-400{% elif t.type == type_values.transfer %}text-violet-600 dark:text-violet-400{% else %}text-rose-600 dark:text-rose-400{% endif %}" data-order="{{ t.amount }}"><span class="inline-flex items-center justify-end gap-0.5">{% if t.type == type_values.income %}+{% elif t.type == type_values.investment %}◆{% elif t.type == type_values.transfer %}⇄{% else %}−{% endif %}{{ t.amount|format_money }}<span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 ml-0.5">{{ base_currency_symbol }}</span></span></td>
 <td class="py-2 px-2 text-center whitespace-nowrap">{% if t.status == status_values.paid %}<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"><svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true"><use href="#tx-ico-check"/></svg>{{ lbl_paid }}</span>{% else %}<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800"><svg class="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" aria-hidden="true"><use href="#tx-ico-clock"/></svg>{{ lbl_pending }}</span>{% endif %}</td>
 <td class="text-right py-2 px-2 whitespace-nowrap"><div class="tx-table-actions">
 <button data-macro="button_secondary" type="button" class="lineage-tx-btn tx-table-action tx-table-action-lineage" data-testid="transaction-lineage-{{ t.id }}" data-id="{{ t.id }}" title="{{ lbl_lineage }}" aria-label="{{ lbl_lineage }}"><svg aria-hidden="true" class="w-3.5 h-3.5"><use href="#tx-ico-lineage"/></svg></button>
@@ -360,7 +356,7 @@
 <a href="{{ assets_view_url }}" data-macro="button_secondary" class="tx-table-action tx-table-action-asset" title="{{ lbl_asset_hint }}" aria-label="{{ lbl_go_asset }}"><svg aria-hidden="true" class="w-3.5 h-3.5"><use href="#tx-ico-asset"/></svg></a>
 {% else %}
 <button data-macro="button_secondary" type="button" class="tx-table-action tx-table-action-quickpay quick-pay-tx-btn" data-id="{{ t.id }}" data-description="{{ t.description|e }}" data-amount="{{ t.amount }}" title="Tek tıkla ödendi olarak işaretle" aria-label="Ödendi Yap"><svg aria-hidden="true" class="w-3.5 h-3.5 shrink-0"><use href="#tx-ico-check"/></svg></button>
-<button data-macro="button_secondary" type="button" class="edit-tx-btn tx-table-action tx-table-action-edit" data-id="{{ t.id }}" data-date="{{ t.date|format_date }}" data-category="{{ t.category }}" data-amount="{{ t.amount }}" data-version="{{ t.version|default(1) }}" data-description="{{ t.description }}" data-note="{{ t.note or '' }}" data-status="{{ t.status }}" data-bank-account-id="{{ t.bank_account_id or '' }}" title="{{ lbl_edit }}" aria-label="{{ lbl_edit }}"><svg aria-hidden="true" class="w-3.5 h-3.5"><use href="#tx-ico-edit"/></svg></button>
+<button data-macro="button_secondary" type="button" class="edit-tx-btn tx-table-action tx-table-action-edit" data-id="{{ t.id }}" data-date="{{ t.date|format_date }}" data-category="{{ t.category }}" data-amount="{{ t.amount }}" data-version="{{ t.version|default(1) }}" data-description="{{ t.description }}" data-note="{{ t.note or '' }}" data-status="{{ t.status }}" title="{{ lbl_edit }}" aria-label="{{ lbl_edit }}"><svg aria-hidden="true" class="w-3.5 h-3.5"><use href="#tx-ico-edit"/></svg></button>
 <button data-macro="button_danger" type="button" class="delete-tx-btn tx-table-action tx-table-action-delete" data-id="{{ t.id }}" title="{{ lbl_delete }}" aria-label="{{ lbl_delete }}"><svg aria-hidden="true" class="w-3.5 h-3.5"><use href="#tx-ico-delete"/></svg></button>
 {% endif %}
 </div></td></tr>
@@ -426,13 +422,6 @@
                     <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">{{ _('tx_category_label') }}</label>
                     <select name="category" id="modalCategory" class="edit-modal-input">
                         {% for c in cats %}<option value="{{ c.name }}">{{ c.name }} ({{ c.type }})</option>{% endfor %}
-                    </select>
-                </div>
-                <div>
-                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">{{ _('tx_account_label') }}</label>
-                    <select name="bank_account_id" id="modalBankAccount" class="edit-modal-input">
-                        <option value="">{{ _('reconciliation_select_account') }}</option>
-                        {% for account in bank_accounts|default([]) %}<option value="{{ account.id }}" data-currency="{{ account.currency }}">{{ account.name }} · {{ account.currency }}</option>{% endfor %}
                     </select>
                 </div>
                 <div>
@@ -507,14 +496,6 @@
                     <select name="category" id="newTxCategory" class="edit-modal-input">
                         {% for c in cats %}<option value="{{ c.name }}">{{ c.name }} ({{ c.type }})</option>{% endfor %}
                     </select>
-                </div>
-                <div>
-                    <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">{{ _('tx_account_label') }}</label>
-                    <select name="bank_account_id" id="newTxBankAccount" class="edit-modal-input">
-                        <option value="">{{ _('reconciliation_select_account') }}</option>
-                        {% for account in bank_accounts|default([]) %}<option value="{{ account.id }}" data-currency="{{ account.currency }}">{{ account.name }} · {{ account.currency }}</option>{% endfor %}
-                    </select>
-                    <p class="mt-1 text-[9px] text-slate-400 leading-4">{{ _('tx_account_unassigned_note') }}</p>
                 </div>
                 <div>
                     <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1.5">{{ _('tx_amount_label') }}</label>
@@ -598,7 +579,6 @@
                 <select id="immutableReasonCode" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white p-3 text-sm font-bold">
                     <option value="amount_error">{{ _('ui_auto_0dce273ae539') }}</option>
                     <option value="duplicate">{{ _('ui_auto_1eabc89c4514') }}</option>
-                    <option value="bank_reconciliation">{{ _('ui_auto_07a6c262b43e') }}</option>
                     <option value="plan_correction">{{ _('ui_auto_5b135b5d25d6') }}</option>
                     <option value="user_request">{{ _('ui_auto_7a99d2847356') }}</option>
                     <option value="other">{{ _('tx_immutable_other_reason') }}</option>

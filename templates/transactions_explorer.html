@@ -582,16 +582,6 @@
         </div>
 
         <div class="filter-section">
-            <div class="filter-title">{{ _('tx_explorer_account_filter') }}</div>
-            <select class="filter-input" id="filterBankAccount" aria-label="{{ _('tx_explorer_account_filter') }}">
-                <option value="">{{ _('tx_explorer_all_accounts') }}</option>
-                {% for account in bank_accounts|default([]) %}
-                <option value="{{ account.id }}" data-currency="{{ account.currency }}">{{ account.name }} · {{ account.currency }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="filter-section">
             <div class="filter-title">{{ _('tx_filter_status') }}</div>
 
                         {% for option in status_options|default([]) %}
@@ -729,8 +719,6 @@
 
 <script>
     const explorerCopy = {
-        unassignedAccount: {{ _('tx_explorer_account_unassigned')|tojson }},
-        accountLabel: {{ _('tx_explorer_detail_account')|tojson }},
         sourceLabel: {{ _('tx_explorer_detail_source')|tojson }},
         openTransaction: {{ _('tx_explorer_open_transaction')|tojson }},
         deleteConfirm: {{ _('tx_explorer_delete_confirm')|tojson }},
@@ -905,7 +893,6 @@
             dateTo: document.getElementById('filterDateTo').value,
             types: getCheckedValues(['filterTypeIncome', 'filterTypeExpense', 'filterTypeInvestment', 'filterTypeTransfer']),
             category: document.getElementById('filterCategory').value,
-            bankAccountId: document.getElementById('filterBankAccount').value,
             statuses: getCheckedValues(['filterStatusPaid', 'filterStatusPending']),
             minAmount: document.getElementById('filterMinAmount').value,
             maxAmount: document.getElementById('filterMaxAmount').value
@@ -928,15 +915,12 @@
 
     function createTransactionCard(tx) {
         const card = document.createElement('div');
-                const typeClass = getTransactionTypeClass(tx.type);
+        const typeClass = getTransactionTypeClass(tx.type);
 
-        const accountName = tx.bank_account_name
-            ? `${tx.bank_account_name}${tx.bank_account_currency ? ` · ${tx.bank_account_currency}` : ''}`
-            : explorerCopy.unassignedAccount;
         card.className = `transaction-card ${typeClass}`;
         card.tabIndex = 0;
         card.setAttribute('role', 'button');
-                card.setAttribute('aria-label', `${tx.category || explorerCopy.noValue} ${formatMoney(tx.amount, tx.bank_account_currency)}`);
+        card.setAttribute('aria-label', `${tx.category || explorerCopy.noValue} ${formatMoney(tx.amount)}`);
 
         card.addEventListener('click', () => openDrawer(tx.id));
         card.addEventListener('keydown', event => {
@@ -947,18 +931,13 @@
         });
         card.innerHTML = `
             <div class="card-header">
-                            <div class="card-category">${escapeHtml(tx.category || explorerCopy.noValue)}</div>
-
+                <div class="card-category">${escapeHtml(tx.category || explorerCopy.noValue)}</div>
                 <div class="card-date">${escapeHtml(formatDate(tx.date))}</div>
             </div>
-                        <div class="card-description">${escapeHtml(tx.description || explorerCopy.noValue)}</div>
-
-                        <div class="card-amount ${typeClass}">${formatMoney(tx.amount, tx.bank_account_currency)}</div>
-
+            <div class="card-description">${escapeHtml(tx.description || explorerCopy.noValue)}</div>
+            <div class="card-amount ${typeClass}">${formatMoney(tx.amount)}</div>
             <div class="card-meta">
-                                <div class="card-meta-item">${escapeHtml(explorerCopy.statusLabels?.[tx.status] || tx.status || explorerCopy.noValue)}</div>
-
-                <div class="card-meta-item">${escapeHtml(accountName)}</div>
+                <div class="card-meta-item">${escapeHtml(explorerCopy.statusLabels?.[tx.status] || tx.status || explorerCopy.noValue)}</div>
                 ${tx.note ? `<div class="card-meta-item">${escapeHtml(tx.note)}</div>` : ''}
             </div>
         `;
@@ -977,8 +956,7 @@
     }
 
     function getSelectedAccountCurrency() {
-        const selected = document.getElementById('filterBankAccount')?.selectedOptions?.[0];
-        return selected?.dataset?.currency || null;
+        return window.BASE_CURRENCY_CODE || null;
     }
 
     function formatSummaryMoney(amount, currency) {
@@ -1032,7 +1010,6 @@
         document.getElementById('filterDateFrom').value = '';
         document.getElementById('filterDateTo').value = '';
         document.getElementById('filterCategory').value = '';
-        document.getElementById('filterBankAccount').value = '';
         document.getElementById('filterMinAmount').value = '';
         document.getElementById('filterMaxAmount').value = '';
         document.querySelectorAll('.filter-checkbox input').forEach(input => {
@@ -1051,7 +1028,6 @@
         document.getElementById('filterDateFrom').value = params.get('from') || '';
         document.getElementById('filterDateTo').value = params.get('to') || '';
         document.getElementById('filterCategory').value = params.get('category') || '';
-        document.getElementById('filterBankAccount').value = params.get('account') || '';
         document.getElementById('filterMinAmount').value = params.get('min') || '';
         document.getElementById('filterMaxAmount').value = params.get('max') || '';
         const types = new Set((params.get('types') || '').split(',').filter(Boolean));
@@ -1074,7 +1050,6 @@
         if (filters.dateFrom) params.set('from', filters.dateFrom);
         if (filters.dateTo) params.set('to', filters.dateTo);
         if (filters.category) params.set('category', filters.category);
-        if (filters.bankAccountId) params.set('account', filters.bankAccountId);
         if (filters.minAmount) params.set('min', filters.minAmount);
         if (filters.maxAmount) params.set('max', filters.maxAmount);
         if (filters.types.length) params.set('types', filters.types.join(','));
@@ -1088,7 +1063,6 @@
         if (filters.search) values.push(filters.search);
         if (filters.dateFrom || filters.dateTo) values.push(`${filters.dateFrom || explorerCopy.noValue} → ${filters.dateTo || explorerCopy.noValue}`);
         if (filters.category) values.push(filters.category);
-        if (filters.bankAccountId) values.push(document.getElementById('filterBankAccount').selectedOptions[0]?.textContent || filters.bankAccountId);
         if (filters.types.length) values.push(filters.types.map(type => explorerCopy.typeLabels?.[type] || type).join(', '));
         if (filters.statuses.length) values.push(filters.statuses.map(status => explorerCopy.statusLabels?.[status] || status).join(', '));
         if (filters.minAmount || filters.maxAmount) values.push(`${filters.minAmount || explorerCopy.noValue} – ${filters.maxAmount || explorerCopy.noValue}`);
@@ -1123,9 +1097,6 @@
         const content = document.getElementById('drawerContent');
         const typeClass = getTransactionTypeClass(tx.type);
         const amountColor = typeClass === 'income' ? 'var(--color-emerald-600, var(--color-emerald-600, #059669))' : typeClass === 'expense' ? 'var(--color-rose-600, var(--color-rose-600, #dc2626))' : typeClass === 'transfer' ? 'var(--color-violet-600, var(--color-violet-600, #7c3aed))' : 'var(--color-blue-500, var(--color-blue-500, #3b82f6))';
-        const account = tx.bank_account_name
-            ? `${tx.bank_account_name}${tx.bank_account_currency ? ` · ${tx.bank_account_currency}` : ''}`
-            : explorerCopy.unassignedAccount;
         const source = explorerCopy.sourceLabels[tx.source_type] || explorerCopy.sourceLabels.default;
 
         content.innerHTML = `
@@ -1135,7 +1106,7 @@
             </div>
             <div class="drawer-field">
                 <div class="drawer-label">${escapeHtml(explorerCopy.amount)}</div>
-                <div class="drawer-amount" style="color:${amountColor};">${escapeHtml(formatMoney(tx.amount, tx.bank_account_currency))}</div>
+                <div class="drawer-amount" style="color:${amountColor};">${escapeHtml(formatMoney(tx.amount))}</div>
             </div>
             <div class="drawer-grid">
                 <div class="drawer-field">
@@ -1149,10 +1120,6 @@
                 <div class="drawer-field">
                     <div class="drawer-label">${escapeHtml(explorerCopy.type)}</div>
                     <div class="drawer-value">${escapeHtml(explorerCopy.typeLabels?.[tx.type] || tx.type || explorerCopy.noValue)}</div>
-                </div>
-                <div class="drawer-field">
-                    <div class="drawer-label">${escapeHtml(explorerCopy.accountLabel)}</div>
-                    <div class="drawer-value">${escapeHtml(account)}</div>
                 </div>
             </div>
             <div class="drawer-field">

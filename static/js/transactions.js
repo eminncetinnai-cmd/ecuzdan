@@ -266,10 +266,9 @@
             }
         }
 
-        // Setup Forms, Currency Sync & Accessibility
+        // Setup Forms & Accessibility
         setupForms();
         setupLineageAndImmutable();
-        setupBankAccountCurrencySync();
         setupWaiAriaTabs();
     }
 
@@ -484,19 +483,18 @@
             return;
         }
 
-        const headers = ['Tarih', 'Kategori', 'Banka / Hesap', 'Açıklama', 'Not', 'Tutar', 'Tür', 'Durum', 'Kaynak'];
+        const headers = ['Tarih', 'Kategori', 'Açıklama', 'Not', 'Tutar', 'Tür', 'Durum', 'Kaynak'];
         const csvRows = [headers.join(';')];
 
         for (let i = 0; i < filteredRows.length; i++) {
             const row = filteredRows[i];
             const cells = row.querySelectorAll('td');
-            if (!cells || cells.length < 7) continue;
+            if (!cells || cells.length < 6) continue;
 
             const date = (cells[0]?.textContent || '').trim().replace(/\s+/g, ' ');
             const category = (row.getAttribute('data-category') || cells[1]?.textContent || '').trim();
-            const account = (cells[2]?.textContent || '').trim().replace('—', '');
-            const desc = (cells[3]?.querySelector('.font-bold')?.textContent || cells[3]?.textContent || '').trim();
-            const note = (cells[4]?.textContent || '').trim().replace('—', '');
+            const desc = (cells[2]?.querySelector('.font-bold')?.textContent || cells[2]?.textContent || '').trim();
+            const note = (cells[3]?.textContent || '').trim().replace('—', '');
             const amount = (row.getAttribute('data-amount') || '').trim();
             const type = (row.getAttribute('data-type') || '').trim();
             const status = (row.getAttribute('data-status') || '').trim();
@@ -506,7 +504,6 @@
             csvRows.push([
                 clean(date),
                 clean(category),
-                clean(account),
                 clean(desc),
                 clean(note),
                 clean(amount),
@@ -548,14 +545,10 @@
         setVal('modalDescription', d.description || '');
         setVal('modalNote', d.note || '');
         setVal('modalStatus', d.status || 'Bekliyor');
-        setVal('modalBankAccount', d.bankAccountId || '');
 
-        const curOpt = document.querySelector(`#modalBankAccount option[value="${d.bankAccountId || ''}"]`);
-        const cur = curOpt ? curOpt.getAttribute('data-currency') : '';
         const editBadge = document.getElementById('modalCurrencyBadge');
         if (editBadge) {
-            const symbolMap = { 'TRY': '₺', 'TL': '₺', 'USD': '$', 'EUR': '€', 'GBP': '£', 'XAU': 'gr' };
-            editBadge.textContent = symbolMap[cur] || cur || (window.BASE_CURRENCY_SYMBOL || '₺');
+            editBadge.textContent = window.BASE_CURRENCY_SYMBOL || '₺';
         }
 
         if (typeof window.openModal === 'function') {
@@ -932,26 +925,6 @@
         } else if (confirm(confirmMsg)) {
             doBulkDelete();
         }
-    }
-
-    function setupBankAccountCurrencySync() {
-        const symbolMap = { 'TRY': '₺', 'TL': '₺', 'USD': '$', 'EUR': '€', 'GBP': '£', 'XAU': 'gr' };
-        const resolveSym = (code) => symbolMap[code] || code || (window.BASE_CURRENCY_SYMBOL || '₺');
-
-        const bindSync = (selectId, badgeId) => {
-            const selectEl = document.getElementById(selectId);
-            const badgeEl = document.getElementById(badgeId);
-            if (!selectEl || !badgeEl) return;
-
-            selectEl.addEventListener('change', function() {
-                const opt = this.options[this.selectedIndex];
-                const cur = opt ? opt.getAttribute('data-currency') : '';
-                badgeEl.textContent = resolveSym(cur);
-            });
-        };
-
-        bindSync('newTxBankAccount', 'newTxCurrencyBadge');
-        bindSync('modalBankAccount', 'modalCurrencyBadge');
     }
 
     function setupWaiAriaTabs() {
