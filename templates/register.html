@@ -270,19 +270,19 @@ body{overflow-x:hidden;}
       <form method="POST" action="{{ url_for('auth.register') }}" id="regForm" novalidate>
         <!-- Ad Soyad -->
         <div class="field">
-          <input id="full_name" type="text" name="full_name" placeholder=" " required autocomplete="name">
+          <input id="full_name" type="text" name="full_name" placeholder=" " required autocomplete="name" enterkeyhint="next">
           <span class="field-prefix">👤</span>
           <label class="field-label" for="full_name">{{ _('ui_auto_e5f443596bf3') }}</label>
         </div>
         <!-- E-posta -->
         <div class="field">
-          <input id="email" type="email" name="email" placeholder=" " required autocomplete="email">
+          <input id="email" type="email" name="email" placeholder=" " required autocomplete="email" autocapitalize="none" autocorrect="off" enterkeyhint="next">
           <span class="field-prefix">✉</span>
           <label class="field-label" for="email">{{ _('ui_auto_1ffe6ef95feb') }}</label>
         </div>
         <!-- Şifre -->
         <div class="field">
-          <input id="password" type="password" name="password" placeholder=" " required autocomplete="new-password" minlength="8" oninput="updateStrength(this.value)">
+          <input id="password" type="password" name="password" placeholder=" " required autocomplete="new-password" minlength="8" oninput="updateStrength(this.value)" enterkeyhint="next">
           <span class="field-prefix">🔑</span>
           <button data-macro="button_secondary" type="button" class="field-suffix" onclick="togglePwd('password','eyeP')" id="eyeP">👁</button>
           <label class="field-label" for="password">{{ _('ui_auto_f7b7f0f1c370') }}</label>
@@ -299,7 +299,7 @@ body{overflow-x:hidden;}
         </div>
         <!-- Şifre tekrar -->
         <div class="field">
-          <input id="confirm_password" type="password" name="confirm_password" placeholder=" " required autocomplete="new-password" minlength="8" oninput="checkMatch()">
+          <input id="confirm_password" type="password" name="confirm_password" placeholder=" " required autocomplete="new-password" minlength="8" oninput="checkMatch()" enterkeyhint="done">
           <span class="field-prefix">🔒</span>
           <button data-macro="button_secondary" type="button" class="field-suffix" onclick="togglePwd('confirm_password','eyeC')" id="eyeC">👁</button>
           <label class="field-label" for="confirm_password">{{ _('ui_auto_656f23385bac') }}</label>

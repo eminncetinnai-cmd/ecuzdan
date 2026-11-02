@@ -72,6 +72,19 @@ html.dark {
     color-scheme: dark;
 }
 
+/* OLED True Black Enhancement (Pure Black for AMOLED/OLED mobile screens) */
+html.dark[data-theme-oled="true"],
+html.dark.theme-oled {
+    --color-bg:             #000000;
+    --color-bg-elevated:    #050505;
+    --color-surface:        #0a0a0a;
+    --color-surface-raised: #111111;
+    --color-surface-muted:  #050505;
+    --color-border:         #1a1a1a;
+    --color-border-strong:  #2d2d2d;
+    --page-gradient:        none;
+}
+
 html.dark body {
     background: var(--page-gradient);
     color: var(--color-text);

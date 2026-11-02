@@ -2497,3 +2497,10 @@ html, body {
         padding: 0.5rem 0.75rem;
     }
 }
+
+/* 7. Mobile Chart & Canvas Touch Optimization: prevent vertical scroll trapping */
+canvas,
+.chart-container canvas,
+.chart-container {
+    touch-action: pan-y !important;
+}
