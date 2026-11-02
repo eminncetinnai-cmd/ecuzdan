@@ -381,7 +381,7 @@ def register_auth_routes(bp):
 
             if not oauth_info:
                 flash('OAuth oturumu sona erdi. Lütfen tekrar deneyin.', 'error')
-                logger.warning("OAuth signup info not found in session, redirecting to login")
+                logger.info("OAuth signup info not found in session, redirecting to login")
                 return redirect(url_for('auth.login'))
 
             # Check session expiration (15 minutes max for signup session)
