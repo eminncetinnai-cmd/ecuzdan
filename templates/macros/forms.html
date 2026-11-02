@@ -1,6 +1,6 @@
 {# Design System Form Macros #}
 
-{% macro form_input(name, label, type='text', placeholder='', required=false, value='', error_message='', extra_classes='', id='', onchange='', oninput='', pattern='', min='', max='', step='') %}
+{% macro form_input(name, label, type='text', placeholder='', required=false, value='', error_message='', extra_classes='', id='', onchange='', oninput='', pattern='', min='', max='', step='', inputmode='', readonly=false, autocomplete='', enterkeyhint='', autocapitalize='') %}
 <div class="form-group {{ extra_classes }}">
     {% if label %}
     <label for="{{ id or name }}" class="form-label">
@@ -22,6 +22,11 @@
         {% if min %}min="{{ min }}"{% endif %}
         {% if max %}max="{{ max }}"{% endif %}
         {% if step %}step="{{ step }}"{% endif %}
+        {% if inputmode %}inputmode="{{ inputmode }}"{% elif type == 'number' %}inputmode="decimal"{% endif %}
+        {% if readonly %}readonly{% endif %}
+        {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}
+        {% if enterkeyhint %}enterkeyhint="{{ enterkeyhint }}"{% endif %}
+        {% if autocapitalize %}autocapitalize="{{ autocapitalize }}"{% endif %}
     >
     {% if error_message %}
     <span class="form-error">

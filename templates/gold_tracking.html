@@ -399,7 +399,7 @@
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
                     <button data-macro="button_secondary" type="button" class="gold-calc-qty-btn" onclick="addToGoldBasket('${q.code}', -1)">−</button>
-                    <input type="number" min="0" step="1" id="qty_${q.code}" value="0" oninput="onBasketInput()"
+                    <input type="number" min="0" step="1" id="qty_${q.code}" value="0" inputmode="numeric" oninput="onBasketInput()"
                            class="gold-calc-qty-input rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-black text-slate-900 dark:text-white">
                     <button data-macro="button_secondary" type="button" class="gold-calc-qty-btn" onclick="addToGoldBasket('${q.code}', 1)">+</button>
                 </div>`;
