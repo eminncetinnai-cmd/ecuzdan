@@ -71,23 +71,35 @@ def clean_pycache(root_dir: Path) -> int:
 
 
 def clean_work_snapshots() -> int:
-    """Eski geçici .work/snapshots/*.db dosyalarını temizler."""
-    snapshots_dir = REPO_ROOT / ".work" / "snapshots"
-    if not snapshots_dir.exists():
+    """Eski geçici .work/snapshots/*.db ve .work/*.json raporlarını temizler."""
+    work_dir = REPO_ROOT / ".work"
+    if not work_dir.exists():
         return 0
 
     total_freed = 0
     count = 0
-    for db_file in snapshots_dir.glob("*.db"):
+    snapshots_dir = work_dir / "snapshots"
+    if snapshots_dir.exists():
+        for db_file in snapshots_dir.glob("*.db"):
+            try:
+                size = db_file.stat().st_size
+                db_file.unlink()
+                total_freed += size
+                count += 1
+            except Exception as e:
+                print(f"  [UYARI] Snapshot silinemedi ({db_file.name}): {e}")
+
+    for report_file in work_dir.glob("*.json"):
         try:
-            size = db_file.stat().st_size
-            db_file.unlink()
+            size = report_file.stat().st_size
+            report_file.unlink()
             total_freed += size
             count += 1
+            print(f"  [OK] Geçici analiz raporu silindi: {report_file.name} ({format_size(size)})")
         except Exception as e:
-            print(f"  [UYARI] Snapshot silinemedi ({db_file.name}): {e}")
+            print(f"  [UYARI] Rapor silinemedi ({report_file.name}): {e}")
 
-    print(f"  [OK] Temizlendi: {count} adet geçici DB snapshot ({format_size(total_freed)})")
+    print(f"  [OK] Temizlendi: {count} adet geçici çalışma dosyası/snapshot ({format_size(total_freed)})")
     return total_freed
 
 
@@ -147,7 +159,7 @@ def clean_test_databases() -> int:
     count_ts = 0
 
     # 1. Test ve repro veritabanları
-    test_db_patterns = ["e_cuzdan_test_*.db", "test_*.db", "test_repro_*.db", "backup_v*.db"]
+    test_db_patterns = ["e_cuzdan_test_*.db", "test_*.db", "test_repro_*.db", "backup_v*.db", "e_cuzdan.db"]
     for pat in test_db_patterns:
         for db_file in instance_dir.glob(pat):
             try:
@@ -162,7 +174,10 @@ def clean_test_databases() -> int:
     for ts_pattern in [
         ".cache_inv_fuzz_*.ts",
         ".cache_inv_tenant_*.ts",
+        ".cache_inv_tenant-*.ts",
         ".cache_inv_test_*.ts",
+        ".cache_inv_test-*.ts",
+        ".cache_inv_audit_*.ts",
         ".cache_inv_tx-*.ts",
         ".cache_inv_plan-*.ts",
     ]:
@@ -180,6 +195,11 @@ def clean_test_databases() -> int:
         sub_path = instance_dir / sub
         if sub_path.exists():
             total_freed += clean_target_dir(sub_path, f"instance/{sub}/")
+
+    # 4. Yetim infrastructure/instance dizini
+    infra_instance = REPO_ROOT / "infrastructure" / "instance"
+    if infra_instance.exists():
+        total_freed += clean_target_dir(infra_instance, "infrastructure/instance/")
 
     if count_db > 0 or count_ts > 0:
         print(f"  [OK] Temizlendi: {count_db} test DB, {count_ts} geçici invalidation marker ({format_size(total_freed)})")
@@ -287,6 +307,7 @@ def run_cleanup(
     total_freed += clean_target_dir(REPO_ROOT / ".mypy_cache", ".mypy_cache/")
     total_freed += clean_target_dir(REPO_ROOT / ".pytest_cache", ".pytest_cache/")
     total_freed += clean_target_dir(REPO_ROOT / ".ruff_cache", ".ruff_cache/")
+    total_freed += clean_target_dir(REPO_ROOT / ".benchmarks", ".benchmarks/")
 
     # 3. Geçici .work Snapshot'ları
     print("\n[3/9] Geçici Çalışma Alanı Snapshot'ları:")
