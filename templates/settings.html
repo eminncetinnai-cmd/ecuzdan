@@ -488,21 +488,21 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div>
                         <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">{{ _('settings_birth_year') }}</label>
-                        <input type="number" name="birth_year" min="1900" max="{{ current_year }}" step="1"
+                        <input type="number" name="birth_year" min="1900" max="{{ current_year }}" step="1" inputmode="numeric"
                                value="{{ preferences.birth_year if preferences and preferences.birth_year else '' }}"
                                placeholder="1985"
                                class="w-full p-2.5 border border-slate-200 rounded-lg bg-slate-50 text-xs focus:ring-2 focus:ring-emerald-500 outline-none transition font-bold">
                     </div>
                     <div>
                         <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">{{ _('settings_target_retirement_age') }}</label>
-                        <input type="number" name="target_retirement_age" min="18" max="100" step="1"
+                        <input type="number" name="target_retirement_age" min="18" max="100" step="1" inputmode="numeric"
                                value="{{ preferences.target_retirement_age if preferences and preferences.target_retirement_age else '' }}"
                                placeholder="55"
                                class="w-full p-2.5 border border-slate-200 rounded-lg bg-slate-50 text-xs focus:ring-2 focus:ring-emerald-500 outline-none transition font-bold">
                     </div>
                     <div>
                         <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">{{ _('settings_target_monthly_income') }}</label>
-                        <input type="number" name="target_monthly_passive_income" min="0" step="0.01"
+                        <input type="number" name="target_monthly_passive_income" min="0" step="0.01" inputmode="decimal"
                                value="{{ preferences.target_monthly_passive_income if preferences and preferences.target_monthly_passive_income else '' }}"
                                placeholder="{{ _('settings_target_monthly_income_placeholder') }}"
                                class="w-full p-2.5 border border-slate-200 rounded-lg bg-slate-50 text-xs focus:ring-2 focus:ring-emerald-500 outline-none transition font-bold">
@@ -520,7 +520,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                         <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">{{ _('settings_emergency_fund_target') }}</label>
-                        <input type="number" name="emergency_fund_target_months" min="1" max="60" step="1"
+                        <input type="number" name="emergency_fund_target_months" min="1" max="60" step="1" inputmode="numeric"
                                value="{{ preferences.emergency_fund_target_months if preferences and preferences.emergency_fund_target_months else '' }}"
                                placeholder="{{ _('ui_auto_d9e21c305a8c') }}"
                                class="w-full p-2.5 border border-slate-200 rounded-lg bg-slate-50 text-xs focus:ring-2 focus:ring-emerald-500 outline-none transition font-bold">
@@ -528,7 +528,7 @@
                     </div>
                     <div>
                         <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">{{ _('settings_safe_withdrawal_rate') }}</label>
-                        <input type="number" name="safe_withdrawal_rate" min="2" max="10" step="0.1"
+                        <input type="number" name="safe_withdrawal_rate" min="2" max="10" step="0.1" inputmode="decimal"
                                value="{{ '%.1f'|format(preferences.safe_withdrawal_rate * 100) if preferences and preferences.safe_withdrawal_rate else '' }}"
                                placeholder="Varsayılan: {{ '%.1f'|format(engine_defaults.safe_withdrawal_rate_pct) }}"
                                class="w-full p-2.5 border border-slate-200 rounded-lg bg-slate-50 text-xs focus:ring-2 focus:ring-emerald-500 outline-none transition font-bold">
@@ -557,7 +557,7 @@
                             <span class="text-[10px] font-bold text-slate-700">{{ _('settings_risk_free_rate_manual') }}</span>
                         </label>
                         <div id="rf_manual_container" class="{% if not preferences or preferences.risk_free_rate_mode != 'manual' %}hidden{% endif %} pl-6">
-                            <input type="number" name="risk_free_rate_manual" min="0" max="200" step="0.1"
+                            <input type="number" name="risk_free_rate_manual" min="0" max="200" step="0.1" inputmode="decimal"
                                    value="{{ '%.1f'|format(preferences.risk_free_rate_manual * 100) if preferences and preferences.risk_free_rate_manual else '' }}"
                                    placeholder="{{ _('settings_risk_free_rate_placeholder') }}"
                                    class="w-full md:w-1/2 p-2.5 border border-slate-200 rounded-lg bg-white text-xs focus:ring-2 focus:ring-emerald-500 outline-none transition font-bold">
@@ -616,7 +616,7 @@
 
                 <div>
                     <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">{{ _('settings_payment_reminder_days') }}</label>
-                    <input type="number" name="payment_reminder_days" min="0" max="30" step="1"
+                    <input type="number" name="payment_reminder_days" min="0" max="30" step="1" inputmode="numeric"
                            value="{{ preferences.payment_reminder_days if preferences and preferences.payment_reminder_days is not none else 3 }}"
                            class="w-full md:w-40 p-2.5 border border-slate-200 rounded-lg bg-slate-50 text-xs focus:ring-2 focus:ring-amber-500 outline-none transition font-bold">
                 </div>

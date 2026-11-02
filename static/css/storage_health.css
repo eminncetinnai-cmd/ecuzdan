@@ -582,6 +582,7 @@
 
 .storage-health-table-wrap {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     border-radius: .75rem;
     border: 1px solid var(--sh-line-strong);
     background: rgba(255,255,255,0.85);
